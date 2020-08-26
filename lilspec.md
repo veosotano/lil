@@ -22,9 +22,9 @@ Special symbols and escapes are written using a forward slash `\` in front of a 
 
 There is no difference between using one kind of quotes or another, just use whatever needs less escaping, like `"Can't"` instead of `'Can\'t'`.
 
-Here is a list of the characters and their meaning. It is not complete, look in further chapters for the complete list.
+Here is a list of the characters and their meaning. It is not complete, look in further chapters for the whole list.
 
-- `\\` the backslach itself
+- `\\` the backslash itself
 - `\n` new line
 - `\t` tab
 - `\b` backspace
@@ -91,7 +91,7 @@ var.i64 myNum: 100 + 50;
 var.i64 myNum2: myNum * 2;
 ```
 
-Expressions can be wrapped in parenthesis `(<lhs> <sign> <rhs>)`, in some cases to desambiguate, and others just to increase legibility. 
+Expressions can be wrapped in parenthesis `(<lhs> <sign> <rhs>)`, in some cases to desambiguate, and others just to increase legibility.
 
 ## Functions
 
