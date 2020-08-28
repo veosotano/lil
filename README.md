@@ -6,6 +6,8 @@ The file lilspec.md contains the specification of the language. It's not a tutor
 
 In the cpp folder resides the compiler that is a custom front-end that interfaces with LLVM to generate native machine code. Warning: WORK IN PROGRESS!!
 
+The lil_cli folder contains the command line interface to the compiler. Also written in C++. Warning: WORK IN PROGRESS!!
+
 Hit me up on Twitter if you want to contribute, discuss or just say hi: https://twitter.com/veosotano
 
 Peace

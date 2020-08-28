@@ -1,0 +1,112 @@
+/********************************************************************
+ *
+ *      LIL Is a Language
+ *
+ *      AUTHORS: Miro Keller
+ *
+ *      COPYRIGHT: ©2020-today:  All Rights Reserved
+ *
+ *      LICENSE: see LICENSE file
+ *
+ *      This file analyzes the code to determine types automatically
+ *
+ ********************************************************************/
+
+#ifndef LILTYPEGUESSER_H
+#define LILTYPEGUESSER_H
+
+#include "LILVisitor.h"
+#include "LILErrorMessage.h"
+#include "LILNode.h"
+
+#include "LILAssignment.h"
+#include "LILBoolLiteral.h"
+#include "LILClassDecl.h"
+#include "LILCombinator.h"
+#include "LILExpression.h"
+#include "LILFilter.h"
+#include "LILFlag.h"
+#include "LILFlowControl.h"
+#include "LILFunctionCall.h"
+#include "LILFunctionDecl.h"
+#include "LILFunctionType.h"
+#include "LILInstruction.h"
+#include "LILNullLiteral.h"
+#include "LILNumberLiteral.h"
+#include "LILMultipleType.h"
+#include "LILObjectDefinition.h"
+#include "LILPercentageLiteral.h"
+#include "LILPropertyName.h"
+#include "LILValuePath.h"
+#include "LILRootNode.h"
+#include "LILRule.h"
+#include "LILSelector.h"
+#include "LILSelectorChain.h"
+#include "LILSimpleSelector.h"
+#include "LILStringFunction.h"
+#include "LILStringLiteral.h"
+#include "LILType.h"
+#include "LILVarDecl.h"
+#include "LILVarName.h"
+
+namespace LIL
+{
+    class LILToStrInfo;
+    class LILTypeGuesser : public LILVisitor
+    {
+    public:
+
+        LILTypeGuesser();
+        virtual ~LILTypeGuesser();
+
+        void initializeVisit();
+        virtual void visit(LILNode * node);
+
+        inline void processChildren(const std::vector<std::shared_ptr<LILNode>> & children);
+        void process(LILNode * node);
+        void _process(LILBoolLiteral * value);
+        void _process(LILNumberLiteral * value);
+        void _process(LILPercentageLiteral * value);
+        void _process(LILExpression * value);
+        void _process(LILStringLiteral * value);
+        void _process(LILStringFunction * value);
+        void _process(LILNullLiteral * value);
+        void _process(LILType * value);
+        void _process(LILVarDecl * value);
+        void _process(LILClassDecl * value);
+        void _process(LILObjectDefinition * value);
+        void _process(LILAssignment * value);
+        void _process(LILValuePath * value);
+        void _process(LILPropertyName * value);
+        void _process(LILVarName * value);
+        void _process(LILRule * value);
+        void _process(LILSimpleSelector * value);
+        void _process(LILSelectorChain * value);
+        void _process(LILSelector * value);
+        void _process(LILCombinator * value);
+        void _process(LILFilter * value);
+        void _process(LILFlag * value);
+        void _process(LILFunctionDecl * value);
+        void _process(LILFunctionCall * value);
+        void _process(LILFlowControl * value);
+        void _process(LILInstruction * value);
+
+        std::shared_ptr<LILType> recursiveFindTypeFromAncestors(std::shared_ptr<LILNode> value) const;
+        std::shared_ptr<LILFunctionDecl> recursiveFindFunctionDecl(std::shared_ptr<LILNode> node) const;
+        std::shared_ptr<LILType> getNodeType(std::shared_ptr<LILNode> node) const;
+        std::shared_ptr<LILType> getExpType(std::shared_ptr<LILExpression> exp) const;
+        std::shared_ptr<LILType> getFnType(std::shared_ptr<LILFunctionDecl> fd) const;
+        void recursiveFindReturnTypes(std::vector<std::shared_ptr<LILType>> & returnTypes, std::shared_ptr<LILNode> eval) const;
+        std::shared_ptr<LILType> findTypeForVarName(std::shared_ptr<LILVarName> name) const;
+        std::shared_ptr<LILType> findTypeFromAssignments(std::vector<std::shared_ptr<LILNode>> nodes, const std::shared_ptr<LILVarDecl> & vd) const;
+         std::shared_ptr<LILType> findTypeFromFunctionCalls(std::vector<std::shared_ptr<LILNode>> nodes, const std::shared_ptr<LILVarDecl> & vd) const;
+        std::shared_ptr<LILType> findTypeFromExpressions(std::vector<std::shared_ptr<LILNode>> nodes, const std::shared_ptr<LILVarDecl> & vd) const;
+
+        void setDebug(bool value);
+
+    private:
+        bool _debug;
+    };
+}
+
+#endif

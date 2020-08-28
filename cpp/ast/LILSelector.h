@@ -1,0 +1,49 @@
+/********************************************************************
+ *
+ *      LIL Is a Language
+ *
+ *      AUTHORS: Miro Keller
+ *
+ *      COPYRIGHT: ©2020-today:  All Rights Reserved
+ *
+ *      LICENSE: see LICENSE file
+ *
+ *      This file is the selector in a selector chain
+ *
+ ********************************************************************/
+
+#ifndef LILSELECTOR_H
+#define LILSELECTOR_H
+
+#include "LILNode.h"
+
+namespace LIL
+{
+    class LILSelector : public LILNode
+    {
+    public:
+        LILSelector();
+        LILSelector(const LILSelector &other);
+        std::shared_ptr<LILSelector> clone() const;
+        virtual ~LILSelector();
+
+        virtual void receiveNodeData(const LILString & data);
+
+        LILString stringRep();
+        bool equalTo(std::shared_ptr<LILNode> otherNode);
+        
+        virtual SelectorType getSelectorType() const;
+        virtual void setSelectorType(SelectorType newType);
+        void setName(LILString newName);
+        LILString getName() const;
+        
+    protected:
+        virtual std::shared_ptr<LILClonable> cloneImpl() const;
+        
+    private:
+        SelectorType _selectorType;
+        LILString _name;
+    };
+}
+
+#endif
