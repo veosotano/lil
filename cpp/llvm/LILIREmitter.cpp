@@ -61,7 +61,6 @@ namespace LIL
         std::map<std::string, llvm::Value*> namedValues;
         std::vector<std::map<std::string, llvm::Value*>> hiddenLocals;
         std::map<std::string, llvm::StructType *> classTypes;
-        std::map<std::string, LILClassDecl *> classes;
         std::vector<LILClassDecl *> selfContext;
         bool needsReturnValue;
         llvm::Value * returnAlloca;
@@ -471,7 +470,6 @@ llvm::Value * LILIREmitter::_emit(LILClassDecl * value)
     std::string name = value->getName().data();
 
     d->classTypes[name] = this->extractStructFromClass(value);
-    d->classes[name] = value;
 
     for (auto methodVar : value->getMethods()) {
         auto vd = std::static_pointer_cast<LILVarDecl>(methodVar);
@@ -493,7 +491,8 @@ llvm::Value * LILIREmitter::_emit(LILObjectDefinition * value)
         return nullptr;
     }
     auto vd = std::static_pointer_cast<LILVarDecl>(parent);
-    std::string className = value->getType()->getName().data();
+    LILString classNameStr = value->getType()->getName();
+    std::string className = classNameStr.data();
     std::string instanceName = vd->getName().data();
     llvm::AllocaInst * alloca = d->irBuilder.CreateAlloca(
         d->classTypes[className],
@@ -501,7 +500,7 @@ llvm::Value * LILIREmitter::_emit(LILObjectDefinition * value)
         instanceName.c_str()
     );
 
-    LILClassDecl * classValue = static_cast<LILClassDecl *>(d->classes[className]);
+    auto classValue = this->findClassWithName(classNameStr);
     size_t theIndex = 0;
     for (auto field : classValue->getFields()) {
         auto vd = std::static_pointer_cast<LILVarDecl>(field);
