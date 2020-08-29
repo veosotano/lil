@@ -1165,7 +1165,7 @@ llvm::Value * LILIREmitter::_emitIf(LILFlowControl * value)
         return nullptr;
     }
     const auto & firstArg = args.front();
-    llvm::Value * condition = this->emit(firstArg.get());
+    llvm::Value * condition = this->deref(firstArg.get());
     if (!firstArg->isA(NodeTypeExpression)) {
         switch (condition->getType()->getTypeID()) {
             case llvm::Type::IntegerTyID:
