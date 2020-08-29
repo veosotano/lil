@@ -3972,39 +3972,39 @@ bool LILCodeParser::readFunctionCallSimple()
         //multiple arguments mode
         bool argumentsDone = false;
 
-        if (!d->currentToken->isA(TokenTypeParenthesisClose))
-        {
-            while (!argumentsDone && valueValid)
+        while (
+               ! argumentsDone
+               && valueValid
+               && !d->currentToken->isA(TokenTypeParenthesisClose)
+        ){
+            argumentsDone = true;
+            
+            if (this->isAssignment()) {
+                bool asgmValid = this->readAssignment(false, true);
+                if (asgmValid) {
+                    d->receiver->receiveNodeCommit();
+                } else {
+                    this->skipInvalidToken();
+                    continue;
+                }
+            }
+            else
             {
-                argumentsDone = true;
-
-                if (this->isAssignment()) {
-                    bool asgmValid = this->readAssignment(false, true);
-                    if (asgmValid) {
-                        d->receiver->receiveNodeCommit();
-                    } else {
-                        this->skipInvalidToken();
-                        continue;
-                    }
+                bool outIsSV = false;
+                NodeType svExpTy = NodeTypeInvalid;
+                bool isValid = this->readExpression(outIsSV, svExpTy);
+                if (isValid) {
+                    d->receiver->receiveNodeCommit();
+                } else {
+                    valueValid = false;
                 }
-                else
-                {
-                    bool outIsSV = false;
-                    NodeType svExpTy = NodeTypeInvalid;
-                    bool isValid = this->readExpression(outIsSV, svExpTy);
-                    if (isValid) {
-                        d->receiver->receiveNodeCommit();
-                    } else {
-                        valueValid = false;
-                    }
-                }
-                if (d->currentToken->isA(TokenTypeComma) || d->currentToken->isA(TokenTypeSemicolon))
-                {
-                    argumentsDone = false;
-                    d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
-                    this->readNextToken();
-                    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-                }
+            }
+            if (d->currentToken->isA(TokenTypeComma) || d->currentToken->isA(TokenTypeSemicolon))
+            {
+                argumentsDone = false;
+                d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+                this->readNextToken();
+                LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
             }
         }
         if (!valueValid)
