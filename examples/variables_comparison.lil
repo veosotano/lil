@@ -1,0 +1,9 @@
+var.i64 bar: 0;
+var test: fn (var.i64 baz) {
+	var xalp: 10;
+	if (baz < 10){
+		xalp: 20;
+	}
+	return baz + xalp;
+};
+test(bar);

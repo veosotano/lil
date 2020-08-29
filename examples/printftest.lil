@@ -1,0 +1,20 @@
+var.fn(cstr...)=>i32 printf extern;
+
+var myPrintf: fn (
+	var.bool|f64 value;
+) {
+	if value is bool {
+		if value {
+			printf `bool true`;
+		} else {
+			printf `bool false`;
+		}
+	}
+	if value is f64 {
+		printf(`%f`, value);
+	}
+}
+
+myPrintf true;
+myPrintf 20.5;
+myPrintf false;

@@ -1,0 +1,2 @@
+var.fn(cstr)=>i32 puts extern;
+puts `Hello world`;
