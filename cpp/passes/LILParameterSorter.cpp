@@ -354,6 +354,10 @@ void LILParameterSorter::_process(LILFunctionCall * value)
             }
         }
         
+        if (isExtern) {
+            return;
+        }
+        
         ++it;
         
         while (it != childNodes.end()) {
@@ -368,29 +372,37 @@ void LILParameterSorter::_process(LILFunctionCall * value)
                         
                         std::vector<std::shared_ptr<LILNode>> newArgs;
                         
+                        //in the order of the arguments in the declaration
                         for (auto declArg : declArgs) {
                             if (!declArg->isA(NodeTypeVarDecl)) {
-                                std::cerr << "!!!!!!!!!!FAIL!!!!!!!!!!!!!!!!\n";
+                                std::cerr << "!!!!!!!!!!DECL ARG WAS NOT VAR DECL FAIL!!!!!!!!!!!!!!!!\n";
                                 return;
                             }
                             auto declVd = std::static_pointer_cast<LILVarDecl>(declArg);
                             
-                            
+                            //find the argument in the call
                             auto callArgs = fc->getArguments();
                             bool found = false;
                             for (auto callArg : callArgs) {
-                                if (callArg->isA(NodeTypeVarDecl)) {
-                                    std::cerr << "!!!!!!!!!!FAIL!!!!!!!!!!!!!!!!\n";
+                                if (!callArg->isA(NodeTypeAssignment)) {
+                                    std::cerr << "!!!!!!!!!!CALL ARG WAS NOT ASSIGNMENT FAIL!!!!!!!!!!!!!!!!\n";
                                     return;
                                 }
-                                auto callVd = std::static_pointer_cast<LILVarDecl>(callArg);
-                                if (declVd->getName() == callVd->getName()) {
+                                auto callAsgmt = std::static_pointer_cast<LILAssignment>(callArg);
+                                auto callArgFirstNode = callAsgmt->getNodes().front();
+                                if (!callArgFirstNode->isA(NodeTypeVarName)) {
+                                    std::cerr << "!!!!!!!!!!FIRST NODE WAS NOT VAR NAME FAIL!!!!!!!!!!!!!!!!\n";
+                                    return;
+                                }
+                                auto cavn = std::static_pointer_cast<LILVarName>(callArgFirstNode);
+                                if (declVd->getName() == cavn->getName()) {
                                     found = true;
-                                    newArgs.push_back(this->_varDeclToAssignment(callVd));
+                                    newArgs.push_back(callAsgmt);
                                     break;
                                 }
                             }
-                            if (!found) {
+                            //if we need the default value
+                            if (!found && declVd->getInitVal()) {
                                 newArgs.push_back(this->_varDeclToAssignment(declVd));
                             }
                         }
@@ -410,7 +422,7 @@ void LILParameterSorter::_process(LILFunctionCall * value)
                     std::cerr << "!!!!!!!!!!FAIL!!!!!!!!!!!!!!!!\n";
                     break;
                 }
-                    
+
                 default:
                     break;
             }
