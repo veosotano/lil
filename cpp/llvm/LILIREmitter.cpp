@@ -401,6 +401,20 @@ llvm::Value * LILIREmitter::_emit(LILExpression * value)
                     break;
             }
         }
+        case ExpressionTypeSmallerComparison:
+        {
+            switch (leftV->getType()->getTypeID()) {
+                case llvm::Type::IntegerTyID:
+                    return d->irBuilder.CreateICmpSLT(leftV, rightV);
+                case llvm::Type::FloatTyID:
+                case llvm::Type::DoubleTyID:
+                    return d->irBuilder.CreateFCmpOLT(leftV, rightV);
+                    
+                default:
+                    std::cerr << "!!!!!!!!!!FAIL!!!!!!!!!!!!!!!!\n";
+                    break;
+            }
+        }
         default:
             std::cerr << "!!!!!!!!!!FAIL!!!!!!!!!!!!!!!!\n";
             return nullptr;
