@@ -32,6 +32,7 @@
 #include "LILObjectDefinition.h"
 #include "LILObjectType.h"
 #include "LILPercentageLiteral.h"
+#include "LILPointerType.h"
 #include "LILPropertyName.h"
 #include "LILValuePath.h"
 #include "LILRootNode.h"
@@ -138,6 +139,12 @@ void LILASTBuilder::receiveNodeStart(NodeType nodeType)
         {
             this->state.push_back(BuilderStateFunctionType);
             this->currentContainer.push_back(std::make_shared<LILFunctionType>());
+            break;
+        }
+        case NodeTypePointerType:
+        {
+            this->state.push_back(BuilderStatePointerType);
+            this->currentContainer.push_back(std::make_shared<LILPointerType>());
             break;
         }
         case NodeTypeObjectType:
@@ -391,6 +398,14 @@ void LILASTBuilder::receiveNodeCommit()
                 } else {
                     ty->addArgument(std::static_pointer_cast<LILType>(this->currentNode));
                 }
+            }
+            break;
+        }
+        case BuilderStatePointerType:
+        {
+            if (this->currentNode) {
+                std::shared_ptr<LILPointerType> ty = std::static_pointer_cast<LILPointerType>(this->currentContainer.back());
+                ty->setArgument(std::static_pointer_cast<LILType>(this->currentNode));
             }
             break;
         }

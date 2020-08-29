@@ -1388,6 +1388,8 @@ bool LILCodeParser::readTypeSimple()
         LILString tokenStr = d->currentToken->getString();
         if (tokenStr == "fn") {
             return this->readFunctionType();
+        } else if (tokenStr == "ptr"){
+            return this->readPointerType();
         }
         LIL_START_NODE(NodeTypeType)
 
@@ -1492,6 +1494,31 @@ bool LILCodeParser::readFunctionType()
     if (tyValid) {
         d->receiver->receiveNodeCommit();
     }
+    LIL_END_NODE_SKIP(false)
+}
+
+bool LILCodeParser::readPointerType()
+{
+    LIL_START_NODE(NodeTypePointerType)
+    d->receiver->receiveNodeData(ParserEventType, d->currentToken->getString());
+    this->readNextToken();
+    LIL_CHECK_FOR_END
+    
+    LIL_EXPECT(TokenTypeParenthesisOpen, "open parenthesis");
+    d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+    this->readNextToken();
+    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+    
+    bool tyValid = this->readType();
+    if (tyValid) {
+        d->receiver->receiveNodeCommit();
+    }
+    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+    
+    LIL_EXPECT(TokenTypeParenthesisClose, "close parenthesis");
+    d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+    this->readNextToken();
+
     LIL_END_NODE_SKIP(false)
 }
 

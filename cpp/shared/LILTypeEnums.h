@@ -81,6 +81,7 @@ namespace LIL
         //these are not actual node types, just for instantiating the concrete subclass:
         NodeTypeMultipleType,
         NodeTypeFunctionType,
+        NodeTypePointerType,
         NodeTypeObjectType,
         //---
         NodeTypeVarName,
@@ -118,6 +119,7 @@ namespace LIL
         TypeTypeSingle,
         TypeTypeMultiple,
         TypeTypeFunction,
+        TypeTypePointer,
         TypeTypeObject,
     };
 

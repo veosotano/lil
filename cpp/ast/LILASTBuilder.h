@@ -33,6 +33,7 @@ namespace LIL
         BuilderStateType,
         BuilderStateMultipleType,
         BuilderStateFunctionType,
+        BuilderStatePointerType,
         BuilderStateObjectType,
         BuilderStateVarDecl,
         BuilderStateVarName,

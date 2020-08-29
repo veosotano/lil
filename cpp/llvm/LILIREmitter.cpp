@@ -16,6 +16,7 @@
 #include "LILIREmitter.h"
 
 #include "LILFunctionType.h"
+#include "LILPointerType.h"
 #include "LILRootNode.h"
 
 #include "llvm/ADT/APFloat.h"
@@ -1248,7 +1249,19 @@ void LILIREmitter::printIR(llvm::raw_ostream & file) const
 
 llvm::Type * LILIREmitter::llvmTypeFromLILType(std::shared_ptr<LILType> type)
 {
-    if (type->isA(TypeTypeObject)) {
+    if (type->isA(TypeTypePointer))
+    {
+        auto ptrTy = std::static_pointer_cast<LILPointerType>(type);
+        auto argTy = ptrTy->getArgument();
+        if (!argTy) {
+            std::cerr << "!!!!!!!!!!PTR TYPE EMPTY ARG FAIL!!!!!!!!!!!!!!!!\n";
+            return nullptr;
+        }
+        auto llvmType = this->llvmTypeFromLILType(argTy);
+        return llvmType->getPointerTo();
+    }
+    else if (type->isA(TypeTypeObject))
+    {
         auto objTy = std::static_pointer_cast<LILObjectType>(type);
         std::vector<llvm::Type *> structTypes;
         for (auto member : objTy->getFields()) {

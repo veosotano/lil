@@ -70,6 +70,7 @@ namespace LIL
         bool readType();
         bool readTypeSimple();
         bool readFunctionType();
+        bool readPointerType();
         bool readVarDecl();
         bool readAssignment(bool allowValuePath, bool firstIsVar, bool firstPartAlreadyRead = false);
         //readVals auto commits
