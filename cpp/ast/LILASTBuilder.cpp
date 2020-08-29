@@ -307,17 +307,23 @@ void LILASTBuilder::receiveNodeCommit()
                     case NodeTypeVarDecl:
                     {
                         auto vd = std::static_pointer_cast<LILVarDecl>(this->currentNode);
-                        auto initVal = vd->getInitVal();
-                        if (initVal) {
-                            this->rootNode->setLocalVariable(vd->getName(), vd);
-                            if (initVal->isA(NodeTypeFunctionDecl)) {
-                                this->rootNode->addNode(this->currentNode);
+                        
+                        //set local variable
+                        this->rootNode->setLocalVariable(vd->getName(), vd);
+                        
+                        if (vd->getIsExtern()) {
+                            this->rootNode->addNode(this->currentNode);
+                        } else {
+                            auto initVal = vd->getInitVal();
+                            if (initVal) {
+                                if (initVal->isA(NodeTypeFunctionDecl)) {
+                                    this->rootNode->addNode(this->currentNode);
+                                } else {
+                                    this->rootNode->getMainFn()->addEvaluable(this->currentNode);
+                                }
                             } else {
                                 this->rootNode->getMainFn()->addEvaluable(this->currentNode);
                             }
-                        } else if (vd->getIsExtern()) {
-                            this->rootNode->setLocalVariable(vd->getName(), vd);
-                            this->rootNode->addNode(this->currentNode);
                         }
                         break;
                     }

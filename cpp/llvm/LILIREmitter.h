@@ -112,6 +112,8 @@ namespace LIL
         llvm::Value * _emit(LILFlowControl * value);
         llvm::Value * _emitIf(LILFlowControl * value);
         llvm::Value * _emit(LILInstruction * value);
+        
+        llvm::Value * deref(LILNode * node);
 
         void printIR(llvm::raw_ostream & file) const;
         void setDebug(bool value);
