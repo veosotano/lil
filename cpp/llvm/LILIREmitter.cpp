@@ -477,7 +477,7 @@ llvm::Value * LILIREmitter::_emit(LILVarDecl * value)
             d->namedValues[name] = d->irBuilder.CreateAlloca(this->llvmTypeFromLILType(value->getType()), 0, name);
         } else {
             for (auto initVal : initVals) {
-                this->emit(initVal.get());
+                this->deref(initVal.get());
             }
         }
     }
@@ -576,7 +576,7 @@ llvm::Value * LILIREmitter::_emit(LILAssignment * value)
     auto theValue = value->getValue();
     if (theValue) {
         llvm::Value * llvmSubject = this->emit(value->getSubject().get());
-        llvm::Value * llvmValue = this->emit(value->getValue().get());
+        llvm::Value * llvmValue = this->deref(value->getValue().get());
         return d->irBuilder.CreateStore(llvmValue, llvmSubject);
     } else {
         std::cerr << "!!!!!!!!!!ASSIGNMENT HAD NO VALUE !!!!!!!!!!!!!!!!\n";
@@ -901,25 +901,12 @@ llvm::Function * LILIREmitter::_emitFnBody(llvm::Function * fun, LILFunctionDecl
                             d->namedValues[name] = llvmValue;
                             break;
                         }
-                            
-                        case NodeTypeValuePath:
-                        {
-                            llvm::Function * fun = d->irBuilder.GetInsertBlock()->getParent();
-                            llvm::Value * llvmValue = this->emit(initVal.get());
-                            if (llvmValue) {
-                                llvm::AllocaInst * alloca = this->createEntryBlockAlloca(fun, name, llvmValue->getType());
-                                d->irBuilder.CreateStore(llvmValue, alloca);
-                                d->hiddenLocals.back()[name] = d->namedValues[name];
-                                d->namedValues[name] = alloca;
-                            }
-                            
-                            break;
-                        }
-                            
+
                         default:
+                        {
                             //local var
                             llvm::Function * fun = d->irBuilder.GetInsertBlock()->getParent();
-                            llvm::Value * llvmValue = this->emit(initVal.get());
+                            llvm::Value * llvmValue = this->deref(initVal.get());
                             if (llvmValue) {
                                 llvm::AllocaInst * alloca = this->createEntryBlockAlloca(fun, name, llvmValue->getType());
                                 d->irBuilder.CreateStore(llvmValue, alloca);
@@ -927,6 +914,7 @@ llvm::Function * LILIREmitter::_emitFnBody(llvm::Function * fun, LILFunctionDecl
                                 d->namedValues[name] = alloca;
                             }
                             break;
+                        }
                     }
                 }
             }
