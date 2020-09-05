@@ -266,6 +266,7 @@ void LILASTValidator::validate(LILExpression value)
         case NodeTypeNumberLiteral:
         case NodeTypeExpression:
         case NodeTypeValuePath:
+        case NodeTypeFunctionCall:
             break;
             
         default:
@@ -279,6 +280,7 @@ void LILASTValidator::validate(LILExpression value)
         case NodeTypeNumberLiteral:
         case NodeTypeExpression:
         case NodeTypeValuePath:
+        case NodeTypeFunctionCall:
             break;
             
         default:
