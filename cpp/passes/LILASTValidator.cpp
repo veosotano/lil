@@ -423,6 +423,7 @@ void LILASTValidator::validate(LILFunctionDecl value)
                     case NodeTypeAssignment:
                     case NodeTypeUnaryExpression:
                     case NodeTypeFlowControlCall:
+                    case NodeTypeFlowControl:
                     {
                         break;
                     }
@@ -443,10 +444,7 @@ void LILASTValidator::validate(LILFunctionDecl value)
 
                         break;
                     }
-                    case NodeTypeFlowControl:
-                    {
-                        break;
-                    }
+
                     default:
                     {
                         this->illegalNodeType(evals[i].get(), &value);
