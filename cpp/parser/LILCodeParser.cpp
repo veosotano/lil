@@ -4355,7 +4355,7 @@ bool LILCodeParser::readSingleArgumentFunctionCall(const LILString & name)
     d->receiver->receiveNodeData(ParserEventFunction, d->currentToken->getString());
     this->readNextToken();
     LIL_CHECK_FOR_END
-
+    
     //parentheses are optional
     bool needsClosingParenthesis = false;
     if (d->currentToken->isA(TokenTypeParenthesisOpen))
@@ -4374,7 +4374,7 @@ bool LILCodeParser::readSingleArgumentFunctionCall(const LILString & name)
         this->skip(TokenTypeWhitespace);
         LIL_CHECK_FOR_END
     }
-
+    
     NodeType outNodeType;
     bool svValid = this->readSingleValue(outNodeType);
     if (svValid) {
@@ -4382,9 +4382,9 @@ bool LILCodeParser::readSingleArgumentFunctionCall(const LILString & name)
     } else {
         LIL_CANCEL_NODE
     }
-
+    
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-
+    
     if (needsClosingParenthesis)
     {
         LIL_EXPECT(TokenTypeParenthesisClose, "closing parenthesis")
@@ -4926,7 +4926,7 @@ bool LILCodeParser::readFlowControlCall()
     if (d->currentToken->isA(TokenTypeIdentifier))
     {
         LILString name = d->currentToken->getString();
-
+        
         if (name == "return")
         {
             this->readReturnFlowControlCall();
@@ -4952,7 +4952,7 @@ bool LILCodeParser::readFlowControlCall()
     {
         valid = false;
     }
-
+    
     return valid;
 }
 
@@ -4966,7 +4966,7 @@ bool LILCodeParser::readReturnFlowControlCall()
     d->receiver->receiveNodeData(ParserEventFunction, d->currentToken->getString());
     this->readNextToken();
     LIL_CHECK_FOR_END
-
+    
     //parentheses are optional
     bool needsClosingParenthesis = false;
     if (d->currentToken->isA(TokenTypeParenthesisOpen))
@@ -4985,13 +4985,13 @@ bool LILCodeParser::readReturnFlowControlCall()
         this->skip(TokenTypeWhitespace);
         LIL_CHECK_FOR_END
     }
-
+    
     //read the return value
     //readVals auto commits
     this->readVals();
-
+    
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-
+    
     if (needsClosingParenthesis)
     {
         LIL_EXPECT(TokenTypeParenthesisClose, "closing parenthesis")
@@ -5011,7 +5011,7 @@ bool LILCodeParser::readRepeatFlowControlCall()
     d->receiver->receiveNodeData(ParserEventFunction, d->currentToken->getString());
     this->readNextToken();
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-
+    
     LIL_END_NODE_SKIP(false)
 }
 
@@ -5025,7 +5025,7 @@ bool LILCodeParser::readBreakFlowControlCall()
     d->receiver->receiveNodeData(ParserEventFunction, d->currentToken->getString());
     this->readNextToken();
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-
+    
     LIL_END_NODE_SKIP(false)
 }
 
@@ -5039,6 +5039,6 @@ bool LILCodeParser::readContinueFlowControlCall()
     d->receiver->receiveNodeData(ParserEventFunction, d->currentToken->getString());
     this->readNextToken();
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-
+    
     LIL_END_NODE_SKIP(false)
 }

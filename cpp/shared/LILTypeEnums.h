@@ -113,7 +113,7 @@ namespace LIL
         NodeTypeCommentNode,
         NodeTypeInvalid,
     };
-    
+
     enum TypeType
     {
         TypeTypeNone = 0,

@@ -1235,7 +1235,7 @@ llvm::Value * LILIREmitter::_emit(LILFlowControlCall * value)
             return nullptr;
         }
     }
-
+    
     return nullptr;
 }
 
@@ -1246,7 +1246,7 @@ llvm::Value * LILIREmitter::_emitReturn(LILFlowControlCall * value)
         if (retVal) {
             llvm::Value * theReturn = d->irBuilder.CreateStore(retVal, d->returnAlloca);
             d->needsReturnValue = true;
-
+            
             return theReturn;
         }
     }
@@ -1292,7 +1292,7 @@ llvm::Value * LILIREmitter::_emitPointer(LILValuePath * value)
         LILNode * subject;
         llvm::Value * llvmSubject = nullptr;
         LILString className;
-
+        
         if (firstNode->isA(NodeTypeVarName)) {
             auto vn = std::static_pointer_cast<LILVarName>(firstNode);
             std::shared_ptr<LILNode> subjectNode = this->findNodeForVarName(vn.get());
@@ -1320,9 +1320,9 @@ llvm::Value * LILIREmitter::_emitPointer(LILValuePath * value)
                     return nullptr;
             }
         }
-
+        
         ++it;
-
+        
         while (it != childNodes.end()) {
             auto currentNode = *it;
             switch (currentNode->getNodeType()) {
@@ -1331,7 +1331,7 @@ llvm::Value * LILIREmitter::_emitPointer(LILValuePath * value)
                     std::cerr << "!!!!!!!!!!POINTER TO: FUNCTION CALL IN VALUE PATH IS UNSUPPORTED!!!!!!!!!!!!!!!!\n";
                     return nullptr;
                 }
-
+                    
                 case NodeTypePropertyName:
                 {
                     if (llvmSubject == nullptr) {
@@ -1339,7 +1339,7 @@ llvm::Value * LILIREmitter::_emitPointer(LILValuePath * value)
                         return nullptr;
                     }
                     auto pn = std::static_pointer_cast<LILPropertyName>(currentNode);
-
+                    
                     //get index of field into struct
                     auto ty = subject->getType();
                     if (!ty->isA(TypeTypeObject)) {
@@ -1356,18 +1356,18 @@ llvm::Value * LILIREmitter::_emitPointer(LILValuePath * value)
                             break;
                         }
                     }
-
+                    
                     std::string name = pn->getName().data();
                     std::string tmp_name = "_lil_"+name+"_tmp";
                     auto gep = this->_emitGEP(llvmSubject, className, theIndex, tmp_name, 0);
                     llvmSubject = gep;
                     break;
                 }
-
+                    
                 default:
                     break;
             }
-
+            
             ++it;
         }
         return llvmSubject;
