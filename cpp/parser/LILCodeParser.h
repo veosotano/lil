@@ -123,6 +123,7 @@ namespace LIL
         bool readNameAndSelectorFunctionCall();
         bool readSelFunction();
         bool readFlagFunction();
+        bool readSingleArgumentFunctionCall(const LILString & name);
 
         bool readFlowControl();
         bool readIfFlowControl();

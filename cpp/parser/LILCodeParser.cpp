@@ -1017,6 +1017,8 @@ bool LILCodeParser::isBuiltinFunctionCall() const
         || value == "addFlag"
         || value == "takeFlag"
         || value == "replaceFlag"
+        || value == "pointerTo"
+        || value == "valueOf"
         )
     {
         return true;
@@ -3942,6 +3944,14 @@ bool LILCodeParser::readFunctionCall()
         {
             this->readSelFunction();
         }
+        else if (name == "pointerTo")
+        {
+            this->readSingleArgumentFunctionCall("pointerTo");
+        }
+        else if (name == "valueOf")
+        {
+            this->readSingleArgumentFunctionCall("valueOf");
+        }
         // <fnName>(arg1, arg2, argN, ...)
         else
         {
@@ -4332,6 +4342,55 @@ bool LILCodeParser::readFlagFunction()
         this->readNextToken();
     }
 
+    LIL_END_NODE_SKIP(false)
+}
+
+bool LILCodeParser::readSingleArgumentFunctionCall(const LILString & name)
+{
+    LIL_START_NODE(NodeTypeFunctionCall)
+    LIL_EXPECT(TokenTypeIdentifier, "identifier")
+    if (d->currentToken->getString() != name){
+        LIL_CANCEL_NODE
+    }
+    d->receiver->receiveNodeData(ParserEventFunction, d->currentToken->getString());
+    this->readNextToken();
+    LIL_CHECK_FOR_END
+
+    //parentheses are optional
+    bool needsClosingParenthesis = false;
+    if (d->currentToken->isA(TokenTypeParenthesisOpen))
+    {
+        needsClosingParenthesis = true;
+        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+        this->readNextToken();
+        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+    }
+    else if (d->currentToken->isA(TokenTypeSemicolon))
+    {
+        LIL_END_NODE
+    }
+    else if (d->currentToken->isA(TokenTypeWhitespace))
+    {
+        this->skip(TokenTypeWhitespace);
+        LIL_CHECK_FOR_END
+    }
+
+    NodeType outNodeType;
+    bool svValid = this->readSingleValue(outNodeType);
+    if (svValid) {
+        d->receiver->receiveNodeCommit();
+    } else {
+        LIL_CANCEL_NODE
+    }
+
+    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+
+    if (needsClosingParenthesis)
+    {
+        LIL_EXPECT(TokenTypeParenthesisClose, "closing parenthesis")
+        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+        this->readNextToken();
+    }
     LIL_END_NODE_SKIP(false)
 }
 

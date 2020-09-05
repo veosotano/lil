@@ -81,6 +81,14 @@ void LILFunctionCall::receiveNodeData(const LILString &data)
     {
         this->setFunctionCallType(FunctionCallTypeReplaceFlag);
     }
+    else if (data == "pointerTo")
+    {
+        this->setFunctionCallType(FunctionCallTypePointerTo);
+    }
+    else if (data == "valueOf")
+    {
+        this->setFunctionCallType(FunctionCallTypeValueOf);
+    }
 }
 
 
@@ -115,6 +123,14 @@ LILString LILFunctionCall::stringRep()
         case FunctionCallTypeReplaceFlag:
         {
             return "replaceFlag";
+        }
+        case FunctionCallTypePointerTo:
+        {
+            return "pointerTo";
+        }
+        case FunctionCallTypeValueOf:
+        {
+            return "valueOf";
         }
 
         default:
