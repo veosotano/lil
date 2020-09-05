@@ -1056,11 +1056,6 @@ llvm::Value * LILIREmitter::_emit(LILFunctionCall * value)
             std::cerr << "fcalltype none\n";
             break;
         }
-        case FunctionCallTypePrint:
-        {
-
-            break;
-        }
     }
 
     return nullptr;

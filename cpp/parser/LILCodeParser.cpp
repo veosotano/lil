@@ -1010,24 +1010,13 @@ bool LILCodeParser::isBuiltinFunctionCall() const
 {
     std::string value = d->currentToken->getString().data();
     if (
-        value == "has"
-        || value == "atLeast"
-        || value == "atMost"
-        || value == "clamp"
-        || value == "floor"
-        || value == "ceil"
-        || value == "round"
-        || value == "ref"
+        value == "ref"
         || value == "sel"
         || value == "flag"
         || value == "unflag"
         || value == "addFlag"
         || value == "takeFlag"
         || value == "replaceFlag"
-        || value == "print"
-        || value == "startTimer"
-        || value == "stopTimer"
-        || value == "toggleTimer"
         )
     {
         return true;

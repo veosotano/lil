@@ -53,35 +53,7 @@ LILFunctionCall::~LILFunctionCall()
 
 void LILFunctionCall::receiveNodeData(const LILString &data)
 {
-    if (data == "has")
-    {
-        this->setFunctionCallType(FunctionCallTypeHas);
-    }
-    else if (data == "atLeast")
-    {
-        this->setFunctionCallType(FunctionCallTypeAtLeast);
-    }
-    else if (data == "atMost")
-    {
-        this->setFunctionCallType(FunctionCallTypeAtMost);
-    }
-    else if (data == "clamp")
-    {
-        this->setFunctionCallType(FunctionCallTypeClamp);
-    }
-    else if (data == "floor")
-    {
-        this->setFunctionCallType(FunctionCallTypeFloor);
-    }
-    else if (data == "ceil")
-    {
-        this->setFunctionCallType(FunctionCallTypeCeil);
-    }
-    else if (data == "round")
-    {
-        this->setFunctionCallType(FunctionCallTypeRound);
-    }
-    else if (data == "ref")
+    if (data == "ref")
     {
         this->setFunctionCallType(FunctionCallTypeRef);
     }
@@ -109,22 +81,6 @@ void LILFunctionCall::receiveNodeData(const LILString &data)
     {
         this->setFunctionCallType(FunctionCallTypeReplaceFlag);
     }
-    else if (data == "print")
-    {
-        this->setFunctionCallType(FunctionCallTypePrint);
-    }
-    else if (data == "startTimer")
-    {
-        this->setFunctionCallType(FunctionCallTypeStartTimer);
-    }
-    else if (data == "stopTimer")
-    {
-        this->setFunctionCallType(FunctionCallTypeStopTimer);
-    }
-    else if (data == "toggleTimer")
-    {
-        this->setFunctionCallType(FunctionCallTypeToggleTimer);
-    }
 }
 
 
@@ -132,34 +88,6 @@ LILString LILFunctionCall::stringRep()
 {
     switch (this->getFunctionCallType())
     {
-        case FunctionCallTypeHas:
-        {
-            return "has";
-        }
-        case FunctionCallTypeAtLeast:
-        {
-            return "atLeast";
-        }
-        case FunctionCallTypeAtMost:
-        {
-            return "atMost";
-        }
-        case FunctionCallTypeClamp:
-        {
-            return "clamp";
-        }
-        case FunctionCallTypeFloor:
-        {
-            return "floor";
-        }
-        case FunctionCallTypeCeil:
-        {
-            return "ceil";
-        }
-        case FunctionCallTypeRound:
-        {
-            return "round";
-        }
         case FunctionCallTypeRef:
         {
             return "ref";
@@ -187,22 +115,6 @@ LILString LILFunctionCall::stringRep()
         case FunctionCallTypeReplaceFlag:
         {
             return "replaceFlag";
-        }
-        case FunctionCallTypePrint:
-        {
-            return "print";
-        }
-        case FunctionCallTypeStartTimer:
-        {
-            return "startTimer";
-        }
-        case FunctionCallTypeStopTimer:
-        {
-            return "stopTimer";
-        }
-        case FunctionCallTypeToggleTimer:
-        {
-            return "toggleTimer";
         }
 
         default:

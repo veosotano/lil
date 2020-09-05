@@ -150,13 +150,6 @@ namespace LIL
     enum FunctionCallType
     {
         FunctionCallTypeNone = 0,
-        FunctionCallTypeHas,
-        FunctionCallTypeAtLeast,
-        FunctionCallTypeAtMost,
-        FunctionCallTypeClamp,
-        FunctionCallTypeFloor,
-        FunctionCallTypeCeil,
-        FunctionCallTypeRound,
         FunctionCallTypeRef,
         FunctionCallTypeSel,
         FunctionCallTypeFlag,
@@ -164,10 +157,6 @@ namespace LIL
         FunctionCallTypeAddFlag,
         FunctionCallTypeTakeFlag,
         FunctionCallTypeReplaceFlag,
-        FunctionCallTypePrint,
-        FunctionCallTypeStartTimer,
-        FunctionCallTypeStopTimer,
-        FunctionCallTypeToggleTimer,
     };
 
     enum FunctionDeclType
