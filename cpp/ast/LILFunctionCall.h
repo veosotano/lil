@@ -30,12 +30,12 @@ namespace LIL
         std::shared_ptr<LILFunctionCall> clone() const;
         virtual ~LILFunctionCall();
 
-        virtual void receiveNodeData(const LILString &data);
+        void receiveNodeData(const LILString &data) override;
         
-        FunctionCallType getFunctionCallType() const;
+        FunctionCallType getFunctionCallType() const override;
         void setFunctionCallType(FunctionCallType newType);
-        bool isA(FunctionCallType otherType) const;
-        virtual LILString stringRep();
+        bool isA(FunctionCallType otherType) const override;
+        LILString stringRep() override;
         
         void addArgument(std::shared_ptr<LILNode> arg);
         void setArguments(std::vector<std::shared_ptr<LILNode>> args);
@@ -45,7 +45,7 @@ namespace LIL
         std::vector<std::shared_ptr<LILType>> getTypes() const;
         
     protected:
-        virtual std::shared_ptr<LILClonable> cloneImpl() const;
+        std::shared_ptr<LILClonable> cloneImpl() const override;
         
     private:
         FunctionCallType _functionCallType;
