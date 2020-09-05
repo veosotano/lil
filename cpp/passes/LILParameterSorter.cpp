@@ -391,8 +391,16 @@ void LILParameterSorter::_process(LILFunctionCall * value)
                             bool found = false;
                             for (auto callArg : callArgs) {
                                 if (!callArg->isA(NodeTypeAssignment)) {
-                                    std::cerr << "!!!!!!!!!!CALL ARG WAS NOT ASSIGNMENT FAIL!!!!!!!!!!!!!!!!\n";
-                                    return;
+                                    auto newAsgmt = std::make_shared<LILAssignment>();
+                                    auto newVp = std::make_shared<LILValuePath>();
+                                    auto newVn = std::make_shared<LILVarName>();
+                                    newVn->setName(declVd->getName());
+                                    newVp->addChild(newVn);
+                                    newAsgmt->setSubject(newVp);
+                                    newAsgmt->setValue(callArg);
+                                    newArgs.push_back(newAsgmt);
+                                    found = true;
+                                    break;
                                 }
                                 auto callAsgmt = std::static_pointer_cast<LILAssignment>(callArg);
                                 auto callArgFirstNode = callAsgmt->getNodes().front();
