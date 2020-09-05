@@ -867,6 +867,11 @@ llvm::Function * LILIREmitter::_emitFn(LILFunctionDecl * value)
 
     this->_emitFnBody(fun, value);
 
+    //clear args from local values
+    for (llvm::Value & arg : fun->args()) {
+        d->namedValues.erase(arg.getName());
+    }
+    //restore hidden locals
     const std::map<std::string, llvm::Value *> & hiddenLocals = d->hiddenLocals.back();
     for (auto it = hiddenLocals.begin(); it != hiddenLocals.end(); ++it) {
         d->namedValues[it->first] = it->second;
