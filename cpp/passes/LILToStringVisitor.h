@@ -25,6 +25,7 @@
 #include "LILFilter.h"
 #include "LILFlag.h"
 #include "LILFlowControl.h"
+#include "LILFlowControlCall.h"
 #include "LILFunctionCall.h"
 #include "LILFunctionDecl.h"
 #include "LILInstruction.h"
@@ -81,6 +82,7 @@ namespace LIL
         LILToStrInfo stringify(LILFunctionDecl value);
         LILToStrInfo stringify(LILFunctionCall value);
         LILToStrInfo stringify(LILFlowControl value);
+        LILToStrInfo stringify(LILFlowControlCall value);
         LILToStrInfo stringify(LILInstruction value);
         LILString stringForIndent(size_t indents, std::vector<size_t> moreItems);
         inline void stringifyChildren(const std::vector<std::shared_ptr<LILNode>> & children, LILToStrInfo & info);

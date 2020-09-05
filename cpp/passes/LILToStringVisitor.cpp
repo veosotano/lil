@@ -225,6 +225,12 @@ LILToStrInfo LILToStringVisitor::stringify(LILNode * node)
             info = this->stringify(*value);
             break;
         }
+        case NodeTypeFlowControlCall:
+        {
+            LILFlowControlCall * value = static_cast<LILFlowControlCall *>(node);
+            info = this->stringify(*value);
+            break;
+        }
         case NodeTypeInstruction:
         {
             LILInstruction * value = static_cast<LILInstruction *>(node);
@@ -563,6 +569,16 @@ LILToStrInfo LILToStringVisitor::stringify(LILFlowControl value)
         }
     }
     
+    return ret;
+}
+
+
+
+LILToStrInfo LILToStringVisitor::stringify(LILFlowControlCall value)
+{
+    LILToStrInfo ret;
+    ret.value = "Flow control call: "+value.stringRep();
+    this->stringifyChildren(value.getArguments(), ret);
     return ret;
 }
 

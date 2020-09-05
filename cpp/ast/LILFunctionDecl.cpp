@@ -155,7 +155,7 @@ void LILFunctionDecl::addEvaluable(std::shared_ptr<LILNode> evl)
     this->addNode(evl);
     this->_body.push_back(evl);
     
-    if (evl->isA(FunctionCallTypeReturn)) {
+    if (evl->isA(FlowControlCallTypeReturn)) {
         this->_hasReturn = true;
     }
 }
@@ -175,7 +175,7 @@ void LILFunctionDecl::prependEvaluable(std::shared_ptr<LILNode> evl)
         this->addNode(existing);
         this->_body.push_back(existing);
     }
-    if (evl->isA(FunctionCallTypeReturn)) {
+    if (evl->isA(FlowControlCallTypeReturn)) {
         this->_hasReturn = true;
     }
 }

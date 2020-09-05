@@ -27,6 +27,7 @@
 #include "LILFilter.h"
 #include "LILFlag.h"
 #include "LILFlowControl.h"
+#include "LILFlowControlCall.h"
 #include "LILFunctionCall.h"
 #include "LILFunctionDecl.h"
 #include "LILInstruction.h"
@@ -86,6 +87,7 @@ namespace LIL
         void validate(LILFunctionDecl value);
         void validate(LILFunctionCall value);
         void validate(LILFlowControl value);
+        void validate(LILFlowControlCall value);
         void validate(LILInstruction value);
         inline void validateChildren(const std::vector<std::shared_ptr<LILNode>> & children);
         

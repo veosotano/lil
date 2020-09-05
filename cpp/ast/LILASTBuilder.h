@@ -53,6 +53,7 @@ namespace LIL
         BuilderStateFunctionDecl,
         BuilderStateFunctionCall,
         BuilderStateFlowControl,
+        BuilderStateFlowControlCall,
     };
     class LILNode;
     class LILRootNode;

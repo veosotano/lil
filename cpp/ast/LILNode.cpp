@@ -145,6 +145,7 @@ bool LILNode::isContainerNode(NodeType nodeType)
         case NodeTypeFunctionCall:
         case NodeTypeFunctionDecl:
         case NodeTypeFlowControl:
+        case NodeTypeFlowControlCall:
         case NodeTypeSimpleSelector:
         case NodeTypeSelectorChain:
         case NodeTypeInstruction:
@@ -408,6 +409,16 @@ bool LILNode::isA(FlowControlType otherType) const
 FlowControlType LILNode::getFlowControlType() const
 {
     return FlowControlTypeNone;
+}
+
+bool LILNode::isA(FlowControlCallType otherType) const
+{
+    return false;
+}
+
+FlowControlCallType LILNode::getFlowControlCallType() const
+{
+    return FlowControlCallTypeNone;
 }
 
 bool LILNode::isA(TypeType otherType) const

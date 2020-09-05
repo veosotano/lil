@@ -191,6 +191,12 @@ void LILParameterSorter::process(LILNode * node)
             this->_process(value);
             break;
         }
+        case NodeTypeFlowControlCall:
+        {
+            LILFlowControlCall * value = static_cast<LILFlowControlCall *>(node);
+            this->_process(value);
+            break;
+        }
         case NodeTypeInstruction:
         {
             LILInstruction * value = static_cast<LILInstruction *>(node);
@@ -436,6 +442,11 @@ void LILParameterSorter::_process(LILFlowControl * value)
 {
     this->processChildren(value->getThen());
     this->processChildren(value->getElse());
+}
+
+void LILParameterSorter::_process(LILFlowControlCall * value)
+{
+    
 }
 
 void LILParameterSorter::_process(LILInstruction * value)

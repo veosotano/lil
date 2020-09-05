@@ -27,6 +27,7 @@
 #include "LILFilter.h"
 #include "LILFlag.h"
 #include "LILFlowControl.h"
+#include "LILFlowControlCall.h"
 #include "LILFunctionCall.h"
 #include "LILFunctionDecl.h"
 #include "LILInstruction.h"
@@ -108,9 +109,10 @@ namespace LIL
 
         llvm::Value * _emit(LILFunctionCall * value);
         llvm::Value * _emit(LILFunctionCall * value, LILString name);
-        llvm::Value * _emitReturn(LILFunctionCall * value);
         llvm::Value * _emit(LILFlowControl * value);
         llvm::Value * _emitIf(LILFlowControl * value);
+        llvm::Value * _emit(LILFlowControlCall * value);
+        llvm::Value * _emitReturn(LILFlowControlCall * value);
         llvm::Value * _emit(LILInstruction * value);
         
         llvm::Value * deref(LILNode * node);

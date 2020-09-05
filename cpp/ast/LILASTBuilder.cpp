@@ -25,6 +25,7 @@
 #include "LILFunctionDecl.h"
 #include "LILFunctionCall.h"
 #include "LILFlowControl.h"
+#include "LILFlowControlCall.h"
 #include "LILInstruction.h"
 #include "LILMultipleType.h"
 #include "LILNumberLiteral.h"
@@ -250,6 +251,12 @@ void LILASTBuilder::receiveNodeStart(NodeType nodeType)
             this->currentContainer.push_back(std::make_shared<LILFlowControl>());
             break;
         }
+        case NodeTypeFlowControlCall:
+        {
+            this->state.push_back(BuilderStateFlowControlCall);
+            this->currentContainer.push_back(std::make_shared<LILFlowControlCall>());
+            break;
+        }
         case NodeTypeNull:
         {
             this->state.push_back(BuilderStateNull);
@@ -349,8 +356,8 @@ void LILASTBuilder::receiveNodeCommit()
             } else {
                 auto mainFn = this->rootNode->getMainFn();
                 if (!mainFn->hasReturn()) {
-                    auto return0 = std::make_shared<LILFunctionCall>();
-                    return0->setFunctionCallType(FunctionCallTypeReturn);
+                    auto return0 = std::make_shared<LILFlowControlCall>();
+                    return0->setFlowControlCallType(FlowControlCallTypeReturn);
                     auto zeroConst = std::make_shared<LILNumberLiteral>();
                     zeroConst->setValue("0");
                     zeroConst->setType(LILType::make("i64"));
@@ -595,6 +602,12 @@ void LILASTBuilder::receiveNodeCommit()
             } else {
                 fc->addArgument(this->currentNode);
             }
+            break;
+        }
+        case BuilderStateFlowControlCall:
+        {
+            std::shared_ptr<LILFlowControlCall> fcc = std::static_pointer_cast<LILFlowControlCall>(this->currentContainer.back());
+            fcc->addArgument(this->currentNode);
             break;
         }
         default:

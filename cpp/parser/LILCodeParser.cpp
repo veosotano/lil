@@ -1028,7 +1028,19 @@ bool LILCodeParser::isBuiltinFunctionCall() const
         || value == "startTimer"
         || value == "stopTimer"
         || value == "toggleTimer"
-        || value == "return"
+        )
+    {
+        return true;
+    }
+
+    return false;
+}
+
+bool LILCodeParser::isFlowControlCall() const
+{
+    std::string value = d->currentToken->getString().data();
+    if (
+        value == "return"
         || value == "repeat"
         || value == "continue"
         || value == "break"
@@ -1036,7 +1048,7 @@ bool LILCodeParser::isBuiltinFunctionCall() const
     {
         return true;
     }
-
+    
     return false;
 }
 
@@ -1922,6 +1934,11 @@ bool LILCodeParser::readSingleValue(NodeType &nodeType)
         {
             nodeType = NodeTypeFlowControl;
             return this->readFlowControl();
+        }
+        else if (this->isFlowControlCall())
+        {
+            nodeType = NodeTypeFlowControlCall;
+            return this->readFlowControlCall();
         }
         else if (this->isFunctionCall(false))
         {
@@ -3676,7 +3693,22 @@ bool LILCodeParser::readEvaluables()
                     if (fcValid) {
                         d->receiver->receiveNodeCommit();
                     } else {
-                        d->receiver->receiveError(LILString::format("Error while reading function on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
+                        d->receiver->receiveError(LILString::format("Error while reading flow control on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
+                    }
+                    if (this->atEndOfSource())
+                        return ret;
+                    this->skip(TokenTypeWhitespace);
+                    if (this->atEndOfSource())
+                        return ret;
+                    evalsDone = false;
+                }
+                if (this->isFlowControlCall())
+                {
+                    bool fccValid = this->readFlowControlCall();
+                    if (fccValid) {
+                        d->receiver->receiveNodeCommit();
+                    } else {
+                        d->receiver->receiveError(LILString::format("Error while reading flow control call on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
                     }
                     if (this->atEndOfSource())
                         return ret;
@@ -3920,22 +3952,6 @@ bool LILCodeParser::readFunctionCall()
         else if (name == "sel")
         {
             this->readSelFunction();
-        }
-        else if (name == "return")
-        {
-            this->readReturnFunction();
-        }
-        else if (name == "repeat")
-        {
-            this->readRepeatFunction();
-        }
-        else if (name == "break")
-        {
-            this->readBreakFunction();
-        }
-        else if (name == "continue")
-        {
-            this->readContinueFunction();
         }
         // <fnName>(arg1, arg2, argN, ...)
         else
@@ -4194,93 +4210,6 @@ bool LILCodeParser::readNameAndSelectorFunctionCall()
         if (atEndOfSource())
             return false;
     }
-
-    LIL_END_NODE_SKIP(false)
-}
-
-bool LILCodeParser::readReturnFunction()
-{
-    LIL_START_NODE(NodeTypeFunctionCall)
-    LIL_EXPECT(TokenTypeIdentifier, "identifier")
-    if (d->currentToken->getString() != "return"){
-        LIL_CANCEL_NODE
-    }
-    d->receiver->receiveNodeData(ParserEventFunction, d->currentToken->getString());
-    this->readNextToken();
-    LIL_CHECK_FOR_END
-
-    //parentheses are optional
-    bool needsClosingParenthesis = false;
-    if (d->currentToken->isA(TokenTypeParenthesisOpen))
-    {
-        needsClosingParenthesis = true;
-        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
-        this->readNextToken();
-        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-    }
-    else if (d->currentToken->isA(TokenTypeSemicolon))
-    {
-        LIL_END_NODE
-    }
-    else if (d->currentToken->isA(TokenTypeWhitespace))
-    {
-        this->skip(TokenTypeWhitespace);
-        LIL_CHECK_FOR_END
-    }
-
-    //read the return value
-    //readVals auto commits
-    this->readVals();
-
-    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-
-    if (needsClosingParenthesis)
-    {
-        LIL_EXPECT(TokenTypeParenthesisClose, "closing parenthesis")
-        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
-        this->readNextToken();
-    }
-    LIL_END_NODE_SKIP(false)
-}
-
-bool LILCodeParser::readRepeatFunction()
-{
-    LIL_START_NODE(NodeTypeFunctionCall)
-    LIL_EXPECT(TokenTypeIdentifier, "identifier")
-    if (d->currentToken->getString() != "repeat"){
-        LIL_CANCEL_NODE
-    }
-    d->receiver->receiveNodeData(ParserEventFunction, d->currentToken->getString());
-    this->readNextToken();
-    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-
-    LIL_END_NODE_SKIP(false)
-}
-
-bool LILCodeParser::readBreakFunction()
-{
-    LIL_START_NODE(NodeTypeFunctionCall)
-    LIL_EXPECT(TokenTypeIdentifier, "identifier")
-    if (d->currentToken->getString() != "break"){
-        LIL_CANCEL_NODE
-    }
-    d->receiver->receiveNodeData(ParserEventFunction, d->currentToken->getString());
-    this->readNextToken();
-    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-
-    LIL_END_NODE_SKIP(false)
-}
-
-bool LILCodeParser::readContinueFunction()
-{
-    LIL_START_NODE(NodeTypeFunctionCall)
-    LIL_EXPECT(TokenTypeIdentifier, "identifier")
-    if (d->currentToken->getString() != "continue"){
-        LIL_CANCEL_NODE
-    }
-    d->receiver->receiveNodeData(ParserEventFunction, d->currentToken->getString());
-    this->readNextToken();
-    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
 
     LIL_END_NODE_SKIP(false)
 }
@@ -4943,3 +4872,125 @@ bool LILCodeParser::readFinallyFlowControl()
     LIL_END_NODE_SKIP(false)
 }
 
+bool LILCodeParser::readFlowControlCall()
+{
+    bool valid = true;
+    if (d->currentToken->isA(TokenTypeIdentifier))
+    {
+        LILString name = d->currentToken->getString();
+
+        if (name == "return")
+        {
+            this->readReturnFlowControlCall();
+        }
+        else if (name == "repeat")
+        {
+            this->readRepeatFlowControlCall();
+        }
+        else if (name == "break")
+        {
+            this->readBreakFlowControlCall();
+        }
+        else if (name == "continue")
+        {
+            this->readContinueFlowControlCall();
+        }
+        else
+        {
+            valid = false;
+        }
+    }
+    else
+    {
+        valid = false;
+    }
+
+    return valid;
+}
+
+bool LILCodeParser::readReturnFlowControlCall()
+{
+    LIL_START_NODE(NodeTypeFlowControlCall)
+    LIL_EXPECT(TokenTypeIdentifier, "identifier")
+    if (d->currentToken->getString() != "return"){
+        LIL_CANCEL_NODE
+    }
+    d->receiver->receiveNodeData(ParserEventFunction, d->currentToken->getString());
+    this->readNextToken();
+    LIL_CHECK_FOR_END
+
+    //parentheses are optional
+    bool needsClosingParenthesis = false;
+    if (d->currentToken->isA(TokenTypeParenthesisOpen))
+    {
+        needsClosingParenthesis = true;
+        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+        this->readNextToken();
+        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+    }
+    else if (d->currentToken->isA(TokenTypeSemicolon))
+    {
+        LIL_END_NODE
+    }
+    else if (d->currentToken->isA(TokenTypeWhitespace))
+    {
+        this->skip(TokenTypeWhitespace);
+        LIL_CHECK_FOR_END
+    }
+
+    //read the return value
+    //readVals auto commits
+    this->readVals();
+
+    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+
+    if (needsClosingParenthesis)
+    {
+        LIL_EXPECT(TokenTypeParenthesisClose, "closing parenthesis")
+        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+        this->readNextToken();
+    }
+    LIL_END_NODE_SKIP(false)
+}
+
+bool LILCodeParser::readRepeatFlowControlCall()
+{
+    LIL_START_NODE(NodeTypeFlowControlCall)
+    LIL_EXPECT(TokenTypeIdentifier, "identifier")
+    if (d->currentToken->getString() != "repeat"){
+        LIL_CANCEL_NODE
+    }
+    d->receiver->receiveNodeData(ParserEventFunction, d->currentToken->getString());
+    this->readNextToken();
+    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+
+    LIL_END_NODE_SKIP(false)
+}
+
+bool LILCodeParser::readBreakFlowControlCall()
+{
+    LIL_START_NODE(NodeTypeFlowControlCall)
+    LIL_EXPECT(TokenTypeIdentifier, "identifier")
+    if (d->currentToken->getString() != "break"){
+        LIL_CANCEL_NODE
+    }
+    d->receiver->receiveNodeData(ParserEventFunction, d->currentToken->getString());
+    this->readNextToken();
+    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+
+    LIL_END_NODE_SKIP(false)
+}
+
+bool LILCodeParser::readContinueFlowControlCall()
+{
+    LIL_START_NODE(NodeTypeFlowControlCall)
+    LIL_EXPECT(TokenTypeIdentifier, "identifier")
+    if (d->currentToken->getString() != "continue"){
+        LIL_CANCEL_NODE
+    }
+    d->receiver->receiveNodeData(ParserEventFunction, d->currentToken->getString());
+    this->readNextToken();
+    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+
+    LIL_END_NODE_SKIP(false)
+}

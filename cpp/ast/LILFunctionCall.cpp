@@ -125,22 +125,6 @@ void LILFunctionCall::receiveNodeData(const LILString &data)
     {
         this->setFunctionCallType(FunctionCallTypeToggleTimer);
     }
-    else if (data == "return")
-    {
-        this->setFunctionCallType(FunctionCallTypeReturn);
-    }
-    else if (data == "repeat")
-    {
-        this->setFunctionCallType(FunctionCallTypeRepeat);
-    }
-    else if (data == "continue")
-    {
-        this->setFunctionCallType(FunctionCallTypeContinue);
-    }
-    else if (data == "break")
-    {
-        this->setFunctionCallType(FunctionCallTypeBreak);
-    }
 }
 
 
@@ -219,22 +203,6 @@ LILString LILFunctionCall::stringRep()
         case FunctionCallTypeToggleTimer:
         {
             return "toggleTimer";
-        }
-        case FunctionCallTypeReturn:
-        {
-            return "return";
-        }
-        case FunctionCallTypeRepeat:
-        {
-            return "repeat";
-        }
-        case FunctionCallTypeContinue:
-        {
-            return "continue";
-        }
-        case FunctionCallTypeBreak:
-        {
-            return "break";
         }
 
         default:

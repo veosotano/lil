@@ -210,6 +210,12 @@ void LILASTValidator::validate(LILNode * node)
             this->validate(*value);
             break;
         }
+        case NodeTypeFlowControlCall:
+        {
+            LILFlowControlCall * value = static_cast<LILFlowControlCall *>(node);
+            this->validate(*value);
+            break;
+        }
         case NodeTypeInstruction:
         {
             LILInstruction * value = static_cast<LILInstruction *>(node);
@@ -414,6 +420,7 @@ void LILASTValidator::validate(LILFunctionDecl value)
                     case NodeTypeVarDecl:
                     case NodeTypeAssignment:
                     case NodeTypeUnaryExpression:
+                    case NodeTypeFlowControlCall:
                     {
                         break;
                     }
@@ -484,6 +491,11 @@ void LILASTValidator::validate(LILFunctionCall value)
 }
 
 void LILASTValidator::validate(LILFlowControl value)
+{
+    
+}
+
+void LILASTValidator::validate(LILFlowControlCall value)
 {
     
 }

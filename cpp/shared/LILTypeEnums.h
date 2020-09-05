@@ -104,6 +104,7 @@ namespace LIL
         NodeTypeFunctionDecl,
         NodeTypeFunctionCall,
         NodeTypeFlowControl,
+        NodeTypeFlowControlCall,
         NodeTypeArgument,
         NodeTypeArray,
         NodeTypeIndexAccessor,
@@ -167,10 +168,6 @@ namespace LIL
         FunctionCallTypeStartTimer,
         FunctionCallTypeStopTimer,
         FunctionCallTypeToggleTimer,
-        FunctionCallTypeReturn,
-        FunctionCallTypeRepeat,
-        FunctionCallTypeContinue,
-        FunctionCallTypeBreak,
     };
 
     enum FunctionDeclType
@@ -194,6 +191,15 @@ namespace LIL
         FlowControlTypeLoop,
         FlowControlTypeFor,
         FlowControlTypeFinally,
+    };
+
+    enum FlowControlCallType
+    {
+        FlowControlCallTypeNone = 0,
+        FlowControlCallTypeReturn,
+        FlowControlCallTypeRepeat,
+        FlowControlCallTypeContinue,
+        FlowControlCallTypeBreak,
     };
 
     enum InstructionType

@@ -242,6 +242,11 @@ llvm::Value * LILIREmitter::emit(LILNode * node)
             LILFlowControl * value = static_cast<LILFlowControl *>(node);
             return this->_emit(value);
         }
+        case NodeTypeFlowControlCall:
+        {
+            LILFlowControlCall * value = static_cast<LILFlowControlCall *>(node);
+            return this->_emit(value);
+        }
         case NodeTypeInstruction:
         {
             LILInstruction * value = static_cast<LILInstruction *>(node);
@@ -875,7 +880,7 @@ llvm::Function * LILIREmitter::_emitFnBody(llvm::Function * fun, LILFunctionDecl
     }
     for (auto & node : body) {
         bool breakAfter = false;
-        if (node->isA(FunctionCallTypeReturn)) {
+        if (node->isA(FlowControlCallTypeReturn)) {
             breakAfter = true;;
         }
 
@@ -1051,10 +1056,6 @@ llvm::Value * LILIREmitter::_emit(LILFunctionCall * value)
             std::cerr << "fcalltype none\n";
             break;
         }
-        case FunctionCallTypeReturn:
-        {
-            return this->_emitReturn(value);
-        }
         case FunctionCallTypePrint:
         {
 
@@ -1064,20 +1065,6 @@ llvm::Value * LILIREmitter::_emit(LILFunctionCall * value)
 
     return nullptr;
 
-}
-
-llvm::Value * LILIREmitter::_emitReturn(LILFunctionCall * value)
-{
-    if (value->getArguments().size() > 0) {
-        llvm::Value * retVal = this->deref(value->getArguments().front().get());
-        if (retVal) {
-            llvm::Value * theReturn = d->irBuilder.CreateStore(retVal, d->returnAlloca);
-            d->needsReturnValue = true;
-
-            return theReturn;
-        }
-    }
-    return nullptr;
 }
 
 llvm::Value * LILIREmitter::_emit(LILFunctionCall * value, LILString name)
@@ -1187,7 +1174,7 @@ llvm::Value * LILIREmitter::_emitIf(LILFlowControl * value)
 
     for (auto & node : value->getThen()) {
         bool breakAfter = false;
-        if (node->isA(FunctionCallTypeReturn)) {
+        if (node->isA(FlowControlCallTypeReturn)) {
             breakAfter = true;;
         }
         this->emit(node.get());
@@ -1203,7 +1190,7 @@ llvm::Value * LILIREmitter::_emitIf(LILFlowControl * value)
 
     for (auto & node : value->getElse()) {
         bool breakAfter = false;
-        if (node->isA(FunctionCallTypeReturn)) {
+        if (node->isA(FlowControlCallTypeReturn)) {
             breakAfter = true;;
         }
         this->emit(node.get());
@@ -1216,6 +1203,37 @@ llvm::Value * LILIREmitter::_emitIf(LILFlowControl * value)
 
     fun->getBasicBlockList().push_back(mergeBB);
     d->irBuilder.SetInsertPoint(mergeBB);
+    return nullptr;
+}
+
+llvm::Value * LILIREmitter::_emit(LILFlowControlCall * value)
+{
+    switch (value->getFlowControlCallType()) {
+        case FlowControlCallTypeReturn:
+        {
+            return this->_emitReturn(value);
+        }
+        default:
+        {
+            std::cerr << "!!!!!!!!!! UNKNOWN FLOW CONTROL CALL TYPE!!!!!!!!!!!!!!!!\n";
+            return nullptr;
+        }
+    }
+
+    return nullptr;
+}
+
+llvm::Value * LILIREmitter::_emitReturn(LILFlowControlCall * value)
+{
+    if (value->getArguments().size() > 0) {
+        llvm::Value * retVal = this->emit(value->getArguments().front().get());
+        if (retVal) {
+            llvm::Value * theReturn = d->irBuilder.CreateStore(retVal, d->returnAlloca);
+            d->needsReturnValue = true;
+
+            return theReturn;
+        }
+    }
     return nullptr;
 }
 

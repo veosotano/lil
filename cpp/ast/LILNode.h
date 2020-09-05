@@ -88,6 +88,8 @@ namespace LIL {
         virtual FunctionCallType getFunctionCallType() const;
         virtual bool isA(FlowControlType otherType) const;
         virtual FlowControlType getFlowControlType() const;
+        virtual bool isA(FlowControlCallType otherType) const;
+        virtual FlowControlCallType getFlowControlCallType() const;
         virtual bool isA(TypeType otherType) const;
         virtual TypeType getTypeType() const;
 

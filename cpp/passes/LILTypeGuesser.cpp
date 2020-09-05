@@ -203,6 +203,12 @@ void LILTypeGuesser::process(LILNode * node)
             this->_process(value);
             break;
         }
+        case NodeTypeFlowControlCall:
+        {
+            LILFlowControlCall * value = static_cast<LILFlowControlCall *>(node);
+            this->_process(value);
+            break;
+        }
         case NodeTypeInstruction:
         {
             LILInstruction * value = static_cast<LILInstruction *>(node);
@@ -430,6 +436,26 @@ void LILTypeGuesser::_process(LILFlowControl * value)
 
 }
 
+void LILTypeGuesser::_process(LILFlowControlCall * value)
+{
+    std::vector<std::shared_ptr<LILType>> newTypes;
+    for (auto arg : value->getArguments()) {
+        auto ty = this->getNodeType(arg);
+        if (ty) {
+            if (ty->isA(TypeTypeFunction)) {
+                auto returnTy = std::static_pointer_cast<LILFunctionType>(ty)->getReturnType();
+                if (returnTy) {
+                    newTypes.push_back(returnTy);
+                }
+            } else {
+                newTypes.push_back(ty);
+            }
+            
+        }
+    }
+    value->setTypes(std::move(newTypes));
+}
+
 void LILTypeGuesser::_process(LILInstruction * value)
 {
 }
@@ -517,7 +543,12 @@ std::shared_ptr<LILType> LILTypeGuesser::recursiveFindTypeFromAncestors(std::sha
                         return nullptr;
                     }
                 }
-                else if (fc->getFunctionCallType() == FunctionCallTypeReturn)
+            }
+                
+            case NodeTypeFlowControlCall:
+            {
+                std::shared_ptr<LILFlowControlCall> fc = std::static_pointer_cast<LILFlowControlCall>(parent);
+                if (fc->getFlowControlCallType() == FlowControlCallTypeReturn)
                 {
                     auto fun = this->recursiveFindFunctionDecl(fc);
                     if(fun){
@@ -525,7 +556,7 @@ std::shared_ptr<LILType> LILTypeGuesser::recursiveFindTypeFromAncestors(std::sha
                         if (funTy) {
                             return funTy->getReturnType();
                         }
-
+                        
                     } else {
                         std::cerr << "Error: return call has no parent function declaration?\n";
                     }
@@ -537,6 +568,7 @@ std::shared_ptr<LILType> LILTypeGuesser::recursiveFindTypeFromAncestors(std::sha
                         return parentTy;
                     }
                 }
+                break;
             }
                 
             case NodeTypeAssignment:
@@ -869,10 +901,10 @@ std::shared_ptr<LILType> LILTypeGuesser::getFnType(std::shared_ptr<LILFunctionDe
 void LILTypeGuesser::recursiveFindReturnTypes(std::vector<std::shared_ptr<LILType>> & returnTypes, std::shared_ptr<LILNode> eval) const
 {
     switch (eval->getNodeType()) {
-        case NodeTypeFunctionCall:
+        case NodeTypeFlowControlCall:
         {
             std::shared_ptr<LILFunctionCall> fc = std::static_pointer_cast<LILFunctionCall>(eval);
-            if (fc->getFunctionCallType() == FunctionCallTypeReturn) {
+            if (fc->getFlowControlCallType() == FlowControlCallTypeReturn) {
                 auto args = fc->getArguments();
                 for (auto it = args.rbegin(); it != args.rend(); ++it) {
                     auto arg = *it;

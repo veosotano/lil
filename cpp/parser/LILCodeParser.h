@@ -59,6 +59,7 @@ namespace LIL
         bool isIndexAccessor() const;
         bool isFunctionCall(bool isPastIdentifier) const;
         bool isBuiltinFunctionCall() const;
+        bool isFlowControlCall() const;
         bool isFunctionDecl() const;
         bool isFlowControl() const;
         bool isIfIs() const;
@@ -120,10 +121,6 @@ namespace LIL
         bool readFunctionCallSimple();
         bool readStandardFunctionCall();
         bool readNameAndSelectorFunctionCall();
-        bool readReturnFunction();
-        bool readRepeatFunction();
-        bool readBreakFunction();
-        bool readContinueFunction();
         bool readSelFunction();
         bool readFlagFunction();
 
@@ -135,6 +132,12 @@ namespace LIL
         bool readLoopFlowControl();
         bool readForFlowControl();
         bool readFinallyFlowControl();
+
+        bool readFlowControlCall();
+        bool readReturnFlowControlCall();
+        bool readRepeatFlowControlCall();
+        bool readBreakFlowControlCall();
+        bool readContinueFlowControlCall();
 
     private:
         LILCodeParserPrivate *const d;
