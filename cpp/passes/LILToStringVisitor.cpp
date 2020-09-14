@@ -393,7 +393,12 @@ LILToStrInfo LILToStringVisitor::stringify(LILObjectDefinition value)
 LILToStrInfo LILToStringVisitor::stringify(LILAssignment value)
 {
     LILToStrInfo ret;
-    ret.value = "Assignment: ";
+    auto ty = value.getType();
+    if (ty) {
+        ret.value = "Assignment (" + ty->stringRep() + "): ";
+    } else {
+        ret.value = "Assignment: ";
+    }
     LILToStrInfo subjInfo;
     subjInfo.value = "Subject:";
     subjInfo.children.push_back(this->stringify(value.getSubject().get()));
