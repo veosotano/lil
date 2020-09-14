@@ -114,22 +114,14 @@ bool LILFlowControlCall::isA(FlowControlCallType otherType) const
     return this->_flowControlCallType == otherType;
 }
 
-void LILFlowControlCall::addArgument(std::shared_ptr<LILNode> arg)
+void LILFlowControlCall::setArgument(std::shared_ptr<LILNode> arg)
 {
     this->addNode(arg);
 }
 
-void LILFlowControlCall::setArguments(std::vector<std::shared_ptr<LILNode>> args)
+std::shared_ptr<LILNode> LILFlowControlCall::getArgument() const
 {
-    this->clearChildNodes();
-    for (auto arg : args) {
-        this->addArgument(arg);
-    }
-}
-
-std::vector<std::shared_ptr<LILNode>> LILFlowControlCall::getArguments() const
-{
-    return this->getChildNodes();
+    return this->getChildNodes().front();
 }
 
 void LILFlowControlCall::setTypes(std::vector<std::shared_ptr<LILType>> types)

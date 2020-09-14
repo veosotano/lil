@@ -578,7 +578,9 @@ LILToStrInfo LILToStringVisitor::stringify(LILFlowControlCall value)
 {
     LILToStrInfo ret;
     ret.value = "Flow control call: "+value.stringRep();
-    this->stringifyChildren(value.getArguments(), ret);
+    if (value.isA(FlowControlCallTypeReturn)) {
+        ret.children.push_back(this->stringify(value.getArgument().get()));
+    }
     return ret;
 }
 

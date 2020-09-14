@@ -1241,8 +1241,9 @@ llvm::Value * LILIREmitter::_emit(LILFlowControlCall * value)
 
 llvm::Value * LILIREmitter::_emitReturn(LILFlowControlCall * value)
 {
-    if (value->getArguments().size() > 0) {
-        llvm::Value * retVal = this->emit(value->getArguments().front().get());
+    auto arg = value->getArgument();
+    if (arg) {
+        llvm::Value * retVal = this->emit(arg.get());
         if (retVal) {
             llvm::Value * theReturn = d->irBuilder.CreateStore(retVal, d->returnAlloca);
             d->needsReturnValue = true;

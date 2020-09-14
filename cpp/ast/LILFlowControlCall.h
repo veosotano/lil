@@ -37,12 +37,10 @@ namespace LIL
         bool isA(FlowControlCallType otherType) const override;
         LILString stringRep() override;
         
-        void addArgument(std::shared_ptr<LILNode> arg);
-        void setArguments(std::vector<std::shared_ptr<LILNode>> args);
-        std::vector<std::shared_ptr<LILNode>> getArguments() const;
-        
         void setTypes(std::vector<std::shared_ptr<LILType>> types);
         std::vector<std::shared_ptr<LILType>> getTypes() const;
+        void setArgument(std::shared_ptr<LILNode> arg);
+        std::shared_ptr<LILNode> getArgument() const;
         
     protected:
         std::shared_ptr<LILClonable> cloneImpl() const override;

@@ -361,7 +361,7 @@ void LILASTBuilder::receiveNodeCommit()
                     auto zeroConst = std::make_shared<LILNumberLiteral>();
                     zeroConst->setValue("0");
                     zeroConst->setType(LILType::make("i64"));
-                    return0->addArgument(zeroConst);
+                    return0->setArgument(zeroConst);
                     mainFn->addEvaluable(return0);
                 }
                 this->rootNode->addNode(mainFn);
@@ -607,7 +607,7 @@ void LILASTBuilder::receiveNodeCommit()
         case BuilderStateFlowControlCall:
         {
             std::shared_ptr<LILFlowControlCall> fcc = std::static_pointer_cast<LILFlowControlCall>(this->currentContainer.back());
-            fcc->addArgument(this->currentNode);
+            fcc->setArgument(this->currentNode);
             break;
         }
         default:
