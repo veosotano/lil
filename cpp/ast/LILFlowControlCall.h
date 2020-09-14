@@ -37,8 +37,6 @@ namespace LIL
         bool isA(FlowControlCallType otherType) const override;
         LILString stringRep() override;
         
-        void setTypes(std::vector<std::shared_ptr<LILType>> types);
-        std::vector<std::shared_ptr<LILType>> getTypes() const;
         void setArgument(std::shared_ptr<LILNode> arg);
         std::shared_ptr<LILNode> getArgument() const;
         
@@ -47,7 +45,6 @@ namespace LIL
         
     private:
         FlowControlCallType _flowControlCallType;
-        std::vector<std::shared_ptr<LILType>> _types;
     };
 }
 

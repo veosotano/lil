@@ -27,7 +27,6 @@ LILFlowControlCall::LILFlowControlCall(const LILFlowControlCall &other)
 : LILNode(other)
 {
     this->_flowControlCallType = other._flowControlCallType;
-    this->_types = other._types;
 }
 
 std::shared_ptr<LILFlowControlCall> LILFlowControlCall::clone() const
@@ -38,11 +37,6 @@ std::shared_ptr<LILFlowControlCall> LILFlowControlCall::clone() const
 std::shared_ptr<LILClonable> LILFlowControlCall::cloneImpl() const
 {
     std::shared_ptr<LILFlowControlCall> clone(new LILFlowControlCall(*this));
-    clone->_types.clear();
-    for (auto ty : this->_types) {
-        clone->_types.push_back(ty->clone());
-    }
-    
     return clone;
 }
 
@@ -122,9 +116,4 @@ void LILFlowControlCall::setArgument(std::shared_ptr<LILNode> arg)
 std::shared_ptr<LILNode> LILFlowControlCall::getArgument() const
 {
     return this->getChildNodes().front();
-}
-
-void LILFlowControlCall::setTypes(std::vector<std::shared_ptr<LILType>> types)
-{
-    this->_types = std::move(types);
 }
