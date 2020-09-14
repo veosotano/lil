@@ -15,11 +15,11 @@
 #ifndef LILASSIGNMENT_H
 #define LILASSIGNMENT_H
 
-#include "LILNode.h"
+#include "LILTypedNode.h"
 
 namespace LIL
 {
-    class LILAssignment : public LILNode
+    class LILAssignment : public LILTypedNode
     {
     public:
         LILAssignment();

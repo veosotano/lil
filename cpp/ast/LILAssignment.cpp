@@ -17,13 +17,13 @@
 using namespace LIL;
 
 LILAssignment::LILAssignment()
-: LIL::LILNode(NodeTypeAssignment)
+: LILTypedNode(NodeTypeAssignment)
 {
     
 }
 
 LILAssignment::LILAssignment(const LILAssignment &other)
-: LILNode(other)
+: LILTypedNode(other)
 {
     this->_subject = other._subject;
     this->_value = other._value;
@@ -39,6 +39,12 @@ std::shared_ptr<LILClonable> LILAssignment::cloneImpl() const
     std::shared_ptr<LILAssignment> clone(new LILAssignment(*this));
     clone->_subject = this->_subject->clone();
     clone->_value = this->_value->clone();
+
+    //clone LILTypedNode
+    if (this->_type) {
+        clone->setType(this->_type->clone());
+    }
+
     return clone;
 }
 
