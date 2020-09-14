@@ -150,6 +150,8 @@ namespace LIL
     enum FunctionCallType
     {
         FunctionCallTypeNone = 0,
+        //when used inside a value path:
+        FunctionCallTypeValuePath,
         FunctionCallTypeRef,
         FunctionCallTypeSel,
         FunctionCallTypeFlag,

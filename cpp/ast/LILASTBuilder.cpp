@@ -460,6 +460,10 @@ void LILASTBuilder::receiveNodeCommit()
         case BuilderStateValuePath:
         {
             std::shared_ptr<LILValuePath> vp = std::static_pointer_cast<LILValuePath>(this->currentContainer.back());
+            if (this->currentNode->isA(NodeTypeFunctionCall)) {
+                auto fc = std::static_pointer_cast<LILFunctionCall>(this->currentNode);
+                fc->setFunctionCallType(FunctionCallTypeValuePath);
+            }
             vp->addChild(this->currentNode);
             break;
         }

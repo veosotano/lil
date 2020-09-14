@@ -388,12 +388,8 @@ void LILNameLowerer::_process(LILFunctionDecl * value)
 
 void LILNameLowerer::_process(LILFunctionCall * value)
 {
-    if (value->getFunctionCallType() == FunctionCallTypeNone) {
-        auto parent = value->getParentNode();
-        if (!parent || !parent->isA(NodeTypeValuePath)) {
-            return;
-        }
-        auto vp = std::static_pointer_cast<LILValuePath>(parent);
+    if (value->getFunctionCallType() == FunctionCallTypeValuePath) {
+        auto vp = std::static_pointer_cast<LILValuePath>(value->getParentNode());
         auto firstNode = vp->getNodes().front();
         if (firstNode && firstNode->isA(NodeTypeVarName)) {
             auto vn = std::static_pointer_cast<LILVarName>(firstNode);

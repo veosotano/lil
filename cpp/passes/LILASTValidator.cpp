@@ -463,7 +463,7 @@ void LILASTValidator::validate(LILFunctionDecl value)
 void LILASTValidator::validate(LILFunctionCall value)
 {
     switch (value.getFunctionCallType()) {
-        case FunctionCallTypeNone:
+        case FunctionCallTypeValuePath:
         {
             auto grandpa = value.getParentNode();
             if (grandpa && grandpa->isA(NodeTypeValuePath)) {

@@ -323,7 +323,7 @@ void LILParameterSorter::_process(LILFunctionDecl * value)
 
 void LILParameterSorter::_process(LILFunctionCall * value)
 {
-    if (value->getFunctionCallType() != FunctionCallTypeNone) {
+    if (value->getFunctionCallType() != FunctionCallTypeValuePath) {
         return;
     }
     

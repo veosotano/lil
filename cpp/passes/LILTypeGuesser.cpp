@@ -480,7 +480,7 @@ std::shared_ptr<LILType> LILTypeGuesser::recursiveFindTypeFromAncestors(std::sha
             case NodeTypeFunctionCall:
             {
                 std::shared_ptr<LILFunctionCall> fc = std::static_pointer_cast<LILFunctionCall>(parent);
-                if (fc->getFunctionCallType() == FunctionCallTypeNone) {
+                if (fc->getFunctionCallType() == FunctionCallTypeValuePath) {
                     //get value path
                     auto grandpa = fc->getParentNode();
                     if (grandpa && grandpa->isA(NodeTypeValuePath)) {
