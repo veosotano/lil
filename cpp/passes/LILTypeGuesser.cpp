@@ -428,7 +428,7 @@ void LILTypeGuesser::_process(LILFunctionCall * value)
 
         }
     }
-    value->setTypes(std::move(newTypes));
+    value->setArgumentTypes(newTypes);
 }
 
 void LILTypeGuesser::_process(LILFlowControl * value)

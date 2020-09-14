@@ -651,7 +651,7 @@ llvm::Value * LILIREmitter::_emit(LILValuePath * value)
                         return this->_emit(fc.get(), vd->getName());
                     }
 
-                    auto fcTypes = fc->getTypes();
+                    auto fcTypes = fc->getArgumentTypes();
                     std::shared_ptr<LILFunctionDecl> targetFn;
                     if (vd->getInitVals().size() > 1 && fcTypes.size() > 0) {
                         targetFn = this->chooseFnByType(vd, fcTypes);

@@ -27,7 +27,7 @@ LILFunctionCall::LILFunctionCall(const LILFunctionCall &other)
 : LILNode(other)
 {
     this->_functionCallType = other._functionCallType;
-    this->_types = other._types;
+    this->_argumentTypes = other._argumentTypes;
 }
 
 std::shared_ptr<LILFunctionCall> LILFunctionCall::clone() const
@@ -38,9 +38,9 @@ std::shared_ptr<LILFunctionCall> LILFunctionCall::clone() const
 std::shared_ptr<LILClonable> LILFunctionCall::cloneImpl() const
 {
     std::shared_ptr<LILFunctionCall> clone(new LILFunctionCall(*this));
-    clone->_types.clear();
-    for (auto ty : this->_types) {
-        clone->_types.push_back(ty->clone());
+    clone->_argumentTypes.clear();
+    for (auto ty : this->_argumentTypes) {
+        clone->_argumentTypes.push_back(ty->clone());
     }
     
     return clone;
@@ -172,12 +172,12 @@ std::vector<std::shared_ptr<LILNode>> LILFunctionCall::getArguments() const
     return this->getChildNodes();
 }
 
-void LILFunctionCall::setTypes(std::vector<std::shared_ptr<LILType>> types)
+void LILFunctionCall::setArgumentTypes(std::vector<std::shared_ptr<LILType>> types)
 {
-    this->_types = std::move(types);
+    this->_argumentTypes = types;
 }
 
-std::vector<std::shared_ptr<LILType>> LILFunctionCall::getTypes() const
+std::vector<std::shared_ptr<LILType>> LILFunctionCall::getArgumentTypes() const
 {
-    return this->_types;
+    return this->_argumentTypes;
 }

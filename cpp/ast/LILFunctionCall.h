@@ -41,15 +41,15 @@ namespace LIL
         void setArguments(std::vector<std::shared_ptr<LILNode>> args);
         std::vector<std::shared_ptr<LILNode>> getArguments() const;
         
-        void setTypes(std::vector<std::shared_ptr<LILType>> types);
-        std::vector<std::shared_ptr<LILType>> getTypes() const;
+        void setArgumentTypes(std::vector<std::shared_ptr<LILType>> types);
+        std::vector<std::shared_ptr<LILType>> getArgumentTypes() const;
         
     protected:
         std::shared_ptr<LILClonable> cloneImpl() const override;
         
     private:
         FunctionCallType _functionCallType;
-        std::vector<std::shared_ptr<LILType>> _types;
+        std::vector<std::shared_ptr<LILType>> _argumentTypes;
     };
 }
 
