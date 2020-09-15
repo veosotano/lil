@@ -319,15 +319,17 @@ void LILStructureLowerer::_process(std::shared_ptr<LILClassDecl> value)
 
 void LILStructureLowerer::_process(std::shared_ptr<LILObjectDefinition> value)
 {
-
+    this->processChildren(value->getNodes());
 }
 
 void LILStructureLowerer::_process(std::shared_ptr<LILAssignment> value)
 {
+    this->processChildren(value->getNodes());
 }
 
 void LILStructureLowerer::_process(std::shared_ptr<LILValuePath> value)
 {
+    this->processChildren(value->getNodes());
 }
 
 void LILStructureLowerer::_process(std::shared_ptr<LILPropertyName> value)
@@ -428,6 +430,8 @@ void LILStructureLowerer::_process(std::shared_ptr<LILFunctionDecl> value)
         default:
             break;
     }
+    
+    this->processChildren(value->getBody());
 }
 std::vector<std::shared_ptr<LILNode>> LILStructureLowerer::reduceIfIsBlocks(std::shared_ptr<LILNode> node, LILString argName, LILString tyName)
 {
@@ -489,10 +493,20 @@ void LILStructureLowerer::_process(std::shared_ptr<LILFunctionCall> value)
 
 void LILStructureLowerer::_process(std::shared_ptr<LILFlowControl> value)
 {
+    this->processChildren(value->getThen());
+    this->processChildren(value->getElse());
 }
 
 void LILStructureLowerer::_process(std::shared_ptr<LILInstruction> value)
 {
+}
+
+void LILStructureLowerer::processChildren(const std::vector<std::shared_ptr<LILNode> > &children)
+{
+    for (auto it = children.begin(); it!=children.end(); ++it)
+    {
+        this->process(*it);
+    };
 }
 
 void LILStructureLowerer::setDebug(bool value)
