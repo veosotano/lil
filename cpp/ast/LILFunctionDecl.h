@@ -63,6 +63,9 @@ namespace LIL
         
         std::shared_ptr<LILNode> getFinally() const;
         void setFinally(std::shared_ptr<LILNode> value);
+        
+        void addCaller(std::shared_ptr<LILNode> caller);
+        std::vector<std::shared_ptr<LILNode>> getCallers() const;
 
     protected:
         virtual std::shared_ptr<LILClonable> cloneImpl() const;
@@ -77,6 +80,8 @@ namespace LIL
         LILString _name;
         bool _hasReturn;
         bool _isConstructor;
+        
+        std::vector<std::shared_ptr<LILNode>> _callers;
     };
 }
 

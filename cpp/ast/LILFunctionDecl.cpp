@@ -41,6 +41,7 @@ LILFunctionDecl::LILFunctionDecl(const LILFunctionDecl &other)
     this->_hasReturn = other._hasReturn;
     this->_isConstructor = other._isConstructor;
     this->_finally = other._finally;
+    this->_callers = other._callers;
 }
 
 bool LILFunctionDecl::isTypedNode() const
@@ -94,6 +95,12 @@ std::shared_ptr<LILClonable> LILFunctionDecl::cloneImpl() const
     if (this->_finally) {
         clone->setFinally(this->_finally->clone());
     }
+    clone->_callers.clear();
+    for (auto it = this->_callers.begin(); it != this->_callers.end(); ++it)
+    {
+        clone->_callers.push_back((*it)->clone());
+    }
+    
     return clone;
 }
 
@@ -269,3 +276,14 @@ void LILFunctionDecl::setFinally(std::shared_ptr<LILNode> value)
     this->addNode(value);
     this->_finally = value;
 }
+
+void LILFunctionDecl::addCaller(std::shared_ptr<LILNode> caller)
+{
+    this->_callers.push_back(caller);
+}
+
+std::vector<std::shared_ptr<LILNode>> LILFunctionDecl::getCallers() const
+{
+    return this->_callers;
+}
+

@@ -60,8 +60,12 @@ namespace LIL
         LILTypeGuesser();
         virtual ~LILTypeGuesser();
 
-        void initializeVisit();
-        virtual void visit(LILNode * node);
+        void initializeVisit() override;
+        void visit(LILNode * node) override;
+        void performVisit(std::shared_ptr<LILRootNode> rootNode) override;
+        void recursiveConnectCallsWithDecls(std::shared_ptr<LILNode> node);
+        void _recursiveConnectCallsWithDecls(std::shared_ptr<LILNode> node);
+        std::shared_ptr<LILNode> resolveValuePath(std::shared_ptr<LILValuePath> vp);
 
         inline void processChildren(const std::vector<std::shared_ptr<LILNode>> & children);
         void process(LILNode * node);
@@ -103,6 +107,7 @@ namespace LIL
         std::shared_ptr<LILType> findTypeFromAssignments(std::vector<std::shared_ptr<LILNode>> nodes, const std::shared_ptr<LILVarDecl> & vd) const;
          std::shared_ptr<LILType> findTypeFromFunctionCalls(std::vector<std::shared_ptr<LILNode>> nodes, const std::shared_ptr<LILVarDecl> & vd) const;
         std::shared_ptr<LILType> findTypeFromExpressions(std::vector<std::shared_ptr<LILNode>> nodes, const std::shared_ptr<LILVarDecl> & vd) const;
+        std::shared_ptr<LILType> findTypeFromCallers(const std::vector<std::shared_ptr<LILNode>> & nodes, const std::shared_ptr<LILVarDecl> & vd) const;
 
         void setDebug(bool value);
 
