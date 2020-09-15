@@ -14,6 +14,7 @@
 
 #include "LILFunctionCall.h"
 #include "LILType.h"
+#include "LILValuePath.h"
 
 using namespace LIL;
 
@@ -180,4 +181,38 @@ void LILFunctionCall::setArgumentTypes(std::vector<std::shared_ptr<LILType>> typ
 std::vector<std::shared_ptr<LILType>> LILFunctionCall::getArgumentTypes() const
 {
     return this->_argumentTypes;
+}
+
+std::shared_ptr<LILValuePath> LILFunctionCall::getSubject() const
+{
+    switch (this->_functionCallType) {
+        case FunctionCallTypeValuePath:
+        {
+            auto vp = std::static_pointer_cast<LILValuePath>(this->getParentNode());
+            if (vp) {
+                auto newVp = std::make_shared<LILValuePath>();
+                auto nodes = vp->getNodes();
+                for (auto node : nodes) {
+                    if (node.get() == this) {
+                        break;
+                    }
+                    newVp->addChild(node->clone());
+                }
+                return newVp;
+            }
+            break;
+        }
+        case FunctionCallTypePointerTo:
+        {
+            auto firstArg = this->getArguments().front();
+            if (firstArg->isA(NodeTypeValuePath)) {
+                return std::static_pointer_cast<LILValuePath>(firstArg);
+            }
+            break;
+        }
+            
+        default:
+            break;
+    }
+    return nullptr;
 }

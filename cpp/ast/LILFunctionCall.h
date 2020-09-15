@@ -22,6 +22,7 @@
 namespace LIL
 {
     class LILType;
+    class LILValuePath;
     class LILFunctionCall : public LILNode
     {
     public:
@@ -43,6 +44,8 @@ namespace LIL
         
         void setArgumentTypes(std::vector<std::shared_ptr<LILType>> types);
         std::vector<std::shared_ptr<LILType>> getArgumentTypes() const;
+        
+        std::shared_ptr<LILValuePath> getSubject() const;
         
     protected:
         std::shared_ptr<LILClonable> cloneImpl() const override;
