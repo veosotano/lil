@@ -42,6 +42,9 @@ namespace LIL
         const std::vector<std::shared_ptr<LILNode>> & getMethods() const;
         LILString getName() const;
         
+        std::shared_ptr<LILNode> getFieldNamed(const LILString & name) const;
+        std::shared_ptr<LILNode> getMethodNamed(const LILString & name) const;
+        
     protected:
         virtual std::shared_ptr<LILClonable> cloneImpl() const;
         

@@ -13,6 +13,7 @@
  ********************************************************************/
 
 #include "LILClassDecl.h"
+#include "LILVarDecl.h"
 
 using namespace LIL;
 
@@ -111,4 +112,32 @@ const std::vector<std::shared_ptr<LILNode>> & LILClassDecl::getMethods() const
 LILString LILClassDecl::getName() const
 {
     return this->getType()->getName().data();
+}
+
+std::shared_ptr<LILNode> LILClassDecl::getFieldNamed(const LILString & name) const
+{
+    for (auto field : this->_fields) {
+        if (!field->isA(NodeTypeVarDecl)) {
+            continue;
+        }
+        auto vd = std::static_pointer_cast<LILVarDecl>(field);
+        if (vd->getName() == name) {
+            return vd;
+        }
+    }
+    return nullptr;
+}
+
+std::shared_ptr<LILNode> LILClassDecl::getMethodNamed(const LILString & name) const
+{
+    for (auto method : this->_methods) {
+        if (!method->isA(NodeTypeVarDecl)) {
+            continue;
+        }
+        auto vd = std::static_pointer_cast<LILVarDecl>(method);
+        if (vd->getName() == name) {
+            return vd;
+        }
+    }
+    return nullptr;
 }
