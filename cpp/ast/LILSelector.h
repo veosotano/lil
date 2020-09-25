@@ -27,18 +27,18 @@ namespace LIL
         std::shared_ptr<LILSelector> clone() const;
         virtual ~LILSelector();
 
-        virtual void receiveNodeData(const LILString & data);
+        void receiveNodeData(const LILString & data) override;
 
-        LILString stringRep();
-        bool equalTo(std::shared_ptr<LILNode> otherNode);
+        LILString stringRep() override;
+        bool equalTo(std::shared_ptr<LILNode> otherNode) override;
         
-        virtual SelectorType getSelectorType() const;
+        virtual SelectorType getSelectorType() const override;
         virtual void setSelectorType(SelectorType newType);
         void setName(LILString newName);
         LILString getName() const;
         
     protected:
-        virtual std::shared_ptr<LILClonable> cloneImpl() const;
+        std::shared_ptr<LILClonable> cloneImpl() const override;
         
     private:
         SelectorType _selectorType;
