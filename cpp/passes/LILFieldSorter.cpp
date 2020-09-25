@@ -325,6 +325,11 @@ void LILFieldSorter::_process(LILFlowControl * value)
     this->processChildren(value->getElse());
 }
 
+void LILFieldSorter::_process(LILFlowControlCall * value)
+{
+    this->process(value->getArgument().get());
+}
+
 void LILFieldSorter::_process(LILInstruction * value)
 {
 }
