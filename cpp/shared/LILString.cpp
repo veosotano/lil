@@ -406,6 +406,13 @@ LILString LILString::stripQuotes() const
     return LILString(string.substr(position, n));
 }
 
+LILString LILString::toUpperFirstCase() const
+{
+    std::string newString = this->data();
+    newString[0] = toupper(newString[0]);
+    return newString;
+}
+
 bool LILString::isEmpty() const
 {
     return d->string.empty();

@@ -69,6 +69,7 @@ namespace LIL
         unsigned int toHex() const;
         LILString trimmed() const;
         LILString stripQuotes() const;
+        LILString toUpperFirstCase() const;
         bool isEmpty() const;
         size_t length() const;
         LILString substr(size_t start, size_t length) const;
