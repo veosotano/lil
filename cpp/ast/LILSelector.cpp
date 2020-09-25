@@ -105,6 +105,11 @@ SelectorType LILSelector::getSelectorType() const
     return this->_selectorType;
 }
 
+bool LILSelector::isA(SelectorType otherType) const
+{
+    return this->_selectorType == otherType;
+}
+
 void LILSelector::setSelectorType(SelectorType newType)
 {
     this->_selectorType = newType;

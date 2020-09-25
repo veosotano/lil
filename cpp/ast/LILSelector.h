@@ -33,6 +33,7 @@ namespace LIL
         bool equalTo(std::shared_ptr<LILNode> otherNode) override;
         
         virtual SelectorType getSelectorType() const override;
+        bool isA(SelectorType otherType) const override;
         virtual void setSelectorType(SelectorType newType);
         void setName(LILString newName);
         LILString getName() const;
