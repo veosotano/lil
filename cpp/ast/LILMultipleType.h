@@ -32,6 +32,7 @@ namespace LIL
         LILString stringRep();
         
         void addType(std::shared_ptr<LILType> ty);
+        void setTypes(std::vector<std::shared_ptr<LILType>> tys);
         std::vector<std::shared_ptr<LILType>> getTypes() const;
         
         bool getIsWeakType() const;

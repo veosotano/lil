@@ -87,6 +87,11 @@ void LILMultipleType::addType(std::shared_ptr<LILType> ty)
     this->_types.push_back(ty);
 }
 
+void LILMultipleType::setTypes(std::vector<std::shared_ptr<LILType>> tys)
+{
+    this->_types = tys;
+}
+
 std::vector<std::shared_ptr<LILType>> LILMultipleType::getTypes() const
 {
     return this->_types;
