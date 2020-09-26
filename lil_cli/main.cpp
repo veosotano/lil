@@ -34,6 +34,7 @@ int main(int argc, const char * argv[]) {
     bool debugASTValidator = false;
     bool debugTypeGuesser = false;
     bool debugStructureLowerer = false;
+    bool debugMethodInserter = false;
     bool debugNameLowerer = false;
     bool debugIREmitter = false;
     int warningLevel = 0;
@@ -112,6 +113,10 @@ int main(int argc, const char * argv[]) {
             debugTypeGuesser = true;
             ++i;
             
+        } else if (command == "--debug-method-inserter") {
+            debugMethodInserter = true;
+            ++i;
+            
         } else if (command == "--debug-name-lowerer") {
             debugNameLowerer = true;
             ++i;
@@ -186,6 +191,7 @@ int main(int argc, const char * argv[]) {
     codeUnit->setDebugParameterSorter(debugParameterSorter);
     codeUnit->setDebugTypeGuesser(debugTypeGuesser);
     codeUnit->setDebugStructureLowerer(debugStructureLowerer);
+    codeUnit->setDebugMethodInserter(debugMethodInserter);
     codeUnit->setDebugNameLowerer(debugNameLowerer);
     codeUnit->setDebugIREmitter(debugIREmitter);
     codeUnit->setFile(inName);
