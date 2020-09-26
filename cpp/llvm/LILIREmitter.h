@@ -115,6 +115,7 @@ namespace LIL
         llvm::Value * _emitReturn(LILFlowControlCall * value);
         llvm::Value * _emit(LILInstruction * value);
 
+        llvm::Value * emitPointer(LILNode * node);
         llvm::Value * _emitPointer(LILValuePath * vp);
 
         void printIR(llvm::raw_ostream & file) const;

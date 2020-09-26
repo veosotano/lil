@@ -119,7 +119,7 @@ namespace LIL
         
         bool readFunctionCall();
         bool readFunctionCallSimple();
-        bool readStandardFunctionCall();
+        bool readStandardFunctionCall(bool readIdentifier);
         bool readNameAndSelectorFunctionCall();
         bool readSelFunction();
         bool readFlagFunction();

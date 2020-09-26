@@ -485,6 +485,45 @@ void LILASTValidator::validate(LILFunctionCall value)
             }
             break;
         }
+        case FunctionCallTypePointerTo:
+        {
+            if (value.getArguments().size() != 1) {
+                LILErrorMessage ei;
+                ei.message =  "Call to pointerTo() needs one argument";
+                LILNode::SourceLocation sl = value.getSourceLocation();
+                ei.file = sl.file;
+                ei.line = sl.line;
+                ei.column = sl.column;
+                this->errors.push_back(ei);
+            }
+            break;
+        }
+        case FunctionCallTypeValueOf:
+        {
+            if (value.getArguments().size() != 1) {
+                LILErrorMessage ei;
+                ei.message =  "Call to valueOf() needs one argument";
+                LILNode::SourceLocation sl = value.getSourceLocation();
+                ei.file = sl.file;
+                ei.line = sl.line;
+                ei.column = sl.column;
+                this->errors.push_back(ei);
+            }
+            break;
+        }
+        case FunctionCallTypeSet:
+        {
+            if (value.getArguments().size() != 2) {
+                LILErrorMessage ei;
+                ei.message =  "Call to set() needs two arguments";
+                LILNode::SourceLocation sl = value.getSourceLocation();
+                ei.file = sl.file;
+                ei.line = sl.line;
+                ei.column = sl.column;
+                this->errors.push_back(ei);
+            }
+            break;
+        }
         default:
             break;
     }

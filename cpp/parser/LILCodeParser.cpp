@@ -1019,6 +1019,7 @@ bool LILCodeParser::isBuiltinFunctionCall() const
         || value == "replaceFlag"
         || value == "pointerTo"
         || value == "valueOf"
+        || value == "set"
         )
     {
         return true;
@@ -3945,20 +3946,24 @@ bool LILCodeParser::readFunctionCall()
             || name == "attr"
             || this->isFlag()
             ){
-            this->readNameAndSelectorFunctionCall();
+            return this->readNameAndSelectorFunctionCall();
         }
         // <fnName> (selector)
         else if (name == "sel")
         {
-            this->readSelFunction();
+            return this->readSelFunction();
         }
         else if (name == "pointerTo")
         {
-            this->readSingleArgumentFunctionCall("pointerTo");
+            return this->readSingleArgumentFunctionCall("pointerTo");
         }
         else if (name == "valueOf")
         {
-            this->readSingleArgumentFunctionCall("valueOf");
+            return this->readSingleArgumentFunctionCall("valueOf");
+        }
+        else if (name == "set")
+        {
+            return this->readStandardFunctionCall(true);
         }
         // <fnName>(arg1, arg2, argN, ...)
         else
@@ -3971,7 +3976,9 @@ bool LILCodeParser::readFunctionCall()
                 LIL_CANCEL_NODE
             }
             LIL_CHECK_FOR_END
-            bool fcValid = this->readStandardFunctionCall();
+            this->skip(TokenTypeWhitespace);
+            LIL_CHECK_FOR_END
+            bool fcValid = this->readStandardFunctionCall(false);
             if (fcValid) {
                 d->receiver->receiveNodeCommit();
             } else {
@@ -4088,9 +4095,15 @@ bool LILCodeParser::readFunctionCallSimple()
     LIL_END_NODE_SKIP(false)
 }
 
-bool LILCodeParser::readStandardFunctionCall()
+bool LILCodeParser::readStandardFunctionCall(bool readIdentifier)
 {
     LIL_START_NODE(NodeTypeFunctionCall)
+    
+    if (readIdentifier && d->currentToken->isA(TokenTypeIdentifier)) {
+        d->receiver->receiveNodeData(ParserEventFunction, d->currentToken->getString());
+        this->readNextToken();
+        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+    }
 
     //open parenthesis
     bool needsParenthesisClose  = false;

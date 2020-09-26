@@ -95,6 +95,10 @@ void LILFunctionCall::receiveNodeData(const LILString &data)
     {
         this->setFunctionCallType(FunctionCallTypeValueOf);
     }
+    else if (data == "set")
+    {
+        this->setFunctionCallType(FunctionCallTypeSet);
+    }
 }
 
 
@@ -137,6 +141,10 @@ LILString LILFunctionCall::stringRep()
         case FunctionCallTypeValueOf:
         {
             return "valueOf";
+        }
+        case FunctionCallTypeSet:
+        {
+            return "set";
         }
 
         default:

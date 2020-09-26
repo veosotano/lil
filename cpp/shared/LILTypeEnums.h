@@ -161,6 +161,7 @@ namespace LIL
         FunctionCallTypeReplaceFlag,
         FunctionCallTypePointerTo,
         FunctionCallTypeValueOf,
+        FunctionCallTypeSet,
     };
 
     enum FunctionDeclType

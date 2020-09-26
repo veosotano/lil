@@ -1290,21 +1290,35 @@ llvm::Function * LILIREmitter::_emitMethod(LILFunctionDecl * value, LILClassDecl
 llvm::Value * LILIREmitter::_emit(LILFunctionCall * value)
 {
     switch (value->getFunctionCallType()) {
-        case FunctionCallTypeNone:
-        {
-            std::cerr << "fcalltype none\n";
-            break;
-        }
         case FunctionCallTypePointerTo:
         {
             auto firstArg = value->getArguments().front();
-            return this->emit(firstArg.get());
+            if (!firstArg->isA(NodeTypeValuePath)) {
+                std::cerr << "FIRST ARG WAS NOT VALUE PATH FAIL\n";
+            }
+            return this->_emitPointer(std::static_pointer_cast<LILValuePath>(firstArg).get());
         }
         case FunctionCallTypeValueOf:
         {
             auto firstArg = value->getArguments().front();
             auto llvmValue = this->emit(firstArg.get());
             return d->irBuilder.CreateLoad(llvmValue);
+        }
+        case FunctionCallTypeSet:
+        {
+            auto args = value->getArguments();
+            if (args.size() != 2) {
+                std::cerr << "SET NEEDS TWO ARGUMENTS FAIL\n";
+                return nullptr;
+            }
+            auto ptr = this->emit(args[0].get());
+            auto val = this->emit(args[1].get());
+            return d->irBuilder.CreateStore(val, ptr);
+        }
+        default:
+        {
+            std::cerr << "UNIMPLEMENTED FUNCTION CALL TYPE FAIL\n";
+            break;
         }
     }
 
@@ -1319,11 +1333,27 @@ llvm::Value * LILIREmitter::_emit(LILFunctionCall * value, LILString name)
     if (fun) {
         std::vector<llvm::Value *> argsvect;
         llvm::Value * fcArgIr;
+
+        auto argIt = fun->arg_begin();
         for (auto fcArg : fcArgs) {
+            llvm::Value * llvmArg = nullptr;
+            if (argIt != fun->arg_end()) {
+                llvmArg = argIt;
+                ++argIt;
+            }
             if (fcArg->isA(NodeTypeAssignment)) {
                 auto asgmt = std::static_pointer_cast<LILAssignment>(fcArg);
                 auto asgmtVal = asgmt->getValue();
-                fcArgIr = this->emit(asgmtVal.get());
+                
+                if (
+                    llvmArg != nullptr
+                    && llvmArg->getType()->getTypeID() == llvm::Type::PointerTyID
+                    && !asgmt->getType()->isA(TypeTypePointer)
+                ) {
+                    fcArgIr = this->emitPointer(asgmtVal.get());
+                } else {
+                    fcArgIr = this->emit(asgmtVal.get());
+                }
             } else {
                 fcArgIr = this->emit(fcArg.get());
             }
@@ -1486,6 +1516,27 @@ llvm::Value * LILIREmitter::_emitReturn(LILFlowControlCall * value)
 llvm::Value * LILIREmitter::_emit(LILInstruction * value)
 {
     std::cerr << "!!!!!!!!!!FAIL!!!!!!!!!!!!!!!!\n";
+    return nullptr;
+}
+
+llvm::Value * LILIREmitter::emitPointer(LILNode * node)
+{
+    switch (node->getNodeType()) {
+        case NodeTypeValuePath:
+        {
+            return this->_emitPointer(static_cast<LILValuePath *>(node));
+        }
+        case NodeTypeNumberLiteral:
+        {
+            //create global variable with the constant as initial value
+            //mark variable as being constant
+            //set linkage to private
+            break;
+        }
+        default:
+            std::cerr << "!!!!!!!!!!EMIT POINTER FAIL!!!!!!!!!!!!!!!!\n";
+            break;
+    }
     return nullptr;
 }
 

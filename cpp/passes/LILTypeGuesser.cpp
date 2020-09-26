@@ -616,6 +616,22 @@ std::shared_ptr<LILType> LILTypeGuesser::recursiveFindTypeFromAncestors(std::sha
                         break;
                     }
                         
+                    case FunctionCallTypeSet:
+                    {
+                        auto args = fc->getArguments();
+                        if (args.size() != 2) {
+                            std::cerr << "SET NEEDS 2 ARGUMENTS FAIL!!!!";
+                            return nullptr;
+                        }
+                        auto firstArg = args[0];
+                        auto firstTy = this->getNodeType(firstArg);
+                        if (firstTy && firstTy->isA(TypeTypePointer)) {
+                            auto ptrTy = std::static_pointer_cast<LILPointerType>(firstTy);
+                            return ptrTy->getArgument();
+                        }
+                        return nullptr;
+                    }
+                        
                     default:
                         break;
                 }
