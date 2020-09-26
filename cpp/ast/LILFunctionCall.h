@@ -45,6 +45,9 @@ namespace LIL
         void setArgumentTypes(std::vector<std::shared_ptr<LILType>> types);
         std::vector<std::shared_ptr<LILType>> getArgumentTypes() const;
         
+        void setReturnType(std::shared_ptr<LILType> retTy);
+        std::shared_ptr<LILType> getReturnType() const;
+        
         std::shared_ptr<LILValuePath> getSubject() const;
         
     protected:
@@ -53,6 +56,7 @@ namespace LIL
     private:
         FunctionCallType _functionCallType;
         std::vector<std::shared_ptr<LILType>> _argumentTypes;
+        std::shared_ptr<LILType> _returnType;
     };
 }
 

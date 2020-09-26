@@ -22,6 +22,7 @@ LILFunctionCall::LILFunctionCall()
 : LIL::LILNode(NodeTypeFunctionCall)
 {
     this->_functionCallType = FunctionCallTypeNone;
+    this->_returnType = nullptr;
 }
 
 LILFunctionCall::LILFunctionCall(const LILFunctionCall &other)
@@ -29,6 +30,7 @@ LILFunctionCall::LILFunctionCall(const LILFunctionCall &other)
 {
     this->_functionCallType = other._functionCallType;
     this->_argumentTypes = other._argumentTypes;
+    this->_returnType = other._returnType;
 }
 
 std::shared_ptr<LILFunctionCall> LILFunctionCall::clone() const
@@ -43,7 +45,10 @@ std::shared_ptr<LILClonable> LILFunctionCall::cloneImpl() const
     for (auto ty : this->_argumentTypes) {
         clone->_argumentTypes.push_back(ty->clone());
     }
-    
+    if (this->_returnType) {
+        clone->setReturnType(this->_returnType->clone());
+    }
+
     return clone;
 }
 
@@ -181,6 +186,16 @@ void LILFunctionCall::setArgumentTypes(std::vector<std::shared_ptr<LILType>> typ
 std::vector<std::shared_ptr<LILType>> LILFunctionCall::getArgumentTypes() const
 {
     return this->_argumentTypes;
+}
+
+void LILFunctionCall::setReturnType(std::shared_ptr<LILType> retTy)
+{
+    this->_returnType = retTy;
+}
+
+std::shared_ptr<LILType> LILFunctionCall::getReturnType() const
+{
+    return this->_returnType;
 }
 
 std::shared_ptr<LILValuePath> LILFunctionCall::getSubject() const
