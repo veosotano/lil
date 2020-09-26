@@ -995,6 +995,9 @@ bool LILCodeParser::isFunctionCall(bool isPastIdentifier) const
         }
         if (peekToken){
             d->lexer->resetPeek();
+            if (peekToken->isA(TokenTypeParenthesisOpen)) {
+                return true;
+            }
             return !this->isPunctuation(peekToken);
         }
 
@@ -3715,7 +3718,25 @@ bool LILCodeParser::readEvaluables()
                     this->skip(TokenTypeWhitespace);
                     if (this->atEndOfSource())
                         return ret;
-                    evalsDone = false;
+                    if (d->currentToken->isA(TokenTypeSemicolon))
+                    {
+                        evalsDone = false;
+                        //skip the semicolon
+                        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+                        this->readNextToken();
+                        if (this->atEndOfSource())
+                            return false;
+                        
+                        this->skip(TokenTypeWhitespace);
+                        if (this->atEndOfSource())
+                            return ret;
+                    }
+                    else if (!d->currentToken->isA(TokenTypeBlockClose))
+                    {
+                        d->receiver->receiveError(LILString::format("Unexpected token while reading evaluables on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
+                        this->skipInvalidToken();
+                        evalsDone = false;
+                    }
                 }
                 else if (this->isFunctionCall(false))
                 {
