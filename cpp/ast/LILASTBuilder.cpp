@@ -899,11 +899,19 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
             
         case BuilderStateVarDecl:
         {
+            auto vd = std::static_pointer_cast<LILVarDecl>(this->currentContainer.back());
             if (eventType == ParserEventExtern) {
-                auto vd = std::static_pointer_cast<LILVarDecl>(this->currentContainer.back());
                 vd->setIsExtern(true);
             } else {
-                this->currentContainer.back()->receiveNodeData(data);
+                if (eventType == ParserEventVariableDeclaration) {
+                    if (data == "ivar") {
+                        vd->setIsIVar(true);
+                    } else if (data == "vvar") {
+                        vd->setIsVVar(true);
+                    }
+                } else {
+                    this->currentContainer.back()->receiveNodeData(data);
+                }
             }
             break;
         }

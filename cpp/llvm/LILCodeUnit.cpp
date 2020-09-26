@@ -23,6 +23,7 @@
 #include "LILASTValidator.h"
 #include "LILIREmitter.h"
 #include "LILFieldSorter.h"
+#include "LILMethodInserter.h"
 #include "LILNameLowerer.h"
 #include "LILParameterSorter.h"
 #include "LILPassManager.h"
@@ -62,6 +63,7 @@ namespace LIL
         , debugASTValidator(false)
         , debugTypeGuesser(false)
         , debugStructureLowerer(false)
+        , debugMethodInserter(false)
         , debugNameLowerer(false)
         , debugFieldSorter(false)
         , debugParameterSorter(false)
@@ -81,6 +83,7 @@ namespace LIL
         bool debugASTValidator;
         bool debugTypeGuesser;
         bool debugStructureLowerer;
+        bool debugMethodInserter;
         bool debugNameLowerer;
         bool debugFieldSorter;
         bool debugParameterSorter;
@@ -166,6 +169,16 @@ void LILCodeUnit::run()
     auto parameterSorter = std::make_unique<LILParameterSorter>();
     parameterSorter->setDebug(d->debugParameterSorter);
     d->pm->addPass(std::move(parameterSorter));
+    if (verbose) {
+        auto stringVisitor0 = std::make_unique<LILToStringVisitor>();
+        stringVisitor0->setPrintHeadline(false);
+        d->pm->addPass(std::move(stringVisitor0));
+    }
+    
+    //method inserter
+    auto methodInserter = std::make_unique<LILMethodInserter>();
+    methodInserter->setDebug(d->debugMethodInserter);
+    d->pm->addPass(std::move(methodInserter));
     if (verbose) {
         auto stringVisitor1 = std::make_unique<LILToStringVisitor>();
         stringVisitor1->setPrintHeadline(false);
@@ -356,6 +369,11 @@ void LILCodeUnit::setDebugFieldSorter(bool value)
 void LILCodeUnit::setDebugParameterSorter(bool value)
 {
     d->debugParameterSorter = value;
+}
+
+void LILCodeUnit::setDebugMethodInserter(bool value)
+{
+    d->debugMethodInserter = value;
 }
 
 void LILCodeUnit::setDebugNameLowerer(bool value)

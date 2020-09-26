@@ -22,6 +22,8 @@ using namespace LIL;
 LILVarDecl::LILVarDecl()
 : LILTypedNode(NodeTypeVarDecl)
 , _isExtern(false)
+, _isIVar(false)
+, _isVVar(false)
 {
     
 }
@@ -31,6 +33,8 @@ LILVarDecl::LILVarDecl(const LILVarDecl & orig)
 {
     this->_name = orig._name;
     this->_isExtern = orig._isExtern;
+    this->_isIVar = orig._isIVar;
+    this->_isVVar = orig._isVVar;
 }
 
 std::shared_ptr<LILVarDecl> LILVarDecl::clone() const
@@ -63,11 +67,20 @@ void LILVarDecl::receiveNodeData(const LIL::LILString &data)
 
 LILString LILVarDecl::stringRep()
 {
+    LILString kw;
+    if (this->getIsIVar()) {
+        kw = "ivar";
+    } else if (this->getIsVVar()){
+        kw = "vvar";
+    } else {
+        kw = "var";
+    }
+
     if (this->getInitVal())
     {
-        return LILString("var ") + this->getName() + " = " + this->getInitVal()->stringRep();
+        return kw + this->getName() + " = " + this->getInitVal()->stringRep();
     }
-    return LILString("var ") + this->getName();
+    return kw + " " + this->getName();
 }
 
 void LILVarDecl::setName(LILString newName)
@@ -108,3 +121,24 @@ bool LILVarDecl::getIsExtern() const
 {
     return this->_isExtern;
 }
+
+void LILVarDecl::setIsIVar(bool value)
+{
+    this->_isIVar = value;
+}
+
+bool LILVarDecl::getIsIVar() const
+{
+    return this->_isIVar;
+}
+
+void LILVarDecl::setIsVVar(bool value)
+{
+    this->_isVVar = value;
+}
+
+bool LILVarDecl::getIsVVar() const
+{
+    return this->_isVVar;
+}
+

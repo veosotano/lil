@@ -528,11 +528,19 @@ llvm::Value * LILIREmitter::_emit(LILObjectDefinition * value)
 
     auto classValue = this->findClassWithName(classNameStr);
     size_t theIndex = 0;
+    std::vector<std::shared_ptr<LILVarDecl>> callVars;
+    std::vector<llvm::Value *> callValues;
     for (auto field : classValue->getFields()) {
         auto vd = std::static_pointer_cast<LILVarDecl>(field);
+        
+        bool needsCall = vd->getIsIVar() || vd->getIsVVar();
+        if (needsCall) {
+            callVars.push_back(vd);
+        }
+        
         auto varName = vd->getName();
         
-        std::shared_ptr<LILNode> initVal = nullptr;
+        std::shared_ptr<LILNode> theVal = nullptr;
         for (auto node : value->getNodes()) {
             if (node->isA(NodeTypeAssignment)) {
                 auto asgmt = std::static_pointer_cast<LILAssignment>(node);
@@ -543,7 +551,7 @@ llvm::Value * LILIREmitter::_emit(LILObjectDefinition * value)
                     if (firstNode->isA(NodeTypePropertyName)) {
                         auto pn = std::static_pointer_cast<LILPropertyName>(firstNode);
                         if (pn->getName() == varName) {
-                            initVal = asgmt->getValue();
+                            theVal = asgmt->getValue();
                             break;
                         }
                     }
@@ -551,15 +559,37 @@ llvm::Value * LILIREmitter::_emit(LILObjectDefinition * value)
             }
         }
         
-        if (!initVal) {
-            initVal = vd->getInitVal();
+        if (!theVal) {
+            theVal = vd->getInitVal();
         }
 
-        if (initVal) {
-            llvm::Value * llvmValue = this->emit(initVal.get());
-            auto gep = this->_emitGEP(alloca, classValue->getName(), theIndex, instanceName + "." + varName, 0);
-            d->irBuilder.CreateStore(llvmValue, gep);
+        if (theVal) {
+            if (needsCall) {
+                callValues.push_back(this->emit(theVal.get()));
+            } else {
+                llvm::Value * llvmValue = this->emit(theVal.get());
+                auto gep = this->_emitGEP(alloca, classValue->getName(), theIndex, instanceName + "." + varName, 0);
+                d->irBuilder.CreateStore(llvmValue, gep);
+            }
         }
+        ++theIndex;
+    }
+    
+    theIndex = 0;
+    for (auto vd : callVars) {
+        LILString name = vd->getName();
+        LILString methodName = "set" + name.toUpperFirstCase();
+        auto methodVd = classValue->getMethodNamed(methodName);
+        
+        LILString newName = this->decorate("", classValue->getName(), methodName, methodVd->getType());
+        llvm::Function* fun = d->llvmModule->getFunction(newName.data());
+        std::vector<llvm::Value *> argsvect;
+        
+        argsvect.push_back(alloca);
+        argsvect.push_back(callValues[theIndex]);
+        
+        d->irBuilder.CreateCall(fun, argsvect);
+        
         ++theIndex;
     }
 
@@ -585,13 +615,179 @@ llvm::Value * LILIREmitter::_emit(LILAssignment * value)
             std::cerr << "!!!!!!!!!!SUBJECT OF ASSIGNMENT WAS NOT VALUE PATH !!!!!!!!!!!!!!!!\n";
             return nullptr;
         }
-        llvm::Value * llvmSubject = this->_emitPointer(static_cast<LILValuePath *>(subjectVal.get()));
         llvm::Value * llvmValue = this->emit(value->getValue().get());
-        return d->irBuilder.CreateStore(llvmValue, llvmSubject);
+        
+        auto vp = std::static_pointer_cast<LILValuePath>(subjectVal);
+        
+        const auto & childNodes = vp->getNodes();
+        if (childNodes.size() > 1) {
+            auto it = childNodes.begin();
+            auto firstNode = *it;
+            bool isExtern = false;
+            std::shared_ptr<LILVarDecl> vd;
+            LILNode * subject;
+            llvm::Value * llvmSubject = nullptr;
+            LILString className;
+            LILString stringRep;
+            
+            if (firstNode->isA(NodeTypeVarName)) {
+                auto vn = std::static_pointer_cast<LILVarName>(firstNode);
+                std::shared_ptr<LILNode> subjectNode = this->findNodeForVarName(vn.get());
+                subject = subjectNode.get();
+                if (subjectNode && subjectNode->isA(NodeTypeVarDecl)) {
+                    vd = std::static_pointer_cast<LILVarDecl>(subjectNode);
+                    className = vd->getName();
+                    llvmSubject = d->namedValues[className.data()];
+                    if (vd->getIsExtern()) {
+                        isExtern = true;
+                    }
+                    stringRep = vn->getName();
+                }
+            } else {
+                //selector
+                auto sel = std::static_pointer_cast<LILSelector>(firstNode);
+                switch (sel->getSelectorType()) {
+                    case SelectorTypeSelfSelector:
+                    {
+                        llvmSubject = d->namedValues["@self"];
+                        subject = d->selfContext.back();
+                        stringRep = "@self";
+                        break;
+                    }
+                    default:
+                        std::cerr << "!!!!!!!!!!UNKNOWN SELECTOR TYPE FAIL!!!!!!!!!!!!!!!!\n";
+                        return nullptr;
+                }
+            }
+            
+            ++it;
+            
+            while (it != childNodes.end()) {
+                auto currentNode = *it;
+                ++it;
+                bool isLastNode = false;
+                if (it == childNodes.end()) {
+                    isLastNode = true;
+                }
+                switch (currentNode->getNodeType()) {
+                    case NodeTypeFunctionCall:
+                    {
+                        if (isLastNode) {
+                            std::cerr << "!!!!!!!!!!CANNOT ASSIGN TO FUNCTION CALL FAIL!!!!!!!!!!!!!!!!\n";
+                            return nullptr;
+                        }
+                        auto fc = std::static_pointer_cast<LILFunctionCall>(currentNode);
+                        if (vd->getIsExtern()) {
+                            return this->_emit(fc.get(), vd->getName());
+                        }
+                        
+                        auto fcTypes = fc->getArgumentTypes();
+                        std::shared_ptr<LILFunctionDecl> targetFn;
+                        if (vd->getInitVals().size() > 1 && fcTypes.size() > 0) {
+                            targetFn = this->chooseFnByType(vd, fcTypes);
+                        } else {
+                            auto initVal = vd->getInitVal();
+                            if (initVal && initVal->isA(NodeTypeFunctionDecl)) {
+                                targetFn = std::static_pointer_cast<LILFunctionDecl>(vd->getInitVal());
+                            }
+                        }
+                        if (targetFn) {
+                            
+                            llvmSubject = this->_emit(fc.get(), targetFn->getName());
+                            stringRep += "()";
+                        }
+                        break;
+                    }
+                        
+                    case NodeTypePropertyName:
+                    {
+                        if (llvmSubject == nullptr) {
+                            std::cerr << "!!!!!!!!!!SUBJECT OF VALUE PATH WAS NULL!!!!!!!!!!!!!!!!\n";
+                            return nullptr;
+                        }
+                        auto pn = std::static_pointer_cast<LILPropertyName>(currentNode);
+                        const auto & pnName = pn->getName();
+                        stringRep += "." + pnName;
+                        
+                        auto ty = subject->getType();
+                        if (!ty->isA(TypeTypeObject)) {
+                            continue;
+                        }
+                        auto objTy = std::static_pointer_cast<LILObjectType>(ty);
+                        auto classValue = this->findClassWithName(objTy->getName());
+                        
+                        auto field = classValue->getFieldNamed(pnName);
+                        auto vd = std::static_pointer_cast<LILVarDecl>(field);
+                        if (
+                            (!isLastNode || !vp->getPreventEmitCallToIVar() )
+                            && field
+                            && field->isA(NodeTypeVarDecl)
+                            && ( vd->getIsIVar() || vd->getIsVVar() )
+                            ) {
+                            LILString methodName = (isLastNode ? "set" : "get") + pnName.toUpperFirstCase();
+                            auto methodVd = classValue->getMethodNamed(methodName);
+                            
+                            LILString newName = this->decorate("", classValue->getName(), methodName, methodVd->getType());
+                            llvm::Function* fun = d->llvmModule->getFunction(newName.data());
+                            std::vector<llvm::Value *> argsvect;
+                            argsvect.push_back(llvmSubject);
+                            if (isLastNode) {
+                                argsvect.push_back(llvmValue);
+                            }
+                            if (fun) {
+                                llvmSubject = d->irBuilder.CreateCall(fun, argsvect);
+                                if (isLastNode) {
+                                    return llvmSubject;
+                                }
+                            } else {
+                                std::cerr << "!!!!!!!!!!COULD NOT FIND METHOD FAIL!!!!!!!!!!!!!!!!\n";
+                            }
+                            
+                        } else {
+                            
+                            if (isLastNode) {
+                                auto ty = value->getType();
+                                if (
+                                    ty->isA(TypeTypePointer)
+                                    && llvmValue->getType()->getTypeID() != llvm::Type::PointerTyID
+                                    ){
+                                    llvm::Value * llvmSubject = this->emit(subjectVal.get());
+                                    return d->irBuilder.CreateStore(llvmValue, llvmSubject);
+                                } else {
+                                    llvm::Value * llvmSubject = this->_emitPointer(static_cast<LILValuePath *>(subjectVal.get()));
+                                    return d->irBuilder.CreateStore(llvmValue, llvmSubject);
+                                }
+                            } else {
+                                
+                                //get index of field into struct
+                                auto fields = classValue->getFields();
+                                size_t theIndex = 0;
+                                for (size_t i=0, j=fields.size(); i<j; ++i) {
+                                    auto vd = std::static_pointer_cast<LILVarDecl>(fields[i]);
+                                    if (vd->getName() == pn->getName()) {
+                                        theIndex = i;
+                                        break;
+                                    }
+                                }
+                                
+                                std::string name = pn->getName().data();
+                                auto gep = this->_emitGEP(llvmSubject, className, theIndex, stringRep, 0);
+                                return d->irBuilder.CreateLoad(gep, name.data());
+                            }
+                        }
+                        break;
+                    }
+                        
+                    default:
+                        break;
+                }
+            }
+        }
     } else {
         std::cerr << "!!!!!!!!!!ASSIGNMENT HAD NO VALUE !!!!!!!!!!!!!!!!\n";
         return nullptr;
     }
+    return nullptr;
 }
 
 llvm::Value * LILIREmitter::_emit(LILValuePath * value)
@@ -610,6 +806,7 @@ llvm::Value * LILIREmitter::_emit(LILValuePath * value)
         LILNode * subject;
         llvm::Value * llvmSubject = nullptr;
         LILString className;
+        LILString stringRep;
 
         if (firstNode->isA(NodeTypeVarName)) {
             auto vn = std::static_pointer_cast<LILVarName>(firstNode);
@@ -622,6 +819,7 @@ llvm::Value * LILIREmitter::_emit(LILValuePath * value)
                 if (vd->getIsExtern()) {
                     isExtern = true;
                 }
+                stringRep = vn->getName();
             }
         } else {
             //selector
@@ -631,6 +829,7 @@ llvm::Value * LILIREmitter::_emit(LILValuePath * value)
                 {
                     llvmSubject = d->namedValues["@self"];
                     subject = d->selfContext.back();
+                    stringRep = "@self";
                     break;
                 }
                 default:
@@ -643,6 +842,8 @@ llvm::Value * LILIREmitter::_emit(LILValuePath * value)
 
         while (it != childNodes.end()) {
             auto currentNode = *it;
+            ++it;
+            bool isLastNode = it == childNodes.end();
             switch (currentNode->getNodeType()) {
                 case NodeTypeFunctionCall:
                 {
@@ -664,6 +865,7 @@ llvm::Value * LILIREmitter::_emit(LILValuePath * value)
                     if (targetFn) {
 
                         llvmSubject = this->_emit(fc.get(), targetFn->getName());
+                        stringRep += "()";
                     }
                     break;
                 }
@@ -675,36 +877,63 @@ llvm::Value * LILIREmitter::_emit(LILValuePath * value)
                         return nullptr;
                     }
                     auto pn = std::static_pointer_cast<LILPropertyName>(currentNode);
-
-                    //get index of field into struct
+                    const auto & pnName = pn->getName();
+                    stringRep += "." + pnName;
+                    
                     auto ty = subject->getType();
                     if (!ty->isA(TypeTypeObject)) {
                         continue;
                     }
                     auto objTy = std::static_pointer_cast<LILObjectType>(ty);
                     auto classValue = this->findClassWithName(objTy->getName());
-                    auto fields = classValue->getFields();
-                    size_t theIndex = 0;
-                    for (size_t i=0, j=fields.size(); i<j; ++i) {
-                        auto vd = std::static_pointer_cast<LILVarDecl>(fields[i]);
-                        if (vd->getName() == pn->getName()) {
-                            theIndex = i;
-                            break;
-                        }
-                    }
+                    
+                    auto field = classValue->getFieldNamed(pnName);
+                    auto vd = std::static_pointer_cast<LILVarDecl>(field);
+                    if (
+                        (!isLastNode || !value->getPreventEmitCallToIVar() )
+                        && field
+                        && field->isA(NodeTypeVarDecl)
+                        && ( vd->getIsIVar() || vd->getIsVVar() )
+                    ) {
+                        LILString methodName = "get" + pnName.toUpperFirstCase();
+                        auto methodVd = classValue->getMethodNamed(methodName);
 
-                    std::string name = pn->getName().data();
-                    std::string tmp_name = "_lil_"+name+"_tmp";
-                    auto gep = this->_emitGEP(llvmSubject, className, theIndex, tmp_name, 0);
-                    llvmSubject = d->irBuilder.CreateLoad(gep, name.data());
+                        LILString newName = this->decorate("", classValue->getName(), methodName, methodVd->getType());
+                        llvm::Function* fun = d->llvmModule->getFunction(newName.data());
+                        std::vector<llvm::Value *> argsvect;
+                        argsvect.push_back(llvmSubject);
+                        if (fun) {
+                            llvmSubject = d->irBuilder.CreateCall(fun, argsvect);
+                        } else {
+                            std::cerr << "!!!!!!!!!!COULD NOT FIND GETTER FAIL!!!!!!!!!!!!!!!!\n";
+                        }
+
+                    } else {
+                        
+                        //get index of field into struct
+                        auto fields = classValue->getFields();
+                        size_t theIndex = 0;
+                        for (size_t i=0, j=fields.size(); i<j; ++i) {
+                            auto vd = std::static_pointer_cast<LILVarDecl>(fields[i]);
+                            if (vd->getName() == pn->getName()) {
+                                theIndex = i;
+                                break;
+                            }
+                        }
+                        
+                        std::string name = pn->getName().data();
+                        auto gep = this->_emitGEP(llvmSubject, className, theIndex, stringRep, 0);
+                        llvmSubject = d->irBuilder.CreateLoad(gep, name.data());
+                        
+                    }
+                    
+                    
                     break;
                 }
 
                 default:
                     break;
             }
-
-            ++it;
         }
         return llvmSubject;
     }
@@ -1293,9 +1522,11 @@ llvm::Value * LILIREmitter::_emitPointer(LILValuePath * value)
         LILNode * subject;
         llvm::Value * llvmSubject = nullptr;
         LILString className;
+        LILString stringRep;
         
         if (firstNode->isA(NodeTypeVarName)) {
             auto vn = std::static_pointer_cast<LILVarName>(firstNode);
+            stringRep = vn->getName();
             std::shared_ptr<LILNode> subjectNode = this->findNodeForVarName(vn.get());
             subject = subjectNode.get();
             if (subjectNode && subjectNode->isA(NodeTypeVarDecl)) {
@@ -1314,6 +1545,7 @@ llvm::Value * LILIREmitter::_emitPointer(LILValuePath * value)
                 {
                     llvmSubject = d->namedValues["@self"];
                     subject = d->selfContext.back();
+                    stringRep = "@self";
                     break;
                 }
                 default:
@@ -1340,6 +1572,7 @@ llvm::Value * LILIREmitter::_emitPointer(LILValuePath * value)
                         return nullptr;
                     }
                     auto pn = std::static_pointer_cast<LILPropertyName>(currentNode);
+                    stringRep += "." + pn->getName();
                     
                     //get index of field into struct
                     auto ty = subject->getType();
@@ -1359,8 +1592,7 @@ llvm::Value * LILIREmitter::_emitPointer(LILValuePath * value)
                     }
                     
                     std::string name = pn->getName().data();
-                    std::string tmp_name = "_lil_"+name+"_tmp";
-                    auto gep = this->_emitGEP(llvmSubject, className, theIndex, tmp_name, 0);
+                    auto gep = this->_emitGEP(llvmSubject, className, theIndex, stringRep, 0);
                     llvmSubject = gep;
                     break;
                 }
@@ -1477,9 +1709,12 @@ llvm::StructType * LILIREmitter::extractStructFromClass(LILClassDecl * value)
 {
     std::vector<llvm::Type*> types;
     for (auto & fld : value->getFields()) {
-        llvm::Type * llvmTy = this->llvmTypeFromLILType(fld->getType());
-        if (llvmTy) {
-            types.push_back(llvmTy);
+        auto vd = std::static_pointer_cast<LILVarDecl>(fld);
+        if (!vd->getIsVVar()) {
+            llvm::Type * llvmTy = this->llvmTypeFromLILType(fld->getType());
+            if (llvmTy) {
+                types.push_back(llvmTy);
+            }
         }
     }
     return llvm::StructType::create(d->llvmContext, types, value->getName().data());

@@ -30,12 +30,15 @@ namespace LIL
         
         const std::vector<std::shared_ptr<LILNode>> & getNodes() const;
         void addChild(std::shared_ptr<LILNode> child);
+        
+        void setPreventEmitCallToIVar(bool newValue);
+        bool getPreventEmitCallToIVar() const;
 
     protected:
         virtual std::shared_ptr<LILClonable> cloneImpl() const;
 
     private:
-
+        bool _preventEmitCallToIVar;
     };
 }
 

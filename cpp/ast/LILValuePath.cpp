@@ -18,12 +18,14 @@ using namespace LIL;
 
 LILValuePath::LILValuePath()
 : LIL::LILNode(NodeTypeValuePath)
+, _preventEmitCallToIVar(false)
 {
 
 }
 
 LILValuePath::LILValuePath(const LILValuePath &other)
 : LILNode(other)
+, _preventEmitCallToIVar(other._preventEmitCallToIVar)
 {
 
 }
@@ -58,4 +60,14 @@ const std::vector<std::shared_ptr<LILNode>> & LILValuePath::getNodes() const
 void LILValuePath::addChild(std::shared_ptr<LILNode> child)
 {
     this->addNode(child);
+}
+
+void LILValuePath::setPreventEmitCallToIVar(bool newValue)
+{
+    this->_preventEmitCallToIVar = newValue;
+}
+
+bool LILValuePath::getPreventEmitCallToIVar() const
+{
+    return this->_preventEmitCallToIVar;
 }

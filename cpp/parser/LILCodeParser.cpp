@@ -1203,8 +1203,11 @@ bool LILCodeParser::readIdentifierStatement()
         {
             return this->readClassDecl();
         }
-        if (d->currentToken->getString() == "var")
-        {
+        if (
+            d->currentToken->getString() == "var"
+            || d->currentToken->getString() == "ivar"
+            || d->currentToken->getString() == "vvar"
+        ){
             return this->readVarDecl();
         }
         if (this->isAssignment()){
@@ -1297,7 +1300,7 @@ bool LILCodeParser::readClassDecl()
         if (
             d->currentToken->getString() == "var"
             || d->currentToken->getString() == "ivar"
-            || d->currentToken->getString() == "prop"
+            || d->currentToken->getString() == "vvar"
             ){
             bool vdValid = this->readVarDecl();
             if (vdValid) {
@@ -1527,9 +1530,14 @@ bool LILCodeParser::readPointerType()
 
 bool LILCodeParser::readVarDecl()
 {
-    //skip the "var"
-    if (d->currentToken->getString() != "var")
+    //skip the var decl keyword
+    if (
+        d->currentToken->getString() != "var"
+        && d->currentToken->getString() != "ivar"
+        && d->currentToken->getString() != "vvar"
+    ) {
         return false;
+    }
 
     LIL_START_NODE(NodeTypeVarDecl)
     d->receiver->receiveNodeData(ParserEventVariableDeclaration, d->currentToken->getString());

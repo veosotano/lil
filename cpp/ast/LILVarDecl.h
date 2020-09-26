@@ -41,12 +41,19 @@ namespace LIL
         
         bool getIsExtern() const;
         void setIsExtern(bool value);
+        void setIsIVar(bool value);
+        bool getIsIVar() const;
+        void setIsVVar(bool value);
+        bool getIsVVar() const;
+        
 
     private:
         virtual std::shared_ptr<LILClonable> cloneImpl() const;
 
         LILString _name;
         bool _isExtern;
+        bool _isIVar;
+        bool _isVVar;
     };
 }
 

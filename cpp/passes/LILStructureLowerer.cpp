@@ -249,39 +249,6 @@ void LILStructureLowerer::_process(std::shared_ptr<LILClassDecl> value)
 
     std::vector<std::shared_ptr<LILNode>> nodes = value->getMethods();
     
-    bool hasCtor = false;
-    for (auto method : nodes) {
-        auto vd = std::static_pointer_cast<LILVarDecl>(method);
-        if (vd->getName() == "construct") {
-            hasCtor = true;
-            break;
-        }
-    }
-    if (!hasCtor) {
-        auto varWrapper = std::make_shared<LILVarDecl>();
-        varWrapper->setName("construct");
-        auto ctor = std::make_shared<LILFunctionDecl>();
-        ctor->setName("construct");
-        ctor->setIsConstructor(true);
-        auto fnTy = std::make_shared<LILFunctionType>();
-        fnTy->setName("fn");
-        ctor->setType(fnTy);
-        auto retTy = std::make_shared<LILType>();
-        retTy->setName("null");
-        ctor->setReturnType(retTy);
-        varWrapper->setInitVal(ctor);
-        newNodes.push_back(varWrapper);
-    }
-    
-    bool hasDtor = false;
-    for (auto method : nodes) {
-        auto vd = std::static_pointer_cast<LILVarDecl>(method);
-        if (vd->getName() == "destruct") {
-            hasDtor = true;
-            break;
-        }
-    }
-
     std::vector<std::shared_ptr<LILNode>> resultNodes;
     for (auto node : nodes) {
         resultNodes.push_back(node);
@@ -299,21 +266,6 @@ void LILStructureLowerer::_process(std::shared_ptr<LILClassDecl> value)
         for (auto newNode : newNodes) {
             value->addMethod(newNode);
         }
-    }
-
-    if (!hasDtor) {
-        auto varWrapper = std::make_shared<LILVarDecl>();
-        varWrapper->setName("destruct");
-        auto dtor = std::make_shared<LILFunctionDecl>();
-        dtor->setName("destruct");
-        auto fnTy = std::make_shared<LILFunctionType>();
-        fnTy->setName("fn");
-        dtor->setType(fnTy);
-        auto retTy = std::make_shared<LILType>();
-        retTy->setName("null");
-        dtor->setReturnType(retTy);
-        varWrapper->setInitVal(dtor);
-        value->addMethod(varWrapper);
     }
 }
 

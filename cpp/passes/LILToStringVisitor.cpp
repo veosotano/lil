@@ -339,10 +339,16 @@ LILToStrInfo LILToStringVisitor::stringify(LILVarDecl value)
     LILNode * type = value.getType().get();
     LILString externStr = value.getIsExtern() ? "extern " : "";
 
+    LILString vdType = "";
+    if (value.getIsIVar()) {
+        vdType = "(ivar) ";
+    } else if (value.getIsVVar()) {
+        vdType = "(vvar) ";
+    }
     if (type) {
-        ret.value = "Var declaration " + externStr + "(" + type->stringRep() + "): " + value.getName();
+        ret.value = "Var declaration " + vdType + externStr + "(" + type->stringRep() + "): " + value.getName();
     } else {
-        ret.value = "Var declaration: " + externStr + value.getName();
+        ret.value = "Var declaration: " + vdType + externStr + value.getName();
     }
     for (auto node : value.getInitVals()) {
         ret.children.push_back(this->stringify(node.get()));

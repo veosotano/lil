@@ -49,6 +49,7 @@ namespace LIL
         void setDebugASTValidator(bool value);
         void setDebugTypeGuesser(bool value);
         void setDebugStructureLowerer(bool value);
+        void setDebugMethodInserter(bool value);
         void setDebugNameLowerer(bool value);
         void setDebugFieldSorter(bool value);
         void setDebugParameterSorter(bool value);
