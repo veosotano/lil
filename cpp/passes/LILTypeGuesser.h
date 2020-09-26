@@ -37,6 +37,7 @@
 #include "LILMultipleType.h"
 #include "LILObjectDefinition.h"
 #include "LILPercentageLiteral.h"
+#include "LILPointerType.h"
 #include "LILPropertyName.h"
 #include "LILValuePath.h"
 #include "LILRootNode.h"
