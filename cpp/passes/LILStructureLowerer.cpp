@@ -188,6 +188,11 @@ void LILStructureLowerer::process(std::shared_ptr<LILNode> node)
             std::shared_ptr<LILFlowControl> value = std::static_pointer_cast<LILFlowControl>(node);
             return this->_process(value);
         }
+        case NodeTypeFlowControlCall:
+        {
+            std::shared_ptr<LILFlowControlCall> value = std::static_pointer_cast<LILFlowControlCall>(node);
+            return this->_process(value);
+        }
         case NodeTypeInstruction:
         {
             std::shared_ptr<LILInstruction> value = std::static_pointer_cast<LILInstruction>(node);
@@ -447,6 +452,11 @@ void LILStructureLowerer::_process(std::shared_ptr<LILFlowControl> value)
 {
     this->processChildren(value->getThen());
     this->processChildren(value->getElse());
+}
+
+void LILStructureLowerer::_process(std::shared_ptr<LILFlowControlCall> value)
+{
+    this->process(value->getArgument());
 }
 
 void LILStructureLowerer::_process(std::shared_ptr<LILInstruction> value)

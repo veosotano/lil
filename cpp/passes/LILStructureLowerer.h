@@ -26,6 +26,7 @@
 #include "LILFilter.h"
 #include "LILFlag.h"
 #include "LILFlowControl.h"
+#include "LILFlowControlCall.h"
 #include "LILFunctionCall.h"
 #include "LILFunctionDecl.h"
 #include "LILFunctionType.h"
@@ -86,6 +87,7 @@ namespace LIL
         void _process(std::shared_ptr<LILFunctionDecl> value);
         void _process(std::shared_ptr<LILFunctionCall> value);
         void _process(std::shared_ptr<LILFlowControl> value);
+        void _process(std::shared_ptr<LILFlowControlCall> value);
         void _process(std::shared_ptr<LILInstruction> value);
 
         void processChildren(const std::vector<std::shared_ptr<LILNode> > &children);
