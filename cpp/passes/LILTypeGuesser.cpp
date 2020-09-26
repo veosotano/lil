@@ -700,12 +700,12 @@ std::shared_ptr<LILType> LILTypeGuesser::recursiveFindTypeFromAncestors(std::sha
                         if (firstNode->isA(NodeTypePropertyName)) {
                             subjectName = std::static_pointer_cast<LILPropertyName>(firstNode)->getName();
                         } else {
-                            std::cerr << "FAIL!!!!";
+                            std::cerr << "FIRST NODE WAS NOT PROPERTY NAME FAIL!!!!";
                             return nullptr;
                         }
                         
                     } else {
-                        std::cerr << "FAIL!!!!";
+                        std::cerr << "SUBJECT WAS NOT VALUE PATH FAIL!!!!";
                         return nullptr;
                     }
 
@@ -724,12 +724,13 @@ std::shared_ptr<LILType> LILTypeGuesser::recursiveFindTypeFromAncestors(std::sha
                             }
                             
                         } else {
-                            std::cerr << "FAIL!!!!";
+                            std::cerr << "FIELD WAS NOT VAR DECL FAIL!!!!";
                             return nullptr;
                         }
                     }
+                
                 } else {
-                    std::cerr << "FAIL!!!!";
+                    //std::cerr << "ASSIGNMENT INSIDE UNKNOWN PARENT FAIL!!!!";
                     return nullptr;
                 }
                 

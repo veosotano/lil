@@ -95,9 +95,10 @@ namespace LIL
 
     private:
         std::vector<std::vector<std::shared_ptr<LILNode>>> _nodeBuffer;
+        bool _debug;
+
         std::vector<std::shared_ptr<LILNode>> reduceIfIsBlocks(std::shared_ptr<LILNode> node, LILString argName, LILString tyName);
         void replaceNodeWithContents(std::shared_ptr<LILNode> node, std::vector<std::shared_ptr<LILNode>> contents);
-        bool _debug;
     };
 }
 
