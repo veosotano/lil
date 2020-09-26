@@ -332,7 +332,7 @@ void LILStructureLowerer::_process(std::shared_ptr<LILFunctionDecl> value)
         {
             auto ty = value->getType();
 
-            if (ty->getTypeType() == TypeTypeFunction) {
+            if (ty && ty->getTypeType() == TypeTypeFunction) {
                 auto fnTy = std::static_pointer_cast<LILFunctionType>(ty);
                 for (auto tyArg : fnTy->getArguments()) {
                     if ((tyArg->getTypeType() == TypeTypeMultiple) && !tyArg->getIsWeakType()) {
