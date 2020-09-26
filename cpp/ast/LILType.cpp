@@ -137,6 +137,7 @@ std::shared_ptr<LILType> LILType::make(LILString name)
 LILType::LILType()
 : LIL::LILNode(NodeTypeType)
 , _typeType(TypeTypeSingle)
+, _isNullable(false)
 {
     
 }
@@ -144,6 +145,7 @@ LILType::LILType()
 LILType::LILType(TypeType type)
 : LIL::LILNode(NodeTypeType)
 , _typeType(type)
+, _isNullable(false)
 {
     
 }
@@ -153,6 +155,7 @@ LILType::LILType(const LILType &other)
 {
     this->_name = other._name;
     this->_typeType = other._typeType;
+    this->_isNullable = other._isNullable;
 }
 
 std::shared_ptr<LILType> LILType::clone() const
@@ -177,6 +180,7 @@ bool LILType::equalTo(std::shared_ptr<LILNode> otherNode)
     std::shared_ptr<LILType> castedNode = std::static_pointer_cast<LILType>(otherNode);
     if ( this->_name != castedNode->_name ) return false;
     if ( this->_typeType != castedNode->_typeType ) return false;
+    if ( this->_isNullable != castedNode->_isNullable )  return false;
     return true;
 }
 
@@ -187,7 +191,12 @@ void LILType::receiveNodeData(const LIL::LILString &data)
 
 LILString LILType::stringRep()
 {
-    return this->getName();
+    auto name = this->getName();
+    if (this->getIsNullable()) {
+        return name + "?";
+    } else {
+        return name;
+    }
 }
 
 void LILType::setName(LILString newName)
@@ -218,4 +227,14 @@ void LILType::setTypeType(TypeType newType)
 bool LILType::isA(TypeType otherType) const
 {
     return this->_typeType == otherType;
+}
+
+bool LILType::getIsNullable() const
+{
+    return this->_isNullable;
+}
+
+void LILType::setIsNullable(bool newValue)
+{
+    this->_isNullable = newValue;
 }

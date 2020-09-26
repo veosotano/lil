@@ -385,6 +385,29 @@ void LILTypeGuesser::_process(LILVarDecl * value)
             //this->searchForType(value);
         }
     }
+    auto ty = value->getType();
+    if (ty && ty->isA(TypeTypeMultiple)) {
+        auto multiTy = std::static_pointer_cast<LILMultipleType>(ty);
+        bool isNullable = false;
+        std::vector<std::shared_ptr<LILType>> newTypes;
+        for (auto mTy : multiTy->getTypes()) {
+            if (mTy->getName() == "null") {
+                isNullable = true;
+            } else {
+                newTypes.push_back(mTy);
+            }
+        }
+        if (isNullable) {
+            if (newTypes.size() == 1) {
+                auto theType = newTypes.front();
+                theType->setIsNullable(true);
+                value->setType(theType);
+            } else {
+                multiTy->setIsNullable(true);
+                multiTy->setTypes(newTypes);
+            }
+        }
+    }
 }
 
 void LILTypeGuesser::_process(LILClassDecl * value)
@@ -913,11 +936,11 @@ std::shared_ptr<LILType> LILTypeGuesser::getExpType(std::shared_ptr<LILExpressio
                 return leftType;
             }
         }
-        std::shared_ptr<LILType> leftTy = std::static_pointer_cast<LILType>(leftType);
-        std::shared_ptr<LILType> rightTy = std::static_pointer_cast<LILType>(rightType);
-        auto mergedTy = LILType::merge(leftTy, rightTy);
+        auto mergedTy = LILType::merge(leftType, rightType);
         if (mergedTy->getIsWeakType()) {
             return this->recursiveFindTypeFromAncestors(exp);
+        } else {
+            return mergedTy;
         }
     }
     else if (!leftType && rightType) {

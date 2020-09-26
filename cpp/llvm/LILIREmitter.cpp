@@ -1694,27 +1694,35 @@ llvm::Type * LILIREmitter::llvmTypeFromLILType(std::shared_ptr<LILType> type)
         return llvm::StructType::get(d->llvmContext, structTypes);
     }
     LILString typestr = type->getName();
+    llvm::Type * ret = nullptr;
     if (typestr == "bool") {
-        return llvm::Type::getInt1Ty(d->llvmContext);
+        ret = llvm::Type::getInt1Ty(d->llvmContext);
     } else if (typestr == "i8"){
-        return llvm::Type::getInt8Ty(d->llvmContext);
+        ret = llvm::Type::getInt8Ty(d->llvmContext);
     } else if (typestr == "i16"){
-        return llvm::Type::getInt16Ty(d->llvmContext);
+        ret = llvm::Type::getInt16Ty(d->llvmContext);
     } else if (typestr == "i32"){
-        return llvm::Type::getInt32Ty(d->llvmContext);
+        ret = llvm::Type::getInt32Ty(d->llvmContext);
     } else if (typestr == "i64"){
-        return llvm::Type::getInt64Ty(d->llvmContext);
+        ret = llvm::Type::getInt64Ty(d->llvmContext);
     } else if (typestr == "f32"){
-        return llvm::Type::getFloatTy(d->llvmContext);
+        ret = llvm::Type::getFloatTy(d->llvmContext);
     } else if (typestr == "f64"){
-        return llvm::Type::getDoubleTy(d->llvmContext);
+        ret = llvm::Type::getDoubleTy(d->llvmContext);
     } else if (typestr == "cstr"){
         auto charType = llvm::IntegerType::get(d->llvmContext, 8);
         return charType->getPointerTo();
     } else if (typestr == "null") {
         return nullptr;
     }
-    std::cerr << "!!!!!!!!!!FAIL!!!!!!!!!!!!!!!!\n";
+    if (ret && type->getIsNullable() && ret->getTypeID() != llvm::Type::PointerTyID) {
+        return ret->getPointerTo();
+    }
+    
+    if (ret)
+        return ret;
+    
+    std::cerr << "!!!!!!!!!!COULD NOT MAKE LLVM TYPE FAIL!!!!!!!!!!!!!!!!\n";
     return nullptr;
 }
 

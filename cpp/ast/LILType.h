@@ -44,12 +44,16 @@ namespace LIL
         void setTypeType(TypeType newType);
         virtual bool isA(TypeType otherType) const;
         
+        bool getIsNullable() const;
+        void setIsNullable(bool newValue);
+        
     protected:
         virtual std::shared_ptr<LILClonable> cloneImpl() const;
         
     private:
         LILString _name;
         TypeType _typeType;
+        bool _isNullable;
     };
 }
 
