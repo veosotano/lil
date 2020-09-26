@@ -300,8 +300,9 @@ void LILTypeGuesser::_process(LILBoolLiteral * value)
 void LILTypeGuesser::_process(LILNumberLiteral * value)
 {
     std::shared_ptr<LILType> ty1 = value->getType();
+    auto sharedVal = value->shared_from_this();
     if (ty1 && ty1->getIsWeakType()) {
-        std::shared_ptr<LILType>ty2 = this->recursiveFindTypeFromAncestors(value->shared_from_this());
+        std::shared_ptr<LILType>ty2 = this->recursiveFindTypeFromAncestors(sharedVal);
         auto ty3 = LILType::merge(ty1, ty2);
         if (ty3) {
             if (ty3->getIsWeakType()) {
@@ -309,6 +310,7 @@ void LILTypeGuesser::_process(LILNumberLiteral * value)
                 value->setType(multiTy->getTypes().front());
             } else {
                 value->setType(ty3);
+                this->setTypeOnAncestorIfNeeded(sharedVal, ty3);
             }
         }
     }
@@ -321,6 +323,11 @@ void LILTypeGuesser::_process(LILPercentageLiteral * value)
 
 void LILTypeGuesser::_process(LILExpression * value)
 {
+    auto existingTy = value->getType();
+    if (existingTy) {
+        return;
+    }
+
     std::shared_ptr<LILNode> left = value->getLeft();
     std::shared_ptr<LILNode> right = value->getRight();
 
@@ -755,6 +762,27 @@ std::shared_ptr<LILType> LILTypeGuesser::recursiveFindTypeFromAncestors(std::sha
     return nullptr;
 }
 
+void LILTypeGuesser::setTypeOnAncestorIfNeeded(std::shared_ptr<LILNode> value, std::shared_ptr<LILType> ty)
+{
+    auto parent = value->getParentNode();
+    if (parent) {
+        switch (parent->getNodeType()) {
+            case NodeTypeExpression:
+            {
+                auto exp = std::static_pointer_cast<LILExpression>(parent);
+                if (!exp->getType()) {
+                    exp->setType(ty);
+                    this->setTypeOnAncestorIfNeeded(exp, ty);
+                }
+                break;
+            }
+                
+            default:
+                break;
+        }
+    }
+}
+
 std::shared_ptr<LILFunctionDecl> LILTypeGuesser::recursiveFindFunctionDecl(std::shared_ptr<LILNode> node) const
 {
     std::shared_ptr<LILNode> parent = node->getParentNode();
@@ -919,6 +947,13 @@ std::shared_ptr<LILType> LILTypeGuesser::getNodeType(std::shared_ptr<LILNode> no
 
 std::shared_ptr<LILType> LILTypeGuesser::getExpType(std::shared_ptr<LILExpression> exp) const
 {
+    //try to find upwards in the tree first
+    auto ancestorTy = this->recursiveFindTypeFromAncestors(exp);
+    if (ancestorTy) {
+        return ancestorTy;
+    }
+    
+    //try to find from contents
     std::shared_ptr<LILNode> left = exp->getLeft();
     std::shared_ptr<LILType> leftType = this->getNodeType(left);
     if (left->isA(NodeTypeExpression)) {
