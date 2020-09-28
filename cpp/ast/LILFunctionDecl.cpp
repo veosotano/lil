@@ -114,7 +114,10 @@ LILString LILFunctionDecl::stringRep()
     switch (this->getFunctionDeclType())
     {
         case FunctionDeclTypeNone: return "";
-        case FunctionDeclTypeFn: return "fn";
+        case FunctionDeclTypeFn:
+        {
+            return "fn " + this->getName();
+        }
         case FunctionDeclTypeInsert: return "insert";
         case FunctionDeclTypeOverride: return "override";
         case FunctionDeclTypeMacro: return "macro";
