@@ -93,6 +93,8 @@ LILString LILNode::nodeTypeToString(NodeType nodeType)
             return "whitespace";
         case NodeTypeFlowControl:
             return "flow control";
+        case NodeTypeFlowControlCall:
+            return "flow control call";
 
         default:
             return "ERROR: unknown node type";
