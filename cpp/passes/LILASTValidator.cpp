@@ -621,7 +621,27 @@ void LILASTValidator::_validate(LILFlowControl * value)
 
 void LILASTValidator::_validate(LILFlowControlCall * value)
 {
-    
+    auto arg = value->getArgument();
+    if (arg) {
+        switch (arg->getNodeType()) {
+            case NodeTypeNumberLiteral:
+            case NodeTypeStringLiteral:
+            case NodeTypeStringFunction:
+            case NodeTypeBool:
+            case NodeTypeExpression:
+            case NodeTypeArray:
+            case NodeTypeValuePath:
+            case NodeTypeSelector:
+            case NodeTypeObjectDefinition:
+                break;
+            default:
+                this->illegalNodeType(arg.get(), value);
+                break;
+        }
+        if (this->_debug && !this->hasErrors()) {
+            std::cerr << "The argument is a " + LILNode::nodeTypeToString(arg->getNodeType()).data() +". OK\n";
+        }
+    }
 }
 
 void LILASTValidator::_validate(LILInstruction * value)
