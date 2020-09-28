@@ -770,10 +770,9 @@ llvm::Value * LILIREmitter::_emit(LILAssignment * value)
                                     ty->isA(TypeTypePointer)
                                     && llvmValue->getType()->getTypeID() != llvm::Type::PointerTyID
                                     ){
-                                    llvm::Value * llvmSubject = this->emit(subjectVal.get());
+                                    llvmSubject = d->irBuilder.CreateLoad(llvmSubject);
                                     return d->irBuilder.CreateStore(llvmValue, llvmSubject);
                                 } else {
-                                    llvm::Value * llvmSubject = this->_emitPointer(static_cast<LILValuePath *>(subjectVal.get()));
                                     return d->irBuilder.CreateStore(llvmValue, llvmSubject);
                                 }
                             } else {
