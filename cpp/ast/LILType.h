@@ -30,25 +30,25 @@ namespace LIL
         LILType(const LILType &other);
         std::shared_ptr<LILType> clone() const;
         virtual ~LILType();
-        bool equalTo(std::shared_ptr<LILNode> otherNode);
-        virtual void receiveNodeData(const LILString & data);
+        bool equalTo(std::shared_ptr<LILNode> otherNode) override;
+        virtual void receiveNodeData(const LILString & data) override;
         
-        LILString stringRep();
+        LILString stringRep() override;
         
         void setName(LILString newName);
         const LILString getName() const;
         
         virtual bool getIsWeakType() const;
         
-        TypeType getTypeType() const;
+        TypeType getTypeType() const override;
         void setTypeType(TypeType newType);
-        virtual bool isA(TypeType otherType) const;
+        virtual bool isA(TypeType otherType) const override;
         
         bool getIsNullable() const;
         void setIsNullable(bool newValue);
         
     protected:
-        virtual std::shared_ptr<LILClonable> cloneImpl() const;
+        virtual std::shared_ptr<LILClonable> cloneImpl() const override;
         
     private:
         LILString _name;
