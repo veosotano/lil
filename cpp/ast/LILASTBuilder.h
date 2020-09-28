@@ -77,6 +77,8 @@ namespace LIL
 
         std::shared_ptr<LILRootNode> getRootNode() const;
         bool hasErrors() const;
+        void printErrors(const LILString & code) const;
+        std::vector<std::string> splitString(std::string code, std::string delimiter) const;
         
         void setVerbose(bool value);
         void setDebugAST(bool value);

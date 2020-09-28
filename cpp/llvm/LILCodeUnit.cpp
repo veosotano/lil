@@ -145,6 +145,11 @@ void LILCodeUnit::run()
     d->pm->setVerbose(verbose);
 
     d->parser->parseString(d->source);
+    
+    if (d->astBuilder->hasErrors()) {
+        d->astBuilder->printErrors(d->source);
+        return;
+    }
 
     if (verbose) {
         d->pm->addPass(std::make_unique<LILToStringVisitor>());
@@ -225,7 +230,7 @@ void LILCodeUnit::run()
     d->pm->execute(d->astBuilder->getRootNode(), d->source);
 
     if (d->pm->hasErrors()) {
-        std::cerr << "Errors encountered. Exiting.";
+        std::cerr << "Errors encountered. Exiting.\n";
         return;
     }
 
@@ -272,6 +277,10 @@ void LILCodeUnit::compileToO(std::string outName)
         return;
     }
     this->run();
+    
+    if (d->astBuilder->hasErrors() || d->pm->hasErrors()) {
+        return;
+    }
 
     if (d->verbose) {
         d->irEmitter->printIR(llvm::errs());
@@ -294,6 +303,10 @@ void LILCodeUnit::compileToS(std::string outName)
 {
     std::error_code error_code;
     this->run();
+    
+    if (d->astBuilder->hasErrors() || d->pm->hasErrors()) {
+        return;
+    }
 
     if (d->verbose) {
         d->irEmitter->printIR(llvm::errs());
@@ -311,6 +324,9 @@ void LILCodeUnit::compileToS(std::string outName)
 void LILCodeUnit::printToOutput()
 {
     this->run();
+    if (d->astBuilder->hasErrors() || d->pm->hasErrors()) {
+        return;
+    }
     if (d->irEmitter){
         //avoid showing IR twice when outputting
         //isatty(1) checks stdout and isatty(2) checks stderr, they say
