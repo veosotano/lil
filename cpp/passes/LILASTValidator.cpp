@@ -240,7 +240,9 @@ void LILASTValidator::validate(LILNode * node)
 
 void LILASTValidator::_validate(LILBoolLiteral * value)
 {
-    //nothing to validate
+    if (this->_debug) {
+        std::cerr << "Nothing to do. OK\n";
+    }
 }
 
 void LILASTValidator::_validate(LILNumberLiteral * value)
@@ -253,12 +255,18 @@ void LILASTValidator::_validate(LILNumberLiteral * value)
         ei.line = sl.line;
         ei.column = sl.column;
         this->errors.push_back(ei);
+    } else {
+        if (this->_debug) {
+            std::cerr << "Number literal was not empty. OK\n";
+        }
     }
 }
 
 void LILASTValidator::_validate(LILPercentageLiteral * value)
 {
-    //todo
+    if (this->_debug) {
+        std::cerr << "Nothing to do. OK\n";
+    }
 }
 
 void LILASTValidator::_validate(LILExpression * value)
@@ -295,7 +303,9 @@ void LILASTValidator::_validate(LILExpression * value)
 
 void LILASTValidator::_validate(LILStringLiteral * value)
 {
-
+    if (this->_debug) {
+        std::cerr << "Nothing to do. OK\n";
+    }
 }
 
 void LILASTValidator::_validate(LILStringFunction * value)
@@ -329,6 +339,9 @@ void LILASTValidator::_validate(LILStringFunction * value)
 
 void LILASTValidator::_validate(LILNullLiteral * value)
 {
+    if (this->_debug) {
+        std::cerr << "Nothing to do. OK\n";
+    }
 }
 
 void LILASTValidator::_validate(LILType * value)
@@ -415,68 +428,104 @@ void LILASTValidator::_validate(LILType * value)
     }
 }
 
+
 void LILASTValidator::_validate(LILVarDecl * value)
 {
-
+    auto ty = value->getType();
+    if (ty) {
+        this->validate(ty.get());
+    }
 }
 
 void LILASTValidator::_validate(LILClassDecl * value)
 {
-
+    if (this->_debug) {
+        std::cerr << "Nothing to do. OK\n";
+    }
 }
 
 void LILASTValidator::_validate(LILObjectDefinition * value)
 {
-
+    if (this->_debug) {
+        std::cerr << "Nothing to do. OK\n";
+    }
 }
 
 void LILASTValidator::_validate(LILAssignment * value)
 {
-
+    if (this->_debug) {
+        std::cerr << "Nothing to do. OK\n";
+    }
 }
 
 void LILASTValidator::_validate(LILValuePath * value)
 {
-
+    if (this->_debug) {
+        std::cerr << "Nothing to do. OK\n";
+    }
 }
 
 void LILASTValidator::_validate(LILPropertyName * value)
 {
+    if (this->_debug) {
+        std::cerr << "Nothing to do. OK\n";
+    }
 }
 
 void LILASTValidator::_validate(LILRule * value)
 {
-
+    if (this->_debug) {
+        std::cerr << "Nothing to do. OK\n";
+    }
 }
 
 void LILASTValidator::_validate(LILSimpleSelector * value)
 {
-
+    if (this->_debug) {
+        std::cerr << "Nothing to do. OK\n";
+    }
 }
 
 void LILASTValidator::_validate(LILSelectorChain * value)
 {
-
+    if (this->_debug) {
+        std::cerr << "Nothing to do. OK\n";
+    }
 }
 
 void LILASTValidator::_validate(LILSelector * value)
 {
+    if (this->_debug) {
+        std::cerr << "Nothing to do. OK\n";
+    }
 }
 
 void LILASTValidator::_validate(LILCombinator * value)
 {
+    if (this->_debug) {
+        std::cerr << "Nothing to do. OK\n";
+    }
 }
 
 void LILASTValidator::_validate(LILFilter * value)
 {
+    if (this->_debug) {
+        std::cerr << "Nothing to do. OK\n";
+    }
 }
 
 void LILASTValidator::_validate(LILFlag * value)
 {
+    if (this->_debug) {
+        std::cerr << "Nothing to do. OK\n";
+    }
 }
 
 void LILASTValidator::_validate(LILVarName * value)
 {
+    if (this->_debug) {
+        std::cerr << "Nothing to do. OK\n";
+    }
 }
 
 void LILASTValidator::_validate(LILFunctionDecl * value)
@@ -616,7 +665,9 @@ void LILASTValidator::_validate(LILFunctionCall * value)
 
 void LILASTValidator::_validate(LILFlowControl * value)
 {
-    
+    if (this->_debug) {
+        std::cerr << "Nothing to do. OK\n";
+    }
 }
 
 void LILASTValidator::_validate(LILFlowControlCall * value)
@@ -646,6 +697,9 @@ void LILASTValidator::_validate(LILFlowControlCall * value)
 
 void LILASTValidator::_validate(LILInstruction * value)
 {
+    if (this->_debug) {
+        std::cerr << "Nothing to do. OK\n";
+    }
 }
 
 void LILASTValidator::validateChildren(const std::vector<std::shared_ptr<LILNode> > &children)
