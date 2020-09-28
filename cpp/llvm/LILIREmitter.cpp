@@ -620,7 +620,26 @@ llvm::Value * LILIREmitter::_emit(LILAssignment * value)
         auto vp = std::static_pointer_cast<LILValuePath>(subjectVal);
         
         const auto & childNodes = vp->getNodes();
-        if (childNodes.size() > 1) {
+        if (childNodes.size() == 1) {
+            auto firstNode = childNodes.front();
+            if (firstNode->isA(NodeTypeVarName)) {
+                auto vd = std::static_pointer_cast<LILVarName>(firstNode);
+                llvm::Value * llvmSubject = d->namedValues[vd->getName().data()];
+                
+                auto ty = value->getType();
+                if (
+                    ty->isA(TypeTypePointer)
+                    && llvmValue->getType()->getTypeID() != llvm::Type::PointerTyID
+                    ){
+                    llvmSubject = d->irBuilder.CreateLoad(llvmSubject);
+                    return d->irBuilder.CreateStore(llvmValue, llvmSubject);
+                } else {
+                    return d->irBuilder.CreateStore(llvmValue, llvmSubject);
+                }
+                
+                return d->irBuilder.CreateStore(llvmValue, llvmSubject);
+            }
+        } else if (childNodes.size() > 1) {
             auto it = childNodes.begin();
             auto firstNode = *it;
             bool isExtern = false;
