@@ -34,7 +34,9 @@
 #include "LILNullLiteral.h"
 #include "LILNumberLiteral.h"
 #include "LILObjectDefinition.h"
+#include "LILObjectType.h"
 #include "LILPercentageLiteral.h"
+#include "LILPointerType.h"
 #include "LILPropertyName.h"
 #include "LILValuePath.h"
 #include "LILRule.h"
@@ -43,7 +45,6 @@
 #include "LILSimpleSelector.h"
 #include "LILStringFunction.h"
 #include "LILStringLiteral.h"
-#include "LILType.h"
 #include "LILVarDecl.h"
 #include "LILVarName.h"
 
