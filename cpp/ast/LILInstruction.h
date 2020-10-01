@@ -37,12 +37,16 @@ namespace LIL
         void setIsColorInstruction(bool value);
         bool getIsColorInstruction() const;
         
+        void setArgument(std::shared_ptr<LILNode> value);
+        std::shared_ptr<LILNode> getArgument() const;
+        
     protected:
         virtual std::shared_ptr<LILClonable> cloneImpl() const;
         
     private:
-        InstructionType _instructionType;
         LILString _name;
+        std::shared_ptr<LILNode> _argument;
+        InstructionType _instructionType;
         bool _isColorInstruction;
     };
 }

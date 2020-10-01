@@ -28,6 +28,7 @@ LILInstruction::LILInstruction(const LILInstruction &other)
     this->_instructionType = other._instructionType;
     this->_name = other._name;
     this->_isColorInstruction = other._isColorInstruction;
+    this->_argument = other._argument;
 }
 
 std::shared_ptr<LILInstruction> LILInstruction::clone() const
@@ -38,6 +39,9 @@ std::shared_ptr<LILInstruction> LILInstruction::clone() const
 std::shared_ptr<LILClonable> LILInstruction::cloneImpl() const
 {
     std::shared_ptr<LILInstruction> clone(new LILInstruction(*this));
+    if (this->_argument) {
+        clone->setArgument(this->_argument->clone());
+    }
     return clone;
 }
 
@@ -111,4 +115,14 @@ void LILInstruction::setIsColorInstruction(bool value)
 bool LILInstruction::getIsColorInstruction() const
 {
     return this->_isColorInstruction;
+}
+
+void LILInstruction::setArgument(std::shared_ptr<LILNode> value)
+{
+    this->_argument = value;
+}
+
+std::shared_ptr<LILNode> LILInstruction::getArgument() const
+{
+    return this->_argument;
 }

@@ -614,6 +614,12 @@ void LILASTBuilder::receiveNodeCommit()
             fcc->setArgument(this->currentNode);
             break;
         }
+        case BuilderStateInstruction:
+        {
+            auto instr = std::static_pointer_cast<LILInstruction>(this->currentContainer.back());
+            instr->setArgument(this->currentNode);
+            break;
+        }
         default:
             std::cerr << "Error: Unknown builder state\n";
             break;
@@ -889,6 +895,23 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
                     instr->setName(data);
                     instr->setInstructionType(InstructionTypeRRGGBBAA);
                     instr->setIsColorInstruction(true);
+                    break;
+                }
+                case ParserEventInstruction:
+                {
+                    std::shared_ptr<LILInstruction> instr = std::static_pointer_cast<LILInstruction>(this->currentContainer.back());
+                    instr->setName(data);
+                    if (data == "needs") {
+                        instr->setInstructionType(InstructionTypeNeeds);
+                    } else if (data == "new") {
+                        instr->setInstructionType(InstructionTypeNew);
+                    } else if (data == "move") {
+                        instr->setInstructionType(InstructionTypeMove);
+                    } else if (data == "delete") {
+                        instr->setInstructionType(InstructionTypeDelete);
+                    } else if (data == "configure") {
+                        instr->setInstructionType(InstructionTypeConfigure);
+                    }
                     break;
                 }
                 default:
