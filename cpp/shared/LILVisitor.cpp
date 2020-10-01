@@ -80,8 +80,10 @@ void LILVisitor::printErrors(const LILString & code) const
         std::cerr << lines[ei.line-1];
         std::cerr << "\n";
         std::string indicator = "   ";
-        for (unsigned i=0; i<ei.column-3; ++i) {
-            indicator += " ";
+        if (ei.column > 2) {
+            for (unsigned i=0; i<ei.column-3; ++i) {
+                indicator += " ";
+            }
         }
         indicator+= "__^__\n";
         std::cerr << indicator;
