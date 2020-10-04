@@ -2920,7 +2920,11 @@ bool LILCodeParser::readInstruction()
 
         if (currentval == "needs")
         {
-            return this->readNeedsInstr();
+            bool isValid = this->readNeedsInstr();
+            if (isValid && !this->atEndOfSource()) {
+                this->skip(TokenTypeWhitespace);
+                return true;
+            }
         }
         else if (currentval == "new")
         {
@@ -3041,7 +3045,7 @@ bool LILCodeParser::readColor()
 
     this->readNextToken();
 
-    LIL_END_NODE
+    LIL_END_NODE_SKIP(false)
 }
 
 bool LILCodeParser::readNeedsInstr()
@@ -3063,7 +3067,7 @@ bool LILCodeParser::readNeedsInstr()
     LIL_EXPECT(TokenTypeSemicolon, "semicolon");
     d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
     this->readNextToken();
-    LIL_END_NODE
+    LIL_END_NODE_SKIP(false)
 }
 
 bool LILCodeParser::readNewInstr()
