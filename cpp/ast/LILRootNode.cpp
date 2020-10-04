@@ -32,6 +32,8 @@ LILRootNode::LILRootNode(const LILRootNode & other)
 : LILVarNode(other)
 {
     this->_localVars = other._localVars;
+    this->_mainFunction = other._mainFunction;
+    this->_classes = other._classes;
 }
 
 LILRootNode::~LILRootNode()
