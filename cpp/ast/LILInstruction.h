@@ -28,10 +28,10 @@ namespace LIL
         LILInstruction(const LILInstruction &other);
         std::shared_ptr<LILInstruction> clone() const;
         virtual ~LILInstruction();
-        virtual LILString stringRep();
-        virtual void receiveNodeData(const LILString &data);
+        virtual LILString stringRep() override;
+        virtual void receiveNodeData(const LILString &data) override;
         void setInstructionType(InstructionType value);
-        InstructionType getInstructionType() const;
+        InstructionType getInstructionType() const override;
         bool isA(InstructionType otherType) const override;
         void setName(LILString name);
         LILString getName() const;
@@ -42,7 +42,7 @@ namespace LIL
         std::shared_ptr<LILNode> getArgument() const;
         
     protected:
-        virtual std::shared_ptr<LILClonable> cloneImpl() const;
+        virtual std::shared_ptr<LILClonable> cloneImpl() const  override;
         
     private:
         LILString _name;
