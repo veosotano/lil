@@ -18,7 +18,6 @@
 using namespace LIL;
 
 LILParameterSorter::LILParameterSorter()
-: _debug(false)
 {
 }
 
@@ -43,7 +42,7 @@ void LILParameterSorter::visit(LILNode *node)
 
 void LILParameterSorter::process(LILNode * node)
 {
-    if (this->_debug) {
+    if (this->getDebug()) {
         std::cerr << "## sorting parameters " + LILNode::nodeTypeToString(node->getNodeType()).data() + " " + node->stringRep().data() + " ##\n";
     }
     switch (node->getNodeType()) {
@@ -467,11 +466,6 @@ void LILParameterSorter::processChildren(const std::vector<std::shared_ptr<LILNo
     {
         this->process((*it).get());
     };
-}
-
-void LILParameterSorter::setDebug(bool value)
-{
-    this->_debug = value;
 }
 
 std::shared_ptr<LILAssignment> LILParameterSorter::_varDeclToAssignment(std::shared_ptr<LILVarDecl> vd)

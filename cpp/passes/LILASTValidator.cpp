@@ -17,7 +17,6 @@
 using namespace LIL;
 
 LILASTValidator::LILASTValidator()
-: _debug(false)
 {
 }
 
@@ -61,7 +60,7 @@ void LILASTValidator::illegalNodeType(LILNode* illegalNode, LILNode* container)
 
 void LILASTValidator::validate(LILNode * node)
 {
-    if (this->_debug) {
+    if (this->getDebug()) {
         std::cerr << "## validating " + LILNode::nodeTypeToString(node->getNodeType()).data() + " " + node->stringRep().data() + " ##\n";
     }
     switch (node->getNodeType()) {
@@ -240,7 +239,7 @@ void LILASTValidator::validate(LILNode * node)
 
 void LILASTValidator::_validate(LILBoolLiteral * value)
 {
-    if (this->_debug) {
+    if (this->getDebug()) {
         std::cerr << "Nothing to do. OK\n";
     }
 }
@@ -256,7 +255,7 @@ void LILASTValidator::_validate(LILNumberLiteral * value)
         ei.column = sl.column;
         this->errors.push_back(ei);
     } else {
-        if (this->_debug) {
+        if (this->getDebug()) {
             std::cerr << "Number literal was not empty. OK\n";
         }
     }
@@ -264,7 +263,7 @@ void LILASTValidator::_validate(LILNumberLiteral * value)
 
 void LILASTValidator::_validate(LILPercentageLiteral * value)
 {
-    if (this->_debug) {
+    if (this->getDebug()) {
         std::cerr << "Nothing to do. OK\n";
     }
 }
@@ -303,7 +302,7 @@ void LILASTValidator::_validate(LILExpression * value)
 
 void LILASTValidator::_validate(LILStringLiteral * value)
 {
-    if (this->_debug) {
+    if (this->getDebug()) {
         std::cerr << "Nothing to do. OK\n";
     }
 }
@@ -339,7 +338,7 @@ void LILASTValidator::_validate(LILStringFunction * value)
 
 void LILASTValidator::_validate(LILNullLiteral * value)
 {
-    if (this->_debug) {
+    if (this->getDebug()) {
         std::cerr << "Nothing to do. OK\n";
     }
 }
@@ -384,7 +383,7 @@ void LILASTValidator::_validate(LILType * value)
                 ei.line = sl.line;
                 ei.column = sl.column;
                 this->errors.push_back(ei);
-            } else if (this->_debug) {
+            } else if (this->getDebug()) {
                 std::cerr << "Object type had " << fields.size() << " fields. OK\n";
             }
             for (auto field : fields) {
@@ -392,7 +391,7 @@ void LILASTValidator::_validate(LILType * value)
                     this->illegalNodeType(field.get(), value);
                 }
             }
-            if (this->_debug && !this->hasErrors()) {
+            if (this->getDebug() && !this->hasErrors()) {
                 std::cerr << "All subtypes in the type are types. OK\n";
             }
             break;
@@ -414,14 +413,14 @@ void LILASTValidator::_validate(LILType * value)
             if (!arg->LILNode::isA(NodeTypeType)) {
                     this->illegalNodeType(arg.get(), value);
             }
-            if (this->_debug && !this->hasErrors()) {
+            if (this->getDebug() && !this->hasErrors()) {
                 std::cerr << "The subtype in the type is a type. OK\n";
             }
             break;
         }
             
         default:
-            if (this->_debug && !this->hasErrors()) {
+            if (this->getDebug() && !this->hasErrors()) {
                 std::cerr << "Nothing to do. OK\n";
             }
             break;
@@ -439,91 +438,91 @@ void LILASTValidator::_validate(LILVarDecl * value)
 
 void LILASTValidator::_validate(LILClassDecl * value)
 {
-    if (this->_debug) {
+    if (this->getDebug()) {
         std::cerr << "Nothing to do. OK\n";
     }
 }
 
 void LILASTValidator::_validate(LILObjectDefinition * value)
 {
-    if (this->_debug) {
+    if (this->getDebug()) {
         std::cerr << "Nothing to do. OK\n";
     }
 }
 
 void LILASTValidator::_validate(LILAssignment * value)
 {
-    if (this->_debug) {
+    if (this->getDebug()) {
         std::cerr << "Nothing to do. OK\n";
     }
 }
 
 void LILASTValidator::_validate(LILValuePath * value)
 {
-    if (this->_debug) {
+    if (this->getDebug()) {
         std::cerr << "Nothing to do. OK\n";
     }
 }
 
 void LILASTValidator::_validate(LILPropertyName * value)
 {
-    if (this->_debug) {
+    if (this->getDebug()) {
         std::cerr << "Nothing to do. OK\n";
     }
 }
 
 void LILASTValidator::_validate(LILRule * value)
 {
-    if (this->_debug) {
+    if (this->getDebug()) {
         std::cerr << "Nothing to do. OK\n";
     }
 }
 
 void LILASTValidator::_validate(LILSimpleSelector * value)
 {
-    if (this->_debug) {
+    if (this->getDebug()) {
         std::cerr << "Nothing to do. OK\n";
     }
 }
 
 void LILASTValidator::_validate(LILSelectorChain * value)
 {
-    if (this->_debug) {
+    if (this->getDebug()) {
         std::cerr << "Nothing to do. OK\n";
     }
 }
 
 void LILASTValidator::_validate(LILSelector * value)
 {
-    if (this->_debug) {
+    if (this->getDebug()) {
         std::cerr << "Nothing to do. OK\n";
     }
 }
 
 void LILASTValidator::_validate(LILCombinator * value)
 {
-    if (this->_debug) {
+    if (this->getDebug()) {
         std::cerr << "Nothing to do. OK\n";
     }
 }
 
 void LILASTValidator::_validate(LILFilter * value)
 {
-    if (this->_debug) {
+    if (this->getDebug()) {
         std::cerr << "Nothing to do. OK\n";
     }
 }
 
 void LILASTValidator::_validate(LILFlag * value)
 {
-    if (this->_debug) {
+    if (this->getDebug()) {
         std::cerr << "Nothing to do. OK\n";
     }
 }
 
 void LILASTValidator::_validate(LILVarName * value)
 {
-    if (this->_debug) {
+    if (this->getDebug()) {
         std::cerr << "Nothing to do. OK\n";
     }
 }
@@ -665,7 +664,7 @@ void LILASTValidator::_validate(LILFunctionCall * value)
 
 void LILASTValidator::_validate(LILFlowControl * value)
 {
-    if (this->_debug) {
+    if (this->getDebug()) {
         std::cerr << "Nothing to do. OK\n";
     }
 }
@@ -689,7 +688,7 @@ void LILASTValidator::_validate(LILFlowControlCall * value)
                 this->illegalNodeType(arg.get(), value);
                 break;
         }
-        if (this->_debug && !this->hasErrors()) {
+        if (this->getDebug() && !this->hasErrors()) {
             std::cerr << "The argument is a " + LILNode::nodeTypeToString(arg->getNodeType()).data() +". OK\n";
         }
     }
@@ -697,7 +696,7 @@ void LILASTValidator::_validate(LILFlowControlCall * value)
 
 void LILASTValidator::_validate(LILInstruction * value)
 {
-    if (this->_debug) {
+    if (this->getDebug()) {
         std::cerr << "Nothing to do. OK\n";
     }
 }
@@ -708,9 +707,4 @@ void LILASTValidator::validateChildren(const std::vector<std::shared_ptr<LILNode
     {
         this->validate((*it).get());
     };
-}
-
-void LILASTValidator::setDebug(bool value)
-{
-    this->_debug = value;
 }

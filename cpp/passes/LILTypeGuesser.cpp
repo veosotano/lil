@@ -19,7 +19,6 @@
 using namespace LIL;
 
 LILTypeGuesser::LILTypeGuesser()
-: _debug(false)
 {
 }
 
@@ -121,7 +120,7 @@ void LILTypeGuesser::process(LILNode * node)
     if (LILNode::isContainerNode(node->getNodeType())) {
         this->processChildren(node->getChildNodes());
     }
-    if (this->_debug) {
+    if (this->getDebug()) {
         std::cerr << "## guessing types " + LILNode::nodeTypeToString(node->getNodeType()).data() + " " + node->stringRep().data() + " ##\n";
     }
     switch (node->getNodeType()) {
@@ -1382,9 +1381,4 @@ std::shared_ptr<LILClassDecl> LILTypeGuesser::findAncestorClass(std::shared_ptr<
     } else {
         return nullptr;
     }
-}
-
-void LILTypeGuesser::setDebug(bool value)
-{
-    this->_debug = value;
 }

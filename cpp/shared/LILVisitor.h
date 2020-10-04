@@ -42,6 +42,8 @@ namespace LIL
         bool getPrintHeadline() const;
         void setVerbose(bool value);
         bool getVerbose() const;
+        void setDebug(bool value);
+        bool getDebug() const;
         std::shared_ptr<LILNode> findNodeForVarName(LILVarName * name) const;
         std::shared_ptr<LILType> findTypeForVarName(std::shared_ptr<LILVarName> name) const;
         LILString decorate(LILString ns, LILString className, LILString name, std::shared_ptr<LILType> type) const;
@@ -55,6 +57,7 @@ namespace LIL
     private:
         bool _printHeadline;
         bool _verbose;
+        bool _debug;
         std::shared_ptr<LILRootNode> _rootNode;
     };
 }

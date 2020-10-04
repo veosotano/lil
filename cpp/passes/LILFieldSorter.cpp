@@ -19,7 +19,6 @@
 using namespace LIL;
 
 LILFieldSorter::LILFieldSorter()
-: _debug(false)
 {
 }
 
@@ -44,7 +43,7 @@ void LILFieldSorter::visit(LILNode *node)
 
 void LILFieldSorter::process(LILNode * node)
 {
-    if (this->_debug) {
+    if (this->getDebug()) {
         std::cerr << "## sorting fields " + LILNode::nodeTypeToString(node->getNodeType()).data() + " " + node->stringRep().data() + " ##\n";
     }
     switch (node->getNodeType()) {
@@ -340,9 +339,4 @@ void LILFieldSorter::processChildren(const std::vector<std::shared_ptr<LILNode> 
     {
         this->process((*it).get());
     };
-}
-
-void LILFieldSorter::setDebug(bool value)
-{
-    this->_debug = value;
 }

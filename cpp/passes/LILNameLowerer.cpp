@@ -19,7 +19,6 @@
 using namespace LIL;
 
 LILNameLowerer::LILNameLowerer()
-: _debug(false)
 {
 }
 
@@ -44,7 +43,7 @@ void LILNameLowerer::visit(LILNode *node)
 
 void LILNameLowerer::process(LILNode * node)
 {
-    if (this->_debug) {
+    if (this->getDebug()) {
         std::cerr << "## lowering name " + LILNode::nodeTypeToString(node->getNodeType()).data() + " " + node->stringRep().data() + " ##\n";
     }
     switch (node->getNodeType()) {
@@ -416,9 +415,4 @@ void LILNameLowerer::processChildren(const std::vector<std::shared_ptr<LILNode> 
     {
         this->process((*it).get());
     };
-}
-
-void LILNameLowerer::setDebug(bool value)
-{
-    this->_debug = value;
 }

@@ -25,6 +25,7 @@ using namespace LIL;
 LILVisitor::LILVisitor()
 : _printHeadline(true)
 , _verbose(false)
+, _debug(false)
 {
 }
 
@@ -132,6 +133,16 @@ void LILVisitor::setVerbose(bool value)
 bool LILVisitor::getVerbose() const
 {
     return this->_verbose;
+}
+
+void LILVisitor::setDebug(bool value)
+{
+    this->_debug = value;
+}
+
+bool LILVisitor::getDebug() const
+{
+    return this->_debug;
 }
 
 std::shared_ptr<LILNode> LILVisitor::findNodeForVarName(LILVarName * name) const

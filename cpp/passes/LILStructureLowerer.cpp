@@ -18,7 +18,6 @@
 using namespace LIL;
 
 LILStructureLowerer::LILStructureLowerer()
-: _debug(false)
 {
 }
 
@@ -63,7 +62,7 @@ void LILStructureLowerer::visit(LILNode *node)
 
 void LILStructureLowerer::process(std::shared_ptr<LILNode> node)
 {
-    if (this->_debug) {
+    if (this->getDebug()) {
         std::cerr << "## validating " + LILNode::nodeTypeToString(node->getNodeType()).data() + " " + node->stringRep().data() + " ##\n";
         std::cerr << "## lowering structure " + LILNode::nodeTypeToString(node->getNodeType()).data() + " " + node->stringRep().data() + " ##\n";
     }
@@ -469,9 +468,4 @@ void LILStructureLowerer::processChildren(const std::vector<std::shared_ptr<LILN
     {
         this->process(*it);
     };
-}
-
-void LILStructureLowerer::setDebug(bool value)
-{
-    this->_debug = value;
 }

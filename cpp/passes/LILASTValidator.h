@@ -91,10 +91,6 @@ namespace LIL
         void _validate(LILFlowControlCall * value);
         void _validate(LILInstruction * value);
         inline void validateChildren(const std::vector<std::shared_ptr<LILNode>> & children);
-        
-        void setDebug(bool value);
-    private:
-        bool _debug;
     };
 }
 

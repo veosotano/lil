@@ -91,11 +91,9 @@ namespace LIL
         void _process(std::shared_ptr<LILInstruction> value);
 
         void processChildren(const std::vector<std::shared_ptr<LILNode> > &children);
-        void setDebug(bool value);
 
     private:
         std::vector<std::vector<std::shared_ptr<LILNode>>> _nodeBuffer;
-        bool _debug;
 
         std::vector<std::shared_ptr<LILNode>> reduceIfIsBlocks(std::shared_ptr<LILNode> node, LILString argName, LILString tyName);
         void replaceNodeWithContents(std::shared_ptr<LILNode> node, std::vector<std::shared_ptr<LILNode>> contents);

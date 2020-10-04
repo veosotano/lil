@@ -88,11 +88,6 @@ namespace LIL
         void _process(LILFlowControl * value);
         void _process(LILInstruction * value);
         inline void processChildren(const std::vector<std::shared_ptr<LILNode>> & children);
-
-        void setDebug(bool value);
-
-    private:
-        bool _debug;
     };
 }
 

@@ -92,11 +92,6 @@ namespace LIL
         void _process(LILInstruction * value);
         inline void processChildren(const std::vector<std::shared_ptr<LILNode>> & children);
         std::shared_ptr<LILAssignment> _varDeclToAssignment(std::shared_ptr<LILVarDecl> vd);
-        
-        void setDebug(bool value);
-        
-    private:
-        bool _debug;
     };
 }
 

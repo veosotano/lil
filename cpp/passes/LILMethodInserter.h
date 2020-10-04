@@ -33,11 +33,7 @@ namespace LIL
         
         void process(LILNode * node);
         
-        void setDebug(bool value);
-        
     private:
-        bool _debug;
-
         std::shared_ptr<LILNode> _findMethod(bool getter, LILClassDecl * value, LILString name);
         std::vector<std::shared_ptr<LILNode>> _findReturnStatements(const std::vector<std::shared_ptr<LILNode>> & body);
         std::vector<std::shared_ptr<LILNode>> _findSetterStatements(LILString name, const std::vector<std::shared_ptr<LILNode>> & body);

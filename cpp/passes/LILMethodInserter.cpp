@@ -27,7 +27,6 @@
 using namespace LIL;
 
 LILMethodInserter::LILMethodInserter()
-: _debug(false)
 {
 }
 
@@ -56,7 +55,7 @@ void LILMethodInserter::process(LILNode * node)
         return;
     }
     
-    if (this->_debug) {
+    if (this->getDebug()) {
         std::cerr << "## inserting methods " + LILNode::nodeTypeToString(node->getNodeType()).data() + " " + node->stringRep().data() + " ##\n";
     }
     auto value = static_cast<LILClassDecl *>(node);
@@ -206,11 +205,6 @@ void LILMethodInserter::process(LILNode * node)
         }
     }
     
-}
-
-void LILMethodInserter::setDebug(bool value)
-{
-    this->_debug = value;
 }
 
 std::shared_ptr<LILNode> LILMethodInserter::_findMethod(bool getter, LILClassDecl * value, LILString name)
