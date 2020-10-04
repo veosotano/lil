@@ -15,6 +15,7 @@
 #include "LILRootNode.h"
 #include "LILClassDecl.h"
 #include "LILFunctionDecl.h"
+#include "LILInstruction.h"
 
 using namespace LIL;
 
@@ -34,6 +35,7 @@ LILRootNode::LILRootNode(const LILRootNode & other)
     this->_localVars = other._localVars;
     this->_mainFunction = other._mainFunction;
     this->_classes = other._classes;
+    this->_dependencies = other._dependencies;
 }
 
 LILRootNode::~LILRootNode()
@@ -69,4 +71,14 @@ void LILRootNode::addClass(std::shared_ptr<LILClassDecl> value)
 std::vector<std::shared_ptr<LILClassDecl>> LILRootNode::getClasses() const
 {
     return this->_classes;
+}
+
+void LILRootNode::addDependency(std::shared_ptr<LILInstruction> value)
+{
+    this->_dependencies.push_back(value);
+}
+
+std::vector<std::shared_ptr<LILInstruction>> LILRootNode::getDependencies() const
+{
+    return this->_dependencies;
 }

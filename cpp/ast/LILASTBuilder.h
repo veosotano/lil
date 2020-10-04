@@ -80,6 +80,7 @@ namespace LIL
         void printErrors(const LILString & code) const;
         std::vector<std::string> splitString(std::string code, std::string delimiter) const;
         
+        void setIsMain(bool value);
         void setVerbose(bool value);
         void setDebugAST(bool value);
 
@@ -88,6 +89,7 @@ namespace LIL
         std::shared_ptr<LILNode> currentNode;
         std::vector<BuilderState> state;
         std::shared_ptr<LILRootNode> rootNode;
+        bool _isMain;
         bool _verbose;
         bool _debugAST;
     };

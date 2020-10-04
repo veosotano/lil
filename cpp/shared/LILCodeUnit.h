@@ -25,13 +25,14 @@ namespace llvm
 namespace LIL
 {
     class LILCodeUnitPrivate;
+    class LILRootNode;
     class LILCodeUnit
     {
     public:
         LILCodeUnit();
         virtual ~LILCodeUnit();
 
-        llvm::Module * getLLVMModule() const;
+        std::shared_ptr<LILRootNode> getRootNode() const;
 
         void setFile(LILString file);
         LILString getFile() const;
@@ -41,11 +42,15 @@ namespace LIL
         LILString getSource() const;
 
         void run();
+        void buildAST();
+        void runPasses();
         void compileToO(std::string outName);
         void compileToS(std::string outName);
         void printToOutput();
+        void setIsMain(bool value);
         void setVerbose(bool value);
         void setDebugAST(bool value);
+        void setDebugNeedsImporter(bool value);
         void setDebugASTValidator(bool value);
         void setDebugTypeGuesser(bool value);
         void setDebugStructureLowerer(bool value);
@@ -53,7 +58,6 @@ namespace LIL
         void setDebugNameLowerer(bool value);
         void setDebugFieldSorter(bool value);
         void setDebugParameterSorter(bool value);
-        void setDebugIREmitter(bool value);
 
     private:
         LILCodeUnitPrivate * d;

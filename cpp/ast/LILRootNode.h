@@ -21,6 +21,8 @@ namespace LIL {
     
     class LILClassDecl;
     class LILFunctionDecl;
+    class LILInstruction;
+
     class LILRootNode : public LILVarNode
     {
     public:
@@ -35,11 +37,15 @@ namespace LIL {
 
         void addClass(std::shared_ptr<LILClassDecl> value);
         std::vector<std::shared_ptr<LILClassDecl>> getClasses() const;
+        
+        void addDependency(std::shared_ptr<LILInstruction> value);
+        std::vector<std::shared_ptr<LILInstruction>> getDependencies() const;
 
     private:
         std::map<LILString, std::shared_ptr<LILNode>> _localVars;
         std::shared_ptr<LILFunctionDecl> _mainFunction;
         std::vector<std::shared_ptr<LILClassDecl>> _classes;
+        std::vector<std::shared_ptr<LILInstruction>> _dependencies;
     };
 }
 

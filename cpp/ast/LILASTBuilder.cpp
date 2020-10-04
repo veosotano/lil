@@ -50,7 +50,8 @@
 using namespace LIL;
 
 LILASTBuilder::LILASTBuilder()
-: _verbose(false)
+: _isMain(false)
+, _verbose(false)
 {
     this->rootNode = std::make_shared<LILRootNode>();
     this->state.push_back(BuilderStateRoot);
@@ -347,13 +348,30 @@ void LILASTBuilder::receiveNodeCommit()
                         this->rootNode->addClass(std::static_pointer_cast<LILClassDecl>(this->currentNode));
                         break;
                     }
+                        
+                    case NodeTypeInstruction:
+                    {
+                        auto instr = std::static_pointer_cast<LILInstruction>(this->currentNode);
+                        switch (instr->getInstructionType()) {
+                            case InstructionTypeNeeds:
+                            {
+                                this->rootNode->addNode(instr);
+                                this->rootNode->addDependency(instr);
+                                break;
+                            }
+
+                            default:
+                                break;
+                        }
+                        break;
+                    }
 
                     default:
                         this->rootNode->getMainFn()->addEvaluable(this->currentNode);
                         break;
                 }
-
-            } else {
+            //end if currentNode
+            } else if (this->_isMain) {
                 auto mainFn = this->rootNode->getMainFn();
                 if (!mainFn->hasReturn()) {
                     auto return0 = std::make_shared<LILFlowControlCall>();
@@ -1058,6 +1076,11 @@ std::vector<std::string> LILASTBuilder::splitString(std::string phrase, std::str
     }
     list.push_back(s);
     return list;
+}
+
+void LILASTBuilder::setIsMain(bool value)
+{
+    this->_isMain = value;
 }
 
 void LILASTBuilder::setVerbose(bool value)

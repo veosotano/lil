@@ -12,16 +12,12 @@
  *
  ********************************************************************/
 
-#include <unistd.h>
-
 #include "LILCodeUnit.h"
 #include "LILASTBuilder.h"
 #include "LILCodeParser.h"
-#include "LILIREmitter.h"
-#include "LILPassManager.h"
 
+#include "LILNeedsImporter.h"
 #include "LILASTValidator.h"
-#include "LILIREmitter.h"
 #include "LILFieldSorter.h"
 #include "LILMethodInserter.h"
 #include "LILNameLowerer.h"
@@ -30,18 +26,6 @@
 #include "LILStructureLowerer.h"
 #include "LILToStringVisitor.h"
 #include "LILTypeGuesser.h"
-
-#include "llvm/IR/LegacyPassManager.h"
-#include "llvm/IR/Module.h"
-#include "llvm/IR/Type.h"
-#include "llvm/IR/Verifier.h"
-#include "llvm/Support/FileSystem.h"
-#include "llvm/Support/Host.h"
-#include "llvm/Support/raw_ostream.h"
-#include "llvm/Support/TargetRegistry.h"
-#include "llvm/Support/TargetSelect.h"
-#include "llvm/Target/TargetMachine.h"
-#include "llvm/Target/TargetOptions.h"
 
 using namespace LIL;
 
@@ -56,9 +40,9 @@ namespace LIL
         : astBuilder(std::make_unique<LILASTBuilder>())
         , parser(std::make_unique<LILCodeParser>(astBuilder.get()))
         , pm(std::make_unique<LILPassManager>())
-        , irEmitter(nullptr)
+        , isMain(false)
         , verbose(false)
-        , targetMachine(nullptr)
+        , debugNeedsImporter(false)
         , debugAST(false)
         , debugASTValidator(false)
         , debugTypeGuesser(false)
@@ -67,7 +51,6 @@ namespace LIL
         , debugNameLowerer(false)
         , debugFieldSorter(false)
         , debugParameterSorter(false)
-        , debugIREmitter(false)
         {
         }
         LILString file;
@@ -76,9 +59,11 @@ namespace LIL
         std::unique_ptr<LILASTBuilder> astBuilder;
         std::unique_ptr<LILCodeParser> parser;
         std::unique_ptr<LILPassManager> pm;
-        LILIREmitter * irEmitter;
-        llvm::TargetMachine * targetMachine;
+
+        bool isMain;
+
         bool verbose;
+        bool debugNeedsImporter;
         bool debugAST;
         bool debugASTValidator;
         bool debugTypeGuesser;
@@ -87,7 +72,6 @@ namespace LIL
         bool debugNameLowerer;
         bool debugFieldSorter;
         bool debugParameterSorter;
-        bool debugIREmitter;
     };
 }
 
@@ -103,9 +87,9 @@ LILCodeUnit::~LILCodeUnit()
     delete d;
 }
 
-llvm::Module * LILCodeUnit::getLLVMModule() const
+std::shared_ptr<LILRootNode> LILCodeUnit::getRootNode() const
 {
-    return d->irEmitter->getLLVMModule();
+    return d->astBuilder->getRootNode();
 }
 
 void LILCodeUnit::setFile(LILString file)
@@ -143,16 +127,40 @@ void LILCodeUnit::run()
     bool verbose = d->verbose;
 
     d->pm->setVerbose(verbose);
-
-    d->parser->parseString(d->source);
     
+    this->buildAST();
+
     if (d->astBuilder->hasErrors()) {
         d->astBuilder->printErrors(d->source);
         return;
     }
+    
+    this->runPasses();
+}
+
+void LILCodeUnit::buildAST()
+{
+    d->parser->parseString(d->source);
+}
+
+void LILCodeUnit::runPasses()
+{
+    bool verbose = d->verbose;
 
     if (verbose) {
         d->pm->addPass(std::make_unique<LILToStringVisitor>());
+    }
+    
+    //handle #needs instructions
+    auto needsImporter = std::make_unique<LILNeedsImporter>();
+    needsImporter->setDebug(d->debugNeedsImporter);
+    needsImporter->setDir(d->dir);
+    needsImporter->setDebugAST(d->debugAST);
+    d->pm->addPass(std::move(needsImporter));
+    if (verbose) {
+        auto stringVisitor = std::make_unique<LILToStringVisitor>();
+        stringVisitor->setPrintHeadline(false);
+        d->pm->addPass(std::move(stringVisitor));
     }
 
     //validation
@@ -200,150 +208,41 @@ void LILCodeUnit::run()
         d->pm->addPass(std::move(stringVisitor2));
     }
 
-    //structure lowering
-    auto structureLowerer = std::make_unique<LILStructureLowerer>();
-    structureLowerer->setDebug(d->debugStructureLowerer);
-    d->pm->addPass(std::move(structureLowerer));
-    if (verbose) {
-        auto stringVisitor3 = std::make_unique<LILToStringVisitor>();
-        stringVisitor3->setPrintHeadline(false);
-        d->pm->addPass(std::move(stringVisitor3));
-    }
+    if (d->isMain) {
+        //structure lowering
+        auto structureLowerer = std::make_unique<LILStructureLowerer>();
+        structureLowerer->setDebug(d->debugStructureLowerer);
+        d->pm->addPass(std::move(structureLowerer));
+        if (verbose) {
+            auto stringVisitor3 = std::make_unique<LILToStringVisitor>();
+            stringVisitor3->setPrintHeadline(false);
+            d->pm->addPass(std::move(stringVisitor3));
+        }
 
-    //name lowering
-    auto nameLowerer = std::make_unique<LILNameLowerer>();
-    nameLowerer->setDebug(d->debugNameLowerer);
-    d->pm->addPass(std::move(nameLowerer));
-    if (d->verbose) {
-        auto stringVisitor4 = std::make_unique<LILToStringVisitor>();
-        stringVisitor4->setPrintHeadline(false);
-        d->pm->addPass(std::move(stringVisitor4));
-    }
+        //name lowering
+        auto nameLowerer = std::make_unique<LILNameLowerer>();
+        nameLowerer->setDebug(d->debugNameLowerer);
+        d->pm->addPass(std::move(nameLowerer));
+        if (d->verbose) {
+            auto stringVisitor4 = std::make_unique<LILToStringVisitor>();
+            stringVisitor4->setPrintHeadline(false);
+            d->pm->addPass(std::move(stringVisitor4));
+        }
 
-    //emit IR
-    auto irEmitter = std::make_unique<LILIREmitter>(this->getFile());
-    irEmitter->setDebug(d->debugIREmitter);
-    d->irEmitter = irEmitter.get();
-    d->pm->addPass(std::move(irEmitter));
+    } //end if isMain
 
     //execute the passes
     d->pm->execute(d->astBuilder->getRootNode(), d->source);
 
     if (d->pm->hasErrors()) {
         std::cerr << "Errors encountered. Exiting.\n";
-        return;
-    }
-
-    std::error_code error_code;
-
-    auto targetTriple = llvm::sys::getDefaultTargetTriple();
-
-    llvm::InitializeNativeTarget();
-    llvm::InitializeNativeTargetAsmParser();
-    llvm::InitializeNativeTargetAsmPrinter();
-    llvm::InitializeNativeTargetDisassembler();
-
-    std::string error;
-    auto target = llvm::TargetRegistry::lookupTarget(targetTriple, error);
-    if (!target) {
-        std::cerr << "Error: could not look up target.\n";
-        return;
-    }
-
-    auto cpu = "generic";
-    auto features = "";
-    llvm::TargetOptions opt;
-    auto relocModel = llvm::Optional<llvm::Reloc::Model>();
-    d->targetMachine = target->createTargetMachine(targetTriple, cpu, features, opt, relocModel);
-
-    llvm::Module * theModule = d->irEmitter->getLLVMModule();
-    theModule->setDataLayout(d->targetMachine->createDataLayout());
-    theModule->setTargetTriple(targetTriple);
-    
-    bool broken = llvm::verifyModule(*theModule, &llvm::errs(), nullptr);
-    if (broken) {
-        std::cerr << "\n\n";
-        std::cerr << "ERRORS FOUND. PLEASE CHECK OUTPUT ABOVE ^^^^^^^^\n";
-        std::cerr << "\n\n";
     }
 }
 
-void LILCodeUnit::compileToO(std::string outName)
+void LILCodeUnit::setIsMain(bool value)
 {
-    std::error_code error_code;
-    llvm::raw_fd_ostream dest(outName.data(), error_code, llvm::sys::fs::OF_None);
-    if (error_code) {
-        std::cerr << "Error: could not open destination file.\n";
-        return;
-    }
-    this->run();
-    
-    if (d->astBuilder->hasErrors() || d->pm->hasErrors()) {
-        return;
-    }
-
-    if (d->verbose) {
-        d->irEmitter->printIR(llvm::errs());
-    }
-
-    llvm::legacy::PassManager emitPassMngr;
-    auto fileType = llvm::TargetMachine::CGFT_ObjectFile;
-
-    if (d->targetMachine->addPassesToEmitFile(emitPassMngr, dest, nullptr, fileType)) {
-        std::cerr << "Error: could not create file type for emitting code.\n";
-        return;
-    }
-    llvm::Module * theModule = d->irEmitter->getLLVMModule();
-    emitPassMngr.run(*theModule);
-
-    dest.flush();
-}
-
-void LILCodeUnit::compileToS(std::string outName)
-{
-    std::error_code error_code;
-    this->run();
-    
-    if (d->astBuilder->hasErrors() || d->pm->hasErrors()) {
-        return;
-    }
-
-    if (d->verbose) {
-        d->irEmitter->printIR(llvm::errs());
-    }
-
-    llvm::raw_fd_ostream dest(outName.data(), error_code, llvm::sys::fs::OF_None);
-    if (error_code) {
-        std::cerr << "Error: could not open destination file.\n";
-        return;
-    }
-    d->irEmitter->printIR(dest);
-    dest.flush();
-}
-
-void LILCodeUnit::printToOutput()
-{
-    this->run();
-    if (d->astBuilder->hasErrors() || d->pm->hasErrors()) {
-        return;
-    }
-    if (d->irEmitter){
-        //avoid showing IR twice when outputting
-        //isatty(1) checks stdout and isatty(2) checks stderr, they say
-        if (d->verbose) {
-            d->irEmitter->printIR(llvm::errs());
-            std::cerr << "\n";
-            
-            //if stdout and stderr point to different things
-            //we need to output on both places. we already got
-            //stderr above, so if they match we do nothing
-            if ( isatty(1) != isatty(2) ) {
-                d->irEmitter->printIR(llvm::outs());
-            }
-        } else {
-            d->irEmitter->printIR(llvm::outs());
-        }
-    }
+    d->isMain = value;
+    d->astBuilder->setIsMain(value);
 }
 
 void LILCodeUnit::setVerbose(bool value)
@@ -360,6 +259,11 @@ void LILCodeUnit::setDebugAST(bool value)
     if(d->astBuilder){
         d->astBuilder->setDebugAST(value);
     }
+}
+
+void LILCodeUnit::setDebugNeedsImporter(bool value)
+{
+    d->debugNeedsImporter = value;
 }
 
 void LILCodeUnit::setDebugASTValidator(bool value)
@@ -395,10 +299,5 @@ void LILCodeUnit::setDebugMethodInserter(bool value)
 void LILCodeUnit::setDebugNameLowerer(bool value)
 {
     d->debugNameLowerer = value;
-}
-
-void LILCodeUnit::setDebugIREmitter(bool value)
-{
-    d->debugIREmitter = value;
 }
 
