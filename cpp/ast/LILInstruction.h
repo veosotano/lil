@@ -32,6 +32,7 @@ namespace LIL
         virtual void receiveNodeData(const LILString &data);
         void setInstructionType(InstructionType value);
         InstructionType getInstructionType() const;
+        bool isA(InstructionType otherType) const override;
         void setName(LILString name);
         LILString getName() const;
         void setIsColorInstruction(bool value);

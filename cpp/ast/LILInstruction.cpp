@@ -96,6 +96,11 @@ InstructionType LILInstruction::getInstructionType() const
     return this->_instructionType;
 }
 
+bool LILInstruction::isA(InstructionType otherType) const
+{
+    return this->_instructionType == otherType;
+}
+
 void LILInstruction::setName(LILString value)
 {
     this->_name = value;
