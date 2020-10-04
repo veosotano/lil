@@ -608,7 +608,7 @@ void LILASTValidator::_validate(LILFunctionCall * value)
                     if (!fn) {
                         LILErrorMessage ei;
                         ei.message =  "Function "+varName->getName()+" not found";
-                        LILNode::SourceLocation sl = value->getSourceLocation();
+                        LILNode::SourceLocation sl = vp->getSourceLocation();
                         ei.file = sl.file;
                         ei.line = sl.line;
                         ei.column = sl.column;
