@@ -51,6 +51,7 @@ std::shared_ptr<LILFunctionType> LILFunctionType::clone() const
 std::shared_ptr<LILClonable> LILFunctionType::cloneImpl() const
 {
     std::shared_ptr<LILFunctionType> clone(new LILFunctionType(*this));
+    clone->_arguments.clear();
     for (const auto & node : this->_arguments) {
         clone->addArgument(node->clone());
     }
