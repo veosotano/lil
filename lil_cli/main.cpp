@@ -14,6 +14,18 @@
 #include <iostream>
 #include <fstream>
 
+#if defined(_WIN32) || defined(_WIN64)
+
+#include <direct.h>
+#define current_dir _getcwd
+
+#else
+
+#include <unistd.h>
+#define current_dir getcwd
+
+#endif
+
 #include "LILShared.h"
 #include "LILCodeUnit.h"
 
@@ -183,6 +195,10 @@ int main(int argc, const char * argv[]) {
     
     LILString lilStr(buffer.str());
     
+    char cwdBuf[FILENAME_MAX];
+    current_dir(cwdBuf, FILENAME_MAX);
+    std::string directory(cwdBuf);
+    
     std::unique_ptr<LILCodeUnit> codeUnit = std::make_unique<LILCodeUnit>();
     codeUnit->setVerbose(verbose);
     codeUnit->setDebugAST(debugAST);
@@ -195,7 +211,7 @@ int main(int argc, const char * argv[]) {
     codeUnit->setDebugNameLowerer(debugNameLowerer);
     codeUnit->setDebugIREmitter(debugIREmitter);
     codeUnit->setFile(inName);
-//    codeUnit->setDir(directory);
+    codeUnit->setDir(directory);
     codeUnit->setSource(lilStr);
     
     if (printOnly) {
