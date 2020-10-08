@@ -1050,9 +1050,20 @@ llvm::Function * LILIREmitter::_emitFnSignature(std::string name, const std::sha
     std::vector<llvm::Type*> types;
     auto arguments = fnTy->getArguments();
     for (auto & arg : arguments) {
-        llvm::Type * llvmTy = this->llvmTypeFromLILType(arg);
+        llvm::Type * llvmTy;
+        std::shared_ptr<LILType> ty;
+        if (arg->isA(NodeTypeType)) {
+            ty = std::static_pointer_cast<LILType>(arg);
+        } else if (arg->isA(NodeTypeVarDecl)){
+            ty = std::static_pointer_cast<LILVarDecl>(arg)->getType();
+        }
+        if (ty) {
+            llvmTy = this->llvmTypeFromLILType(ty);
+        }
         if (llvmTy) {
             types.push_back(llvmTy);
+        } else {
+            std::cerr << "!!!!!!!!!!EMIT FN SIGNATURE FAIL!!!!!!!!!!!!!!!!\n";
         }
     }
     return this->_emitFnSignature(name, types, fnTy);
@@ -1077,21 +1088,23 @@ llvm::Function * LILIREmitter::_emitFnSignature(std::string name, std::vector<ll
 
 llvm::Function * LILIREmitter::_emitFn(LILFunctionDecl * value)
 {
-    auto arguments = value->getArguments();
-
     auto fnTy = std::static_pointer_cast<LILFunctionType>(value->getType());
+    auto arguments = fnTy->getArguments();
     llvm::Function * fun = this->_emitFnSignature(value->getName().data(), fnTy);
 
     size_t argIndex = 0;
     for (auto & llvmArg : fun->args()) {
         auto arg = arguments[argIndex];
-        if(!arg || !arg->isA(NodeTypeVarDecl)){
+        if(!arg){
             std::cerr << "!!!!!!!!!!FAIL!!!!!!!!!!!!!!!!\n";
             return nullptr;
         }
 
-        std::shared_ptr<LILVarDecl> vd = std::static_pointer_cast<LILVarDecl>(arg);
-        llvmArg.setName(vd->getName().data());
+        if (arg->isA(NodeTypeVarDecl)) {
+            std::shared_ptr<LILVarDecl> vd = std::static_pointer_cast<LILVarDecl>(arg);
+            llvmArg.setName(vd->getName().data());
+        }
+
         ++argIndex;
     }
 
@@ -1218,9 +1231,8 @@ llvm::Function * LILIREmitter::_emitFnBody(llvm::Function * fun, LILFunctionDecl
 
 llvm::Function * LILIREmitter::_emitMethod(LILFunctionDecl * value, LILClassDecl * classValue)
 {
-    auto arguments = value->getArguments();
-
     auto fnTy = std::static_pointer_cast<LILFunctionType>(value->getType());
+    auto arguments = fnTy->getArguments();
 
     std::vector<llvm::Type*> types;
 
@@ -1230,11 +1242,23 @@ llvm::Function * LILIREmitter::_emitMethod(LILFunctionDecl * value, LILClassDecl
 
     types.push_back(classPtrType);
 
-    auto tyArgs = fnTy->getArguments();
-    for (auto & arg : tyArgs) {
-        llvm::Type * llvmTy = this->llvmTypeFromLILType(arg);
+    llvm::Type * llvmTy;
+    std::shared_ptr<LILType> ty;
+    for (auto & arg : arguments) {
+        llvmTy = nullptr;
+        ty.reset();
+        if (arg->isA(NodeTypeType)) {
+            ty = std::static_pointer_cast<LILType>(arg);
+        } else if (arg->isA(NodeTypeVarDecl)){
+            ty = std::static_pointer_cast<LILVarDecl>(arg)->getType();
+        }
+        if (ty) {
+            llvmTy = this->llvmTypeFromLILType(ty);
+        }
         if (llvmTy) {
             types.push_back(llvmTy);
+        } else {
+            std::cerr << "!!!!!!!!!!EMIT METHOD FAIL!!!!!!!!!!!!!!!!\n";
         }
     }
     llvm::Function * fun = this->_emitFnSignature(value->getName().data(), types, fnTy);
@@ -1759,11 +1783,20 @@ std::shared_ptr<LILFunctionDecl> LILIREmitter::chooseFnByType(std::shared_ptr<LI
             if (types.size() == 0) {
                 return fd;
             }
+            std::shared_ptr<LILType> ty;
             for (size_t i=0, j=fdTys.size(); i<j; ++i) {
-                auto ty = fdTys[i];
-                auto resultTy = LILType::merge(ty, types[i]);
-                if (resultTy && resultTy->equalTo(ty)) {
-                    return fd;
+                ty.reset();
+                auto arg = fdTys[i];
+                if (arg->isA(NodeTypeType)) {
+                    ty = std::static_pointer_cast<LILType>(arg);
+                } else if (arg->isA(NodeTypeVarDecl)) {
+                    ty = std::static_pointer_cast<LILVarDecl>(arg)->getType();
+                }
+                if (ty) {
+                    auto resultTy = LILType::merge(ty, types[i]);
+                    if (resultTy && resultTy->equalTo(ty)) {
+                        return fd;
+                    }
                 }
             }
         }

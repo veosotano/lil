@@ -1458,52 +1458,80 @@ bool LILCodeParser::readTypeSimple()
 bool LILCodeParser::readFunctionType()
 {
     LIL_START_NODE(NodeTypeFunctionType)
+
+    LIL_EXPECT(TokenTypeIdentifier, "identifier")
+    if (d->currentToken->getString() != "fn"){
+        LIL_CANCEL_NODE
+    }
+
     d->receiver->receiveNodeData(ParserEventType, d->currentToken->getString());
     this->readNextToken();
     LIL_CHECK_FOR_END
 
-    LIL_EXPECT(TokenTypeParenthesisOpen, "open parenthesis");
-    d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
-    this->readNextToken();
-    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-
-    bool done = false;
-    while(!done){
-        done = true;
-        if (d->currentToken->isA(TokenTypeComma)) {
-            done = false;
-            d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
-            this->readNextToken();
-            LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-        }
+    //open parenthesis
+    bool needsParenthesisClose  = false;
+    if (d->currentToken->isA(TokenTypeParenthesisOpen)){
+        needsParenthesisClose = true;
+        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+        this->readNextToken();
+        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+        
+        if (!d->currentToken->isA(TokenTypeParenthesisClose))
+        {
+            bool valueValid = true;
+            bool argumentsDone = false;
+            while (!argumentsDone && !d->currentToken->isA(TokenTypeParenthesisClose))
+            {
+                argumentsDone = true;
+                bool svValid;
+                if (d->currentToken->isA(TokenTypeIdentifier) && d->currentToken->getString() == "var") {
+                    svValid = this->readVarDecl();
+                    
+                } else {
+                    svValid = this->readType();
+                }
+                if (svValid) {
+                    d->receiver->receiveNodeCommit();
+                }
+                LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+                
+                if (d->currentToken->isA(TokenTypeSemicolon) || d->currentToken->isA(TokenTypeComma))
+                {
+                    argumentsDone = false;
+                    d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+                    this->readNextToken();
+                    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+                }
+                if(!svValid) valueValid = false;
+            }
+            if (!valueValid)
+                LIL_CANCEL_NODE
+                }
+        
+        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+    }
+    
+    //close parenthesis
+    if (needsParenthesisClose){
+        LIL_EXPECT(TokenTypeParenthesisClose, "closing parenthesis")
+        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+        this->readNextToken();
+        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+    }
+    
+    if (d->currentToken->isA(TokenTypeFatArrow)) {
+        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+        this->readNextToken();
+        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+        
+        d->receiver->receiveNodeData(ParserEventReturnType, "");
         bool tyValid = this->readType();
         if (tyValid) {
             d->receiver->receiveNodeCommit();
         }
         LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
     }
-
-    if (d->currentToken->isA(TokenTypeEllipsis)) {
-        d->receiver->receiveNodeData(ParserEventFunctionVariadic, d->currentToken->getString());
-        this->readNextToken();
-        LIL_CHECK_FOR_END
-    }
-    LIL_EXPECT(TokenTypeParenthesisClose, "close parenthesis");
-    d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
-    this->readNextToken();
-    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-
-    LIL_EXPECT(TokenTypeFatArrow, "fat arrow");
-    if (d->currentToken->isA(TokenTypeFatArrow)) {
-        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
-        this->readNextToken();
-    }
-    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-    d->receiver->receiveNodeData(ParserEventReturnType, "");
-    bool tyValid = this->readType();
-    if (tyValid) {
-        d->receiver->receiveNodeCommit();
-    }
+    
     LIL_END_NODE_SKIP(false)
 }
 
@@ -3417,72 +3445,20 @@ bool LILCodeParser::readFunctionDecl()
 
 bool LILCodeParser::readFnFunction()
 {
+    //we read the type first, so that the container gets the function type
+    bool fnTyValid = this->readFunctionType();
+    if (fnTyValid) {
+        d->receiver->receiveNodeCommit();
+    }
+    if(this->atEndOfSource()) {
+        return fnTyValid;
+    }
+    this->skip(TokenTypeWhitespace);
+    if(this->atEndOfSource()) {
+        return fnTyValid;
+    }
+
     LIL_START_NODE(NodeTypeFunctionDecl)
-    LIL_EXPECT(TokenTypeIdentifier, "identifier")
-    if (d->currentToken->getString() != "fn"){
-        LIL_CANCEL_NODE
-    }
-    d->receiver->receiveNodeData(ParserEventFunction, d->currentToken->getString());
-    this->readNextToken();
-    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-
-    //open parenthesis
-    bool needsParenthesisClose  = false;
-    if (d->currentToken->isA(TokenTypeParenthesisOpen)){
-        needsParenthesisClose = true;
-        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
-        this->readNextToken();
-        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-
-        if (!d->currentToken->isA(TokenTypeParenthesisClose))
-        {
-            bool valueValid = true;
-            bool argumentsDone = false;
-            while (!argumentsDone && !d->currentToken->isA(TokenTypeParenthesisClose))
-            {
-                argumentsDone = true;
-                NodeType nodeType = NodeTypeInvalid;
-                bool svValid = this->readSingleValue(nodeType);
-                if (svValid) {
-                    d->receiver->receiveNodeCommit();
-                }
-                LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-
-                if (d->currentToken->isA(TokenTypeSemicolon))
-                {
-                    argumentsDone = false;
-                    d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
-                    this->readNextToken();
-                    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-                }
-                if(!svValid) valueValid = false;
-            }
-            if (!valueValid)
-                LIL_CANCEL_NODE
-                }
-
-        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-    }
-
-    //close parenthesis
-    if (needsParenthesisClose){
-        LIL_EXPECT(TokenTypeParenthesisClose, "closing parenthesis")
-        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
-        this->readNextToken();
-        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-    }
-
-    if (d->currentToken->isA(TokenTypeFatArrow)) {
-        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
-        this->readNextToken();
-        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-
-        bool tyValid = this->readType();
-        if (tyValid) {
-            d->receiver->receiveNodeCommit();
-        }
-        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-    }
 
     LIL_EXPECT(TokenTypeBlockOpen, "block open")
     d->receiver->receiveNodeData(ParserEventFunctionBody, "");
@@ -4143,29 +4119,31 @@ bool LILCodeParser::readStandardFunctionCall(bool readIdentifier)
         this->skip(TokenTypeWhitespace);
         LIL_CHECK_FOR_END
     }
-
-    //read the arguments
-    bool done = false;
-    while (!done)
-    {
-        done = true;
-        bool outIsSV = false;
-        NodeType svExpTy = NodeTypeInvalid;
-        bool valueValid = this->readExpression(outIsSV, svExpTy);
-        if (valueValid){
-            d->receiver->receiveNodeCommit();
-        } else {
-            LIL_CANCEL_NODE
-        }
-
-        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-
-        if (d->currentToken->isA(TokenTypeComma))
+    
+    if (!d->currentToken->isA(TokenTypeParenthesisClose)) {
+        //read the arguments
+        bool done = false;
+        while (!done)
         {
-            done = false;
-            d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
-            this->readNextToken();
+            done = true;
+            bool outIsSV = false;
+            NodeType svExpTy = NodeTypeInvalid;
+            bool valueValid = this->readExpression(outIsSV, svExpTy);
+            if (valueValid){
+                d->receiver->receiveNodeCommit();
+            } else {
+                LIL_CANCEL_NODE
+            }
+            
             LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+            
+            if (d->currentToken->isA(TokenTypeComma))
+            {
+                done = false;
+                d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+                this->readNextToken();
+                LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+            }
         }
     }
 

@@ -382,7 +382,7 @@ void LILASTBuilder::receiveNodeCommit()
                     return0->setArgument(zeroConst);
                     mainFn->addEvaluable(return0);
                 }
-                this->rootNode->addNode(mainFn);
+                this->rootNode->addNode(this->rootNode->getMainFnVarDecl());
             }
             break;
         }
@@ -589,19 +589,13 @@ void LILASTBuilder::receiveNodeCommit()
         case BuilderStateFunctionDecl:
         {
             std::shared_ptr<LILFunctionDecl> fd = std::static_pointer_cast<LILFunctionDecl>(this->currentContainer.back());
-            if (this->currentNode->isA(NodeTypeType)) {
-                fd->setReturnType(std::static_pointer_cast<LILType>(this->currentNode));
-            } else  if (!fd->getReceivesFunctionBody()) {
-                fd->addArgument(this->currentNode);
+            if (this->currentNode->isA(FlowControlTypeFinally)) {
+                fd->setFinally(this->currentNode);
             } else {
-                if (this->currentNode->isA(FlowControlTypeFinally)) {
-                    fd->setFinally(this->currentNode);
-                } else {
-                    fd->addEvaluable(this->currentNode);
-                    if (this->currentNode->isA(NodeTypeVarDecl)) {
-                        auto vd = std::static_pointer_cast<LILVarDecl>(this->currentNode);
-                        fd->setLocalVariable(vd->getName(), vd);
-                    }
+                fd->addEvaluable(this->currentNode);
+                if (this->currentNode->isA(NodeTypeVarDecl)) {
+                    auto vd = std::static_pointer_cast<LILVarDecl>(this->currentNode);
+                    fd->setLocalVariable(vd->getName(), vd);
                 }
             }
             break;

@@ -22,6 +22,7 @@ namespace LIL {
     class LILClassDecl;
     class LILFunctionDecl;
     class LILInstruction;
+    class LILVarDecl;
 
     class LILRootNode : public LILVarNode
     {
@@ -33,6 +34,7 @@ namespace LIL {
         virtual bool isRootNode() const;
         
         std::shared_ptr<LILFunctionDecl> getMainFn() const;
+        std::shared_ptr<LILVarDecl> getMainFnVarDecl() const;
         const std::vector<std::shared_ptr<LILNode>> & getNodes() const;
 
         void addClass(std::shared_ptr<LILClassDecl> value);
@@ -44,6 +46,7 @@ namespace LIL {
     private:
         std::map<LILString, std::shared_ptr<LILNode>> _localVars;
         std::shared_ptr<LILFunctionDecl> _mainFunction;
+        std::shared_ptr<LILVarDecl> _mainFunctionVarDecl;
         std::vector<std::shared_ptr<LILClassDecl>> _classes;
         std::vector<std::shared_ptr<LILInstruction>> _dependencies;
     };

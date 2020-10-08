@@ -13,6 +13,7 @@
  ********************************************************************/
 
 #include "LILFunctionType.h"
+#include "LILVarDecl.h"
 
 using namespace LIL;
 
@@ -91,11 +92,18 @@ LILString LILFunctionType::stringRep()
     auto args = this->getArguments();
     for (size_t i=0, j=args.size(); i<j; ++i) {
         std::shared_ptr<LILNode> arg = args[i];
-        if (arg && arg->isA(NodeTypeType)) {
-            std::shared_ptr<LILType> ty = std::static_pointer_cast<LILType>(arg);
-            name += ty->stringRep();
-            if ((i+1)<j) {
-                name += ",";
+        if (arg) {
+            std::shared_ptr<LILType> ty;
+            if (arg->isA(NodeTypeType)) {
+                ty = std::static_pointer_cast<LILType>(arg);
+            } else if (arg->isA(NodeTypeVarDecl)){
+                ty = std::static_pointer_cast<LILVarDecl>(arg)->getType();
+            }
+            if (ty) {
+                name += ty->stringRep();
+                if ((i+1)<j) {
+                    name += ",";
+                }
             }
         }
     }
@@ -112,17 +120,17 @@ LILString LILFunctionType::stringRep()
     return name;
 }
 
-void LILFunctionType::addArgument(std::shared_ptr<LILType> node)
+void LILFunctionType::addArgument(std::shared_ptr<LILNode> node)
 {
     this->addNode(node);
     this->_arguments.push_back(node);
 }
 
-void LILFunctionType::prependArgument(std::shared_ptr<LILType> node)
+void LILFunctionType::prependArgument(std::shared_ptr<LILNode> node)
 {
     this->addNode(node);
 
-    std::vector<std::shared_ptr<LILType>> newVector;
+    std::vector<std::shared_ptr<LILNode>> newVector;
     newVector.push_back(node);
     for (auto existing : this->_arguments) {
         newVector.push_back(existing);
@@ -130,7 +138,7 @@ void LILFunctionType::prependArgument(std::shared_ptr<LILType> node)
     this->_arguments = newVector;
 }
 
-std::vector<std::shared_ptr<LILType>> LILFunctionType::getArguments() const
+std::vector<std::shared_ptr<LILNode>> LILFunctionType::getArguments() const
 {
     return this->_arguments;
 }

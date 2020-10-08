@@ -499,7 +499,8 @@ LILToStrInfo LILToStringVisitor::stringify(LILFunctionDecl value)
     
     auto name = value.getName();
     
-    LILNode * type = value.getType().get();
+    auto ty = std::static_pointer_cast<LILFunctionType>(value.getType());
+    auto type = ty.get();
     if (type) {
         ret.value = "Function declaration " + name +" (" + type->stringRep() + "): " + value.stringRep();
     } else {
@@ -510,9 +511,11 @@ LILToStrInfo LILToStringVisitor::stringify(LILFunctionDecl value)
     argsInfo.value = "Arguments:";
     LILToStrInfo bodyInfo;
     bodyInfo.value = "Body:";
-    for (auto it = value.getArguments().begin(); it!=value.getArguments().end(); ++it)
+    const auto & args = ty->getArguments();
+    for (auto it = args.begin(); it!= args.end(); ++it)
     {
-        argsInfo.children.push_back(this->stringify((*it).get()));
+        auto node = (*it).get();
+        argsInfo.children.push_back(this->stringify(node));
     };
     if (argsInfo.children.size() > 0) {
         ret.children.push_back(argsInfo);

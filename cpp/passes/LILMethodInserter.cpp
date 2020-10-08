@@ -189,7 +189,9 @@ void LILMethodInserter::process(LILNode * node)
                         
                         auto vp2 = std::make_shared<LILValuePath>();
                         auto vn = std::make_shared<LILVarName>();
-                        auto firstArg = fd->getArguments().front();
+                        auto ty = fd->getType();
+                        auto fnTy = std::static_pointer_cast<LILFunctionType>(ty);
+                        auto firstArg = fnTy->getArguments().front();
                         if (firstArg->isA(NodeTypeVarDecl)) {
                             auto vd = std::static_pointer_cast<LILVarDecl>(firstArg);
                             vn->setName(vd->getName());

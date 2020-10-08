@@ -38,8 +38,6 @@ namespace LIL
         virtual LILString stringRep();
         virtual void receiveNodeData(const LILString &data);
 
-        void addArgument(std::shared_ptr<LILNode> arg);
-        const std::vector<std::shared_ptr<LILNode>> & getArguments() const;
         void addEvaluable(std::shared_ptr<LILNode> evl);
         void prependEvaluable(std::shared_ptr<LILNode> evl);
         const std::vector<std::shared_ptr<LILNode>> & getBody() const;
@@ -71,12 +69,10 @@ namespace LIL
         virtual std::shared_ptr<LILClonable> cloneImpl() const;
         
     private:
-        std::vector<std::shared_ptr<LILNode>> _arguments;
         std::vector<std::shared_ptr<LILNode>> _body;
         std::shared_ptr<LILNode> _finally;
         bool _receivesFunctionBody;
         FunctionDeclType _functionDeclType;
-        std::shared_ptr<LILFunctionType> _type;
         LILString _name;
         bool _hasReturn;
         bool _isConstructor;

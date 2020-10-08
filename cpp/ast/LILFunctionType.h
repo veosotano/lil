@@ -19,6 +19,7 @@
 
 namespace LIL
 {
+    class LILVarDecl;
     class LILFunctionType : public LILType
     {
     public:
@@ -32,9 +33,9 @@ namespace LIL
         
         LILString stringRep();
         
-        void addArgument(std::shared_ptr<LILType> node);
-        void prependArgument(std::shared_ptr<LILType> node);
-        std::vector<std::shared_ptr<LILType>> getArguments() const;
+        void addArgument(std::shared_ptr<LILNode> node);
+        void prependArgument(std::shared_ptr<LILNode> node);
+        std::vector<std::shared_ptr<LILNode>> getArguments() const;
         void setReturnType(std::shared_ptr<LILType> node);
         std::shared_ptr<LILType> getReturnType() const;
         void setReceivesReturnType(bool value);
@@ -46,7 +47,7 @@ namespace LIL
         virtual std::shared_ptr<LILClonable> cloneImpl() const;
         
     private:
-        std::vector<std::shared_ptr<LILType>> _arguments;
+        std::vector<std::shared_ptr<LILNode>> _arguments;
         std::shared_ptr<LILType> _returnType;
         bool _receivesReturnType;
         bool _isVariadic;

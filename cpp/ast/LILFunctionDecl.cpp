@@ -19,6 +19,7 @@ using namespace LIL;
 
 LILFunctionDecl::LILFunctionDecl()
 : LILVarNode(NodeTypeFunctionDecl)
+, _functionDeclType(FunctionDeclTypeFn)
 , _name("")
 , needsNameMangling(false)
 , _hasReturn(false)
@@ -31,11 +32,9 @@ LILFunctionDecl::LILFunctionDecl()
 LILFunctionDecl::LILFunctionDecl(const LILFunctionDecl &other)
 : LILVarNode(other)
 {
-    this->_arguments = other._arguments;
     this->_body = other._body;
     this->_receivesFunctionBody = other._receivesFunctionBody;
     this->_functionDeclType = other._functionDeclType;
-    this->_type = other._type;
     this->_name = other._name;
     this->needsNameMangling = other.needsNameMangling;
     this->_hasReturn = other._hasReturn;
@@ -51,21 +50,32 @@ bool LILFunctionDecl::isTypedNode() const
 
 void LILFunctionDecl::setType(std::shared_ptr<LILType> value)
 {
-    auto ty = std::dynamic_pointer_cast<LILFunctionType>(value);
-    if (ty) {
-        this->_type = ty;
+    auto parent = this->getParentNode();
+    if (parent && parent->isA(NodeTypeVarDecl)) {
+        auto vd = std::static_pointer_cast<LILVarDecl>(parent);
+        if (vd) {
+            vd->setType(value);
+        }
     }
 }
 
 std::shared_ptr<LILType> LILFunctionDecl::getType() const
 {
-    return this->_type;
+    auto parent = this->getParentNode();
+    if (parent && parent->isA(NodeTypeVarDecl)) {
+        auto vd = std::static_pointer_cast<LILVarDecl>(parent);
+        if (vd) {
+            return vd->getType();
+        }
+    }
+    return nullptr;
 }
 
 std::shared_ptr<LILFunctionType> LILFunctionDecl::getFnType() const
 {
-    if (this->_type->isA(TypeTypeFunction)) {
-        return std::static_pointer_cast<LILFunctionType>(this->_type);
+    auto ty = this->getType();
+    if (ty->isA(TypeTypeFunction)) {
+        return std::static_pointer_cast<LILFunctionType>(ty);
     } else {
         return nullptr;
     }
@@ -79,18 +89,11 @@ std::shared_ptr<LILFunctionDecl> LILFunctionDecl::clone() const
 std::shared_ptr<LILClonable> LILFunctionDecl::cloneImpl() const
 {
     std::shared_ptr<LILFunctionDecl> clone(new LILFunctionDecl(*this));
-    clone->_arguments.clear();
-    for (auto it = this->_arguments.begin(); it != this->_arguments.end(); ++it)
-    {
-        clone->addArgument((*it)->clone());
-    }
+
     clone->_body.clear();
     for (auto it = this->_body.begin(); it != this->_body.end(); ++it)
     {
         clone->addEvaluable((*it)->clone());
-    }
-    if (this->_type) {
-        clone->setType(this->_type->clone());
     }
     if (this->_finally) {
         clone->setFinally(this->_finally->clone());
@@ -126,11 +129,7 @@ LILString LILFunctionDecl::stringRep()
 
 void LILFunctionDecl::receiveNodeData(const LILString &data)
 {
-    if (data == "fn")
-    {
-        this->setFunctionDeclType(FunctionDeclTypeFn);
-    }
-    else if (data == "override")
+    if (data == "override")
     {
         this->setFunctionDeclType(FunctionDeclTypeOverride);
     }
@@ -142,22 +141,6 @@ void LILFunctionDecl::receiveNodeData(const LILString &data)
     {
         this->setFunctionDeclType(FunctionDeclTypeMacro);
     }
-}
-
-void LILFunctionDecl::addArgument(std::shared_ptr<LILNode> arg)
-{
-    this->addNode(arg);
-    this->_arguments.push_back(arg);
-
-    if (!arg->isA(NodeTypeVarDecl))
-        return;
-    std::shared_ptr<LILVarDecl> vd = std::static_pointer_cast<LILVarDecl>(arg);
-    this->setLocalVariable(vd->getName(), vd);
-}
-
-const std::vector<std::shared_ptr<LILNode>> & LILFunctionDecl::getArguments() const
-{
-    return this->_arguments;
 }
 
 void LILFunctionDecl::addEvaluable(std::shared_ptr<LILNode> evl)
@@ -173,10 +156,7 @@ void LILFunctionDecl::addEvaluable(std::shared_ptr<LILNode> evl)
 void LILFunctionDecl::prependEvaluable(std::shared_ptr<LILNode> evl)
 {
     this->clearChildNodes();
-    
-    for (auto arg : this->_arguments) {
-        this->addNode(arg);
-    }
+
     auto bodyBackup = this->_body;
     this->_body.clear();
     this->addNode(evl);
@@ -229,19 +209,23 @@ void LILFunctionDecl::setFunctionDeclType(FunctionDeclType newType)
 
 void LILFunctionDecl::setReturnType(std::shared_ptr<LILType> type)
 {
-    if (!this->_type) {
-        this->_type = std::make_shared<LILFunctionType>();
+    auto ty = this->getType();
+    if (!ty) {
+        ty = std::make_shared<LILFunctionType>();
+        this->setType(ty);
     }
-    this->_type->setReturnType(type);
+    if (ty->isA(TypeTypeFunction)) {
+        std::static_pointer_cast<LILFunctionType>(ty)->setReturnType(type);
+    }
 }
 
 std::shared_ptr<LILType> LILFunctionDecl::getReturnType() const
 {
-    if (this->_type) {
-        return this->_type->getReturnType();
-    } else {
-        return nullptr;
+    auto ty = this->getType();
+    if (ty && ty->isA(TypeTypeFunction)) {
+        return std::static_pointer_cast<LILFunctionType>(ty)->getReturnType();
     }
+    return nullptr;
 }
 
 void LILFunctionDecl::setName(LILString value)
@@ -289,4 +273,3 @@ std::vector<std::shared_ptr<LILNode>> LILFunctionDecl::getCallers() const
 {
     return this->_callers;
 }
-

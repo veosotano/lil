@@ -371,9 +371,10 @@ void LILParameterSorter::_process(LILFunctionCall * value)
                 case NodeTypeFunctionCall:
                 {
                     auto fc = std::static_pointer_cast<LILFunctionCall>(currentNode);
-                    auto initVal = vd->getInitVal();
-                    if (initVal->isA(NodeTypeFunctionDecl)) {
-                        auto declArgs = std::static_pointer_cast<LILFunctionDecl>(initVal)->getArguments();
+                    auto ty = vd->getType();
+                    if (ty->isA(TypeTypeFunction)) {
+                        auto fnTy = std::static_pointer_cast<LILFunctionType>(ty);
+                        auto declArgs = fnTy->getArguments();
                         
                         std::vector<std::shared_ptr<LILNode>> newArgs;
                         

@@ -16,6 +16,7 @@
 #include "LILClassDecl.h"
 #include "LILFunctionDecl.h"
 #include "LILInstruction.h"
+#include "LILVarDecl.h"
 
 using namespace LIL;
 
@@ -24,9 +25,12 @@ LILRootNode::LILRootNode()
 {
     this->_mainFunction = std::make_shared<LILFunctionDecl>();
     this->_mainFunction->setFunctionDeclType(FunctionDeclTypeFn);
-    auto ty = LILFunctionType::make("i64");
-    this->_mainFunction->setType(ty);
     this->_mainFunction->setName("main");
+    
+    this->_mainFunctionVarDecl = std::make_shared<LILVarDecl>();
+    auto ty = LILFunctionType::make("i64");
+    this->_mainFunctionVarDecl->setType(ty);
+    this->_mainFunctionVarDecl->setInitVal(this->_mainFunction);
 }
 
 LILRootNode::LILRootNode(const LILRootNode & other)
@@ -34,6 +38,7 @@ LILRootNode::LILRootNode(const LILRootNode & other)
 {
     this->_localVars = other._localVars;
     this->_mainFunction = other._mainFunction;
+    this->_mainFunctionVarDecl = other._mainFunctionVarDecl;
     this->_classes = other._classes;
     this->_dependencies = other._dependencies;
 }
@@ -56,6 +61,11 @@ bool LILRootNode::isRootNode() const
 std::shared_ptr<LILFunctionDecl> LILRootNode::getMainFn() const
 {
     return this->_mainFunction;
+}
+
+std::shared_ptr<LILVarDecl> LILRootNode::getMainFnVarDecl() const
+{
+    return this->_mainFunctionVarDecl;
 }
 
 const std::vector<std::shared_ptr<LILNode>> & LILRootNode::getNodes() const

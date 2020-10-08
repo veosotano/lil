@@ -595,26 +595,19 @@ std::shared_ptr<LILType> LILTypeGuesser::recursiveFindTypeFromAncestors(std::sha
                                 if (fnNode && fnNode->isA(NodeTypeFunctionDecl)) {
                                     auto fd = std::static_pointer_cast<LILFunctionDecl>(fnNode);
                                     
-                                    //find the index of the type
-                                    size_t typeIndex = 0;
-                                    auto args = fd->getArguments();
-                                    for (size_t i=0,j=args.size(); i<j; ++i) {
-                                        auto argVd = std::static_pointer_cast<LILVarDecl>(args[i]);
-                                        if (argVd->getName() == varName->getName()) {
-                                            typeIndex = i;
-                                            break;
-                                        }
-                                    }
                                     auto ty = fd->getType();
                                     if (ty && ty->getTypeType() == TypeTypeFunction) {
                                         auto fnTy = std::static_pointer_cast<LILFunctionType>(ty);
-                                        if (fnTy->getArguments().size() < typeIndex + 1) {
-                                            std::cerr << "ARGS SIZE BIGGER THAN TYPEINDEX FAIL!!!!";
-                                            return nullptr;
+
+                                        auto args = fnTy->getArguments();
+                                        for (auto arg : args) {
+                                            if (arg->LILNode::isA(NodeTypeVarDecl)) {
+                                                auto argVd = std::static_pointer_cast<LILVarDecl>(arg);
+                                                if (argVd->getName() == varName->getName()) {
+                                                    return argVd->getType();
+                                                }
+                                            }
                                         }
-                                        
-                                        //ta daaaaa
-                                        return fnTy->getArguments()[typeIndex];
                                         
                                     } else {
                                         std::cerr << "TYPE IS NOT FN TYPE FAIL!!!!";
@@ -958,9 +951,10 @@ std::shared_ptr<LILType> LILTypeGuesser::getFnType(std::shared_ptr<LILFunctionDe
 {
     std::vector<std::shared_ptr<LILType>> returnTypes;
     std::shared_ptr<LILFunctionType> ret = std::make_shared<LILFunctionType>();
+    auto ty = std::static_pointer_cast<LILFunctionType>(fd->getType());
     ret->setName("fn");
-    for (const auto & arg : fd->getArguments()) {
-        if (!arg->isA(NodeTypeVarDecl)) {
+    for (const auto & arg : ty->getArguments()) {
+        if (!arg->LILNode::isA(NodeTypeVarDecl)) {
             continue;
         }
         std::shared_ptr<LILVarDecl> vd = std::static_pointer_cast<LILVarDecl>(arg);

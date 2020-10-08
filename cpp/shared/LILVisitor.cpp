@@ -19,6 +19,7 @@
 #include "LILVarNode.h"
 #include "LILRootNode.h"
 #include "LILFunctionType.h"
+#include "LILVarDecl.h"
 
 using namespace LIL;
 
@@ -191,9 +192,19 @@ LILString LILVisitor::typeToString(std::shared_ptr<LILType> type) const
             ret = "_";
         }
         for (size_t i=0, j=args.size(); i<j; ++i) {
-            const auto & argFt = std::dynamic_pointer_cast<LILFunctionType>(args[i]);
-            auto tyName = this->typeToString(args[i]);
-            if (argFt) {
+            const auto & arg = args[i];
+            LILString tyName;
+            if (arg->isA(NodeTypeType)) {
+                tyName = this->typeToString(std::static_pointer_cast<LILType>(arg));
+            } else if (arg->isA(NodeTypeVarDecl)){
+                auto vd = std::static_pointer_cast<LILVarDecl>(arg);
+                auto vdTy = vd->getType();
+                if (vdTy) {
+                    tyName = this->typeToString(vdTy);
+                }
+            }
+
+            if (arg->isA(TypeTypeFunction)) {
                 ret += LILString("f0") + tyName;
             } else {
                 ret += "a" + LILString::number((LILUnitI64)tyName.length())+"_"+tyName;
