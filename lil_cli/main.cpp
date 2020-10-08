@@ -40,6 +40,7 @@ int main(int argc, const char * argv[]) {
     bool compileToO = false;
     bool compileToS = false;
     bool verbose = false;
+    bool debugNeedsImporter = false;
     bool debugAST = false;
     bool debugFieldSorter = false;
     bool debugParameterSorter = false;
@@ -48,6 +49,7 @@ int main(int argc, const char * argv[]) {
     bool debugStructureLowerer = false;
     bool debugMethodInserter = false;
     bool debugNameLowerer = false;
+    bool debugTypeValidator = false;
     bool debugIREmitter = false;
     int warningLevel = 0;
     std::string outName;
@@ -105,6 +107,10 @@ int main(int argc, const char * argv[]) {
             ++i;
             
         
+        } else if (command == "--debug-needs-importer") {
+            debugNeedsImporter = true;
+            ++i;
+            
         } else if (command == "--debug-ast") {
             debugAST = true;
             ++i;
@@ -117,7 +123,7 @@ int main(int argc, const char * argv[]) {
             debugParameterSorter = true;
             ++i;
             
-        } else if (command == "--debug-validator") {
+        } else if (command == "--debug-ast-validator") {
             debugASTValidator = true;
             ++i;
             
@@ -135,6 +141,10 @@ int main(int argc, const char * argv[]) {
             
         } else if (command == "--debug-structure-lowerer") {
             debugStructureLowerer = true;
+            ++i;
+            
+        } else if (command == "--debug-type-validator") {
+            debugTypeValidator = true;
             ++i;
             
         } else if (command == "--debug-ir-emitter") {
@@ -201,6 +211,7 @@ int main(int argc, const char * argv[]) {
     
     std::unique_ptr<LILCodeUnit> codeUnit = std::make_unique<LILCodeUnit>();
     codeUnit->setVerbose(verbose);
+    codeUnit->setDebugNeedsImporter(debugNeedsImporter);
     codeUnit->setDebugAST(debugAST);
     codeUnit->setDebugASTValidator(debugASTValidator);
     codeUnit->setDebugFieldSorter(debugFieldSorter);
@@ -210,6 +221,7 @@ int main(int argc, const char * argv[]) {
     codeUnit->setDebugMethodInserter(debugMethodInserter);
     codeUnit->setDebugNameLowerer(debugNameLowerer);
     codeUnit->setDebugIREmitter(debugIREmitter);
+    codeUnit->setDebugTypeValidator(debugTypeValidator);
     codeUnit->setFile(inName);
     codeUnit->setDir(directory);
     codeUnit->setSource(lilStr);
