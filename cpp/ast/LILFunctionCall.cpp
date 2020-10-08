@@ -221,6 +221,7 @@ std::shared_ptr<LILValuePath> LILFunctionCall::getSubject() const
                     }
                     newVp->addChild(node->clone());
                 }
+                newVp->setParentNode(vp->getParentNode());
                 return newVp;
             }
             break;
