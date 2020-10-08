@@ -760,10 +760,10 @@ std::shared_ptr<LILToken> LILLexer::readCommentOrSymbol()
     const size_t index = d->index;
 
     std::shared_ptr<LILToken> ret;
-    this->readNextChar();
+    this->storeCurrentCharAndReadNext();
     if (d->currentChar == '/')
     {
-        this->readNextChar(); // skip '/'
+        this->storeCurrentCharAndReadNext(); // skip '/'
 
         // Read all chars until end of line
         while (d->currentChar != '\n' && d->currentChar != '\r' && d->currentChar != '\f' && !this->atEndOfSource())
@@ -771,33 +771,31 @@ std::shared_ptr<LILToken> LILLexer::readCommentOrSymbol()
             this->storeCurrentCharAndReadNext();
         }
 
-        ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeLineComment, "//" + this->extractCurrentTokenText(), line, column, index));
+        ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeLineComment, this->extractCurrentTokenText(), line, column, index));
     }
     else if (d->currentChar == '*')
     {
-        readNextChar(); //skip '*'
+        this->storeCurrentCharAndReadNext(); //skip '*'
         while (true)
         {
             if (d->currentChar == '*')
             {
-                readNextChar(); // We won't know if it is the end of the comment until we seek further
+                this->storeCurrentCharAndReadNext(); // We won't know if it is the end of the comment until we seek further
                 if (d->currentChar == '/')
                 {
                     // It is the end, break the loop
+                    d->currentTokenText += d->currentChar;
                     break;
-                }
-                else
-                {
-                    // It's not the end of the comment, store the char and continue reading
-                    d->currentTokenText += '*';
                 }
             }
             else if (this->atEndOfSource())
             {
                 break;
             }
-
-            this->storeCurrentCharAndReadNext();
+            else
+            {
+                this->storeCurrentCharAndReadNext();
+            }
         }
 
         ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeBlockComment, this->extractCurrentTokenText(), line, column, index));
@@ -805,7 +803,7 @@ std::shared_ptr<LILToken> LILLexer::readCommentOrSymbol()
     }
     else
     {
-        ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeSlash, "/", line, column, index));
+        ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeSlash, this->extractCurrentTokenText(), line, column, index));
     }
 
     return ret;
