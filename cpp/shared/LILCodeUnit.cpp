@@ -171,26 +171,6 @@ void LILCodeUnit::runPasses()
     astValidator->setDebug(d->debugASTValidator);
     d->pm->addPass(std::move(astValidator));
 
-    //field sorting
-    auto fieldSorter = std::make_unique<LILFieldSorter>();
-    fieldSorter->setDebug(d->debugFieldSorter);
-    d->pm->addPass(std::move(fieldSorter));
-    if (verbose) {
-        auto stringVisitor0 = std::make_unique<LILToStringVisitor>();
-        stringVisitor0->setPrintHeadline(false);
-        d->pm->addPass(std::move(stringVisitor0));
-    }
-
-    //parameter sorting
-    auto parameterSorter = std::make_unique<LILParameterSorter>();
-    parameterSorter->setDebug(d->debugParameterSorter);
-    d->pm->addPass(std::move(parameterSorter));
-    if (verbose) {
-        auto stringVisitor0 = std::make_unique<LILToStringVisitor>();
-        stringVisitor0->setPrintHeadline(false);
-        d->pm->addPass(std::move(stringVisitor0));
-    }
-    
     //method inserter
     auto methodInserter = std::make_unique<LILMethodInserter>();
     methodInserter->setDebug(d->debugMethodInserter);
@@ -209,6 +189,26 @@ void LILCodeUnit::runPasses()
         auto stringVisitor2 = std::make_unique<LILToStringVisitor>();
         stringVisitor2->setPrintHeadline(false);
         d->pm->addPass(std::move(stringVisitor2));
+    }
+    
+    //field sorting
+    auto fieldSorter = std::make_unique<LILFieldSorter>();
+    fieldSorter->setDebug(d->debugFieldSorter);
+    d->pm->addPass(std::move(fieldSorter));
+    if (verbose) {
+        auto stringVisitor = std::make_unique<LILToStringVisitor>();
+        stringVisitor->setPrintHeadline(false);
+        d->pm->addPass(std::move(stringVisitor));
+    }
+    
+    //parameter sorting
+    auto parameterSorter = std::make_unique<LILParameterSorter>();
+    parameterSorter->setDebug(d->debugParameterSorter);
+    d->pm->addPass(std::move(parameterSorter));
+    if (verbose) {
+        auto stringVisitor = std::make_unique<LILToStringVisitor>();
+        stringVisitor->setPrintHeadline(false);
+        d->pm->addPass(std::move(stringVisitor));
     }
     
     //type validation
