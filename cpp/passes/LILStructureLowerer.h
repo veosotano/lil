@@ -51,7 +51,6 @@
 
 namespace LIL
 {
-    class LILToStrInfo;
     class LILStructureLowerer : public LILVisitor
     {
     public:

@@ -64,7 +64,6 @@ namespace LIL
     class LILClassDecl;
     class LILFunctionType;
     class LILIREmitterPrivate;
-    class LILToStrInfo;
 
     class LILIREmitter : public LILVisitor
     {

@@ -51,7 +51,6 @@
 
 namespace LIL
 {
-    class LILToStrInfo;
     class LILFieldSorter : public LILVisitor
     {
     public:

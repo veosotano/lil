@@ -53,7 +53,6 @@
 
 namespace LIL
 {
-    class LILToStrInfo;
     class LILParameterSorter : public LILVisitor
     {
     public:
