@@ -38,6 +38,7 @@ namespace LIL {
         
         friend class LILASTValidator;
         friend class LILTypeGuesser;
+        friend class LILTypeValidator;
         
         static LILString nodeTypeToString(NodeType nodeType);
         LILNode(NodeType type);

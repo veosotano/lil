@@ -19,6 +19,7 @@
 #include "LILNeedsImporter.h"
 #include "LILASTValidator.h"
 #include "LILFieldSorter.h"
+#include "LILTypeValidator.h"
 #include "LILMethodInserter.h"
 #include "LILNameLowerer.h"
 #include "LILParameterSorter.h"
@@ -51,6 +52,7 @@ namespace LIL
         , debugNameLowerer(false)
         , debugFieldSorter(false)
         , debugParameterSorter(false)
+        , debugTypeValidator(false)
         {
         }
         LILString file;
@@ -72,6 +74,7 @@ namespace LIL
         bool debugNameLowerer;
         bool debugFieldSorter;
         bool debugParameterSorter;
+        bool debugTypeValidator;
     };
 }
 
@@ -163,10 +166,10 @@ void LILCodeUnit::runPasses()
         d->pm->addPass(std::move(stringVisitor));
     }
 
-    //validation
-    auto validator = std::make_unique<LILASTValidator>();
-    validator->setDebug(d->debugASTValidator);
-    d->pm->addPass(std::move(validator));
+    //ast validation
+    auto astValidator = std::make_unique<LILASTValidator>();
+    astValidator->setDebug(d->debugASTValidator);
+    d->pm->addPass(std::move(astValidator));
 
     //field sorting
     auto fieldSorter = std::make_unique<LILFieldSorter>();
@@ -207,6 +210,16 @@ void LILCodeUnit::runPasses()
         stringVisitor2->setPrintHeadline(false);
         d->pm->addPass(std::move(stringVisitor2));
     }
+    
+    //type validation
+    auto tyValidator = std::make_unique<LILTypeValidator>();
+    tyValidator->setDebug(d->debugTypeValidator);
+    d->pm->addPass(std::move(tyValidator));
+    if (verbose) {
+        auto stringVisitor = std::make_unique<LILToStringVisitor>();
+        stringVisitor->setPrintHeadline(false);
+        d->pm->addPass(std::move(stringVisitor));
+    }
 
     if (d->isMain) {
         //structure lowering
@@ -235,7 +248,7 @@ void LILCodeUnit::runPasses()
     d->pm->execute(d->astBuilder->getRootNode(), d->source);
 
     if (d->pm->hasErrors()) {
-        std::cerr << "Errors encountered. Exiting.\n";
+        std::cerr << "Errors encountered. Exiting.\n\n";
     }
 }
 
@@ -301,3 +314,12 @@ void LILCodeUnit::setDebugNameLowerer(bool value)
     d->debugNameLowerer = value;
 }
 
+void LILCodeUnit::setDebugTypeValidator(bool value)
+{
+    d->debugTypeValidator = value;
+}
+
+bool LILCodeUnit::hasErrors() const
+{
+    return d->astBuilder->hasErrors() || d->pm->hasErrors();
+}

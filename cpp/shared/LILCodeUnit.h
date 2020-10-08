@@ -58,6 +58,8 @@ namespace LIL
         void setDebugNameLowerer(bool value);
         void setDebugFieldSorter(bool value);
         void setDebugParameterSorter(bool value);
+        void setDebugTypeValidator(bool value);
+        bool hasErrors() const;
 
     private:
         LILCodeUnitPrivate * d;

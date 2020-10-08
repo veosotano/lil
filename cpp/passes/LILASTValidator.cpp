@@ -532,20 +532,6 @@ void LILASTValidator::_validate(LILFunctionDecl * value)
     switch (value->getFunctionDeclType()) {
         case FunctionDeclTypeFn:
         {
-            auto args = value->getArguments();
-            for (size_t i=0, j=args.size(); i<j; ++i) {
-                NodeType argType = args[i]->getNodeType();
-                if (argType != NodeTypeVarDecl) {
-                    LILErrorMessage ei;
-                    ei.message =  "Functions only accept var declarations as arguments, found " + LILNode::nodeTypeToString(args[i]->getNodeType()) + " instead.";
-                    LILNode::SourceLocation loc = args[i]->getSourceLocation();
-                    ei.file = loc.file;
-                    ei.line = loc.line;
-                    ei.column = loc.column;
-                    this->errors.push_back(ei);
-                }
-            }
-
             auto evals = value->getBody();
             for (size_t i=0, j=evals.size(); i<j; ++i) {
                 NodeType evalType = evals[i]->getNodeType();
