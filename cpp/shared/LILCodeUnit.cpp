@@ -176,9 +176,9 @@ void LILCodeUnit::runPasses()
     methodInserter->setDebug(d->debugMethodInserter);
     d->pm->addPass(std::move(methodInserter));
     if (verbose) {
-        auto stringVisitor1 = std::make_unique<LILToStringVisitor>();
-        stringVisitor1->setPrintHeadline(false);
-        d->pm->addPass(std::move(stringVisitor1));
+        auto stringVisitor = std::make_unique<LILToStringVisitor>();
+        stringVisitor->setPrintHeadline(false);
+        d->pm->addPass(std::move(stringVisitor));
     }
 
     //type guessing
@@ -186,9 +186,9 @@ void LILCodeUnit::runPasses()
     typeGuesser->setDebug(d->debugTypeGuesser);
     d->pm->addPass(std::move(typeGuesser));
     if (verbose) {
-        auto stringVisitor2 = std::make_unique<LILToStringVisitor>();
-        stringVisitor2->setPrintHeadline(false);
-        d->pm->addPass(std::move(stringVisitor2));
+        auto stringVisitor = std::make_unique<LILToStringVisitor>();
+        stringVisitor->setPrintHeadline(false);
+        d->pm->addPass(std::move(stringVisitor));
     }
     
     //field sorting
@@ -227,9 +227,9 @@ void LILCodeUnit::runPasses()
         structureLowerer->setDebug(d->debugStructureLowerer);
         d->pm->addPass(std::move(structureLowerer));
         if (verbose) {
-            auto stringVisitor3 = std::make_unique<LILToStringVisitor>();
-            stringVisitor3->setPrintHeadline(false);
-            d->pm->addPass(std::move(stringVisitor3));
+            auto stringVisitor = std::make_unique<LILToStringVisitor>();
+            stringVisitor->setPrintHeadline(false);
+            d->pm->addPass(std::move(stringVisitor));
         }
 
         //name lowering
@@ -237,9 +237,9 @@ void LILCodeUnit::runPasses()
         nameLowerer->setDebug(d->debugNameLowerer);
         d->pm->addPass(std::move(nameLowerer));
         if (d->verbose) {
-            auto stringVisitor4 = std::make_unique<LILToStringVisitor>();
-            stringVisitor4->setPrintHeadline(false);
-            d->pm->addPass(std::move(stringVisitor4));
+            auto stringVisitor = std::make_unique<LILToStringVisitor>();
+            stringVisitor->setPrintHeadline(false);
+            d->pm->addPass(std::move(stringVisitor));
         }
 
     } //end if isMain
