@@ -28,6 +28,7 @@
 
 #include "LILShared.h"
 #include "LILCodeUnit.h"
+#include "LILOutputEmitter.h"
 
 using namespace LIL;
 
@@ -210,6 +211,7 @@ int main(int argc, const char * argv[]) {
     std::string directory(cwdBuf);
     
     std::unique_ptr<LILCodeUnit> codeUnit = std::make_unique<LILCodeUnit>();
+    codeUnit->setIsMain(true);
     codeUnit->setVerbose(verbose);
     codeUnit->setDebugNeedsImporter(debugNeedsImporter);
     codeUnit->setDebugAST(debugAST);
@@ -226,13 +228,26 @@ int main(int argc, const char * argv[]) {
     codeUnit->setDir(directory);
     codeUnit->setSource(lilStr);
     
+    codeUnit->run();
+    
+    if (codeUnit->hasErrors()) {
+        return 0;
+    }
+    
+    std::unique_ptr<LILOutputEmitter> outEmitter = std::make_unique<LILOutputEmitter>();
+    outEmitter->setVerbose(verbose);
+    outEmitter->setDebugIREmitter(debugIREmitter);
+    outEmitter->setFile(inName);
+    outEmitter->setDir(directory);
+    outEmitter->setSource(lilStr);
+    
     if (printOnly) {
-        codeUnit->printToOutput();
+        outEmitter->printToOutput(codeUnit.get());
     } else {
         if (compileToS) {
-            codeUnit->compileToS(outName);
+            outEmitter->compileToS(outName, codeUnit.get());
         } else {
-            codeUnit->compileToO(outName);
+            outEmitter->compileToO(outName, codeUnit.get());
         }
     }
     
