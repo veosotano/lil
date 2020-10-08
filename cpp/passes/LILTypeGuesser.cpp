@@ -1368,17 +1368,3 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeFromCallers(const std::vector<s
     }
     return ret;
 }
-
-std::shared_ptr<LILClassDecl> LILTypeGuesser::findAncestorClass(std::shared_ptr<LILNode> node) const
-{
-    auto parent = node->getParentNode();
-    if (parent) {
-        if (parent->isA(NodeTypeClassDecl)) {
-            return std::static_pointer_cast<LILClassDecl>(parent);
-        } else {
-            return this->findAncestorClass(parent);
-        }
-    } else {
-        return nullptr;
-    }
-}

@@ -53,7 +53,8 @@ namespace LIL
         std::shared_ptr<LILRootNode> getRootNode() const;
 
         std::shared_ptr<LILClassDecl> findClassWithName(const LILString & name) const;
-        
+        std::shared_ptr<LILClassDecl> findAncestorClass(std::shared_ptr<LILNode> node) const;
+
     private:
         bool _printHeadline;
         bool _verbose;

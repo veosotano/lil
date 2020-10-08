@@ -227,3 +227,17 @@ std::shared_ptr<LILClassDecl> LILVisitor::findClassWithName(const LILString & na
     }
     return nullptr;
 }
+
+std::shared_ptr<LILClassDecl> LILVisitor::findAncestorClass(std::shared_ptr<LILNode> node) const
+{
+    auto parent = node->getParentNode();
+    if (parent) {
+        if (parent->isA(NodeTypeClassDecl)) {
+            return std::static_pointer_cast<LILClassDecl>(parent);
+        } else {
+            return this->findAncestorClass(parent);
+        }
+    } else {
+        return nullptr;
+    }
+}
