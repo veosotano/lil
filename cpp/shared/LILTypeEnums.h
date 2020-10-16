@@ -403,6 +403,7 @@ namespace LIL
         ParserEventExtern,
         ParserEventObjectDefinition,
         ParserEventFunction,
+        ParserEventFunctionTypeFn,
         ParserEventFunctionBody,
         ParserEventFunctionModifier,
         ParserEventFunctionShorthand,

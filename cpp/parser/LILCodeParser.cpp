@@ -3453,6 +3453,7 @@ bool LILCodeParser::readFnFunction()
     }
 
     LIL_START_NODE(NodeTypeFunctionDecl)
+    d->receiver->receiveNodeData(ParserEventFunctionTypeFn, "");
 
     LIL_EXPECT(TokenTypeBlockOpen, "block open")
     d->receiver->receiveNodeData(ParserEventFunctionBody, "");
