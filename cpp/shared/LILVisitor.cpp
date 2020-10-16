@@ -148,17 +148,20 @@ bool LILVisitor::getDebug() const
 
 std::shared_ptr<LILNode> LILVisitor::findNodeForVarName(LILVarName * name) const
 {
-    std::shared_ptr<LILNode> parent = name->getParentNode();
-    LILString nameStr = name->getName();
+    return this->findNodeForName(name->getName(), name->getParentNode().get());
+}
+
+std::shared_ptr<LILNode> LILVisitor::findNodeForName(LILString name, LILNode * parent) const
+{
     while (parent) {
         if(parent->isVarNode()){
-            std::shared_ptr<LILVarNode> vn = std::static_pointer_cast<LILVarNode>(parent);
-            std::shared_ptr<LILNode> localVar = vn->getVariable(nameStr);
+            LILVarNode * vn = static_cast<LILVarNode *>(parent);
+            std::shared_ptr<LILNode> localVar = vn->getVariable(name);
             if (localVar) {
                 return localVar;
             }
         }
-        parent = parent->getParentNode();
+        parent = parent->getParentNode().get();
     }
     return nullptr;
 }
