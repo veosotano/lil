@@ -423,25 +423,7 @@ void LILTypeGuesser::_process(LILClassDecl * value)
 
 void LILTypeGuesser::_process(LILObjectDefinition * value)
 {
-    auto ty = value->getType();
-    if (!ty->isA(TypeTypeObject)) {
-        return;
-    }
-    auto objTy = std::static_pointer_cast<LILObjectType>(ty);
-    //populate the fields of the object type from the class
-    if (objTy->getFields().size() == 0) {
-        for (auto classVal : this->getRootNode()->getClasses()) {
-            if (classVal->getType()->getName() == objTy->getName()) {
-                for (auto method : classVal->getMethods()) {
-                    auto methTy = method->getType();
-                    if (!methTy->isA(TypeTypeFunction)) {
-                        objTy->addField(methTy->clone());
-                    }
-                }
-                break;
-            }
-        }
-    }
+
 }
 
 void LILTypeGuesser::_process(LILAssignment * value)

@@ -1437,15 +1437,9 @@ bool LILCodeParser::readTypeSimple()
     }
     else if (d->currentToken->isA(TokenTypeObjectSign))
     {
-        LIL_START_NODE(NodeTypeType)
         d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
         this->readNextToken();
-        LIL_CHECK_FOR_END
-
-        LIL_EXPECT(TokenTypeIdentifier, "identifier")
-        d->receiver->receiveNodeData(ParserEventType, d->currentToken->getString());
-        this->readNextToken();
-        LIL_END_NODE_SKIP(false)
+        return this->readObjectType();
     }
     else
     {

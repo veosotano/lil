@@ -32,14 +32,8 @@ namespace LIL
         
         LILString stringRep();
         
-        void addField(std::shared_ptr<LILType> node);
-        std::vector<std::shared_ptr<LILType>> getFields() const;
-        
     protected:
         virtual std::shared_ptr<LILClonable> cloneImpl() const;
-        
-    private:
-        std::vector<std::shared_ptr<LILType>> _fields;
     };
 }
 

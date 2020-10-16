@@ -434,14 +434,6 @@ void LILASTBuilder::receiveNodeCommit()
             }
             break;
         }
-        case BuilderStateObjectType:
-        {
-            if (this->currentNode) {
-                std::shared_ptr<LILObjectType> ty = std::static_pointer_cast<LILObjectType>(this->currentContainer.back());
-                ty->addField(std::static_pointer_cast<LILType>(this->currentNode));
-            }
-            break;
-        }
         case BuilderStateVarDecl:
         {
             if (this->currentNode)

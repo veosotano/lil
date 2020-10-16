@@ -1722,18 +1722,19 @@ llvm::Type * LILIREmitter::llvmTypeFromLILType(std::shared_ptr<LILType> type)
     }
     else if (type->isA(TypeTypeObject))
     {
-        auto objTy = std::static_pointer_cast<LILObjectType>(type);
-        std::vector<llvm::Type *> structTypes;
-        for (auto member : objTy->getFields()) {
-            auto memTy = this->llvmTypeFromLILType(member);
-            if (memTy) {
-                structTypes.push_back(memTy);
-            } else {
-                std::cerr << "!!!!!!!!!!FAIL!!!!!!!!!!!!!!!!\n";
+        auto className = type->getName().data();
+        auto classTy = d->classTypes[className];
+        if (!classTy) {
+            auto classDecl = this->findClassWithName(className);
+            if (!classDecl) {
+                std::cerr << "CLASS NOT FOUND FAIL!!!!!!!!!!!!!!!!\n";
                 return nullptr;
             }
+            auto newClassTy = this->extractStructFromClass(classDecl.get());
+            d->classTypes[className] = newClassTy;
+            classTy = newClassTy;
         }
-        return llvm::StructType::get(d->llvmContext, structTypes);
+        return classTy;
     }
     LILString typestr = type->getName();
     llvm::Type * ret = nullptr;
