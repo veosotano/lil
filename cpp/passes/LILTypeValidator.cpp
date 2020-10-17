@@ -39,7 +39,7 @@ void LILTypeValidator::initializeVisit()
     if (this->getVerbose()) {
         std::cerr << "\n\n";
         std::cerr << "============================\n";
-        std::cerr << "===  FUNCTION VALIDATION  ==\n";
+        std::cerr << "====  TYPE VALIDATION   ====\n";
         std::cerr << "============================\n\n";
     }
 }

@@ -46,7 +46,6 @@
 #include "LILSimpleSelector.h"
 #include "LILStringFunction.h"
 #include "LILStringLiteral.h"
-#include "LILType.h"
 #include "LILVarDecl.h"
 #include "LILVarName.h"
 

@@ -519,8 +519,6 @@ void LILTypeGuesser::_process(LILVarDecl * value)
             auto type = this->getNodeType(initValue);
             if(type)
                 value->setType(type);
-        } else {
-            //this->searchForType(value);
         }
     }
     auto ty = value->getType();
@@ -550,7 +548,7 @@ void LILTypeGuesser::_process(LILVarDecl * value)
 
 void LILTypeGuesser::_process(LILClassDecl * value)
 {
-
+    
 }
 
 void LILTypeGuesser::_process(LILObjectDefinition * value)
