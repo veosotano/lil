@@ -1273,7 +1273,7 @@ llvm::Function * LILIREmitter::_emitFnBody(llvm::Function * fun, LILFunctionDecl
     auto body = value->getBody();
 
     auto ty = value->getReturnType();
-    if (ty->getName() != "null") {
+    if (ty && ty->getName() != "null") {
         d->returnAlloca = d->irBuilder.CreateAlloca(fun->getReturnType(), 0, "return");
     }
     for (auto & node : body) {
