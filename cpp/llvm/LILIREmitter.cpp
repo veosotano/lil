@@ -596,12 +596,14 @@ llvm::Value * LILIREmitter::_emit(LILObjectDefinition * value)
     }
 
     //call the constructor
-    LILString decoratedName = this->decorate("", className, "construct", nullptr);
-    llvm::Function* fun = d->llvmModule->getFunction(decoratedName.data());
-    if (fun) {
-        std::vector<llvm::Value *> argsvect;
-        argsvect.push_back(alloca);
-        d->irBuilder.CreateCall(fun, argsvect);
+    if (classValue->getMethodNamed("construct")) {
+        LILString decoratedName = this->decorate("", className, "construct", nullptr);
+        llvm::Function* fun = d->llvmModule->getFunction(decoratedName.data());
+        if (fun) {
+            std::vector<llvm::Value *> argsvect;
+            argsvect.push_back(alloca);
+            d->irBuilder.CreateCall(fun, argsvect);
+        }
     }
 
     return nullptr;

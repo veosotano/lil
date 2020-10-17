@@ -64,50 +64,6 @@ void LILMethodInserter::process(LILNode * node)
         return;
     }
     
-    std::vector<std::shared_ptr<LILNode>> nodes = value->getMethods();
-    bool hasCtor = false;
-    for (auto method : nodes) {
-        auto vd = std::static_pointer_cast<LILVarDecl>(method);
-        if (vd->getName() == "construct") {
-            hasCtor = true;
-            break;
-        }
-    }
-    if (!hasCtor) {
-        auto varWrapper = std::make_shared<LILVarDecl>();
-        varWrapper->setName("construct");
-        auto ctor = std::make_shared<LILFunctionDecl>();
-        ctor->setFunctionDeclType(FunctionDeclTypeFn);
-        ctor->setName("construct");
-        ctor->setIsConstructor(true);
-        auto fnTy = std::make_shared<LILFunctionType>();
-        fnTy->setName("fn");
-        varWrapper->setType(fnTy);
-        varWrapper->setInitVal(ctor);
-        value->addMethod(varWrapper);
-    }
-    
-    bool hasDtor = false;
-    for (auto method : nodes) {
-        auto vd = std::static_pointer_cast<LILVarDecl>(method);
-        if (vd->getName() == "destruct") {
-            hasDtor = true;
-            break;
-        }
-    }
-    if (!hasDtor) {
-        auto varWrapper = std::make_shared<LILVarDecl>();
-        varWrapper->setName("destruct");
-        auto dtor = std::make_shared<LILFunctionDecl>();
-        dtor->setFunctionDeclType(FunctionDeclTypeFn);
-        dtor->setName("destruct");
-        auto fnTy = std::make_shared<LILFunctionType>();
-        fnTy->setName("fn");
-        varWrapper->setType(fnTy);
-        varWrapper->setInitVal(dtor);
-        value->addMethod(varWrapper);
-    }
-    
     for (auto field : value->getFields()) {
         if (field->isA(NodeTypeVarDecl)) {
             auto vd = std::static_pointer_cast<LILVarDecl>(field);
