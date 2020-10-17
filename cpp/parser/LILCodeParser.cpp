@@ -1503,6 +1503,11 @@ bool LILCodeParser::readFunctionType()
                     this->readNextToken();
                     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
                 }
+                if (d->currentToken->isA(TokenTypeEllipsis)) {
+                    d->receiver->receiveNodeData(ParserEventFunctionVariadic, d->currentToken->getString());
+                    this->readNextToken();
+                    LIL_CHECK_FOR_END
+                }
                 if(!svValid) valueValid = false;
             }
             if (!valueValid)
