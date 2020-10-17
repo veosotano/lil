@@ -63,10 +63,14 @@ namespace LIL
         void initializeVisit() override;
         void visit(LILNode * node) override;
         void performVisit(std::shared_ptr<LILRootNode> rootNode) override;
-        void recursiveConnectCallsWithDecls(std::shared_ptr<LILNode> node);
-        void _recursiveConnectCallsWithDecls(std::shared_ptr<LILNode> node);
-        std::shared_ptr<LILNode> resolveValuePath(std::shared_ptr<LILValuePath> vp);
-
+        void connectCallsWithDecls(std::shared_ptr<LILNode> node);
+        void propagateStrongTypes(std::shared_ptr<LILNode> node);
+        void _propagateStrongType(std::shared_ptr<LILNode> node, std::shared_ptr<LILType> ty);
+        
+        void searchForTypesFromInitVal(std::shared_ptr<LILNode> node);
+        void searchForTypesFromAssignments(std::shared_ptr<LILNode> node);
+        void searchForTypesForArguments(std::shared_ptr<LILNode> node);
+        
         inline void processChildren(const std::vector<std::shared_ptr<LILNode>> & children);
         void process(LILNode * node);
         void _process(LILBoolLiteral * value);
@@ -104,6 +108,7 @@ namespace LIL
         std::shared_ptr<LILType> getNodeType(std::shared_ptr<LILNode> node) const;
         std::shared_ptr<LILType> getExpType(std::shared_ptr<LILExpression> exp) const;
         std::shared_ptr<LILType> getFnType(std::shared_ptr<LILFunctionDecl> fd) const;
+        std::shared_ptr<LILType> findTypeForArg(std::shared_ptr<LILVarDecl> vd, std::shared_ptr<LILFunctionDecl> fd, size_t argCount) const;
         void recursiveFindReturnTypes(std::vector<std::shared_ptr<LILType>> & returnTypes, std::shared_ptr<LILNode> eval) const;
         std::shared_ptr<LILType> findReturnTypeForFunctionCall(std::shared_ptr<LILFunctionCall> fc) const;
         std::shared_ptr<LILType> findTypeForVarName(std::shared_ptr<LILVarName> name) const;
@@ -111,7 +116,7 @@ namespace LIL
         std::shared_ptr<LILType> findTypeFromAssignments(std::vector<std::shared_ptr<LILNode>> nodes, const std::shared_ptr<LILVarDecl> & vd) const;
          std::shared_ptr<LILType> findTypeFromFunctionCalls(std::vector<std::shared_ptr<LILNode>> nodes, const std::shared_ptr<LILVarDecl> & vd) const;
         std::shared_ptr<LILType> findTypeFromExpressions(std::vector<std::shared_ptr<LILNode>> nodes, const std::shared_ptr<LILVarDecl> & vd) const;
-        std::shared_ptr<LILType> findTypeFromCallers(const std::vector<std::shared_ptr<LILNode>> & nodes, const std::shared_ptr<LILVarDecl> & vd) const;
+        std::shared_ptr<LILType> findTypeFromCallers(const std::vector<std::shared_ptr<LILNode>> & nodes, const std::shared_ptr<LILVarDecl> & vd, size_t argCount) const;
     };
 }
 

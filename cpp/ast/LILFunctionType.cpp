@@ -42,6 +42,7 @@ LILFunctionType::LILFunctionType(const LILFunctionType &other)
     this->_returnType = other._returnType;
     this->_receivesReturnType = other._receivesReturnType;
     this->_isVariadic = other._isVariadic;
+    this->_callers = other._callers;
 }
 
 std::shared_ptr<LILFunctionType> LILFunctionType::clone() const
@@ -56,7 +57,14 @@ std::shared_ptr<LILClonable> LILFunctionType::cloneImpl() const
     for (const auto & node : this->_arguments) {
         clone->addArgument(node->clone());
     }
-    clone->setReturnType(this->getReturnType()->clone());
+    if (this->_returnType) {
+        clone->setReturnType(this->getReturnType()->clone());
+    }
+    clone->_callers.clear();
+    for (auto it = this->_callers.begin(); it != this->_callers.end(); ++it)
+    {
+        clone->_callers.push_back((*it)->clone());
+    }
     return clone;
 }
 
@@ -174,3 +182,12 @@ bool LILFunctionType::getIsVariadic() const
     return this->_isVariadic;
 }
 
+void LILFunctionType::addCaller(std::shared_ptr<LILNode> caller)
+{
+    this->_callers.push_back(caller);
+}
+
+std::vector<std::shared_ptr<LILNode>> LILFunctionType::getCallers() const
+{
+    return this->_callers;
+}

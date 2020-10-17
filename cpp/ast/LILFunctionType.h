@@ -42,12 +42,16 @@ namespace LIL
         bool getReceivesReturnType() const;
         void setIsVariadic(bool value);
         bool getIsVariadic() const;
+
+        void addCaller(std::shared_ptr<LILNode> caller);
+        std::vector<std::shared_ptr<LILNode>> getCallers() const;
         
     protected:
         virtual std::shared_ptr<LILClonable> cloneImpl() const;
         
     private:
         std::vector<std::shared_ptr<LILNode>> _arguments;
+        std::vector<std::shared_ptr<LILNode>> _callers;
         std::shared_ptr<LILType> _returnType;
         bool _receivesReturnType;
         bool _isVariadic;
