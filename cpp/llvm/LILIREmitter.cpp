@@ -52,6 +52,7 @@ namespace LIL
         : llvmContext()
         , irBuilder(llvmContext)
         , needsReturnValue(false)
+        , currentAlloca(nullptr)
         , returnAlloca(nullptr)
         {
         }
@@ -63,6 +64,7 @@ namespace LIL
         std::vector<std::map<std::string, llvm::Value*>> hiddenLocals;
         std::map<std::string, llvm::StructType *> classTypes;
         bool needsReturnValue;
+        llvm::Value * currentAlloca;
         llvm::Value * returnAlloca;
         llvm::BasicBlock * finallyBB;
     };
@@ -506,25 +508,18 @@ llvm::Value * LILIREmitter::_emit(LILClassDecl * value)
 
 llvm::Value * LILIREmitter::_emit(LILObjectDefinition * value)
 {
-    auto parent = value->getParentNode();
-    if (!parent->isA(NodeTypeVarDecl)) {
-        std::cerr << "!!!!!!!!!!FAIL!!!!!!!!!!!!!!!!\n";
+    if (d->currentAlloca == nullptr) {
+        std::cerr << "CURRENT ALLOCA WAS NULL FAIL !!!!!!!!\n\n";
         return nullptr;
     }
-    auto vd = std::static_pointer_cast<LILVarDecl>(parent);
     LILString classNameStr = value->getType()->getName();
     std::string className = classNameStr.data();
-    std::string instanceName = vd->getName().data();
-    llvm::AllocaInst * alloca = d->irBuilder.CreateAlloca(
-        d->classTypes[className],
-        0,
-        instanceName.c_str()
-    );
 
     auto classValue = this->findClassWithName(classNameStr);
     size_t theIndex = 0;
     std::vector<std::shared_ptr<LILVarDecl>> callVars;
     std::vector<llvm::Value *> callValues;
+    llvm::Value * alloca = d->currentAlloca;
     for (auto field : classValue->getFields()) {
         auto vd = std::static_pointer_cast<LILVarDecl>(field);
         
@@ -569,9 +564,14 @@ llvm::Value * LILIREmitter::_emit(LILObjectDefinition * value)
             if (needsCall) {
                 callValues.push_back(this->emit(theVal.get()));
             } else {
-                llvm::Value * llvmValue = this->emit(theVal.get());
-                auto gep = this->_emitGEP(alloca, classValue->getName(), theIndex, instanceName + "." + varName, 0);
-                d->irBuilder.CreateStore(llvmValue, gep);
+                auto gep = this->_emitGEP(alloca, classValue->getName(), theIndex, varName, 0);
+                if (vd->getType()->isA(TypeTypeObject)) {
+                    d->currentAlloca = gep;
+                    this->emit(theVal.get());
+                } else {
+                    llvm::Value * llvmValue = this->emit(theVal.get());
+                    d->irBuilder.CreateStore(llvmValue, gep);
+                }
             }
         }
         ++theIndex;
@@ -587,7 +587,7 @@ llvm::Value * LILIREmitter::_emit(LILObjectDefinition * value)
         llvm::Function* fun = d->llvmModule->getFunction(newName.data());
         std::vector<llvm::Value *> argsvect;
         
-        argsvect.push_back(alloca);
+        argsvect.push_back(d->currentAlloca);
         argsvect.push_back(callValues[theIndex]);
         
         d->irBuilder.CreateCall(fun, argsvect);
@@ -604,8 +604,7 @@ llvm::Value * LILIREmitter::_emit(LILObjectDefinition * value)
         d->irBuilder.CreateCall(fun, argsvect);
     }
 
-    return alloca;
-
+    return nullptr;
 }
 
 llvm::Value * LILIREmitter::_emit(LILAssignment * value)
@@ -1298,24 +1297,17 @@ llvm::Function * LILIREmitter::_emitFnBody(llvm::Function * fun, LILFunctionDecl
                             this->emit(initVal.get());
                             break;
                         }
-                        case NodeTypeObjectDefinition:
-                        {
-                            llvm::Value * llvmValue = this->emit(initVal.get());
-                            d->hiddenLocals.back()[name] = d->namedValues[name];
-                            d->namedValues[name] = llvmValue;
-                            break;
-                        }
 
                         default:
                         {
                             //local var
                             llvm::Function * fun = d->irBuilder.GetInsertBlock()->getParent();
+                            d->hiddenLocals.back()[name] = d->namedValues[name];
+                            d->currentAlloca = this->createEntryBlockAlloca(fun, name, this->llvmTypeFromLILType(initVal->getType()));
+                            d->namedValues[name] = d->currentAlloca;
                             llvm::Value * llvmValue = this->emit(initVal.get());
                             if (llvmValue) {
-                                llvm::AllocaInst * alloca = this->createEntryBlockAlloca(fun, name, llvmValue->getType());
-                                d->irBuilder.CreateStore(llvmValue, alloca);
-                                d->hiddenLocals.back()[name] = d->namedValues[name];
-                                d->namedValues[name] = alloca;
+                                d->irBuilder.CreateStore(llvmValue, d->currentAlloca);
                             }
                             break;
                         }

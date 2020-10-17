@@ -19,6 +19,7 @@
 #include "LILVisitor.h"
 #include "LILNode.h"
 #include "LILFunctionCall.h"
+#include "LILObjectDefinition.h"
 #include "LILRootNode.h"
 
 
@@ -36,6 +37,7 @@ namespace LIL
         
         void validate(std::shared_ptr<LILNode> node);
         void _validate(std::shared_ptr<LILFunctionCall> fc);
+        void _validate(std::shared_ptr<LILObjectDefinition> od);
         inline void validateChildren(const std::vector<std::shared_ptr<LILNode>> & children);
         
     private:

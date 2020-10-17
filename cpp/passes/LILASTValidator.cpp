@@ -375,27 +375,6 @@ void LILASTValidator::_validate(LILType * value)
         }
         case TypeTypeObject:
         {
-            auto objTy = static_cast<LILObjectType *>(value);
-            auto fields = objTy->getFields();
-            if (fields.size() == 0) {
-                LILErrorMessage ei;
-                ei.message =  "Object types need at least one field";
-                LILNode::SourceLocation sl = value->getSourceLocation();
-                ei.file = sl.file;
-                ei.line = sl.line;
-                ei.column = sl.column;
-                this->errors.push_back(ei);
-            } else if (this->getDebug()) {
-                std::cerr << "Object type had " << fields.size() << " fields. OK\n";
-            }
-            for (auto field : fields) {
-                if (!field->LILNode::isA(NodeTypeType)) {
-                    this->illegalNodeType(field.get(), value);
-                }
-            }
-            if (this->getDebug() && !this->hasErrors()) {
-                std::cerr << "All subtypes in the type are types. OK\n";
-            }
             break;
         }
             
@@ -447,8 +426,20 @@ void LILASTValidator::_validate(LILClassDecl * value)
 
 void LILASTValidator::_validate(LILObjectDefinition * value)
 {
-    if (this->getDebug()) {
-        std::cerr << "Nothing to do. OK\n";
+    auto ty = value->getType();
+    if (!ty->isA(TypeTypeObject)) {
+        this->illegalNodeType(ty.get(), value);
+        return;
+    }
+    auto classValue = this->findClassWithName(ty->getName());
+    if (!classValue) {
+        LILErrorMessage ei;
+        ei.message =  "Class "+ty->getName()+" not found";
+        LILNode::SourceLocation sl = value->getSourceLocation();
+        ei.file = sl.file;
+        ei.line = sl.line;
+        ei.column = sl.column;
+        this->errors.push_back(ei);
     }
 }
 

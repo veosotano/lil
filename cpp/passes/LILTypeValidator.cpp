@@ -13,6 +13,7 @@
  ********************************************************************/
 
 #include "LILTypeValidator.h"
+#include "LILAssignment.h"
 #include "LILClassDecl.h"
 #include "LILErrorMessage.h"
 #include "LILFunctionCall.h"
@@ -71,6 +72,12 @@ void LILTypeValidator::validate(std::shared_ptr<LILNode> node)
             break;
         }
             
+        case NodeTypeObjectDefinition:
+        {
+            auto od = std::static_pointer_cast<LILObjectDefinition>(node);
+            this->_validate(od);
+            break;
+        }
             
         default:
             break;
@@ -150,6 +157,71 @@ void LILTypeValidator::_validate(std::shared_ptr<LILFunctionCall> fc)
             LILErrorMessage ei;
             ei.message =  "Function "+fc->getName()+" not found.";
             LILNode::SourceLocation sl = fc->getSourceLocation();
+            ei.file = sl.file;
+            ei.line = sl.line;
+            ei.column = sl.column;
+            this->errors.push_back(ei);
+        }
+    }
+}
+
+void LILTypeValidator::_validate(std::shared_ptr<LILObjectDefinition> od)
+{
+    auto ty = od->getType();
+    auto classValue = this->findClassWithName(ty->getName());
+    auto clFields = classValue->getFields();
+    auto odFields = od->getNodes();
+    for (auto odField : odFields) {
+        if (!odField->isA(NodeTypeAssignment)){
+            std::cerr << "!!!!!!! NODE IS NOT ASSIGNMENT FAIL !!!!!!!\n";
+            continue;
+        }
+        auto as = std::static_pointer_cast<LILAssignment>(odField);
+        auto asSubject = as->getSubject();
+        if (!asSubject) {
+            std::cerr << "!!!!!!! SUBJECT OF ASSIGNMENT WAS NULL FAIL !!!!!!!\n";
+            continue;
+        }
+        LILString pnName;
+        if (asSubject->isA(NodeTypeValuePath)) {
+            auto vp = std::static_pointer_cast<LILValuePath>(asSubject);
+            auto firstNode = vp->getNodes().front();
+            if (!firstNode || !firstNode->isA(NodeTypePropertyName)) {
+                std::cerr << "!!!!!!! FIRST NODE IS NOT PROPERTY NAME FAIL !!!!!!!\n";
+                continue;
+            }
+            auto pn = std::static_pointer_cast<LILPropertyName>(firstNode);
+            pnName = pn->getName();
+        } else if (asSubject->isA(NodeTypePropertyName)){
+            pnName = std::static_pointer_cast<LILPropertyName>(asSubject)->getName();
+        }
+
+        bool fieldFound = false;
+        for (auto clField : clFields) {
+            if (!clField->isA(NodeTypeVarDecl)) {
+                std::cerr << "!!!!!!! FIELD IN CLASS IS NOT VAR DECL FAIL !!!!!!!\n";
+                continue;
+            }
+            auto vd = std::static_pointer_cast<LILVarDecl>(clField);
+            if (pnName == vd->getName()) {
+                fieldFound = true;
+                auto vdTy = vd->getType();
+                auto asTy = as->getType();
+                if (!vdTy->equalTo(asTy)) {
+                    LILErrorMessage ei;
+                    ei.message =  "The field "+pnName+" needs to be of type "+vdTy->stringRep()+", "+asTy->stringRep()+" was given instead";
+                    LILNode::SourceLocation sl = as->getSourceLocation();
+                    ei.file = sl.file;
+                    ei.line = sl.line;
+                    ei.column = sl.column;
+                    this->errors.push_back(ei);
+                }
+            }
+        }
+        if (!fieldFound) {
+            LILErrorMessage ei;
+            ei.message =  "The field "+pnName+" was not found on class @"+classValue->getName();
+            LILNode::SourceLocation sl = as->getSourceLocation();
             ei.file = sl.file;
             ei.line = sl.line;
             ei.column = sl.column;
