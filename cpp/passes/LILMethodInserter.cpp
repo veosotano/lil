@@ -82,10 +82,7 @@ void LILMethodInserter::process(LILNode * node)
         ctor->setIsConstructor(true);
         auto fnTy = std::make_shared<LILFunctionType>();
         fnTy->setName("fn");
-        ctor->setType(fnTy);
-        auto retTy = std::make_shared<LILType>();
-        retTy->setName("null");
-        ctor->setReturnType(retTy);
+        varWrapper->setType(fnTy);
         varWrapper->setInitVal(ctor);
         value->addMethod(varWrapper);
     }
@@ -106,10 +103,7 @@ void LILMethodInserter::process(LILNode * node)
         dtor->setName("destruct");
         auto fnTy = std::make_shared<LILFunctionType>();
         fnTy->setName("fn");
-        dtor->setType(fnTy);
-        auto retTy = std::make_shared<LILType>();
-        retTy->setName("null");
-        dtor->setReturnType(retTy);
+        varWrapper->setType(fnTy);
         varWrapper->setInitVal(dtor);
         value->addMethod(varWrapper);
     }
