@@ -1836,6 +1836,7 @@ bool LILCodeParser::readExpression(bool &outIsSingleValue, NodeType & outType)
         if (this->atEndOfSource())
             return false;
     }
+    bool isSingleValue = false;
     NodeType svNodeType = NodeTypeInvalid;
     if (d->currentToken->isA(TokenTypeParenthesisOpen))
     {
@@ -1872,6 +1873,7 @@ bool LILCodeParser::readExpression(bool &outIsSingleValue, NodeType & outType)
     else
     {
         valid = this->readSingleValue(svNodeType);
+        isSingleValue = true;
         this->skip(TokenTypeWhitespace);
         if (this->atEndOfSource())
             return valid;
@@ -1879,8 +1881,6 @@ bool LILCodeParser::readExpression(bool &outIsSingleValue, NodeType & outType)
 
     if (this->atEndOfSource())
         return valid;
-
-    bool isSingleValue = true;
 
     while (!done && valid)
     {
@@ -1901,9 +1901,9 @@ bool LILCodeParser::readExpression(bool &outIsSingleValue, NodeType & outType)
         if (atEndOfSource())
             return false;
     }
+    outIsSingleValue = isSingleValue;
     if (isSingleValue)
     {
-        outIsSingleValue = true;
         outType = svNodeType;
     }
     return valid;
@@ -1922,7 +1922,7 @@ bool LILCodeParser::readExpressionInner()
     bool outIsSV = false;
     NodeType svExpTy = NodeTypeInvalid;
     isValid = this->readExpression(outIsSV, svExpTy);
-    if (isValid && outIsSV)
+    if (isValid)
     {
         d->receiver->receiveNodeCommit();
     }
