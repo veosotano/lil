@@ -269,7 +269,7 @@ llvm::Value * LILIREmitter::_emit(LILNumberLiteral * value)
 {
     const auto & tyNode = value->getType();
     if (!tyNode) {
-        std::cerr << "!!!!!!!!!!FAIL!!!!!!!!!!!!!!!!\n";
+        std::cerr << "!!!!!!!!!!NO TYPE FAIL!!!!!!!!!!!!!!!!\n";
         return nullptr;
     }
     const auto & ty = std::static_pointer_cast<LILType>(tyNode);
@@ -291,7 +291,7 @@ llvm::Value * LILIREmitter::_emit(LILNumberLiteral * value)
 
 llvm::Value * LILIREmitter::_emit(LILPercentageLiteral * value)
 {
-    std::cerr << "!!!!!!!!!!FAIL!!!!!!!!!!!!!!!!\n";
+    std::cerr << "!!!!!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!\n";
     return nullptr;
 }
 
@@ -303,11 +303,11 @@ llvm::Value * LILIREmitter::_emit(LILExpression * value)
     llvm::Value * leftV = this->emit(left.get());
     llvm::Value * rightV = this->emit(right.get());
     if (!leftV || !rightV) {
-        std::cerr << "!!!!!!!!!!FAIL!!!!!!!!!!!!!!!!\n";
+        std::cerr << "!!!!!!!!!!LEFT OR RIGHT EMIT FAIL!!!!!!!!!!!!!!!!\n";
         return nullptr;
     }
     if (leftV->getType() != rightV->getType()) {
-        std::cerr << "!!!!!!!!!!FAIL!!!!!!!!!!!!!!!!\n";
+        std::cerr << "!!!!!!!!!!LEFT AND RIGHT TYPE DONT MATCH FAIL!!!!!!!!!!!!!!!!\n";
         return nullptr;
     }
     switch (value->getExpressionType()) {
@@ -326,7 +326,7 @@ llvm::Value * LILIREmitter::_emit(LILExpression * value)
                     break;
                 }
                 default:
-                    std::cerr << "!!!!!!!!!!FAIL!!!!!!!!!!!!!!!!\n";
+                    std::cerr << "!!!!!!!!!!UNKNOWN LLVM TYPE FAIL!!!!!!!!!!!!!!!!\n";
                     break;
             }
             break;
@@ -346,7 +346,7 @@ llvm::Value * LILIREmitter::_emit(LILExpression * value)
                     break;
                 }
                 default:
-                    std::cerr << "!!!!!!!!!!FAIL!!!!!!!!!!!!!!!!\n";
+                    std::cerr << "!!!!!!!!!!UNKNOWN LLVM TYPE FAIL!!!!!!!!!!!!!!!!\n";
                     break;
             }
             break;
@@ -366,7 +366,7 @@ llvm::Value * LILIREmitter::_emit(LILExpression * value)
                     break;
                 }
                 default:
-                    std::cerr << "!!!!!!!!!!FAIL!!!!!!!!!!!!!!!!\n";
+                    std::cerr << "!!!!!!!!!!UNKNOWN LLVM TYPE FAIL!!!!!!!!!!!!!!!!\n";
                     break;
             }
             break;
@@ -386,7 +386,7 @@ llvm::Value * LILIREmitter::_emit(LILExpression * value)
                     break;
                 }
                 default:
-                    std::cerr << "!!!!!!!!!!FAIL!!!!!!!!!!!!!!!!\n";
+                    std::cerr << "!!!!!!!!!!UNKNOWN LLVM TYPE FAIL!!!!!!!!!!!!!!!!\n";
                     break;
             }
             break;
@@ -401,7 +401,7 @@ llvm::Value * LILIREmitter::_emit(LILExpression * value)
                     return d->irBuilder.CreateFCmpOGT(leftV, rightV);
 
                 default:
-                    std::cerr << "!!!!!!!!!!FAIL!!!!!!!!!!!!!!!!\n";
+                    std::cerr << "!!!!!!!!!!UNKNOWN LLVM TYPE FAIL!!!!!!!!!!!!!!!!\n";
                     break;
             }
         }
@@ -415,16 +415,16 @@ llvm::Value * LILIREmitter::_emit(LILExpression * value)
                     return d->irBuilder.CreateFCmpOLT(leftV, rightV);
                     
                 default:
-                    std::cerr << "!!!!!!!!!!FAIL!!!!!!!!!!!!!!!!\n";
+                    std::cerr << "!!!!!!!!!! UNKNOWN LLVM TYPE FAIL!!!!!!!!!!!!!!!!\n";
                     break;
             }
         }
         default:
-            std::cerr << "!!!!!!!!!!FAIL!!!!!!!!!!!!!!!!\n";
+            std::cerr << "!!!!!!!!!!UNKNOWN EXPRESSION TYPE FAIL!!!!!!!!!!!!!!!!\n";
             return nullptr;
     }
 
-    std::cerr << "!!!!!!!!!!FAIL!!!!!!!!!!!!!!!!\n";
+    std::cerr << "!!!!!!!!!!EMIT EXPRESSION FAIL!!!!!!!!!!!!!!!!\n";
     return nullptr;
 
 }
@@ -454,19 +454,19 @@ llvm::Value * LILIREmitter::_emit(LILStringLiteral * value)
 
         return llvm::ConstantExpr::getBitCast(globalDeclaration, charType->getPointerTo());
     }
-    std::cerr << "!!!!!!!!!!FAIL!!!!!!!!!!!!!!!!\n";
+    std::cerr << "!!!!!!!!!!EMIT STRING LITERAL FAIL!!!!!!!!!!!!!!!!\n";
     return nullptr;
 }
 
 llvm::Value * LILIREmitter::_emit(LILStringFunction * value)
 {
-    std::cerr << "!!!!!!!!!!FAIL!!!!!!!!!!!!!!!!\n";
+    std::cerr << "!!!!!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!\n";
     return nullptr;
 }
 
 llvm::Value * LILIREmitter::_emit(LILNullLiteral * value)
 {
-    std::cerr << "!!!!!!!!!!FAIL!!!!!!!!!!!!!!!!\n";
+    std::cerr << "!!!!!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!\n";
     return nullptr;
 }
 
@@ -1084,7 +1084,7 @@ llvm::Value * LILIREmitter::_emit(LILValuePath * value)
         }
         return llvmSubject;
     }
-    std::cerr << "!!!!!!!!!!FAIL!!!!!!!!!!!!!!!!\n";
+    std::cerr << "!!!!!!!!!!EMIT VALUE PATH FAIL!!!!!!!!!!!!!!!!\n";
     return nullptr;
 }
 
@@ -1098,52 +1098,52 @@ llvm::Value * LILIREmitter::_emitGEP(llvm::Value * llvmValue, LILString classNam
 
 llvm::Value * LILIREmitter::_emit(LILPropertyName * value)
 {
-    std::cerr << "!!!!!!!!!!FAIL!!!!!!!!!!!!!!!!\n";
+    std::cerr << "!!!!!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!\n";
     return nullptr;
 }
 
 llvm::Value * LILIREmitter::_emit(LILRule * value)
 {
-    std::cerr << "!!!!!!!!!!FAIL!!!!!!!!!!!!!!!!\n";
+    std::cerr << "!!!!!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!\n";
     return nullptr;
 
 }
 
 llvm::Value * LILIREmitter::_emit(LILSimpleSelector * value)
 {
-    std::cerr << "!!!!!!!!!!FAIL!!!!!!!!!!!!!!!!\n";
+    std::cerr << "!!!!!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!\n";
     return nullptr;
 
 }
 
 llvm::Value * LILIREmitter::_emit(LILSelectorChain * value)
 {
-    std::cerr << "!!!!!!!!!!FAIL!!!!!!!!!!!!!!!!\n";
+    std::cerr << "!!!!!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!\n";
     return nullptr;
 
 }
 
 llvm::Value * LILIREmitter::_emit(LILSelector * value)
 {
-    std::cerr << "!!!!!!!!!!FAIL!!!!!!!!!!!!!!!!\n";
+    std::cerr << "!!!!!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!\n";
     return nullptr;
 }
 
 llvm::Value * LILIREmitter::_emit(LILCombinator * value)
 {
-    std::cerr << "!!!!!!!!!!FAIL!!!!!!!!!!!!!!!!\n";
+    std::cerr << "!!!!!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!\n";
     return nullptr;
 }
 
 llvm::Value * LILIREmitter::_emit(LILFilter * value)
 {
-    std::cerr << "!!!!!!!!!!FAIL!!!!!!!!!!!!!!!!\n";
+    std::cerr << "!!!!!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!\n";
     return nullptr;
 }
 
 llvm::Value * LILIREmitter::_emit(LILFlag * value)
 {
-    std::cerr << "!!!!!!!!!!FAIL!!!!!!!!!!!!!!!!\n";
+    std::cerr << "!!!!!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!\n";
     return nullptr;
 }
 
@@ -1168,7 +1168,7 @@ llvm::Function * LILIREmitter::_emit(LILFunctionDecl * value)
         }
 
         default:
-            std::cerr << "!!!!!!!!!!FAIL!!!!!!!!!!!!!!!!\n";
+            std::cerr << "!!!!!!!!!!UNKNOWN FUNCTION DECL TYPE FAIL!!!!!!!!!!!!!!!!\n";
             break;
     }
     return nullptr;
@@ -1225,7 +1225,7 @@ llvm::Function * LILIREmitter::_emitFn(LILFunctionDecl * value)
     for (auto & llvmArg : fun->args()) {
         auto arg = arguments[argIndex];
         if(!arg){
-            std::cerr << "!!!!!!!!!!FAIL!!!!!!!!!!!!!!!!\n";
+            std::cerr << "!!!!!!!!!!ARGUMENT WAS NULL FAIL!!!!!!!!!!!!!!!!\n";
             return nullptr;
         }
 
@@ -1400,7 +1400,7 @@ llvm::Function * LILIREmitter::_emitMethod(LILFunctionDecl * value, LILClassDecl
         } else {
             auto arg = arguments[argIndex-1];
             if(!arg || !arg->isA(NodeTypeVarDecl)){
-                std::cerr << "!!!!!!!!!!FAIL!!!!!!!!!!!!!!!!\n";
+                std::cerr << "!!!!!!!!!!NODE WAS NOT VAR DECL FAIL!!!!!!!!!!!!!!!!\n";
                 return nullptr;
             }
 
@@ -1695,7 +1695,7 @@ llvm::Value * LILIREmitter::_emitReturn(LILFlowControlCall * value)
 
 llvm::Value * LILIREmitter::_emit(LILInstruction * value)
 {
-    std::cerr << "!!!!!!!!!!FAIL!!!!!!!!!!!!!!!!\n";
+    std::cerr << "!!!!!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!\n";
     return nullptr;
 }
 
@@ -1777,7 +1777,7 @@ llvm::Value * LILIREmitter::_emitPointer(LILValuePath * value)
                     break;
                 }
                 default:
-                    std::cerr << "!!!!!!!!!!FAIL!!!!!!!!!!!!!!!!\n";
+                    std::cerr << "!!!!!!!!!!UNKNOWN SELECTOR TYPE FAIL!!!!!!!!!!!!!!!!\n";
                     return nullptr;
             }
         }

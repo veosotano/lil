@@ -354,7 +354,7 @@ void LILParameterSorter::_process(LILFunctionCall * value)
             auto sel = std::static_pointer_cast<LILSelector>(firstNode);
             switch (sel->getSelectorType()) {
                 default:
-                    std::cerr << "!!!!!!!!!!FAIL!!!!!!!!!!!!!!!!\n";
+                    std::cerr << "!!!!!!!!!!SELECTORS UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!\n";
                     return;
             }
         }
@@ -462,7 +462,7 @@ void LILParameterSorter::_process(LILFunctionCall * value)
                         fc->setArguments(std::move(newArgs));
                         
                     } else {
-                        std::cerr << "!!!!!!!!!!FAIL!!!!!!!!!!!!!!!!\n";
+                        std::cerr << "!!!!!!!!!!TYPE WAS NOT FUNCTION TYPE FAIL!!!!!!!!!!!!!!!!\n";
                     }
                     
                     break;
