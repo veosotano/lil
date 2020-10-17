@@ -19,6 +19,7 @@ using namespace LIL;
 
 LILClassDecl::LILClassDecl()
 : LILTypedNode(NodeTypeClassDecl)
+, _isExtern(false)
 {
     this->_receivesInherits = false;
 }
@@ -27,6 +28,7 @@ LILClassDecl::LILClassDecl(const LILClassDecl &other)
 : LILTypedNode(other)
 {
     this->_inheritType = other._inheritType;
+    this->_isExtern = other._isExtern;
     this->_fields = other._fields;
     this->_methods = other._methods;
 }
@@ -140,4 +142,14 @@ std::shared_ptr<LILNode> LILClassDecl::getMethodNamed(const LILString & name) co
         }
     }
     return nullptr;
+}
+
+bool LILClassDecl::getIsExtern() const
+{
+    return this->_isExtern;
+}
+
+void LILClassDecl::setIsExtern(bool value)
+{
+    this->_isExtern = value;
 }

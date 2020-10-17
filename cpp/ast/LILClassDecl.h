@@ -44,11 +44,15 @@ namespace LIL
         
         std::shared_ptr<LILNode> getFieldNamed(const LILString & name) const;
         std::shared_ptr<LILNode> getMethodNamed(const LILString & name) const;
+
+        bool getIsExtern() const;
+        void setIsExtern(bool value);
         
     protected:
         virtual std::shared_ptr<LILClonable> cloneImpl() const;
         
     private:
+        bool _isExtern;
         std::shared_ptr<LILNode> _inheritType;
         bool _receivesInherits;
         std::vector<std::shared_ptr<LILNode>> _fields;

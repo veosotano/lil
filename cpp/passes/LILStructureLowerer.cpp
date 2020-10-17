@@ -249,6 +249,10 @@ void LILStructureLowerer::_process(std::shared_ptr<LILVarDecl> value)
 
 void LILStructureLowerer::_process(std::shared_ptr<LILClassDecl> value)
 {
+    if (value->getIsExtern()) {
+        return;
+    }
+
     std::vector<std::shared_ptr<LILNode>> newNodes;
 
     std::vector<std::shared_ptr<LILNode>> nodes = value->getMethods();

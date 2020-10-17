@@ -19,6 +19,7 @@
 #include "LILCodeUnit.h"
 #include "LILFunctionDecl.h"
 #include "LILInstruction.h"
+#include "LILObjectType.h"
 #include "LILRootNode.h"
 #include "LILStringLiteral.h"
 #include "LILVarDecl.h"
@@ -220,7 +221,7 @@ std::vector<std::string> LILNeedsImporter::_glob(const std::string& pattern) con
     return filenames;
 }
 
-void LILNeedsImporter::_getNodesForImport(std::vector<std::shared_ptr<LILNode>> * newNodes, std::shared_ptr<LILRootNode> rootNode)
+void LILNeedsImporter::_getNodesForImport(std::vector<std::shared_ptr<LILNode>> * newNodes, std::shared_ptr<LILRootNode> rootNode) const
 {
     for (auto node : rootNode->getNodes()) {
         switch (node->getNodeType()) {
@@ -240,6 +241,48 @@ void LILNeedsImporter::_getNodesForImport(std::vector<std::shared_ptr<LILNode>> 
                 
             case NodeTypeClassDecl:
             {
+                auto cd = std::static_pointer_cast<LILClassDecl>(node);
+                
+                auto newCd = std::make_shared<LILClassDecl>();
+                newCd->setIsExtern(true);
+                auto newTy = std::make_shared<LILObjectType>();
+                newTy->setTypeType(TypeTypeObject);
+                newTy->setName(cd->getName());
+                newCd->setType(newTy);
+                
+                auto fields = cd->getFields();
+                for (auto field : fields) {
+                    if (!field->isA(NodeTypeVarDecl)) {
+                        continue;
+                    }
+                    auto fldVd = std::static_pointer_cast<LILVarDecl>(field);
+                    auto newVd = std::make_shared<LILVarDecl>();
+                    auto fldTy = field->getType();
+                    if (!fldTy) {
+                        continue;
+                    }
+                    newVd->setType(fldTy->clone());
+                    newVd->setName(fldVd->getName());
+                    newCd->addField(newVd);
+                }
+                
+                auto methods = cd->getMethods();
+                for (auto method : methods) {
+                    if (!method->isA(NodeTypeVarDecl)) {
+                        continue;
+                    }
+                    auto metVd = std::static_pointer_cast<LILVarDecl>(method);
+                    auto newVd = std::make_shared<LILVarDecl>();
+                    auto metTy = method->getType();
+                    if (!metTy) {
+                        continue;
+                    }
+                    newVd->setType(metTy->clone());
+                    newVd->setName(metVd->getName());
+                    newCd->addMethod(newVd);
+                }
+                
+                newNodes->push_back(newCd);
                 break;
             }
                 

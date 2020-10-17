@@ -118,7 +118,9 @@ void LILTypeGuesser::processChildren(const std::vector<std::shared_ptr<LILNode> 
 void LILTypeGuesser::process(LILNode * node)
 {
     if (LILNode::isContainerNode(node->getNodeType())) {
-        this->processChildren(node->getChildNodes());
+        if (!node->isA(NodeTypeClassDecl) || !static_cast<LILClassDecl *>(node)->getIsExtern()) {
+            this->processChildren(node->getChildNodes());
+        }
     }
     if (this->getDebug()) {
         std::cerr << "## guessing types " + LILNode::nodeTypeToString(node->getNodeType()).data() + " " + node->stringRep().data() + " ##\n";

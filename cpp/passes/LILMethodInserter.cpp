@@ -60,6 +60,10 @@ void LILMethodInserter::process(LILNode * node)
     }
     auto value = static_cast<LILClassDecl *>(node);
     
+    if (value->getIsExtern()) {
+        return;
+    }
+    
     std::vector<std::shared_ptr<LILNode>> nodes = value->getMethods();
     bool hasCtor = false;
     for (auto method : nodes) {

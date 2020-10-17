@@ -288,8 +288,10 @@ void LILNameLowerer::_process(LILVarDecl * value)
 
 void LILNameLowerer::_process(LILClassDecl * value)
 {
-    this->processChildren(value->getFields());
-    this->processChildren(value->getMethods());
+    if (!value->getIsExtern()) {
+        this->processChildren(value->getFields());
+        this->processChildren(value->getMethods());
+    }
 }
 
 void LILNameLowerer::_process(LILObjectDefinition * value)

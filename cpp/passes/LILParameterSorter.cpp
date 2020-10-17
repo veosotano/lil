@@ -256,8 +256,10 @@ void LILParameterSorter::_process(LILVarDecl * value)
 
 void LILParameterSorter::_process(LILClassDecl * value)
 {
-    this->processChildren(value->getFields());
-    this->processChildren(value->getMethods());
+    if (!value->getIsExtern()) {
+        this->processChildren(value->getFields());
+        this->processChildren(value->getMethods());
+    }
 }
 
 void LILParameterSorter::_process(LILObjectDefinition * value)

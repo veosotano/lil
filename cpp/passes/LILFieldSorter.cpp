@@ -250,8 +250,10 @@ void LILFieldSorter::_process(LILVarDecl * value)
 
 void LILFieldSorter::_process(LILClassDecl * value)
 {
-    this->processChildren(value->getFields());
-    this->processChildren(value->getMethods());
+    if (!value->getIsExtern()) {
+        this->processChildren(value->getFields());
+        this->processChildren(value->getMethods());
+    }
 }
 
 void LILFieldSorter::_process(LILObjectDefinition * value)
