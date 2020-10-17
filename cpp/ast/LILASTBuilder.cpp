@@ -677,15 +677,30 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
             {
                 if (eventType == ParserEventNumberInt)
                 {
-                    std::shared_ptr<LILMultipleType> type = std::make_shared<LILMultipleType>();
-                    std::shared_ptr<LILType> type1 = std::make_shared<LILType>();
-                    type1->setName("i64");
-                    type->addType(type1);
-                    std::shared_ptr<LILType> type2 = std::make_shared<LILType>();
-                    type2->setName("f64");
-                    type->addType(type2);
-                    type->setIsWeakType(true);
-                    std::static_pointer_cast<LILNumberLiteral>(this->currentNode)->setType(type);
+                    std::shared_ptr<LILType> ty;
+                    if (this->currentContainer.size() > 0) {
+                        auto cont = this->currentContainer.back();
+                        if (cont->isA(NodeTypeVarDecl)) {
+                            ty = cont->getType();
+                        }
+                    }
+                    
+                    if (ty)
+                    {
+                        std::static_pointer_cast<LILNumberLiteral>(this->currentNode)->setType(ty);
+                    }
+                    else
+                    {
+                        std::shared_ptr<LILMultipleType> type = std::make_shared<LILMultipleType>();
+                        std::shared_ptr<LILType> type1 = std::make_shared<LILType>();
+                        type1->setName("i64");
+                        type->addType(type1);
+                        std::shared_ptr<LILType> type2 = std::make_shared<LILType>();
+                        type2->setName("f64");
+                        type->addType(type2);
+                        type->setIsWeakType(true);
+                        std::static_pointer_cast<LILNumberLiteral>(this->currentNode)->setType(type);
+                    }
                 }
                 else if (eventType == ParserEventNumberFP)
                 {
