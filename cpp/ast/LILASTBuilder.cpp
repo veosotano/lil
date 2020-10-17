@@ -335,21 +335,23 @@ void LILASTBuilder::receiveNodeCommit()
                     {
                         auto vd = std::static_pointer_cast<LILVarDecl>(this->currentNode);
                         
-                        //set local variable
-                        this->rootNode->setLocalVariable(vd->getName(), vd);
-                        
                         if (vd->getIsExtern()) {
                             this->rootNode->addNode(this->currentNode);
-                        } else {
+                            this->rootNode->setLocalVariable(vd->getName(), vd);
+
+                        } else if (this->_isMain) {
+                            auto mainFn = this->rootNode->getMainFn();
+                            //set local variable
+                            mainFn->setLocalVariable(vd->getName(), vd);
                             auto initVal = vd->getInitVal();
                             if (initVal) {
                                 if (initVal->isA(NodeTypeFunctionDecl)) {
                                     this->rootNode->addNode(this->currentNode);
                                 } else {
-                                    this->rootNode->getMainFn()->addEvaluable(this->currentNode);
+                                    mainFn->addEvaluable(this->currentNode);
                                 }
                             } else {
-                                this->rootNode->getMainFn()->addEvaluable(this->currentNode);
+                                mainFn->addEvaluable(this->currentNode);
                             }
                         }
                         break;
@@ -461,6 +463,15 @@ void LILASTBuilder::receiveNodeCommit()
                         fd->setName(name);
                         if (name == "construct") {
                             fd->setIsConstructor(true);
+                        }
+                        
+                        auto ty = varDecl->getType();
+                        auto fnTy = std::static_pointer_cast<LILFunctionType>(ty);
+                        for ( auto arg : fnTy->getArguments()) {
+                            if (arg->isA(NodeTypeVarDecl)) {
+                                auto argVd = std::static_pointer_cast<LILVarDecl>(arg);
+                                fd->setLocalVariable(argVd->getName(), argVd);
+                            }
                         }
                     }
                 }
