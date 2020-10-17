@@ -243,7 +243,19 @@ void LILASTBuilder::receiveNodeStart(NodeType nodeType)
         case NodeTypeFunctionCall:
         {
             this->state.push_back(BuilderStateFunctionCall);
-            this->currentContainer.push_back(std::make_shared<LILFunctionCall>());
+            std::shared_ptr<LILFunctionCall> fc = std::make_shared<LILFunctionCall>();
+            if (this->currentNode)
+            {
+                if (this->currentNode->isA(NodeTypePropertyName)) {
+                    auto pn = std::static_pointer_cast<LILPropertyName>(this->currentNode);
+                    fc->setName(pn->getName());
+                } else if (this->currentNode->isA(NodeTypeVarName)) {
+                    auto vn = std::static_pointer_cast<LILVarName>(this->currentNode);
+                    fc->setName(vn->getName());
+                }
+                this->currentNode.reset();
+            }
+            this->currentContainer.push_back(fc);
             break;
         }
         case NodeTypeFlowControl:

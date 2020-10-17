@@ -275,6 +275,7 @@ void LILASTValidator::_validate(LILExpression * value)
         case NodeTypeNumberLiteral:
         case NodeTypeExpression:
         case NodeTypeValuePath:
+        case NodeTypeVarName:
         case NodeTypeFunctionCall:
             break;
             
@@ -289,6 +290,7 @@ void LILASTValidator::_validate(LILExpression * value)
         case NodeTypeNumberLiteral:
         case NodeTypeExpression:
         case NodeTypeValuePath:
+        case NodeTypeVarName:
         case NodeTypeFunctionCall:
             break;
             
@@ -666,9 +668,11 @@ void LILASTValidator::_validate(LILFlowControlCall * value)
             case NodeTypeBool:
             case NodeTypeExpression:
             case NodeTypeArray:
+            case NodeTypeVarName:
             case NodeTypeValuePath:
             case NodeTypeSelector:
             case NodeTypeObjectDefinition:
+            case NodeTypeFunctionCall:
                 break;
             default:
                 this->illegalNodeType(arg.get(), value);

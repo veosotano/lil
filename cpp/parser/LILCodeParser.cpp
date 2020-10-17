@@ -1217,9 +1217,16 @@ bool LILCodeParser::readIdentifierStatement()
         if (this->isAssignment()){
             isValid = this->readAssignment(true, true);
         }
+        else if (this->isFunctionCall(false)){
+            isValid = this->readStandardFunctionCall(true);
+        }
         else if (this->isValuePath())
         {
-            isValid = this->readValuePath(true, true);
+            bool vnValid = this->readVarName();
+            if (!vnValid) {
+                return false;
+            }
+            isValid = this->readValuePath(true);
             if (this->isExpression())
             {
                 bool outIsSV = false;
@@ -1644,8 +1651,19 @@ bool LILCodeParser::readAssignment(bool allowValuePath, bool firstIsVar, bool fi
             while (!done)
             {
                 done = true;
-                if (allowValuePath) {
-                    bool ppValid = this->readValuePath(firstIsVar, false);
+                if (allowValuePath && this->isValuePath()) {
+                    if (firstIsVar) {
+                        bool vnValid = this->readVarName();
+                        if (!vnValid) {
+                            return false;
+                        }
+                    } else {
+                        bool pnValid = this->readPropertyName();
+                        if (!pnValid) {
+                            return false;
+                        }
+                    }
+                    bool ppValid = this->readValuePath(false);
                     d->receiver->receiveNodeCommit();
                     if (!ppValid){
                         LIL_CANCEL_NODE
@@ -2028,8 +2046,18 @@ bool LILCodeParser::readBasicValue(NodeType &nodeType)
             }
             else
             {
-                nodeType = NodeTypeValuePath;
-                return this->readValuePath(true, true);
+                bool isVp = this->isValuePath();
+                bool vnValid = this->readVarName();
+                if (!vnValid) {
+                    return false;
+                }
+                if (isVp) {
+                    nodeType = NodeTypeValuePath;
+                    return this->readValuePath(true);
+                } else {
+                    nodeType = NodeTypeVarName;
+                    return true;
+                }
             }
             break;
         }
@@ -2300,7 +2328,7 @@ bool LILCodeParser::readObjectPath()
     if (!osValid || atEndOfSource())
         return false;
 
-    return this->readValuePath(false, true);
+    return this->readValuePath(true);
 }
 
 //this assumes currentToken is an object sign
@@ -3180,10 +3208,8 @@ bool LILCodeParser::readInstructionRule()
     return true;
 }
 
-bool LILCodeParser::readValuePath(bool firstIsVar, bool allowFunctionCall)
+bool LILCodeParser::readValuePath(bool allowFunctionCall)
 {
-    bool isFirst = true;
-
     bool done = false;
 
     LIL_START_NODE(NodeTypeValuePath);
@@ -3193,25 +3219,23 @@ bool LILCodeParser::readValuePath(bool firstIsVar, bool allowFunctionCall)
         done = true;
         if (d->currentToken->isA(TokenTypeIdentifier))
         {
-            if (isFirst && firstIsVar)
-            {
-                bool isValid = this->readVarName();
-                if (isValid){
-                    d->receiver->receiveNodeCommit();
-                } else {
-                    d->receiver->receiveError("Failed to read var name in value path", d->file, d->line, d->column);
-                    this->skipInvalidToken();
-                }
+            bool isFc = this->isFunctionCall(false);
+            bool pnValid = this->readPropertyName();
+            if (!pnValid){
+                d->receiver->receiveError("Failed to read property name in value path", d->file, d->line, d->column);
+                this->skipInvalidToken();
+                continue;
             }
-            else
-            {
-                bool isValid = this->readPropertyName();
-                if (isValid){
+            if (isFc) {
+                bool fcValid = this->readFunctionCallSimple();
+                if (fcValid) {
                     d->receiver->receiveNodeCommit();
                 } else {
-                    d->receiver->receiveError("Failed to read property name in value path", d->file, d->line, d->column);
+                    d->receiver->receiveError("Failed to read function call in value path", d->file, d->line, d->column);
                     this->skipInvalidToken();
                 }
+            } else if (pnValid) {
+                d->receiver->receiveNodeCommit();
             }
         }
         if (this->isIndexAccessor())
@@ -3225,16 +3249,6 @@ bool LILCodeParser::readValuePath(bool firstIsVar, bool allowFunctionCall)
                 this->skipInvalidToken();
             }
         }
-        if (this->isFunctionCall(true))
-        {
-            bool fcValid = this->readFunctionCallSimple();
-            if (fcValid) {
-                d->receiver->receiveNodeCommit();
-            } else {
-                d->receiver->receiveError("Failed to read function call in value path", d->file, d->line, d->column);
-                this->skipInvalidToken();
-            }
-        }
         if (!atEndOfSource() && d->currentToken->isA(TokenTypeDot))
         {
             done = false;
@@ -3242,8 +3256,6 @@ bool LILCodeParser::readValuePath(bool firstIsVar, bool allowFunctionCall)
             this->readNextToken();
             LIL_CHECK_FOR_END
         }
-
-        isFirst = false;
     }
 
     LIL_END_NODE_SKIP(false)
@@ -3749,7 +3761,11 @@ bool LILCodeParser::readEvaluables()
 
                 else if (this->isValuePath())
                 {
-                    bool ppValid = this->readValuePath(true, true);
+                    bool vnValid = this->readVarName();
+                    if (!vnValid) {
+                        return false;
+                    }
+                    bool ppValid = this->readValuePath(true);
                     if (ppValid) {
                         d->receiver->receiveNodeCommit();
                     }
@@ -3835,7 +3851,11 @@ bool LILCodeParser::readEvaluables()
                 }
                 else if (d->currentToken->isA(TokenTypeIdentifier))
                 {
-                    bool ppValid = this->readValuePath(true, true);
+                    bool vnValid = this->readVarName();
+                    if (!vnValid) {
+                        return false;
+                    }
+                    bool ppValid = this->readValuePath(true);
                     if (ppValid) {
                         d->receiver->receiveNodeCommit();
                     }
@@ -3964,23 +3984,7 @@ bool LILCodeParser::readFunctionCall()
         // <fnName>(arg1, arg2, argN, ...)
         else
         {
-            LIL_START_NODE(NodeTypeValuePath)
-            bool vnValid = this->readVarName();
-            if (vnValid) {
-                d->receiver->receiveNodeCommit();
-            } else {
-                LIL_CANCEL_NODE
-            }
-            LIL_CHECK_FOR_END
-            this->skip(TokenTypeWhitespace);
-            LIL_CHECK_FOR_END
-            bool fcValid = this->readStandardFunctionCall(false);
-            if (fcValid) {
-                d->receiver->receiveNodeCommit();
-            } else {
-                LIL_CANCEL_NODE
-            }
-            LIL_END_NODE_SKIP(false)
+            return this->readStandardFunctionCall(true);
         }
     }
     else
@@ -4169,7 +4173,11 @@ bool LILCodeParser::readNameAndSelectorFunctionCall()
 
     //read the arguments
     LIL_EXPECT(TokenTypeIdentifier, "identifier");
-    bool vpValid = this->readValuePath(true, false);
+    bool vnValid = this->readVarName();
+    if (!vnValid) {
+        return false;
+    }
+    bool vpValid = this->readValuePath(false);
     if (vpValid) {
         d->receiver->receiveNodeCommit();
     }

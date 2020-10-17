@@ -18,6 +18,7 @@
 
 #include "LILVisitor.h"
 #include "LILNode.h"
+#include "LILFunctionCall.h"
 #include "LILRootNode.h"
 
 
@@ -33,7 +34,8 @@ namespace LIL
         void visit(LILNode * node) override { };
         void performVisit(std::shared_ptr<LILRootNode> rootNode) override;
         
-        void validate(std::shared_ptr<LILNode>);
+        void validate(std::shared_ptr<LILNode> node);
+        void _validate(std::shared_ptr<LILFunctionCall> fc);
         inline void validateChildren(const std::vector<std::shared_ptr<LILNode>> & children);
         
     private:

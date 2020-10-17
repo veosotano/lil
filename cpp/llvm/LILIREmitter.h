@@ -107,7 +107,7 @@ namespace LIL
         llvm::Function * _emitMethod(LILFunctionDecl * value, LILClassDecl * classValue);
 
         llvm::Value * _emit(LILFunctionCall * value);
-        llvm::Value * _emit(LILFunctionCall * value, LILString name);
+        llvm::Value * _emitFunctionCall(LILFunctionCall * value, LILString name, llvm::Value * instance);
         llvm::Value * _emit(LILFlowControl * value);
         llvm::Value * _emitIf(LILFlowControl * value);
         llvm::Value * _emit(LILFlowControlCall * value);

@@ -101,7 +101,7 @@ namespace LIL
         bool readNeedsInstr();
         bool readNewInstr();
         bool readInstructionRule();
-        bool readValuePath(bool firstIsVar, bool allowFunctionCall);
+        bool readValuePath(bool allowFunctionCall);
         bool readVarName();
         bool readPropertyName();
         bool readIndexAccessor();

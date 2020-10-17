@@ -98,6 +98,7 @@ namespace LIL
         void _process(LILInstruction * value);
 
         std::shared_ptr<LILType> recursiveFindTypeFromAncestors(std::shared_ptr<LILNode> value) const;
+        std::shared_ptr<LILFunctionType> findFnTypeForFunctionCall(std::shared_ptr<LILFunctionCall> fc) const;
         void setTypeOnAncestorIfNeeded(std::shared_ptr<LILNode> value, std::shared_ptr<LILType> ty);
         std::shared_ptr<LILFunctionDecl> recursiveFindFunctionDecl(std::shared_ptr<LILNode> node) const;
         std::shared_ptr<LILType> getNodeType(std::shared_ptr<LILNode> node) const;

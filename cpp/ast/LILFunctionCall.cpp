@@ -31,6 +31,7 @@ LILFunctionCall::LILFunctionCall(const LILFunctionCall &other)
     this->_functionCallType = other._functionCallType;
     this->_argumentTypes = other._argumentTypes;
     this->_returnType = other._returnType;
+    this->_name = other._name;
 }
 
 std::shared_ptr<LILFunctionCall> LILFunctionCall::clone() const
@@ -99,6 +100,7 @@ void LILFunctionCall::receiveNodeData(const LILString &data)
     {
         this->setFunctionCallType(FunctionCallTypeSet);
     }
+    this->_name = data;
 }
 
 
@@ -150,7 +152,7 @@ LILString LILFunctionCall::stringRep()
         default:
             break;
     }
-    return "";
+    return this->_name;
 }
 
 FunctionCallType LILFunctionCall::getFunctionCallType() const
@@ -239,4 +241,15 @@ std::shared_ptr<LILValuePath> LILFunctionCall::getSubject() const
             break;
     }
     return nullptr;
+}
+
+
+void LILFunctionCall::setName(LILString newName)
+{
+    this->_name = newName;
+}
+
+const LILString LILFunctionCall::getName() const
+{
+    return this->_name;
 }

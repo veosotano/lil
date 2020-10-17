@@ -49,7 +49,9 @@ namespace LIL
         std::shared_ptr<LILType> getReturnType() const;
         
         std::shared_ptr<LILValuePath> getSubject() const;
-        
+        void setName(LILString newName);
+        const LILString getName() const;
+
     protected:
         std::shared_ptr<LILClonable> cloneImpl() const override;
         
@@ -57,6 +59,7 @@ namespace LIL
         FunctionCallType _functionCallType;
         std::vector<std::shared_ptr<LILType>> _argumentTypes;
         std::shared_ptr<LILType> _returnType;
+        LILString _name;
     };
 }
 
