@@ -222,7 +222,6 @@ int main(int argc, const char * argv[]) {
     codeUnit->setDebugStructureLowerer(debugStructureLowerer);
     codeUnit->setDebugMethodInserter(debugMethodInserter);
     codeUnit->setDebugNameLowerer(debugNameLowerer);
-    codeUnit->setDebugIREmitter(debugIREmitter);
     codeUnit->setDebugTypeValidator(debugTypeValidator);
     codeUnit->setFile(inName);
     codeUnit->setDir(directory);
