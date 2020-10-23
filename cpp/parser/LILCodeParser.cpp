@@ -370,78 +370,28 @@ void LILCodeParser::parseNext()
 
     bool isValid = false;
 
-     switch (d->currentToken->getType())
-     {
-         case TokenTypeInstructionSign:
-         {
-             isValid = this->readInstruction();
-             break;
-         }
+    switch (d->currentToken->getType())
+    {
+        case TokenTypeBlockComment:
+        case TokenTypeLineComment:
+        case TokenTypeSemicolon:
+        case TokenTypeWhitespace:
+        {
+            d->receiver->receiveNodeData(ParserEventComment, d->currentToken->getString());
+            this->readNextToken();
+            break;
+        }
 
-         case TokenTypeObjectSign:
-         {
-             if (this->isObjectSelector())
-             {
-                 isValid = this->readRule();
-             }
-             else
-             {
-                 isValid = this->readObjectDefinition();
-             }
-             break;
-         }
-
-         case TokenTypeIdentifier:
-         {
-             isValid = this->readIdentifierStatement();
-             break;
-         }
-         case TokenTypeAsterisk:
-         case TokenTypeEqualSign:
-         case TokenTypeMinusSign:
-         case TokenTypePlusSign:
-         case TokenTypeBiggerComparator:
-         case TokenTypeDot:
-         case TokenTypeDoubleDot:
-         {
-             isValid = this->readRule();
-             break;
-         }
-
-         case TokenTypeBlockComment:
-         case TokenTypeLineComment:
-         {
-             d->receiver->receiveNodeData(ParserEventComment, d->currentToken->getString());
-             this->readNextToken();
-             break;
-         }
-
-         case TokenTypeSemicolon:
-         case TokenTypeWhitespace:
-         {
-             isValid = false;
-             break;
-         }
-
-         case TokenTypeNumberFP:
-         case TokenTypeNumberInt:
-         case TokenTypePercentageNumber:
-         case TokenTypeParenthesisOpen:
-         {
-             bool outIsSV = false;
-             NodeType svExpTy = NodeTypeInvalid;
-             isValid = this->readExpression(outIsSV, svExpTy);
-             if (!atEndOfSource())
-                 this->skip(TokenTypeWhitespace);
-             break;
-         }
-
-         default:
-         {
-             isValid = false;
-             break;
-         }
-     }
+        default:
+        {
+            bool outIsSV = false;
+            NodeType svExpTy = NodeTypeInvalid;
+            isValid = this->readExpression(outIsSV, svExpTy);
+            if (!atEndOfSource())
+                this->skip(TokenTypeWhitespace);
+            break;
+        }
+    }
 
     if (!atEndOfSource() && !isValid)
     {
@@ -1993,6 +1943,9 @@ bool LILCodeParser::readSingleValue(NodeType &nodeType)
             nodeType = NodeTypeFunctionCall;
             return this->readFunctionCall();
         }
+    }
+    if (this->isAssignment()) {
+        return this->readAssignment(true, true);
     }
     return this->readBasicValue(nodeType);
  }
