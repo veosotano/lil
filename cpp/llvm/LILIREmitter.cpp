@@ -478,14 +478,32 @@ llvm::Value * LILIREmitter::_emit(LILVarDecl * value)
     if (value->getIsExtern()) {
         return this->_emitFnSignature(name, std::static_pointer_cast<LILFunctionType>(value->getType()));
     } else {
+        auto ty = value->getType();
         auto initVals = value->getInitVals();
-        if (initVals.size() == 0) {
-            d->namedValues[name] = d->irBuilder.CreateAlloca(this->llvmTypeFromLILType(value->getType()), 0, name);
+        if (initVals.size() == 0)
+        {
+            llvm::Function * fun = d->irBuilder.GetInsertBlock()->getParent();
+            d->hiddenLocals.back()[name] = d->namedValues[name];
+            d->currentAlloca = this->createEntryBlockAlloca(fun, name, this->llvmTypeFromLILType(ty));
+            d->namedValues[name] = d->currentAlloca;
+
         } else {
             for (auto initVal : initVals) {
-                this->emit(initVal.get());
+                llvm::Value * llvmValue = this->emit(initVal.get());
+                if (llvmValue) {
+                    llvm::Function * fun = d->irBuilder.GetInsertBlock()->getParent();
+                    auto namedValue = d->namedValues[name];
+                    if (namedValue) {
+                        d->hiddenLocals.back()[name] = namedValue;
+                    }
+                    d->currentAlloca = this->createEntryBlockAlloca(fun, name, this->llvmTypeFromLILType(ty));
+                    d->namedValues[name] = d->currentAlloca;
+                    
+                    d->irBuilder.CreateStore(llvmValue, d->currentAlloca);
+                }
             }
         }
+        
     }
     return nullptr;
 }
@@ -1267,7 +1285,7 @@ llvm::Function * LILIREmitter::_emitFn(LILFunctionDecl * value)
         d->namedValues[it->first] = it->second;
     }
     d->hiddenLocals.pop_back();
-    return fun;
+    return nullptr;
 }
 
 llvm::Function * LILIREmitter::_emitFnBody(llvm::Function * fun, LILFunctionDecl * value)
@@ -1278,52 +1296,7 @@ llvm::Function * LILIREmitter::_emitFnBody(llvm::Function * fun, LILFunctionDecl
     if (ty && ty->getName() != "null") {
         d->returnAlloca = d->irBuilder.CreateAlloca(fun->getReturnType(), 0, "return");
     }
-    for (auto & node : body) {
-        bool breakAfter = false;
-        if (node->isA(FlowControlCallTypeReturn)) {
-            breakAfter = true;;
-        }
-
-        if (node->isA(NodeTypeVarDecl)) {
-            auto vd = std::static_pointer_cast<LILVarDecl>(node);
-            auto initVals = vd->getInitVals();
-            if (initVals.size() == 0) {
-                this->emit(vd.get());
-            } else {
-                std::string name = vd->getName().data();
-                for (auto initVal : initVals){
-                    switch (initVal->getNodeType()) {
-                        case NodeTypeFunctionDecl:
-                        {
-                            //this is a lambda
-                            this->emit(initVal.get());
-                            break;
-                        }
-
-                        default:
-                        {
-                            //local var
-                            llvm::Function * fun = d->irBuilder.GetInsertBlock()->getParent();
-                            d->hiddenLocals.back()[name] = d->namedValues[name];
-                            d->currentAlloca = this->createEntryBlockAlloca(fun, name, this->llvmTypeFromLILType(initVal->getType()));
-                            d->namedValues[name] = d->currentAlloca;
-                            llvm::Value * llvmValue = this->emit(initVal.get());
-                            if (llvmValue) {
-                                d->irBuilder.CreateStore(llvmValue, d->currentAlloca);
-                            }
-                            break;
-                        }
-                    }
-                }
-            }
-        } else {
-            this->emit(node.get());
-        }
-
-        if (breakAfter) {
-            break;
-        }
-    }
+    this->_emitEvaluables(body);
 
     d->finallyBB = llvm::BasicBlock::Create(d->llvmContext, "finally", fun);
     d->irBuilder.CreateBr(d->finallyBB);
@@ -1350,6 +1323,21 @@ llvm::Function * LILIREmitter::_emitFnBody(llvm::Function * fun, LILFunctionDecl
     d->functionPassManager->run(*fun);
 #endif
     return fun;
+}
+
+llvm::Value * LILIREmitter::_emitEvaluables(const std::vector<std::shared_ptr<LILNode>> & nodes)
+{
+    for (auto & node : nodes) {
+        bool breakAfter = false;
+        if (node->isA(FlowControlCallTypeReturn)) {
+            breakAfter = true;;
+        }
+        this->emit(node.get());
+        if (breakAfter) {
+            break;
+        }
+    }
+    return nullptr;
 }
 
 llvm::Function * LILIREmitter::_emitMethod(LILFunctionDecl * value, LILClassDecl * classValue)
@@ -1583,9 +1571,7 @@ llvm::Value * LILIREmitter::_emitIf(LILFlowControl * value)
 {
     const auto & args = value->getArguments();
     if (args.size() == 0) {
-        for (auto & node : value->getThen()) {
-            this->emit(node.get());
-        }
+        this->_emitEvaluables(value->getThen());
         return nullptr;
     }
     const auto & firstArg = args.front();

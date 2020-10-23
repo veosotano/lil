@@ -104,6 +104,7 @@ namespace LIL
         llvm::Function * _emitFnSignature(std::string name, std::vector<llvm::Type*>, const std::shared_ptr<LILFunctionType> fnTy);
         llvm::Function * _emitFn( LILFunctionDecl * value);
         llvm::Function * _emitFnBody(llvm::Function * fun, LILFunctionDecl * value);
+        llvm::Value * _emitEvaluables(const std::vector<std::shared_ptr<LILNode>> & nodes);
         llvm::Function * _emitMethod(LILFunctionDecl * value, LILClassDecl * classValue);
 
         llvm::Value * _emit(LILFunctionCall * value);
