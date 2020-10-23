@@ -617,12 +617,21 @@ void LILTypeGuesser::_process(LILVarName * value)
 void LILTypeGuesser::_process(LILFunctionDecl * value)
 {
     auto ty = value->getType();
-    if (!ty) {
+    if (!ty || !ty->isA(TypeTypeFunction)) {
         std::shared_ptr<LILNode> type = this->getNodeType(value->shared_from_this());
         if(type && type->isA(NodeTypeType)){
             std::shared_ptr<LILFunctionType> ft = std::dynamic_pointer_cast<LILFunctionType>(type);
             if (ft) {
                 value->setType(ft);
+            }
+        }
+    } else {
+        auto fnTy = std::static_pointer_cast<LILFunctionType>(ty);
+        auto returnTy = fnTy->getReturnType();
+        if (!returnTy) {
+            auto returnType = this->getFnReturnType(value->getBody());
+            if (returnType) {
+                fnTy->setReturnType(returnType);
             }
         }
     }
@@ -1119,7 +1128,6 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForArg(std::shared_ptr<LILVarDe
 
 std::shared_ptr<LILType> LILTypeGuesser::getFnType(std::shared_ptr<LILFunctionDecl> fd) const
 {
-    std::vector<std::shared_ptr<LILType>> returnTypes;
     std::shared_ptr<LILFunctionType> ret = std::make_shared<LILFunctionType>();
     auto ty = std::static_pointer_cast<LILFunctionType>(fd->getType());
     ret->setName("fn");
@@ -1143,31 +1151,38 @@ std::shared_ptr<LILType> LILTypeGuesser::getFnType(std::shared_ptr<LILFunctionDe
     if (existingReturnType) {
         ret->setReturnType(existingReturnType);
     } else {
-        for (auto it = evals.rbegin(); it!=evals.rend(); ++it) {
-            this->recursiveFindReturnTypes(returnTypes, *it);
-        }
-        std::shared_ptr<LILType> returnType;
-        if (returnTypes.size() > 1) {
-            returnType = returnTypes.front();
-            for (size_t i=1,j=returnTypes.size(); i<j; ++i){
-                returnType = LILType::merge(returnType, returnTypes[i]);
-            }
-        } else if (returnTypes.size() == 1){
-            returnType = returnTypes.back();
-        } else {
-            std::shared_ptr<LILType> nullTy = std::make_shared<LILType>();
-            nullTy->setName("null");
-            returnType = nullTy;
-        }
-        
-        if (returnType->getIsWeakType()) {
-            auto intType = std::make_shared<LILType>();
-            intType->setName("i64");
-            returnType = intType;
-        }
+        auto returnType = this->getFnReturnType(evals);
         ret->setReturnType(returnType);
     }
     return ret;
+}
+
+std::shared_ptr<LILType> LILTypeGuesser::getFnReturnType(const std::vector<std::shared_ptr<LILNode>> & nodes) const
+{
+    std::vector<std::shared_ptr<LILType>> returnTypes;
+    std::shared_ptr<LILType> returnType;
+    for (auto it = nodes.rbegin(); it!=nodes.rend(); ++it) {
+        this->recursiveFindReturnTypes(returnTypes, *it);
+    }
+    if (returnTypes.size() > 1) {
+        returnType = returnTypes.front();
+        for (size_t i=1,j=returnTypes.size(); i<j; ++i){
+            returnType = LILType::merge(returnType, returnTypes[i]);
+        }
+    } else if (returnTypes.size() == 1){
+        returnType = returnTypes.back();
+    } else {
+        std::shared_ptr<LILType> nullTy = std::make_shared<LILType>();
+        nullTy->setName("null");
+        returnType = nullTy;
+    }
+    
+    if (returnType->getIsWeakType()) {
+        auto intType = std::make_shared<LILType>();
+        intType->setName("i64");
+        returnType = intType;
+    }
+    return returnType;
 }
 
 void LILTypeGuesser::recursiveFindReturnTypes(std::vector<std::shared_ptr<LILType>> & returnTypes, std::shared_ptr<LILNode> eval) const

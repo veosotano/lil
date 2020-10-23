@@ -108,6 +108,7 @@ namespace LIL
         std::shared_ptr<LILType> getNodeType(std::shared_ptr<LILNode> node) const;
         std::shared_ptr<LILType> getExpType(std::shared_ptr<LILExpression> exp) const;
         std::shared_ptr<LILType> getFnType(std::shared_ptr<LILFunctionDecl> fd) const;
+        std::shared_ptr<LILType> getFnReturnType(const std::vector<std::shared_ptr<LILNode>> & nodes) const;
         std::shared_ptr<LILType> findTypeForArg(std::shared_ptr<LILVarDecl> vd, std::shared_ptr<LILFunctionDecl> fd, size_t argCount) const;
         void recursiveFindReturnTypes(std::vector<std::shared_ptr<LILType>> & returnTypes, std::shared_ptr<LILNode> eval) const;
         std::shared_ptr<LILType> findReturnTypeForFunctionCall(std::shared_ptr<LILFunctionCall> fc) const;
