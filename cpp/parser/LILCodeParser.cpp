@@ -1417,7 +1417,7 @@ bool LILCodeParser::readFunctionType()
 
     d->receiver->receiveNodeData(ParserEventType, d->currentToken->getString());
     this->readNextToken();
-    LIL_CHECK_FOR_END
+    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
 
     //open parenthesis
     bool needsParenthesisClose  = false;
