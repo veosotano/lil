@@ -1272,6 +1272,11 @@ void LILTypeGuesser::recursiveFindReturnTypes(std::vector<std::shared_ptr<LILTyp
                             }
                             break;
                         }
+                        case NodeTypeObjectDefinition:
+                        {
+                            returnTypes.push_back(arg->getType()->clone());
+                            break;
+                        }
                         default:
                             std::cerr << "!!!!!!!!!!GUESSER FAIL!!!!!!!!!!!!!!!!\n";
                             break;
