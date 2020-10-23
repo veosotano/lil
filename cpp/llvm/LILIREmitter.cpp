@@ -1541,11 +1541,6 @@ llvm::Value * LILIREmitter::_emitFunctionCall(LILFunctionCall * value, LILString
 llvm::Value * LILIREmitter::_emit(LILFlowControl * value)
 {
     switch (value->getFlowControlType()) {
-        case FlowControlTypeNone:
-        {
-            std::cerr << "flowcontrol type none\n";
-            break;
-        }
         case FlowControlTypeIf:
         {
             return this->_emitIf(value);
@@ -1557,9 +1552,17 @@ llvm::Value * LILIREmitter::_emit(LILFlowControl * value)
             }
             return nullptr;
         }
+        case FlowControlTypeFor:
+        {
+            return this->_emitFor(value);
+        }
+        case FlowControlTypeLoop:
+        {
+            return this->_emitLoop(value);
+        }
         default:
         {
-            std::cerr << "!!!!!!!!!! UNKNOWN FLOW CONTROL TYPE!!!!!!!!!!!!!!!!\n";
+            std::cerr << "UNKNOWN FLOW CONTROL TYPE FAIL!!!!!!!!!!!!!!!!\n\n";
             return nullptr;
         }
     }
@@ -1641,12 +1644,107 @@ llvm::Value * LILIREmitter::_emitIf(LILFlowControl * value)
     return nullptr;
 }
 
+llvm::Value * LILIREmitter::_emitFor(LILFlowControl * value)
+{
+    auto arguments = value->getArguments();
+    auto initial = arguments.front();
+    this->emit(initial.get());
+    
+    auto currentBB = d->irBuilder.GetInsertBlock();
+    auto fun = currentBB->getParent();
+    auto loopBB = llvm::BasicBlock::Create(d->llvmContext, "loop", fun);
+    d->irBuilder.CreateBr(loopBB);
+    d->irBuilder.SetInsertPoint(loopBB);
+    this->_emitEvaluables(value->getThen());
+    
+    auto stepNode = arguments[2];
+    if (!stepNode) {
+        return nullptr;
+    }
+    this->emit(stepNode.get());
+    
+    auto condNode = arguments[1];
+    if (!condNode) {
+        return nullptr;
+    }
+    auto condition = this->emit(condNode.get());
+    if (!condNode->isA(NodeTypeExpression)) {
+        switch (condition->getType()->getTypeID()) {
+            case llvm::Type::IntegerTyID:
+            {
+                auto bitWidth = condition->getType()->getIntegerBitWidth();
+                if (bitWidth == 1){
+                    condition = d->irBuilder.CreateICmpNE(condition, llvm::ConstantInt::get(d->llvmContext, llvm::APInt(bitWidth, 0, true)), "for.cond");
+                } else {
+                    condition = d->irBuilder.CreateICmpSGT(condition, llvm::ConstantInt::get(d->llvmContext, llvm::APInt(bitWidth, 0, true)), "for.cond");
+                }
+            }
+                break;
+            case llvm::Type::FloatTyID:
+                condition = d->irBuilder.CreateFCmpONE(condition, llvm::ConstantFP::get(d->llvmContext, llvm::APFloat(0.0)), "for.cond");
+                break;
+                
+            default:
+                break;
+        }
+    }
+    
+    auto afterBB = llvm::BasicBlock::Create(d->llvmContext, "for.after", fun);
+    d->irBuilder.CreateCondBr(condition, loopBB, afterBB);
+    
+    d->irBuilder.SetInsertPoint(afterBB);
+
+    return nullptr;
+}
+
+llvm::Value * LILIREmitter::_emitLoop(LILFlowControl * value)
+{
+    auto currentBB = d->irBuilder.GetInsertBlock();
+    auto fun = currentBB->getParent();
+    auto loopBB = llvm::BasicBlock::Create(d->llvmContext, "loop", fun);
+    d->irBuilder.CreateBr(loopBB);
+    d->irBuilder.SetInsertPoint(loopBB);
+    
+    auto condVd = std::make_shared<LILVarDecl>();
+    LILString condName("_lil_loop_repeat");
+    condVd->setName(condName);
+    auto boolVal = std::make_shared<LILBoolLiteral>();
+    boolVal->setValue(false);
+    auto boolTy = std::make_shared<LILType>();
+    boolTy->setName("bool");
+    condVd->setType(boolTy);
+    condVd->setInitVal(boolVal);
+    this->emit(condVd.get());
+    
+    this->_emitEvaluables(value->getThen());
+    
+    auto exp = std::make_shared<LILExpression>();
+    exp->setExpressionType(ExpressionTypeEqualComparison);
+    auto leftVn = std::make_shared<LILVarName>();
+    leftVn->setName(condName);
+    exp->setLeft(leftVn);
+    auto rightVal = std::make_shared<LILBoolLiteral>();
+    rightVal->setValue(true);
+    exp->setRight(rightVal);
+    auto condition = this->emit(exp.get());
+    
+    auto afterBB = llvm::BasicBlock::Create(d->llvmContext, "for.after", fun);
+    d->irBuilder.CreateCondBr(condition, loopBB, afterBB);
+    d->irBuilder.SetInsertPoint(afterBB);
+    
+    return nullptr;
+}
+
 llvm::Value * LILIREmitter::_emit(LILFlowControlCall * value)
 {
     switch (value->getFlowControlCallType()) {
         case FlowControlCallTypeReturn:
         {
             return this->_emitReturn(value);
+        }
+        case FlowControlCallTypeRepeat:
+        {
+            return this->_emitRepeat(value);
         }
         default:
         {
@@ -1671,6 +1769,21 @@ llvm::Value * LILIREmitter::_emitReturn(LILFlowControlCall * value)
         }
     }
     return nullptr;
+}
+
+llvm::Value * LILIREmitter::_emitRepeat(LILFlowControlCall * value)
+{
+    auto asgmt = std::make_shared<LILAssignment>();
+    auto vn = std::make_shared<LILVarName>();
+    vn->setName("_lil_loop_repeat");
+    asgmt->setSubject(vn);
+    auto boolVal = std::make_shared<LILBoolLiteral>();
+    boolVal->setValue(true);
+    asgmt->setValue(boolVal);
+    auto ty = std::make_shared<LILType>();
+    ty->setName("bool");
+    asgmt->setType(ty);
+    return this->emit(asgmt.get());
 }
 
 llvm::Value * LILIREmitter::_emit(LILInstruction * value)
