@@ -365,8 +365,8 @@ void LILCodeParser::skipUntilEndOfValuePath()
 
 void LILCodeParser::parseNext()
 {
-     if (this->atEndOfSource())
-         return;
+    if (this->atEndOfSource())
+        return;
 
     bool isValid = false;
 
@@ -398,8 +398,8 @@ void LILCodeParser::parseNext()
         this->skipUntilSemicolon();
     }
 
-     if (!this->atEndOfSource())
-         this->skip(TokenTypeWhitespace);
+    if (!this->atEndOfSource())
+        this->skip(TokenTypeWhitespace);
 
     if (!atEndOfSource() && d->currentToken->isA(TokenTypeSemicolon)) {
         d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());

@@ -333,6 +333,7 @@ llvm::Value * LILIREmitter::_emit(LILExpression * value)
             }
             break;
         }
+
         case ExpressionTypeSubtraction:
         {
             switch (leftV->getType()->getTypeID()) {
@@ -353,6 +354,7 @@ llvm::Value * LILIREmitter::_emit(LILExpression * value)
             }
             break;
         }
+
         case ExpressionTypeMultiplication:
         {
             switch (leftV->getType()->getTypeID()) {
@@ -373,6 +375,7 @@ llvm::Value * LILIREmitter::_emit(LILExpression * value)
             }
             break;
         }
+
         case ExpressionTypeDivision:
         {
             switch (leftV->getType()->getTypeID()) {
@@ -393,6 +396,7 @@ llvm::Value * LILIREmitter::_emit(LILExpression * value)
             }
             break;
         }
+
         case ExpressionTypeBiggerComparison:
         {
             switch (leftV->getType()->getTypeID()) {
