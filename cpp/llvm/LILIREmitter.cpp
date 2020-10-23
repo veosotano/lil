@@ -411,6 +411,22 @@ llvm::Value * LILIREmitter::_emit(LILExpression * value)
                     break;
             }
         }
+
+        case ExpressionTypeBiggerOrEqualComparison:
+        {
+            switch (leftV->getType()->getTypeID()) {
+                case llvm::Type::IntegerTyID:
+                    return d->irBuilder.CreateICmpSGE(leftV, rightV);
+                case llvm::Type::FloatTyID:
+                case llvm::Type::DoubleTyID:
+                    return d->irBuilder.CreateFCmpOGE(leftV, rightV);
+                    
+                default:
+                    std::cerr << "!!!!!!!!!!UNKNOWN LLVM TYPE FAIL!!!!!!!!!!!!!!!!\n";
+                    break;
+            }
+        }
+
         case ExpressionTypeSmallerComparison:
         {
             switch (leftV->getType()->getTypeID()) {
@@ -425,6 +441,52 @@ llvm::Value * LILIREmitter::_emit(LILExpression * value)
                     break;
             }
         }
+
+        case ExpressionTypeSmallerOrEqualComparison:
+        {
+            switch (leftV->getType()->getTypeID()) {
+                case llvm::Type::IntegerTyID:
+                    return d->irBuilder.CreateICmpSLE(leftV, rightV);
+                case llvm::Type::FloatTyID:
+                case llvm::Type::DoubleTyID:
+                    return d->irBuilder.CreateFCmpOLE(leftV, rightV);
+                    
+                default:
+                    std::cerr << "!!!!!!!!!! UNKNOWN LLVM TYPE FAIL!!!!!!!!!!!!!!!!\n";
+                    break;
+            }
+        }
+            
+        case ExpressionTypeEqualComparison:
+        {
+            switch (leftV->getType()->getTypeID()) {
+                case llvm::Type::IntegerTyID:
+                    return d->irBuilder.CreateICmpEQ(leftV, rightV);
+                case llvm::Type::FloatTyID:
+                case llvm::Type::DoubleTyID:
+                    return d->irBuilder.CreateFCmpOEQ(leftV, rightV);
+
+                default:
+                    std::cerr << "!!!!!!!!!!UNKNOWN LLVM TYPE FAIL!!!!!!!!!!!!!!!!\n";
+                    break;
+            }
+        }
+            
+        case ExpressionTypeNotEqualComparison:
+        {
+            switch (leftV->getType()->getTypeID()) {
+                case llvm::Type::IntegerTyID:
+                    return d->irBuilder.CreateICmpNE(leftV, rightV);
+                case llvm::Type::FloatTyID:
+                case llvm::Type::DoubleTyID:
+                    return d->irBuilder.CreateFCmpONE(leftV, rightV);
+                    
+                default:
+                    std::cerr << "!!!!!!!!!!UNKNOWN LLVM TYPE FAIL!!!!!!!!!!!!!!!!\n";
+                    break;
+            }
+        }
+            
         default:
             std::cerr << "!!!!!!!!!!UNKNOWN EXPRESSION TYPE FAIL!!!!!!!!!!!!!!!!\n";
             return nullptr;
