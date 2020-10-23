@@ -465,7 +465,10 @@ void LILStructureLowerer::_process(std::shared_ptr<LILFlowControl> value)
 
 void LILStructureLowerer::_process(std::shared_ptr<LILFlowControlCall> value)
 {
-    this->process(value->getArgument());
+    auto arg = value->getArgument();
+    if (arg) {
+        this->process(arg);
+    }
 }
 
 void LILStructureLowerer::_process(std::shared_ptr<LILInstruction> value)
