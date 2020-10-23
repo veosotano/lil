@@ -4763,6 +4763,7 @@ bool LILCodeParser::readLoopFlowControl()
     LIL_EXPECT(TokenTypeBlockOpen, "block open")
     d->receiver->receiveNodeData(ParserEventFunctionBody, "");
     d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+    this->readNextToken();
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
 
     this->readEvaluables();
@@ -4834,20 +4835,40 @@ bool LILCodeParser::readForFlowControl()
                 d->receiver->receiveError("Expected semicolon", d->file, d->line, d->column);
                 this->skipInvalidToken();
             }
+            LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
         }
 
-        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-
-        if (!d->currentToken->isA(TokenTypeParenthesisClose))
+        if (d->currentToken->isA(TokenTypeSemicolon))
         {
-            bool outIsSV2 = false;
-            NodeType sv2ExpTy = NodeTypeInvalid;
-            bool sv2Valid = this->readExpression(outIsSV2, sv2ExpTy);
-            if (sv2Valid) {
+            d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+            this->readNextToken();
+            LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+        }
+
+        //end expr was empty
+        if (d->currentToken->isA(TokenTypeParenthesisClose))
+        {
+            d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+            this->readNextToken();
+            LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+        }
+        else
+        {
+            bool outIsSV3 = false;
+            NodeType sv3ExpTy = NodeTypeInvalid;
+            bool sv3Valid = this->readExpression(outIsSV3, sv3ExpTy);
+            if (sv3Valid) {
                 d->receiver->receiveNodeCommit();
             } else {
                 LIL_CANCEL_NODE
             }
+        }
+        //allow trailing semicolon
+        if (d->currentToken->isA(TokenTypeSemicolon))
+        {
+            d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+            this->readNextToken();
+            LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
         }
     }
 
