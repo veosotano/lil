@@ -342,7 +342,7 @@ LILToStrInfo LILToStringVisitor::_stringify(LILVarDecl * value)
     LILToStrInfo ret;
     
     LILNode * type = value->getType().get();
-    LILString externStr = value->getIsExtern() ? "extern " : "";
+    LILString externStr = value->getIsExtern() ? " extern" : "";
 
     LILString vdType = "";
     if (value->getIsIVar()) {
@@ -351,9 +351,9 @@ LILToStrInfo LILToStringVisitor::_stringify(LILVarDecl * value)
         vdType = "(vvar) ";
     }
     if (type) {
-        ret.value = "Var declaration " + vdType + externStr + "(" + type->stringRep() + "): " + value->getName();
+        ret.value = "Var declaration " + vdType + "(" + type->stringRep() + "): " + value->getName() + externStr;
     } else {
-        ret.value = "Var declaration: " + vdType + externStr + value->getName();
+        ret.value = "Var declaration: " + vdType + value->getName() + externStr;
     }
     for (auto node : value->getInitVals()) {
         ret.children.push_back(this->stringify(node.get()));
@@ -506,12 +506,7 @@ LILToStrInfo LILToStringVisitor::_stringify(LILFunctionDecl * value)
     auto name = value->getName();
     
     auto ty = std::static_pointer_cast<LILFunctionType>(value->getType());
-    auto type = ty.get();
-    if (type) {
-        ret.value = "Function declaration " + name +" (" + type->stringRep() + "): " + value->stringRep();
-    } else {
-        ret.value = "Function declaration " + name + ": " + value->stringRep();
-    }
+    ret.value = "Function declaration: " + name;
 
     if (ty) {
         LILToStrInfo argsInfo;
