@@ -123,7 +123,7 @@ llvm::Value * LILIREmitter::emit(LILNode * node)
     }
 
     switch (node->getNodeType()) {
-        case NodeTypeBool:
+        case NodeTypeBoolLiteral:
         {
             LILBoolLiteral * value = static_cast<LILBoolLiteral *>(node);
             return this->_emit(value);

@@ -1996,7 +1996,7 @@ bool LILCodeParser::readBasicValue(NodeType &nodeType)
             }
             else if (this->isBool())
             {
-                LIL_START_NODE(NodeTypeBool)
+                LIL_START_NODE(NodeTypeBoolLiteral)
                 d->receiver->receiveNodeData(ParserEventBoolLiteral, d->currentToken->getString());
                 this->readNextToken();
                 nodeType = __nodeType;

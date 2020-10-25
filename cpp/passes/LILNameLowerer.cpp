@@ -47,7 +47,7 @@ void LILNameLowerer::process(LILNode * node)
         std::cerr << "## lowering name " + LILNode::nodeTypeToString(node->getNodeType()).data() + " " + node->stringRep().data() + " ##\n";
     }
     switch (node->getNodeType()) {
-        case NodeTypeBool:
+        case NodeTypeBoolLiteral:
         {
             LILBoolLiteral * value = static_cast<LILBoolLiteral *>(node);
             this->_process(value);

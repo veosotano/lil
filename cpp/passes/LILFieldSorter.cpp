@@ -47,7 +47,7 @@ void LILFieldSorter::process(LILNode * node)
         std::cerr << "## sorting fields " + LILNode::nodeTypeToString(node->getNodeType()).data() + " " + node->stringRep().data() + " ##\n";
     }
     switch (node->getNodeType()) {
-        case NodeTypeBool:
+        case NodeTypeBoolLiteral:
         {
             LILBoolLiteral * value = static_cast<LILBoolLiteral *>(node);
             this->_process(value);

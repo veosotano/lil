@@ -256,7 +256,7 @@ void LILTypeGuesser::process(LILNode * node)
         std::cerr << "## guessing types " + LILNode::nodeTypeToString(node->getNodeType()).data() + " " + node->stringRep().data() + " ##\n";
     }
     switch (node->getNodeType()) {
-        case NodeTypeBool:
+        case NodeTypeBoolLiteral:
         {
             LILBoolLiteral * value = static_cast<LILBoolLiteral *>(node);
             this->_process(value);
@@ -945,7 +945,7 @@ std::shared_ptr<LILType> LILTypeGuesser::getNodeType(std::shared_ptr<LILNode> no
 {
     switch (node->getNodeType())
     {
-        case NodeTypeBool:
+        case NodeTypeBoolLiteral:
         {
             std::shared_ptr<LILType> type = std::make_shared<LILType>();
             type->setName("bool");
@@ -1196,7 +1196,7 @@ void LILTypeGuesser::recursiveFindReturnTypes(std::vector<std::shared_ptr<LILTyp
                 for (auto it = args.rbegin(); it != args.rend(); ++it) {
                     auto arg = *it;
                     switch (arg->getNodeType()) {
-                        case NodeTypeBool:
+                        case NodeTypeBoolLiteral:
                         {
                             std::shared_ptr<LILType> type = std::make_shared<LILType>();
                             type->setName("bool");

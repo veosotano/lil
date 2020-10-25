@@ -276,7 +276,7 @@ void LILASTBuilder::receiveNodeStart(NodeType nodeType)
             this->currentNode = std::make_shared<LILNullLiteral>();
             break;
         }
-        case NodeTypeBool:
+        case NodeTypeBoolLiteral:
         {
             this->state.push_back(BuilderStateBool);
             this->currentNode = std::make_shared<LILBoolLiteral>();

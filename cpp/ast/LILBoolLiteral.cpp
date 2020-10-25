@@ -17,7 +17,7 @@
 using namespace LIL;
 
 LILBoolLiteral::LILBoolLiteral()
-: LILNode(NodeTypeBool)
+: LILNode(NodeTypeBoolLiteral)
 {
 
 }

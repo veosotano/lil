@@ -64,7 +64,7 @@ void LILASTValidator::validate(LILNode * node)
         std::cerr << "## validating " + LILNode::nodeTypeToString(node->getNodeType()).data() + " " + node->stringRep().data() + " ##\n";
     }
     switch (node->getNodeType()) {
-        case NodeTypeBool:
+        case NodeTypeBoolLiteral:
         {
             LILBoolLiteral * value = static_cast<LILBoolLiteral *>(node);
             this->_validate(value);
@@ -316,7 +316,7 @@ void LILASTValidator::_validate(LILStringFunction * value)
         NodeType childType = children[i]->getNodeType();
         switch (childType) {
             case NodeTypeNull:
-            case NodeTypeBool:
+            case NodeTypeBoolLiteral:
             case NodeTypeNumberLiteral:
             case NodeTypePercentage:
             case NodeTypeVarName:
@@ -656,7 +656,7 @@ void LILASTValidator::_validate(LILFlowControlCall * value)
             case NodeTypeNumberLiteral:
             case NodeTypeStringLiteral:
             case NodeTypeStringFunction:
-            case NodeTypeBool:
+            case NodeTypeBoolLiteral:
             case NodeTypeExpression:
             case NodeTypeArray:
             case NodeTypeVarName:

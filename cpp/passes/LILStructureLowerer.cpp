@@ -67,7 +67,7 @@ void LILStructureLowerer::process(std::shared_ptr<LILNode> node)
         std::cerr << "## lowering structure " + LILNode::nodeTypeToString(node->getNodeType()).data() + " " + node->stringRep().data() + " ##\n";
     }
     switch (node->getNodeType()) {
-        case NodeTypeBool:
+        case NodeTypeBoolLiteral:
         {
             std::shared_ptr<LILBoolLiteral> value = std::static_pointer_cast<LILBoolLiteral>(node);
             return this->_process(value);

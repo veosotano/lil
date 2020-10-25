@@ -27,7 +27,7 @@ LILString LILNode::nodeTypeToString(NodeType nodeType)
             return "null";
         case NodeTypeNegation:
             return "negation";
-        case NodeTypeBool:
+        case NodeTypeBoolLiteral:
             return "bool";
         case NodeTypeNumberLiteral:
             return "number literal";

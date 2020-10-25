@@ -69,7 +69,7 @@ namespace LIL
         NodeTypeRoot,
         NodeTypeNull,
         NodeTypeNegation,
-        NodeTypeBool,
+        NodeTypeBoolLiteral,
         NodeTypeNumberLiteral,
         NodeTypePercentage,
         NodeTypeExpression,

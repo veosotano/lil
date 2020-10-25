@@ -74,7 +74,7 @@ LILToStrInfo LILToStringVisitor::stringify(LILNode * node)
 {
     LILToStrInfo info;
     switch (node->getNodeType()) {
-        case NodeTypeBool:
+        case NodeTypeBoolLiteral:
         {
             LILBoolLiteral * value = static_cast<LILBoolLiteral *>(node);
             info = this->_stringify(value);
