@@ -406,6 +406,53 @@ LILString LILString::stripQuotes() const
     return LILString(string.substr(position, n));
 }
 
+LILString LILString::replaceEscapes() const
+{
+    std::string string = d->string;
+    const char * strdata = string.c_str();
+    size_t lastPosition = 0;
+    size_t position = 0;
+    size_t n;
+    size_t len = string.length();
+    bool isEscape = false;
+    std::string ret;
+    for (n=0; n<len; ++n) {
+        if (isEscape)
+        {
+            isEscape = false;
+            ret += string.substr(lastPosition, position - lastPosition);
+            lastPosition = position + 2;
+            
+            switch (strdata[n]) {
+                case 'n':
+                {
+                    ret += "\n";
+                    break;
+                }
+
+                case 't':
+                {
+                    ret += "\t";
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
+        else
+        {
+            if (strdata[n] == '\\') {
+                isEscape = true;
+                position = n;
+            }
+        }
+    }
+    if (len > lastPosition) {
+        ret += string.substr(lastPosition, len - lastPosition);
+    }
+    return ret;
+}
+
 LILString LILString::toUpperFirstCase() const
 {
     std::string newString = this->data();

@@ -500,7 +500,10 @@ llvm::Value * LILIREmitter::_emit(LILExpression * value)
 llvm::Value * LILIREmitter::_emit(LILStringLiteral * value)
 {
     if (value->getIsCString()) {
-        auto str = value->getValue().stripQuotes().data();
+        LILString stringLiteral = value->getValue();
+        LILString stringWithoutQuotes = stringLiteral.stripQuotes();
+        LILString stringEscaped = stringWithoutQuotes.replaceEscapes();
+        auto str = stringEscaped.data();
         auto charType = llvm::IntegerType::get(d->llvmContext, 8);
 
         std::vector<llvm::Constant *> chars(str.length());
