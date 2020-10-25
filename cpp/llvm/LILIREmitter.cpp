@@ -810,17 +810,17 @@ llvm::Value * LILIREmitter::_emit(LILAssignment * value)
                             targetFn = std::static_pointer_cast<LILFunctionDecl>(vd->getInitVal());
                         }
                     }
-                    if (targetFn) {
-                        
-                        llvmSubject = this->_emitFunctionCall(fc.get(), targetFn->getName(), nullptr);
-                        stringRep += "()";
-                    }
                     auto ty = vd->getType();
                     if (!ty->isA(TypeTypeFunction)) {
                         std::cerr << "!!!!!!!!!!TYPE IS NOT FUNCTION TYPE FAIL !!!!!!!!!!!!!!!!\n";
                         return nullptr;
                     }
                     auto fnTy = std::static_pointer_cast<LILFunctionType>(ty);
+                    if (targetFn) {
+                        llvmSubject = this->_emitFunctionCall(fc.get(), targetFn->getName(), fnTy.get(), nullptr);
+                        stringRep += "()";
+                    }
+
                     auto retTy = fnTy->getReturnType();
                     if (!retTy->isA(TypeTypeObject)) {
                         std::cerr << "!!!!!!!!!!NODE DOES NOT POINT TO OBJECT FAIL !!!!!!!!!!!!!!!!\n";
@@ -1043,17 +1043,17 @@ llvm::Value * LILIREmitter::_emit(LILValuePath * value)
                             targetFn = std::static_pointer_cast<LILFunctionDecl>(vd->getInitVal());
                         }
                     }
-                    if (targetFn) {
-
-                        llvmSubject = this->_emitFunctionCall(fc.get(), targetFn->getName(), llvmSubject);
-                        stringRep += "()";
-                    }
                     auto ty = vd->getType();
                     if (!ty->isA(TypeTypeFunction)) {
                         std::cerr << "!!!!!!!!!!TYPE IS NOT FUNCTION TYPE FAIL !!!!!!!!!!!!!!!!\n";
                         return nullptr;
                     }
                     auto fnTy = std::static_pointer_cast<LILFunctionType>(ty);
+                    if (targetFn) {
+                        
+                        llvmSubject = this->_emitFunctionCall(fc.get(), targetFn->getName(), fnTy.get(), llvmSubject);
+                        stringRep += "()";
+                    }
                     auto retTy = fnTy->getReturnType();
                     if (!retTy->isA(TypeTypeObject)) {
                         std::cerr << "!!!!!!!!!!NODE DOES NOT POINT TO OBJECT FAIL !!!!!!!!!!!!!!!!\n";
@@ -1514,7 +1514,23 @@ llvm::Value * LILIREmitter::_emit(LILFunctionCall * value)
     switch (value->getFunctionCallType()) {
         case FunctionCallTypeNone:
         {
-            return this->_emitFunctionCall(value, value->getName(), nullptr);
+            LILString name = value->getName();
+            auto node = this->findNodeForName(name, value->getParentNode().get());
+            if (!node) {
+                std::cerr << "!!!!!!!!!!!!!!!!FUNCTION NOT FOUND FAIL\n\n";
+                break;
+            }
+            auto ty = node->getType();
+            if (!ty) {
+                std::cerr << "!!!!!!!!!!!!!!!!NODE HAD NO TYPE FAIL\n\n";
+                break;
+            }
+            if (!ty->isA(TypeTypeFunction)) {
+                std::cerr << "TYPE IS NOT FUNCTION TYPE FAIL !!!!!!!!!!!!!!!!\n\n";
+                return nullptr;
+            }
+            auto fnTy = std::static_pointer_cast<LILFunctionType>(ty);
+            return this->_emitFunctionCall(value, value->getName(), fnTy.get(), nullptr);
         }
         case FunctionCallTypePointerTo:
         {
@@ -1552,42 +1568,62 @@ llvm::Value * LILIREmitter::_emit(LILFunctionCall * value)
 
 }
 
-llvm::Value * LILIREmitter::_emitFunctionCall(LILFunctionCall * value, LILString name, llvm::Value * instance)
+llvm::Value * LILIREmitter::_emitFunctionCall(LILFunctionCall * value, LILString name, LILFunctionType * fnTy, llvm::Value * instance)
 {
     llvm::Function* fun = d->llvmModule->getFunction(name.data());
     auto fcArgs = value->getArguments();
     if (fun) {
         std::vector<llvm::Value *> argsvect;
-        llvm::Value * fcArgIr;
 
-        auto argIt = fun->arg_begin();
         if (instance != nullptr){
             argsvect.push_back(instance);
-            ++argIt;
         }
-        
-        for (auto fcArg : fcArgs) {
-            llvm::Value * llvmArg = nullptr;
-            if (argIt != fun->arg_end()) {
-                llvmArg = argIt;
-                ++argIt;
-            }
-            if (fcArg->isA(NodeTypeAssignment)) {
-                auto asgmt = std::static_pointer_cast<LILAssignment>(fcArg);
-                auto asgmtVal = asgmt->getValue();
-                
-                if (
-                    llvmArg != nullptr
-                    && llvmArg->getType()->getTypeID() == llvm::Type::PointerTyID
-                    && !asgmt->getType()->isA(TypeTypePointer)
-                ) {
-                    fcArgIr = this->emitPointer(asgmtVal.get());
-                } else {
-                    fcArgIr = this->emit(asgmtVal.get());
-                }
-            } else {
+
+        auto declArgs = fnTy->getArguments();
+        if (!fnTy->getIsVariadic() && fcArgs.size() != declArgs.size()) {
+            std::cerr << "NUMBER OF ARGUMENTS FROM CALL AND DECL DONT MATCH!!!!!!!!!!!!!!!!\n\n";
+            return nullptr;
+        }
+        for (size_t i = 0, j = fcArgs.size(); i<j; ++i) {
+            auto fcArg = fcArgs[i];
+            llvm::Value * fcArgIr;
+            std::shared_ptr<LILNode> fcValue;
+
+            if (declArgs.size() <= i)
+            {
                 fcArgIr = this->emit(fcArg.get());
             }
+            else
+            {
+                auto declArg = declArgs[i];
+                auto declArgTy = declArg->getType();
+                
+                
+                if (fcArg->isA(NodeTypeAssignment)) {
+                    auto asgmt = std::static_pointer_cast<LILAssignment>(fcArg);
+                    fcValue = asgmt->getValue();
+                } else {
+                    fcValue = fcArg;
+                }
+                if (
+                    declArgTy
+                    && declArgTy->isA(TypeTypePointer)
+                    && !fcValue->getType()->isA(TypeTypePointer)
+                    ) {
+                    fcArgIr = this->emitPointer(fcValue.get());
+                } else {
+                    if (
+                        declArgTy
+                        && declArgTy->getIsNullable()
+                        ) {
+                        fcArgIr = this->emitNullable(fcValue.get(), declArgTy.get());
+                    } else {
+                        fcArgIr = this->emit(fcValue.get());
+                    }
+                }
+            }
+            
+            
 
             if (!fcArgIr) {
                 std::cerr << "!!!!!!!!!!ARG CODEGEN FAIL!!!!!!!!!!!!!!!!\n";
@@ -1613,6 +1649,10 @@ llvm::Value * LILIREmitter::_emit(LILFlowControl * value)
         case FlowControlTypeIf:
         {
             return this->_emitIf(value);
+        }
+        case FlowControlTypeIfIs:
+        {
+            return this->_emitIfIs(value);
         }
         case FlowControlTypeFinally:
         {
@@ -1708,6 +1748,97 @@ llvm::Value * LILIREmitter::_emitIf(LILFlowControl * value)
 
     d->irBuilder.CreateBr(mergeBB);
 
+    fun->getBasicBlockList().push_back(mergeBB);
+    d->irBuilder.SetInsertPoint(mergeBB);
+    return nullptr;
+}
+
+llvm::Value * LILIREmitter::_emitIfIs(LILFlowControl * value)
+{
+    const auto & args = value->getArguments();
+    if (args.size() == 0) {
+        this->_emitEvaluables(value->getThen());
+        return nullptr;
+    }
+    
+    llvm::Value * condition;
+    
+    const auto & firstArg = args.front();
+    const auto & lastArg = args.back();
+    if (!lastArg->isA(NodeTypeType)) {
+        std::cerr << "LAST ARG NOT TYPE FAIL!!!!!!!!!!!!!!!!\n\n";
+        return nullptr;
+    }
+    auto lastArgTy = std::static_pointer_cast<LILType>(lastArg);
+    if (lastArgTy->getName() == "bool") {
+        llvm::Value * firstArgIr = this->emit(firstArg.get());
+        if (firstArg->isA(NodeTypeVarName)) {
+            auto vn = std::static_pointer_cast<LILVarName>(firstArg);
+            auto vdNode = this->findNodeForVarName(vn.get());
+            if (!vdNode || !vdNode->isA(NodeTypeVarDecl)) {
+                std::cerr << "NODE NOT FOUND FAIL!!!!!!!!!!!!!!!!\n\n";
+                return nullptr;
+            }
+            auto vd = std::static_pointer_cast<LILVarDecl>(vdNode);
+            auto ty = vd->getType();
+            if (ty->isA(TypeTypeMultiple)) {
+                std::cerr << "UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!\n\n";
+                return nullptr;
+            } else {
+                if (ty->getName() != "bool") {
+                    std::cerr << "IF IS TYPE MISMATCH FAIL!!!!!!!!!!!!!!!!\n\n";
+                    return nullptr;
+                }
+                if (ty->getIsNullable()) {
+                    condition = d->irBuilder.CreateICmpULT(firstArgIr, llvm::ConstantInt::get(d->llvmContext, llvm::APInt(2, 2, false)), "if.cond");
+                }
+            }
+            
+        } else {
+            std::cerr << "UNKNOWN FIRST ARG FAIL!!!!!!!!!!!!!!!!\n\n";
+            return nullptr;
+        }
+    }
+
+    llvm::Function * fun = d->irBuilder.GetInsertBlock()->getParent();
+    llvm::BasicBlock * bodyBB = llvm::BasicBlock::Create(d->llvmContext, "if.true", fun);
+    llvm::BasicBlock * elseBB = llvm::BasicBlock::Create(d->llvmContext, "if.false");
+    llvm::BasicBlock * mergeBB = llvm::BasicBlock::Create(d->llvmContext, "if.end");
+    
+    d->irBuilder.CreateCondBr(condition, bodyBB, elseBB);
+    
+    //configure the body of the if
+    d->irBuilder.SetInsertPoint(bodyBB);
+    
+    for (auto & node : value->getThen()) {
+        bool breakAfter = false;
+        if (node->isA(FlowControlCallTypeReturn)) {
+            breakAfter = true;;
+        }
+        this->emit(node.get());
+        if (breakAfter) {
+            break;
+        }
+    }
+    
+    d->irBuilder.CreateBr(mergeBB);
+    
+    fun->getBasicBlockList().push_back(elseBB);
+    d->irBuilder.SetInsertPoint(elseBB);
+    
+    for (auto & node : value->getElse()) {
+        bool breakAfter = false;
+        if (node->isA(FlowControlCallTypeReturn)) {
+            breakAfter = true;;
+        }
+        this->emit(node.get());
+        if (breakAfter) {
+            break;
+        }
+    }
+    
+    d->irBuilder.CreateBr(mergeBB);
+    
     fun->getBasicBlockList().push_back(mergeBB);
     d->irBuilder.SetInsertPoint(mergeBB);
     return nullptr;
@@ -2036,7 +2167,11 @@ llvm::Type * LILIREmitter::llvmTypeFromLILType(std::shared_ptr<LILType> type)
     LILString typestr = type->getName();
     llvm::Type * ret = nullptr;
     if (typestr == "bool") {
-        ret = llvm::Type::getInt1Ty(d->llvmContext);
+        if (type->getIsNullable()) {
+            ret = llvm::IntegerType::get(d->llvmContext, 2);
+        } else {
+            ret = llvm::Type::getInt1Ty(d->llvmContext);
+        }
     } else if (typestr == "i8"){
         ret = llvm::Type::getInt8Ty(d->llvmContext);
     } else if (typestr == "i16"){
@@ -2054,9 +2189,6 @@ llvm::Type * LILIREmitter::llvmTypeFromLILType(std::shared_ptr<LILType> type)
         return charType->getPointerTo();
     } else if (typestr == "null") {
         return nullptr;
-    }
-    if (ret && type->getIsNullable() && ret->getTypeID() != llvm::Type::PointerTyID) {
-        return ret->getPointerTo();
     }
     
     if (ret)
@@ -2126,4 +2258,34 @@ llvm::StructType * LILIREmitter::extractStructFromClass(LILClassDecl * value)
         }
     }
     return llvm::StructType::create(d->llvmContext, types, value->getName().data());
+}
+
+llvm::Value * LILIREmitter::emitNullable(LILNode * node, LILType * targetTy) const
+{
+    if (targetTy->getName() == "bool") {
+        switch (node->getNodeType()) {
+            case NodeTypeBoolLiteral:
+            {
+                auto bl = static_cast<LILBoolLiteral *>(node);
+                if (bl->getValue()) {
+                    return llvm::ConstantInt::get(d->llvmContext, llvm::APInt(2, 0b01, false));
+                } else {
+                    return llvm::ConstantInt::get(d->llvmContext, llvm::APInt(2, 0b00, false));
+                }
+                break;
+            }
+            case NodeTypeNull:
+            {
+                return llvm::ConstantInt::get(d->llvmContext, llvm::APInt(2, 0b11, false));
+            }
+                
+            default:
+                break;
+        }
+    } else {
+        std::cerr << "UNKNOWN NULLABLE TARGET TY FAIL!!!!!!!!!!!!!!!!\n";
+        return nullptr;
+    }
+    
+    return nullptr;
 }
