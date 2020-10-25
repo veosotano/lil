@@ -250,6 +250,12 @@ void LILTypeGuesser::process(LILNode * node)
     if (LILNode::isContainerNode(node->getNodeType())) {
         if (!node->isA(NodeTypeClassDecl) || !static_cast<LILClassDecl *>(node)->getIsExtern()) {
             this->processChildren(node->getChildNodes());
+            if (!node->isA(NodeTypeType)) {
+                auto ty = node->getType();
+                if (ty) {
+                    this->process(ty.get());
+                }
+            }
         }
     }
     if (this->getDebug()) {
