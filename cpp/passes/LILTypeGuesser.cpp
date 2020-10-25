@@ -729,7 +729,11 @@ std::shared_ptr<LILType> LILTypeGuesser::recursiveFindTypeFromAncestors(std::sha
                             auto callArgs = fc->getArguments();
                             for (size_t i=0, j=callArgs.size(); i<j; ++i) {
                                 if (callArgs[i].get() == value.get()) {
-                                    return args[i]->getType();
+                                    if (args.size() > i) {
+                                        return args[i]->getType();
+                                    } else {
+                                        return nullptr;
+                                    }
                                 }
                             }
                         }
