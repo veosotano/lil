@@ -440,6 +440,10 @@ void LILTypeGuesser::_process(LILNumberLiteral * value)
     auto sharedVal = value->shared_from_this();
     if (ty1 && ty1->getIsWeakType()) {
         std::shared_ptr<LILType>ty2 = this->recursiveFindTypeFromAncestors(sharedVal);
+        if (ty2->getIsNullable()) {
+            ty2 = ty2->clone();
+            ty2->setIsNullable(false);
+        }
         auto ty3 = LILType::merge(ty1, ty2);
         if (ty3) {
             if (ty3->getIsWeakType()) {
