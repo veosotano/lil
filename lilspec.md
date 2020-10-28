@@ -4,7 +4,7 @@
 
 ### Numbers:
 
-There are four kinds of integers: `i8`, `i16`, `i32` and `i64`, which are whole numbers, with no decimals. The `i` stands for integer and the number is how many bits wide the value is.
+There are four kinds of integers: `i8`, `i16`, `i32`, `i64` and `i128`, which are whole numbers, with no decimals. The `i` stands for integer and the number is how many bits wide the value is.
 
 There are two kinds of floating point numbers, `f32` and `f64`, which are numbers with decimals. Like with integers, the `f` stands for floating point and the number is how many bits.
 
@@ -119,3 +119,47 @@ print myString.length;
 ```
 
 Here we are calling the `length`method of the `myString` object
+
+
+## Classes
+
+These are like templates to make identical, but separate, copies of various other values put together as a unit, which we call object instances.
+
+They are written using the `class` keyword, followed by whitespace, then the "object symbol" `@`, and then the name of the class. A semicolon afterwards is allowed but not required. For example:
+
+```
+class @myClass {
+	// more stuff here
+}
+```
+### Fields
+
+Since an object is a group of values, you have to specify each as a variable declaration. For example, the following class contains an integer, a floating point value and another object of class `@string`:
+
+```
+class @myClass2 {
+	var.i64 id;
+	var.f32 value;
+	var.@string description;
+}
+```
+
+### Methods
+
+When you put functions inside a class they are called methods. These are said to be "called on" an object instance. You typically use a value path ending in a function call to invoke them. Inside the method the special selector object `@self` is available, which is a pointer to the object instance itself.
+
+The next example shows a class with a method which takes a boolean as argument and prints a message if `true` is passed:
+
+```
+class @myClass3 {
+	var.@string message;
+	var printMessage: fn(var.bool areYouSure) {
+		if areYouSure {
+			print @self.message;
+		}
+	};
+}
+
+var myObjectInstance: @myClass3 { message: "This is the message" };
+myObjectInstance.printMessage(true);
+```
