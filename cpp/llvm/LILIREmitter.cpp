@@ -553,7 +553,7 @@ llvm::Value * LILIREmitter::_emit(LILVarDecl * value)
         {
             llvm::Function * fun = d->irBuilder.GetInsertBlock()->getParent();
             d->hiddenLocals.back()[name] = d->namedValues[name];
-            d->currentAlloca = this->createEntryBlockAlloca(fun, name, this->llvmTypeFromLILType(ty));
+            d->currentAlloca = this->createEntryBlockAlloca(fun, name, this->llvmTypeFromLILType(ty.get()));
             d->namedValues[name] = d->currentAlloca;
 
         } else {
@@ -565,7 +565,7 @@ llvm::Value * LILIREmitter::_emit(LILVarDecl * value)
                     if (namedValue) {
                         d->hiddenLocals.back()[name] = namedValue;
                     }
-                    d->currentAlloca = this->createEntryBlockAlloca(fun, name, this->llvmTypeFromLILType(ty));
+                    d->currentAlloca = this->createEntryBlockAlloca(fun, name, this->llvmTypeFromLILType(ty.get()));
                     d->namedValues[name] = d->currentAlloca;
                     
                     d->irBuilder.CreateStore(llvmValue, d->currentAlloca);
@@ -1275,7 +1275,7 @@ llvm::Function * LILIREmitter::_emitFnSignature(std::string name, const std::sha
             ty = std::static_pointer_cast<LILVarDecl>(arg)->getType();
         }
         if (ty) {
-            llvmTy = this->llvmTypeFromLILType(ty);
+            llvmTy = this->llvmTypeFromLILType(ty.get());
         }
         if (llvmTy) {
             types.push_back(llvmTy);
@@ -1291,7 +1291,7 @@ llvm::Function * LILIREmitter::_emitFnSignature(std::string name, std::vector<ll
     std::shared_ptr<LILType> retTy = fnTy->getReturnType();
     llvm::Type * returnType;
     if (retTy) {
-        returnType = this->llvmTypeFromLILType(retTy);
+        returnType = this->llvmTypeFromLILType(retTy.get());
     }
     if (!returnType) {
         returnType = llvm::Type::getVoidTy(d->llvmContext);
@@ -1433,7 +1433,7 @@ llvm::Function * LILIREmitter::_emitMethod(LILFunctionDecl * value, LILClassDecl
             ty = std::static_pointer_cast<LILVarDecl>(arg)->getType();
         }
         if (ty) {
-            llvmTy = this->llvmTypeFromLILType(ty);
+            llvmTy = this->llvmTypeFromLILType(ty.get());
         }
         if (llvmTy) {
             types.push_back(llvmTy);
@@ -2135,17 +2135,17 @@ void LILIREmitter::printIR(llvm::raw_ostream & file) const
     d->llvmModule->print(file, nullptr);
 }
 
-llvm::Type * LILIREmitter::llvmTypeFromLILType(std::shared_ptr<LILType> type)
+llvm::Type * LILIREmitter::llvmTypeFromLILType(LILType * type)
 {
     if (type->isA(TypeTypePointer))
     {
-        auto ptrTy = std::static_pointer_cast<LILPointerType>(type);
+        auto ptrTy = static_cast<LILPointerType *>(type);
         auto argTy = ptrTy->getArgument();
         if (!argTy) {
             std::cerr << "!!!!!!!!!!PTR TYPE EMPTY ARG FAIL!!!!!!!!!!!!!!!!\n";
             return nullptr;
         }
-        auto llvmType = this->llvmTypeFromLILType(argTy);
+        auto llvmType = this->llvmTypeFromLILType(argTy.get());
         return llvmType->getPointerTo();
     }
     else if (type->isA(TypeTypeObject))
@@ -2251,7 +2251,7 @@ llvm::StructType * LILIREmitter::extractStructFromClass(LILClassDecl * value)
     for (auto & fld : value->getFields()) {
         auto vd = std::static_pointer_cast<LILVarDecl>(fld);
         if (!vd->getIsVVar()) {
-            llvm::Type * llvmTy = this->llvmTypeFromLILType(fld->getType());
+            llvm::Type * llvmTy = this->llvmTypeFromLILType(fld->getType().get());
             if (llvmTy) {
                 types.push_back(llvmTy);
             }
