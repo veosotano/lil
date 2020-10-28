@@ -1580,16 +1580,27 @@ llvm::Value * LILIREmitter::_emitFunctionCall(LILFunctionCall * value, LILString
         }
 
         auto declArgs = fnTy->getArguments();
-        if (!fnTy->getIsVariadic() && fcArgs.size() != declArgs.size()) {
-            std::cerr << "NUMBER OF ARGUMENTS FROM CALL AND DECL DONT MATCH!!!!!!!!!!!!!!!!\n\n";
-            return nullptr;
-        }
-        for (size_t i = 0, j = fcArgs.size(); i<j; ++i) {
-            auto fcArg = fcArgs[i];
+        auto fcArgsSize = fcArgs.size();
+        auto declArgsSize = declArgs.size();
+        size_t j = fcArgsSize > declArgsSize ? fcArgsSize : declArgsSize;
+        for (size_t i = 0; i<j; ++i) {
+            std::shared_ptr<LILNode> fcArg;
+            if (fcArgsSize <= i) {
+                auto vdNode = declArgs[i];;
+                if (!vdNode->isA(NodeTypeVarDecl)) {
+                    std::cerr << "DECL ARG IS NOT VAR DECL FAIL!!!!!!!!\n\n";
+                    return nullptr;
+                }
+                auto vd = std::static_pointer_cast<LILVarDecl>(vdNode);
+                fcArg = vd->getInitVal();
+            } else {
+                fcArg = fcArgs[i];
+            }
+            
             llvm::Value * fcArgIr;
             std::shared_ptr<LILNode> fcValue;
 
-            if (declArgs.size() <= i)
+            if (declArgsSize <= i)
             {
                 fcArgIr = this->emit(fcArg.get());
             }
