@@ -127,7 +127,7 @@ namespace LIL
 
         llvm::StructType * extractStructFromClass(LILClassDecl * value);
         
-        llvm::Value * emitNullable(LILNode * node, LILType * targetTy) const;
+        llvm::Value * emitNullable(LILNode * node, LILType * targetTy);
 
     private:
         LILIREmitterPrivate *const d;
