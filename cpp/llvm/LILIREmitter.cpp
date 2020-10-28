@@ -2006,6 +2006,17 @@ llvm::Value * LILIREmitter::emitPointer(LILNode * node)
             //set linkage to private
             break;
         }
+        case NodeTypeVarName:
+        {
+            auto vn = static_cast<LILVarName *>(node);
+            LILString name = vn->getName();
+            llvm::Value * val = d->namedValues[name.data()];
+            if (!val) {
+                std::cerr << "!!!!!!!!!!UNKNOWN VARIABLE FAIL!!!!!!!!!!!!!!!!\n";
+                return nullptr;
+            }
+            return val;
+        }
         default:
             std::cerr << "!!!!!!!!!!EMIT POINTER FAIL!!!!!!!!!!!!!!!!\n";
             break;
