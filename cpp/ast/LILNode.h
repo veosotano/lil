@@ -24,6 +24,7 @@ namespace LIL {
 
     class LILDocument;
     class LILType;
+    class LILVarNode;
     class LILVisitor;
     
     class LILNode : public LILClonable, public std::enable_shared_from_this<LILNode>
@@ -50,6 +51,7 @@ namespace LIL {
         static bool isContainerNode(NodeType nodeType);
         virtual void receiveNodeData(const LILString & data);
         virtual bool isVarNode() const;
+        std::shared_ptr<LILVarNode> getClosestVarNode() const;
         virtual bool isRootNode() const;
         virtual bool isTypedNode() const;
         virtual std::shared_ptr<LILType> getType() const;

@@ -14,6 +14,7 @@
 
 #include "LILShared.h"
 #include "LILNode.h"
+#include "LILVarNode.h"
 #include "LILVisitor.h"
 
 using namespace LIL;
@@ -167,6 +168,37 @@ void LILNode::receiveNodeData(const LIL::LILString &data)
 bool LILNode::isVarNode() const
 {
     return false;
+}
+
+std::shared_ptr<LILVarNode> LILNode::getClosestVarNode() const
+{
+    std::shared_ptr<LILVarNode> ret;
+    std::shared_ptr<LILNode> parent = this->getParentNode();
+    if (!parent) {
+        return ret;
+    }
+    ret = std::dynamic_pointer_cast<LILVarNode>(parent);
+    if (ret)
+        return ret;
+    
+    bool done = false;
+    while (!done) {
+        done = true;
+        
+        parent = parent->getParentNode();
+        if (parent)
+        {
+            done = false;
+        }
+        else
+        {
+            return ret;
+        }
+        ret = std::dynamic_pointer_cast<LILVarNode>(parent);
+        if (ret)
+            return ret;
+    }
+    return ret;
 }
 
 bool LILNode::isRootNode() const

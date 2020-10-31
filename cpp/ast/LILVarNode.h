@@ -34,7 +34,6 @@ namespace LIL {
         bool hasLocalVar(LILString name);
         virtual bool hasLocalVariable(LILString name);
         virtual void setLocalVariable(LILString name, std::shared_ptr<LILNode> value);
-        std::shared_ptr<LILVarNode> getClosestVarNode();
         
     private:
         std::map<LILString, std::shared_ptr<LILNode>> _localVars;

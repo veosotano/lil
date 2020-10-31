@@ -96,35 +96,3 @@ void LILVarNode::setLocalVariable(LILString name, std::shared_ptr<LILNode> value
 {
     this->_localVars[name] = value;
 }
-
-std::shared_ptr<LILVarNode> LILVarNode::getClosestVarNode()
-{
-    std::shared_ptr<LILVarNode> ret;
-    std::shared_ptr<LILNode> parent = this->getParentNode();
-    if (!parent) {
-        return ret;
-    }
-    ret = std::dynamic_pointer_cast<LILVarNode>(parent);
-    if (ret)
-        return ret;
-
-    bool done = false;
-    while (!done) {
-        done = true;
-
-        parent = parent->getParentNode();
-        if (parent)
-        {
-            done = false;
-        }
-        else
-        {
-            return ret;
-        }
-        ret = std::dynamic_pointer_cast<LILVarNode>(parent);
-        if (ret)
-            return ret;
-    }
-    return ret;
-}
-
