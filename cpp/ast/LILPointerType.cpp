@@ -82,7 +82,9 @@ LILString LILPointerType::stringRep()
         name += arg->stringRep();
     }
     name += ")";
-
+    if (this->getIsNullable()) {
+        name += "?";
+    }
     return name;
 }
 
