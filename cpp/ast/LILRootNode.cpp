@@ -28,6 +28,7 @@ LILRootNode::LILRootNode()
     this->_mainFunction->setName("main");
     
     this->_mainFunctionVarDecl = std::make_shared<LILVarDecl>();
+    this->_mainFunctionVarDecl->setName("main");
     auto ty = LILFunctionType::make("i64");
     this->_mainFunctionVarDecl->setType(ty);
     this->_mainFunctionVarDecl->setInitVal(this->_mainFunction);
