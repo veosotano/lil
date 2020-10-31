@@ -1295,12 +1295,20 @@ bool LILCodeParser::readType()
     bool isMultiple = false;
     auto peekToken = d->lexer->peekNextToken();
     if (peekToken) {
+        bool expectParenthesisClose = false;
         if (peekToken->isA(TokenTypeParenthesisOpen)) {
             peekToken = d->lexer->peekNextToken();
+            expectParenthesisClose = true;
         }
         if (peekToken && peekToken->isA(TokenTypeIdentifier)) {
             peekToken = d->lexer->peekNextToken();
         }
+        if (expectParenthesisClose) {
+            if (peekToken->isA(TokenTypeParenthesisClose)) {
+                peekToken = d->lexer->peekNextToken();
+            }
+        }
+
         if (peekToken && peekToken->isA(TokenTypeVerticalBar)) {
             isMultiple = true;
         }
