@@ -18,6 +18,8 @@ using namespace LIL;
 
 LILInstruction::LILInstruction()
 : LIL::LILNode(NodeTypeInstruction)
+, _instructionType(InstructionTypeNone)
+, _isColorInstruction(false)
 {
     this->_instructionType = InstructionTypeNone;
 }
