@@ -13,6 +13,7 @@
  ********************************************************************/
 
 #include "LILNullLiteral.h"
+#include "LILType.h"
 
 using namespace LIL;
 
@@ -58,4 +59,14 @@ bool LILNullLiteral::equalTo(std::shared_ptr<LILNode> otherNode)
     if ( ! LILNode::equalTo(otherNode)) return false;
     std::shared_ptr<LILNullLiteral> castedNode = std::static_pointer_cast<LILNullLiteral>(otherNode);
     return true;
+}
+
+std::shared_ptr<LILType> LILNullLiteral::getType() const
+{
+    static std::shared_ptr<LILType> nullTy;
+    if (!nullTy) {
+        nullTy = std::make_shared<LILType>();
+        nullTy->setName("null");
+    }
+    return nullTy;
 }

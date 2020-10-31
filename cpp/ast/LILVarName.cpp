@@ -13,6 +13,7 @@
  ********************************************************************/
 
 #include "LILVarName.h"
+#include "LILVarNode.h"
 
 using namespace LIL;
 
@@ -64,4 +65,14 @@ const LILString LILVarName::getName() const
     return this->_name;
 }
 
-
+std::shared_ptr<LILType> LILVarName::getType() const
+{
+    auto varNode = this->getClosestVarNode();
+    if (varNode) {
+        auto remoteNode = varNode->getVar(this->getName());
+        if (remoteNode) {
+            return remoteNode->getType();
+        }
+    }
+    return nullptr;
+}
