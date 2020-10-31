@@ -38,6 +38,7 @@
 
 
 #define LILIREMITTEROPTIMIZE
+#define LIL_GEP_INDEX_SIZE 32
 
 
 using namespace LIL;
@@ -1179,8 +1180,8 @@ llvm::Value * LILIREmitter::_emit(LILValuePath * value)
 llvm::Value * LILIREmitter::_emitGEP(llvm::Value * llvmValue, LILString className, LILUnitI32 fieldIndex, LILString fieldName, LILUnitI32 arrayIndex)
 {
     std::vector<llvm::Value *> idList;
-    idList.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(32, 0, false)));
-    idList.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(32, fieldIndex, false)));
+    idList.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
+    idList.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, fieldIndex, false)));
     return llvm::GetElementPtrInst::Create(d->classTypes[className.data()], llvmValue, idList, fieldName.data(), d->irBuilder.GetInsertBlock());
 }
 
@@ -1825,9 +1826,9 @@ llvm::Value * LILIREmitter::_emitIfIs(LILFlowControl * value)
         {
             auto llvmSubject = this->emitPointer(firstArg.get());
             std::vector<llvm::Value *> idList;
-            idList.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(32, 0, false)));
-            idList.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(32, 1, false)));
-            auto temp = llvm::GetElementPtrInst::Create(this->llvmTypeFromLILType(ty.get()), llvmSubject, idList, "nullableBit", d->irBuilder.GetInsertBlock());
+            idList.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
+            idList.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 1, false)));
+            auto temp = llvm::GetElementPtrInst::Create(this->llvmTypeFromLILType(ty.get()), llvmSubject, idList, "isNull", d->irBuilder.GetInsertBlock());
             auto temp2 = d->irBuilder.CreateLoad(temp);
             condition = d->irBuilder.CreateICmpNE(temp2, llvm::ConstantInt::get(d->llvmContext, llvm::APInt(1, 1, false)), "if.cond");
         }
@@ -2388,8 +2389,8 @@ llvm::Value * LILIREmitter::emitNullable(LILNode * node, LILType * targetTy)
         
         //number member
         std::vector<llvm::Value *> gepIndices1;
-        gepIndices1.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(32, 0, false)));
-        gepIndices1.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(32, 0, false)));
+        gepIndices1.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
+        gepIndices1.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
         auto member1 = d->irBuilder.CreateGEP(alloca, gepIndices1);
         d->irBuilder.CreateStore(ir, member1);
         
@@ -2403,8 +2404,8 @@ llvm::Value * LILIREmitter::emitNullable(LILNode * node, LILType * targetTy)
             )
         );
         std::vector<llvm::Value *> gepIndices2;
-        gepIndices2.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(32, 0, false)));
-        gepIndices2.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(32, 1, false)));
+        gepIndices2.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
+        gepIndices2.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 1, false)));
         auto member2 = d->irBuilder.CreateGEP(alloca, gepIndices2);
         d->irBuilder.CreateStore(nullBit, member2);
         
