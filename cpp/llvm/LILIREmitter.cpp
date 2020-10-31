@@ -1537,10 +1537,7 @@ llvm::Value * LILIREmitter::_emit(LILFunctionCall * value)
         case FunctionCallTypePointerTo:
         {
             auto firstArg = value->getArguments().front();
-            if (!firstArg->isA(NodeTypeValuePath)) {
-                std::cerr << "FIRST ARG WAS NOT VALUE PATH FAIL\n";
-            }
-            return this->_emitPointer(std::static_pointer_cast<LILValuePath>(firstArg).get());
+            return this->emitPointer(firstArg.get());
         }
         case FunctionCallTypeValueOf:
         {
