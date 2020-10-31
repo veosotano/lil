@@ -19,6 +19,9 @@ using namespace LIL;
 
 std::shared_ptr<LILType> LILType::merge(std::shared_ptr<LILType> typeA, std::shared_ptr<LILType> typeB)
 {
+    if (!typeA && !typeB) {
+        return nullptr;
+    }
     if (typeA && !typeB) {
         return typeA;
     }
