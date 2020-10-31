@@ -26,15 +26,15 @@ namespace LIL
         LILNullLiteral(const LILNullLiteral & other);
         std::shared_ptr<LILNullLiteral> clone() const;
         virtual ~LILNullLiteral();
-        void receiveNodeData(const LIL::LILString &data);
-        LILString stringRep();
-        bool equalTo(std::shared_ptr<LILNode> otherNode);
+        void receiveNodeData(const LIL::LILString &data) override;
+        LILString stringRep() override;
+        bool equalTo(std::shared_ptr<LILNode> otherNode) override;
         
     private:
 
         
     private:
-        virtual std::shared_ptr<LILClonable> cloneImpl() const;
+        std::shared_ptr<LILClonable> cloneImpl() const override;
     };
 }
 
