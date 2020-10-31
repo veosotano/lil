@@ -549,31 +549,32 @@ llvm::Value * LILIREmitter::_emit(LILVarDecl * value)
         return this->_emitFnSignature(name, std::static_pointer_cast<LILFunctionType>(value->getType()));
     } else {
         auto ty = value->getType();
-        auto initVals = value->getInitVals();
-        if (initVals.size() == 0)
-        {
+        if (!ty->isA(TypeTypeFunction)) {
+            //backup if needed
+            auto namedValue = d->namedValues[name];
+            if (namedValue) {
+                d->hiddenLocals.back()[name] = namedValue;
+            }
+
             llvm::Function * fun = d->irBuilder.GetInsertBlock()->getParent();
             d->hiddenLocals.back()[name] = d->namedValues[name];
             d->currentAlloca = this->createEntryBlockAlloca(fun, name, this->llvmTypeFromLILType(ty.get()));
             d->namedValues[name] = d->currentAlloca;
+        }
 
-        } else {
-            for (auto initVal : initVals) {
-                llvm::Value * llvmValue = this->emit(initVal.get());
-                if (llvmValue) {
-                    llvm::Function * fun = d->irBuilder.GetInsertBlock()->getParent();
-                    auto namedValue = d->namedValues[name];
-                    if (namedValue) {
-                        d->hiddenLocals.back()[name] = namedValue;
-                    }
-                    d->currentAlloca = this->createEntryBlockAlloca(fun, name, this->llvmTypeFromLILType(ty.get()));
-                    d->namedValues[name] = d->currentAlloca;
-                    
-                    d->irBuilder.CreateStore(llvmValue, d->currentAlloca);
+        auto initVals = value->getInitVals();
+        for (auto initVal : initVals) {
+            llvm::Value * llvmValue = this->emit(initVal.get());
+            if (llvmValue) {
+                if (
+                    !ty->isA(TypeTypePointer)
+                    && initVal->getType()->isA(TypeTypePointer)
+                ) {
+                    llvmValue = d->irBuilder.CreateLoad(llvmValue);
                 }
+                d->irBuilder.CreateStore(llvmValue, d->currentAlloca);
             }
         }
-        
     }
     return nullptr;
 }
