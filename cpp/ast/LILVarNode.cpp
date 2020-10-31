@@ -96,3 +96,8 @@ void LILVarNode::setLocalVariable(LILString name, std::shared_ptr<LILNode> value
 {
     this->_localVars[name] = value;
 }
+
+void LILVarNode::unsetLocalVariable(LILString name)
+{
+    this->_localVars.erase(name);
+}

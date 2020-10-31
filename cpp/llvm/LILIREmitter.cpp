@@ -1617,23 +1617,28 @@ llvm::Value * LILIREmitter::_emitFunctionCall(LILFunctionCall * value, LILString
                 }
                 if (
                     declArgTy
-                    && declArgTy->isA(TypeTypePointer)
-                    && !fcValue->getType()->isA(TypeTypePointer)
+                    && declArgTy->getIsNullable()
                     ) {
-                    fcArgIr = this->emitPointer(fcValue.get());
+                    fcArgIr = this->emitNullable(fcValue.get(), declArgTy.get());
                 } else {
                     if (
                         declArgTy
-                        && declArgTy->getIsNullable()
+                        && declArgTy->isA(TypeTypePointer)
+                        && !fcValue->getType()->isA(TypeTypePointer)
                         ) {
-                        fcArgIr = this->emitNullable(fcValue.get(), declArgTy.get());
+                        fcArgIr = this->emitPointer(fcValue.get());
                     } else {
                         fcArgIr = this->emit(fcValue.get());
                     }
                 }
+                if (
+                    declArgTy
+                    && !declArgTy->isA(TypeTypePointer)
+                    && fcValue->getType()->isA(TypeTypePointer)
+                    ) {
+                    fcArgIr = d->irBuilder.CreateLoad(fcArgIr);
+                }
             }
-            
-            
 
             if (!fcArgIr) {
                 std::cerr << "!!!!!!!!!!ARG CODEGEN FAIL!!!!!!!!!!!!!!!!\n";
@@ -1781,15 +1786,16 @@ llvm::Value * LILIREmitter::_emitIfIs(LILFlowControl * value)
     }
 
     std::shared_ptr<LILType> ty;
+    std::shared_ptr<LILVarDecl> subject;
     if (firstArg->isA(NodeTypeVarName)) {
         auto vn = std::static_pointer_cast<LILVarName>(firstArg);
-        auto vdNode = this->findNodeForVarName(vn.get());
-        if (!vdNode || !vdNode->isA(NodeTypeVarDecl)) {
+        auto subjectNode = this->findNodeForVarName(vn.get());
+        if (!subjectNode || !subjectNode->isA(NodeTypeVarDecl)) {
             std::cerr << "NODE NOT FOUND FAIL!!!!!!!!!!!!!!!!\n\n";
             return nullptr;
         }
-        auto vd = std::static_pointer_cast<LILVarDecl>(vdNode);
-        ty = vd->getType();
+        subject = std::static_pointer_cast<LILVarDecl>(subjectNode);
+        ty = subject->getType();
         if (ty->isA(TypeTypeMultiple)) {
             std::cerr << "UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!\n\n";
             return nullptr;
@@ -1820,7 +1826,25 @@ llvm::Value * LILIREmitter::_emitIfIs(LILFlowControl * value)
             || lastArgTy->getName() == "i32"
             || lastArgTy->getName() == "i64"
             || lastArgTy->getName() == "i128"
+            || lastArgTy->getName() == "f32"
+            || lastArgTy->getName() == "f64"
         )
+        {
+            auto llvmSubject = this->emitPointer(firstArg.get());
+            std::vector<llvm::Value *> idList;
+            idList.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
+            idList.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 1, false)));
+            auto temp = llvm::GetElementPtrInst::Create(this->llvmTypeFromLILType(ty.get()), llvmSubject, idList, "isNull", d->irBuilder.GetInsertBlock());
+            auto temp2 = d->irBuilder.CreateLoad(temp);
+            condition = d->irBuilder.CreateICmpNE(temp2, llvm::ConstantInt::get(d->llvmContext, llvm::APInt(1, 1, false)), "if.cond");
+        }
+        else if (lastArgTy->isA(TypeTypePointer))
+        {
+            llvm::Value * firstArgIr = this->emit(firstArg.get());
+            auto temp = d->irBuilder.CreatePtrToInt(firstArgIr, llvm::Type::getInt64Ty(d->llvmContext));
+            condition = d->irBuilder.CreateICmpNE(temp, llvm::ConstantInt::get(d->llvmContext, llvm::APInt(64, 0, false)), "if.cond");
+        }
+        else if (lastArgTy->isA(TypeTypeObject))
         {
             auto llvmSubject = this->emitPointer(firstArg.get());
             std::vector<llvm::Value *> idList;
@@ -1844,6 +1868,22 @@ llvm::Value * LILIREmitter::_emitIfIs(LILFlowControl * value)
     
     d->irBuilder.CreateCondBr(condition, bodyBB, elseBB);
     
+    //hide the nullable var
+    auto newTy = subject->getType()->clone();
+    newTy->setIsNullable(false);
+    auto newVar = subject->clone();
+    newVar->setType(newTy);
+    auto name = subject->getName();
+    auto nameData = name.data();
+    value->setLocalVariable(name, newVar);
+
+    auto currentLlvmValue = d->namedValues[nameData];
+    
+    std::vector<llvm::Value *> gepIndices;
+    gepIndices.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
+    gepIndices.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
+    d->namedValues[nameData] = llvm::GetElementPtrInst::Create(this->llvmTypeFromLILType(ty.get()), currentLlvmValue, gepIndices, nameData, d->irBuilder.GetInsertBlock());
+
     //configure the body of the if
     d->irBuilder.SetInsertPoint(bodyBB);
     
@@ -1859,6 +1899,9 @@ llvm::Value * LILIREmitter::_emitIfIs(LILFlowControl * value)
     }
     
     d->irBuilder.CreateBr(mergeBB);
+    
+    d->namedValues[nameData] = currentLlvmValue;
+    value->unsetLocalVariable(name);
     
     fun->getBasicBlockList().push_back(elseBB);
     d->irBuilder.SetInsertPoint(elseBB);
@@ -2210,7 +2253,14 @@ llvm::Type * LILIREmitter::llvmTypeFromLILType(LILType * type)
             d->classTypes[className] = newClassTy;
             classTy = newClassTy;
         }
-        return classTy;
+        if (type->getIsNullable()) {
+            std::vector<llvm::Type*> types;
+            types.push_back(classTy);
+            types.push_back(llvm::Type::getInt1Ty(d->llvmContext));
+            return llvm::StructType::get(d->llvmContext, types);
+        } else {
+            return classTy;
+        }
     }
     LILString typestr = type->getName();
     llvm::Type * ret = nullptr;
@@ -2238,7 +2288,7 @@ llvm::Type * LILIREmitter::llvmTypeFromLILType(LILType * type)
     } else if (typestr == "null") {
         return llvm::Type::getVoidTy(d->llvmContext);
     }
-    //if we get here it's an int
+    //if we get here it's a number type
     if (type->getIsNullable()) {
         std::vector<llvm::Type*> types;
         types.push_back(ret);
@@ -2317,6 +2367,67 @@ llvm::StructType * LILIREmitter::extractStructFromClass(LILClassDecl * value)
 
 llvm::Value * LILIREmitter::emitNullable(LILNode * node, LILType * targetTy)
 {
+    if (targetTy->isA(TypeTypePointer)) {
+        switch (node->getNodeType()) {
+            case NodeTypeVarName:
+            case NodeTypeValuePath:
+            case NodeTypeFunctionCall:
+            {
+                return this->emit(node);
+            }
+            case NodeTypeNull:
+            {
+                auto ptrTy = static_cast<LILPointerType *>(targetTy);
+                auto argTy = ptrTy->getArgument();
+                auto argLlvmTy = this->llvmTypeFromLILType(argTy.get());
+                return llvm::ConstantPointerNull::get(argLlvmTy->getPointerTo());
+            }
+            default:
+                std::cerr << "UNKNOWN NODE TYPE FAIL!!!!!!!!!!!!!!!!\n\n";
+                return nullptr;
+        }
+    }
+    if (targetTy->isA(TypeTypeObject)) {
+        llvm::Value * ir = nullptr;
+        //nullable numbers are structs with two members
+        auto nullableObjAlloca = d->irBuilder.CreateAlloca(this->llvmTypeFromLILType(targetTy));
+
+        std::vector<llvm::Value *> gepIndices1;
+        gepIndices1.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
+        gepIndices1.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
+        d->currentAlloca = d->irBuilder.CreateGEP(nullableObjAlloca, gepIndices1);
+        
+        //if it is null we just ignore the first member
+        if (!node->isA(NodeTypeNull)) {
+            ir = this->emit(node);
+        }
+
+        //if we need to store something
+        if (ir) {
+            d->irBuilder.CreateStore(ir, d->currentAlloca);
+        }
+        //we're done
+        d->currentAlloca = nullptr;
+
+        //is null member
+        auto nullBit = llvm::ConstantInt::get(
+                                              d->llvmContext,
+                                              llvm::APInt(
+                                                          1,
+                                                          (node->isA(NodeTypeNull) ? 1 : 0),
+                                                          false
+                                                          )
+                                              );
+        std::vector<llvm::Value *> gepIndices2;
+        gepIndices2.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
+        gepIndices2.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 1, false)));
+        auto member2 = d->irBuilder.CreateGEP(nullableObjAlloca, gepIndices2);
+        d->irBuilder.CreateStore(nullBit, member2);
+
+        auto loadInstr = d->irBuilder.CreateLoad(nullableObjAlloca);
+        return loadInstr;
+        
+    }
     LILString name = targetTy->getName();
     if (name == "bool") {
         switch (node->getNodeType()) {
@@ -2361,6 +2472,8 @@ llvm::Value * LILIREmitter::emitNullable(LILNode * node, LILType * targetTy)
         || name == "i32"
         || name == "i64"
         || name == "i128"
+        || name == "f32"
+        || name == "f64"
     ){
         llvm::Value * ir;
         if (node->isA(NodeTypeNull)) {
@@ -2374,6 +2487,10 @@ llvm::Value * LILIREmitter::emitNullable(LILNode * node, LILType * targetTy)
                 ir = llvm::ConstantInt::get(d->llvmContext, llvm::APInt(64, 0, false));
             } else if (name == "i128") {
                 ir = llvm::ConstantInt::get(d->llvmContext, llvm::APInt(128, 0, false));
+            } else if (name == "f32") {
+                ir = llvm::ConstantFP::get(d->llvmContext, llvm::APFloat(0.0f));
+            } else if (name == "f64") {
+                ir = llvm::ConstantFP::get(d->llvmContext, llvm::APFloat(0.0));
             }
         } else {
             ir = this->emit(node);
