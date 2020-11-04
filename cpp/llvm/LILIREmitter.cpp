@@ -1528,38 +1528,22 @@ llvm::Function * LILIREmitter::_emitMethod(LILFunctionDecl * value, LILClassDecl
     d->hiddenLocals.push_back(scope);
 
     for (llvm::Value & arg : fun->args()) {
-        if (arg.getType()->getTypeID() == llvm::Type::TypeID::PointerTyID) {
-            d->namedValues[arg.getName()] = &arg;
-        } else {
-            llvm::AllocaInst * alloca = this->createEntryBlockAlloca(fun, arg.getName(), arg.getType());
-            d->irBuilder.CreateStore(&arg, alloca);
-            auto name = arg.getName();
-            if (d->namedValues.count(name)) {
-                d->hiddenLocals.back()[name] = d->namedValues[name];
-            }
-            d->namedValues[name] = alloca;
+        llvm::AllocaInst * alloca = this->createEntryBlockAlloca(fun, arg.getName(), arg.getType());
+        d->irBuilder.CreateStore(&arg, alloca);
+        auto name = arg.getName();
+        if (d->namedValues.count(name)) {
+            d->hiddenLocals.back()[name] = d->namedValues[name];
         }
+        d->namedValues[name] = alloca;
     }
-
-//    if (value->getIsConstructor()) {
-//        size_t theIndex = 0;
-//        for (auto field : classValue->getFields()) {
-//            auto vd = std::static_pointer_cast<LILVarDecl>(field);
-//            auto initVal = vd->getInitVal();
-//            if (initVal) {
-//                auto varName = vd->getName();
-//                auto subject = d->namedValues["@self"];
-//                auto gep = this->_emitGEP(subject, classValue->getName(), theIndex, varName, 0);
-//                llvm::Value * llvmValue = this->emit(initVal.get());
-//
-//                d->irBuilder.CreateStore(llvmValue, gep);
-//            }
-//            ++theIndex;
-//        }
-//    }
 
     this->_emitFnBody(fun, value);
 
+    //clear args from local values
+    for (llvm::Value & arg : fun->args()) {
+        d->namedValues.erase(arg.getName());
+    }
+    //restore hidden locals
     const std::map<std::string, llvm::Value *> & hiddenLocals = d->hiddenLocals.back();
     for (auto it = hiddenLocals.begin(); it != hiddenLocals.end(); ++it) {
         d->namedValues[it->first] = it->second;
