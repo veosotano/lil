@@ -37,6 +37,8 @@ namespace LIL
         
         bool getIsWeakType() const;
         void setIsWeakType(bool value);
+
+        void sortTypes();
         
     protected:
         virtual std::shared_ptr<LILClonable> cloneImpl() const;

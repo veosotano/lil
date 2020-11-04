@@ -63,6 +63,7 @@ namespace LIL
 {
     class LILClassDecl;
     class LILFunctionType;
+    class LILMultipleType;
     class LILIREmitterPrivate;
 
     class LILIREmitter : public LILVisitor
@@ -90,6 +91,7 @@ namespace LIL
         llvm::Value * _emit(LILAssignment * value);
         llvm::Value * _emit(LILValuePath * value);
         llvm::Value * _emitGEP(llvm::Value * llvmValue, LILString className, LILUnitI32 fieldIndex, LILString fieldName, LILUnitI32 arrayIndex);
+        llvm::Value * _emitGEP(llvm::Value * llvmValue, llvm::Type * llvmType, LILUnitI32 fieldIndex, LILString fieldName, LILUnitI32 arrayIndex);
         llvm::Value * _emit(LILPropertyName * value);
         llvm::Value * _emit(LILVarName * value);
         llvm::Value * _emit(LILRule * value);
@@ -109,6 +111,7 @@ namespace LIL
 
         llvm::Value * _emit(LILFunctionCall * value);
         llvm::Value * _emitFunctionCall(LILFunctionCall * value, LILString name, LILFunctionType * fnTy, llvm::Value * instance);
+        llvm::Value * _emitFunctionCallMT(LILFunctionCall * value, LILString name, std::vector<std::shared_ptr<LILType>> types, LILFunctionType * fnTy, llvm::Value * instance);
         llvm::Value * _emit(LILFlowControl * value);
         llvm::Value * _emitIf(LILFlowControl * value);
         llvm::Value * _emitIfIs(LILFlowControl * value);
@@ -128,6 +131,11 @@ namespace LIL
         llvm::StructType * extractStructFromClass(LILClassDecl * value);
         
         llvm::Value * emitNullable(LILNode * node, LILType * targetTy);
+        llvm::Value * emitForMultipleType(LILNode * node, std::shared_ptr<LILMultipleType> multiTy);
+        llvm::Value * emitUnwrappedFromMT(LILNode * node, LILType * targetTy);
+        
+        std::shared_ptr<LILType> getMostAlignedType(const std::vector<std::shared_ptr<LILType>> & types) const;
+        size_t getSizeOfType(std::shared_ptr<LILType> ty) const;
 
     private:
         LILIREmitterPrivate *const d;

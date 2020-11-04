@@ -62,17 +62,22 @@ namespace LIL
         std::shared_ptr<LILNode> getFinally() const;
         void setFinally(std::shared_ptr<LILNode> value);
 
+        void setHasOwnType(bool value);
+        bool getHasOwnType() const;
+
     protected:
         virtual std::shared_ptr<LILClonable> cloneImpl() const;
         
     private:
         std::vector<std::shared_ptr<LILNode>> _body;
         std::shared_ptr<LILNode> _finally;
+        std::shared_ptr<LILFunctionType> _fnType;
         bool _receivesFunctionBody;
         FunctionDeclType _functionDeclType;
         LILString _name;
         bool _hasReturn;
         bool _isConstructor;
+        bool _hasOwnType;
     };
 }
 

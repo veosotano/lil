@@ -87,15 +87,22 @@ std::shared_ptr<LILType> LILType::merge(std::shared_ptr<LILType> typeA, std::sha
             return multiA;
         } else if (aIsWeak){
             //a is weak, but b isn't
+            std::shared_ptr<LILType> ret = nullptr;
+            bool foundOne = false;
             for (const auto & tyB : multiB->getTypes()) {
                 for (const auto & tyA : multiA->getTypes()) {
                     if (tyA->equalTo(tyB)) {
-                        return tyB;
+                        if (foundOne) {
+                            //more than one match -- cant merge
+                            return nullptr;
+                        }
+                        ret = tyB;
+                        foundOne = true;
                     }
                 }
+                
             }
-            //if no type from a is found in b, we can't merge
-            return nullptr;
+            return ret;
             
         } else {
             //b is weak, but a isn't

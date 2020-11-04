@@ -24,6 +24,7 @@ LILFunctionDecl::LILFunctionDecl()
 , needsNameMangling(false)
 , _hasReturn(false)
 , _isConstructor(false)
+, _hasOwnType(false)
 {
     this->_receivesFunctionBody = false;
     this->_functionDeclType = FunctionDeclTypeNone;
@@ -40,6 +41,8 @@ LILFunctionDecl::LILFunctionDecl(const LILFunctionDecl &other)
     this->_hasReturn = other._hasReturn;
     this->_isConstructor = other._isConstructor;
     this->_finally = other._finally;
+    this->_hasOwnType = other._hasOwnType;
+    this->_fnType = other._fnType;
 }
 
 bool LILFunctionDecl::isTypedNode() const
@@ -49,22 +52,32 @@ bool LILFunctionDecl::isTypedNode() const
 
 void LILFunctionDecl::setType(std::shared_ptr<LILType> value)
 {
-    auto parent = this->getParentNode();
-    if (parent && parent->isA(NodeTypeVarDecl)) {
-        auto vd = std::static_pointer_cast<LILVarDecl>(parent);
-        if (vd) {
-            vd->setType(value);
+    if (this->_hasOwnType) {
+        if (value->isA(TypeTypeFunction)) {
+            this->_fnType = std::static_pointer_cast<LILFunctionType>(value);
+        }
+    } else {
+        auto parent = this->getParentNode();
+        if (parent && parent->isA(NodeTypeVarDecl)) {
+            auto vd = std::static_pointer_cast<LILVarDecl>(parent);
+            if (vd) {
+                vd->setType(value);
+            }
         }
     }
 }
 
 std::shared_ptr<LILType> LILFunctionDecl::getType() const
 {
-    auto parent = this->getParentNode();
-    if (parent && parent->isA(NodeTypeVarDecl)) {
-        auto vd = std::static_pointer_cast<LILVarDecl>(parent);
-        if (vd) {
-            return vd->getType();
+    if (this->_hasOwnType) {
+        return this->_fnType;
+    } else {
+        auto parent = this->getParentNode();
+        if (parent && parent->isA(NodeTypeVarDecl)) {
+            auto vd = std::static_pointer_cast<LILVarDecl>(parent);
+            if (vd) {
+                return vd->getType();
+            }
         }
     }
     return nullptr;
@@ -96,6 +109,9 @@ std::shared_ptr<LILClonable> LILFunctionDecl::cloneImpl() const
     }
     if (this->_finally) {
         clone->setFinally(this->_finally->clone());
+    }
+    if (this->_fnType) {
+        clone->_fnType = this->_fnType->clone();
     }
     return clone;
 }
@@ -255,4 +271,14 @@ void LILFunctionDecl::setFinally(std::shared_ptr<LILNode> value)
 {
     this->addNode(value);
     this->_finally = value;
+}
+
+void LILFunctionDecl::setHasOwnType(bool value)
+{
+    this->_hasOwnType = value;
+}
+
+bool LILFunctionDecl::getHasOwnType() const
+{
+    return this->_hasOwnType;
 }

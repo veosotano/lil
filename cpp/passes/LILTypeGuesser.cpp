@@ -420,6 +420,8 @@ void LILTypeGuesser::process(LILNode * node)
         }
         case NodeTypeType:
         {
+            LILType * value = static_cast<LILType *>(node);
+            this->_process(value);
             break;
         }
 
@@ -519,6 +521,13 @@ void LILTypeGuesser::_process(LILStringFunction * value)
 void LILTypeGuesser::_process(LILNullLiteral * value)
 {
 
+}
+
+void LILTypeGuesser::_process(LILType * value)
+{
+    if (value->isA(TypeTypeMultiple)) {
+        static_cast<LILMultipleType *>(value)->sortTypes();
+    }
 }
 
 void LILTypeGuesser::_process(LILVarDecl * value)

@@ -102,52 +102,56 @@ void LILTypeValidator::_validate(std::shared_ptr<LILFunctionCall> fc)
         
         auto vd = std::static_pointer_cast<LILVarDecl>(remoteNode);
         auto fieldTy = vd->getType();
-        std::shared_ptr<LILType> ty;
-        if (fieldTy->isA(TypeTypeObject)) {
-            auto classDecl = this->findClassWithName(fieldTy->getName());
-            if (!classDecl) {
-                std::cerr << "!!!!!!! CLASS NOT FOUND FAIL !!!!!!!\n";
+        if (fieldTy->isA(TypeTypeMultiple)) {
+            //FIXME
+        } else {
+            std::shared_ptr<LILType> ty;
+            if (fieldTy->isA(TypeTypeObject)) {
+                auto classDecl = this->findClassWithName(fieldTy->getName());
+                if (!classDecl) {
+                    std::cerr << "!!!!!!! CLASS NOT FOUND FAIL !!!!!!!\n";
+                    return;
+                }
+                auto method = classDecl->getMethodNamed(fc->getName());
+                ty = method->getType();
+            }
+            
+            if (!ty || !ty->isA(TypeTypeFunction)) {
+                LILErrorMessage ei;
+                ei.message =  "The path "+vp->stringRep()+" does not point to a function";
+                LILNode::SourceLocation sl = fc->getSourceLocation();
+                ei.file = sl.file;
+                ei.line = sl.line;
+                ei.column = sl.column;
+                this->errors.push_back(ei);
                 return;
             }
-            auto method = classDecl->getMethodNamed(fc->getName());
-            ty = method->getType();
-        }
-
-        if (!ty || !ty->isA(TypeTypeFunction)) {
-            LILErrorMessage ei;
-            ei.message =  "The path "+vp->stringRep()+" does not point to a function";
-            LILNode::SourceLocation sl = fc->getSourceLocation();
-            ei.file = sl.file;
-            ei.line = sl.line;
-            ei.column = sl.column;
-            this->errors.push_back(ei);
-            return;
-        }
-        auto fnTy = std::static_pointer_cast<LILFunctionType>(ty);
-        auto fnTyArgs = fnTy->getArguments();
-        auto args = fc->getArguments();
-        if (fnTyArgs.size() != args.size()) {
-            LILErrorMessage ei;
-            if (args.size() == 0) {
-                if (fnTyArgs.size() > 1) {
-                    ei.message =  "Missing argument in call: "+vp->stringRep()+" needs "+LILString::number((LILUnitI64)fnTyArgs.size()) + " arguments";
+            auto fnTy = std::static_pointer_cast<LILFunctionType>(ty);
+            auto fnTyArgs = fnTy->getArguments();
+            auto args = fc->getArguments();
+            if (fnTyArgs.size() != args.size()) {
+                LILErrorMessage ei;
+                if (args.size() == 0) {
+                    if (fnTyArgs.size() > 1) {
+                        ei.message =  "Missing argument in call: "+vp->stringRep()+" needs "+LILString::number((LILUnitI64)fnTyArgs.size()) + " arguments";
+                    } else {
+                        ei.message =  "Missing argument in call: "+vp->stringRep()+" needs one argument";
+                    }
                 } else {
-                    ei.message =  "Missing argument in call: "+vp->stringRep()+" needs one argument";
+                    ei.message =  "Mismatch of numberof arguments: "+vp->stringRep()+" needs "+LILString::number((LILUnitI64)fnTyArgs.size()) + " arguments and was given " + LILString::number((LILUnitI64)args.size());
                 }
-            } else {
-                ei.message =  "Mismatch of numberof arguments: "+vp->stringRep()+" needs "+LILString::number((LILUnitI64)fnTyArgs.size()) + " arguments and was given " + LILString::number((LILUnitI64)args.size());
+                LILNode::SourceLocation sl = fc->getSourceLocation();
+                ei.file = sl.file;
+                ei.line = sl.line;
+                ei.column = sl.column;
+                this->errors.push_back(ei);
+                return;
             }
-            LILNode::SourceLocation sl = fc->getSourceLocation();
-            ei.file = sl.file;
-            ei.line = sl.line;
-            ei.column = sl.column;
-            this->errors.push_back(ei);
-            return;
-        }
-        for (size_t i=0,j=args.size(); i<j; ++i) {
-            auto declArg = fnTyArgs[i];
-            auto callArg = args[i];
-            //fixme?
+            for (size_t i=0,j=args.size(); i<j; ++i) {
+                auto declArg = fnTyArgs[i];
+                auto callArg = args[i];
+                //FIXME
+            }
         }
     }
     else if ( fc->isA(FunctionCallTypeNone))

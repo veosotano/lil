@@ -24,6 +24,9 @@ namespace LIL
     public:
         static std::shared_ptr<LILType> merge(std::shared_ptr<LILType> typeA, std::shared_ptr<LILType> typeB);
         static std::shared_ptr<LILType> make(LILString name);
+        static bool sortTyAlphabeticallyCompare(std::shared_ptr<LILType> typeA, std::shared_ptr<LILType> typeB) {
+            return typeA->getName().data() < typeB->getName().data();
+        };
 
         LILType();
         LILType(TypeType type);

@@ -338,56 +338,61 @@ void LILStructureLowerer::_process(std::shared_ptr<LILFunctionDecl> value)
             if (ty && ty->getTypeType() == TypeTypeFunction) {
                 auto fnTy = std::static_pointer_cast<LILFunctionType>(ty);
                 for (auto arg : fnTy->getArguments()) {
+                    std::shared_ptr<LILType> tyArg;
                     if (arg->isA(NodeTypeType)) {
-                        auto tyArg = std::static_pointer_cast<LILType>(arg);
-                        if ((tyArg->getTypeType() == TypeTypeMultiple) && !tyArg->getIsWeakType()) {
-                            
-                            for (auto argChild : std::static_pointer_cast<LILMultipleType>(tyArg)->getTypes()) {
-                                auto newFd = std::make_shared<LILFunctionDecl>();
-                                newFd->setFunctionDeclType(FunctionDeclTypeFn);
-                                newFd->needsNameMangling = true;
-                                auto newFnType = std::make_shared<LILFunctionType>();
-                                newFnType->addArgument(argChild->clone());
-                                newFnType->setReturnType(fnTy->getReturnType());
-                                newFd->setType(newFnType);
-                                newFd->setName(value->getName());
-                                
-                                std::vector<std::shared_ptr<LILNode>> newArgs;
-                                for (auto funArg : fnTy->getArguments()){
-                                    if (!funArg->isA(NodeTypeVarDecl)) {
-                                        continue;
-                                    }
-                                    //disambiguate argument types
-                                    auto argClone = std::static_pointer_cast<LILVarDecl>(funArg)->clone();
-                                    auto funArgTy = funArg->getType();
-                                    if(funArgTy && funArgTy->getTypeType() == TypeTypeMultiple){
-                                        argClone->setType(argChild);
-                                        newArgs.push_back(argClone);
-                                    }
-                                    
-                                    //resolve "if is" blocks
-                                    std::vector<std::shared_ptr<LILNode>> newBody;
-                                    for (auto node : value->getBody()) {
-                                        auto newChildNodes = this->reduceIfIsBlocks(node, argClone->getName(), argChild->getName());
-                                        for (auto child : newChildNodes) {
-                                            newBody.push_back(child);
-                                        }
-                                    }
-                                    newFd->setBody(newBody);
-                                }
-                                
-                                for (auto newArg : newArgs) {
-                                    newFnType->addArgument(newArg);
-                                }
-                                
-                                this->_nodeBuffer.back().push_back(newFd);
-                            } //end for
-                        } //end if tyArg is multiple or not weak
-                    } //end if arg isa type
-                    else if (arg->isA(NodeTypeVarDecl))
-                    {
+                        tyArg = std::static_pointer_cast<LILType>(arg);
+                    } else if (arg->isA(NodeTypeVarDecl)){
+                        tyArg = arg->getType();
+                    }
+
+                    if ((tyArg->getTypeType() == TypeTypeMultiple) && !tyArg->getIsWeakType()) {
                         
-                    } //end if arg isa var decl
+                        for (auto argChild : std::static_pointer_cast<LILMultipleType>(tyArg)->getTypes()) {
+                            auto newFd = std::make_shared<LILFunctionDecl>();
+                            newFd->setFunctionDeclType(FunctionDeclTypeFn);
+                            newFd->needsNameMangling = true;
+                            auto newFnType = std::make_shared<LILFunctionType>();
+                            newFnType->setReturnType(fnTy->getReturnType());
+                            newFd->setHasOwnType(true);
+                            newFd->setType(newFnType);
+                            newFd->setName(value->getName());
+                            
+                            std::vector<std::shared_ptr<LILNode>> newArgs;
+                            for (auto funArg : fnTy->getArguments()){
+                                if (!funArg->isA(NodeTypeVarDecl)) {
+                                    continue;
+                                }
+                                //disambiguate argument types
+                                auto argClone = std::static_pointer_cast<LILVarDecl>(funArg)->clone();
+                                auto funArgTy = funArg->getType();
+                                if(funArgTy && funArgTy->getTypeType() == TypeTypeMultiple){
+                                    argClone->setType(argChild);
+                                    newArgs.push_back(argClone);
+                                }
+                                
+                                //resolve "if is" blocks
+                                std::vector<std::shared_ptr<LILNode>> newBody;
+                                for (auto node : value->getBody()) {
+                                    auto newChildNodes = this->reduceIfIsBlocks(node, argClone->getName(), argChild->getName());
+                                    for (auto child : newChildNodes) {
+                                        newBody.push_back(child);
+                                    }
+                                }
+                                newFd->setBody(newBody);
+                            }
+                            
+                            for (auto newArg : newArgs) {
+                                newFnType->addArgument(newArg);
+                                if (newArg->isA(NodeTypeVarDecl)) {
+                                    auto newArgVd = std::static_pointer_cast<LILVarDecl>(newArg);
+                                    newFd->setLocalVariable(newArgVd->getName(), newArgVd);
+                                }
+                                
+                            }
+                            
+                            this->_nodeBuffer.back().push_back(newFd);
+                        } //end for
+                    } //end if tyArg is multiple or not weak
                 } //end for
             } //end if ty isa function type
             break;

@@ -106,3 +106,8 @@ void LILMultipleType::setIsWeakType(bool value)
 {
     this->_isWeakType = value;
 }
+
+void LILMultipleType::sortTypes()
+{
+    std::sort(this->_types.begin(), this->_types.end(), LILType::sortTyAlphabeticallyCompare);
+}
