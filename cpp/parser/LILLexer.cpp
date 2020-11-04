@@ -321,6 +321,10 @@ std::shared_ptr<LILToken> LILLexer::readNextToken()
             return ret;
         case '`':
             return this->readCString();
+        case '%':
+            ret = std::shared_ptr<LILToken>(new LILToken(TokenTypePercentSign, cc, d->currentLine, d->currentColumn - 1, d->index));
+            this->readNextChar();
+            return ret;
 
         default:
             return this->readInvalidChar();
@@ -578,7 +582,12 @@ std::shared_ptr<LILToken> LILLexer::readNumberOrPercentage()
     std::shared_ptr<LILToken> ret;
     if (d->currentChar == '%')
     {
-        ret = std::shared_ptr<LILToken>(new LILToken(TokenTypePercentageNumber, this->extractCurrentTokenText()+"%", line, column, index));
+        if (dotFound) {
+            ret = std::shared_ptr<LILToken>(new LILToken(TokenTypePercentageNumberFP, this->extractCurrentTokenText(), line, column, index));
+        } else {
+            ret = std::shared_ptr<LILToken>(new LILToken(TokenTypePercentageNumberInt, this->extractCurrentTokenText(), line, column, index));
+        }
+        
         this->readNextChar();
     }
     else

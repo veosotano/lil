@@ -363,6 +363,12 @@ void LILASTValidator::_validate(LILType * value)
                 && name != "cstr"
                 && name != "str"
                 && name != "null"
+                && name != "i8%"
+                && name != "i16%"
+                && name != "i32%"
+                && name != "i64%"
+                && name != "f32%"
+                && name != "f64%"
                 ) {
                 LILErrorMessage ei;
                 ei.message =  "Invalid type name "+name;

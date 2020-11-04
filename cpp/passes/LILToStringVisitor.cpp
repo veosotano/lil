@@ -271,7 +271,12 @@ LILToStrInfo LILToStringVisitor::_stringify(LILNumberLiteral * value)
 LILToStrInfo LILToStringVisitor::_stringify(LILPercentageLiteral * value)
 {
     LILToStrInfo ret;
-    ret.value = "Percentage literal: "+value->stringRep();
+    LILNode * type = value->getType().get();
+    if (type) {
+        ret.value = "Percentage literal (" + type->stringRep() + "): " + value->stringRep();
+    } else {
+        ret.value = "Percentage literal: " + value->stringRep();
+    }
     return ret;
 }
 

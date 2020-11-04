@@ -745,7 +745,83 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
             }
             break;
         }
-            
+        case BuilderStatePercentage:
+        {
+            if (this->currentNode)
+            {
+                if (eventType == ParserEventNumberInt)
+                {
+                    std::shared_ptr<LILType> ty;
+                    if (this->currentContainer.size() > 0) {
+                        auto cont = this->currentContainer.back();
+                        if (cont->isA(NodeTypeVarDecl)) {
+                            ty = cont->getType();
+                        }
+                    }
+                    
+                    if (ty)
+                    {
+                        if (ty->isA(TypeTypeMultiple)) {
+                            auto multiTy = std::static_pointer_cast<LILMultipleType>(ty);
+                            bool intFound = false;
+                            for (auto ty : multiTy->getTypes()) {
+                                auto name = ty->getName();
+                                if (name == "i64%") {
+                                    intFound = true;
+                                    break;
+                                }
+                            }
+                            if (intFound) {
+                                std::shared_ptr<LILType> intTy = std::make_shared<LILType>();
+                                intTy->setName("i64%");
+                                std::static_pointer_cast<LILPercentageLiteral>(this->currentNode)->setType(intTy);
+                            } else {
+                                bool floatFound = false;
+                                for (auto ty : multiTy->getTypes()) {
+                                    auto name = ty->getName();
+                                    if (name == "f64%") {
+                                        floatFound = true;
+                                        break;
+                                    }
+                                }
+                                if (floatFound) {
+                                    std::shared_ptr<LILType> floatTy = std::make_shared<LILType>();
+                                    floatTy->setName("f64%");
+                                    std::static_pointer_cast<LILPercentageLiteral>(this->currentNode)->setType(floatTy);
+                                }
+                            }
+                        } else {
+                            std::static_pointer_cast<LILPercentageLiteral>(this->currentNode)->setType(ty);
+                        }
+                    }
+                    else
+                    {
+                        std::shared_ptr<LILMultipleType> type = std::make_shared<LILMultipleType>();
+                        std::shared_ptr<LILType> type1 = std::make_shared<LILType>();
+                        type1->setName("i64%");
+                        type->addType(type1);
+                        std::shared_ptr<LILType> type2 = std::make_shared<LILType>();
+                        type2->setName("f64%");
+                        type->addType(type2);
+                        type->setIsWeakType(true);
+                        std::static_pointer_cast<LILPercentageLiteral>(this->currentNode)->setType(type);
+                    }
+                }
+                else if (eventType == ParserEventNumberFP)
+                {
+                    auto ty = std::make_shared<LILType>();
+                    ty->setName("f64%");
+                    std::static_pointer_cast<LILPercentageLiteral>(this->currentNode)->setType(ty);
+                } else {
+                    this->currentNode->receiveNodeData(data);
+                }
+            }
+            else if (this->currentContainer.size() > 0)
+            {
+                this->currentContainer.back()->receiveNodeData(data);
+            }
+            break;
+        }
         case BuilderStateStringFunction:
         {
             switch (eventType) {

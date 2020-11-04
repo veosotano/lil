@@ -196,7 +196,13 @@ bool LILType::equalTo(std::shared_ptr<LILNode> otherNode)
 
 void LILType::receiveNodeData(const LIL::LILString &data)
 {
-    this->setName(data);
+    auto currentName = this->getName();
+    if (currentName.length() == 0) {
+        this->setName(data);
+    } else {
+        LILString newStr = currentName + data;
+        this->setName(newStr);
+    }
 }
 
 LILString LILType::stringRep()

@@ -295,7 +295,25 @@ llvm::Value * LILIREmitter::_emit(LILNumberLiteral * value)
 
 llvm::Value * LILIREmitter::_emit(LILPercentageLiteral * value)
 {
-    std::cerr << "!!!!!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!\n";
+    const auto & tyNode = value->getType();
+    if (!tyNode) {
+        std::cerr << "!!!!!!!!!!NO TYPE FAIL!!!!!!!!!!!!!!!!\n";
+        return nullptr;
+    }
+    const auto & ty = std::static_pointer_cast<LILType>(tyNode);
+    if (ty->getName() == "i8%") {
+        return llvm::ConstantInt::get(d->llvmContext, llvm::APInt(8, value->getValue().toChar(), true));
+    } else if (ty->getName() == "i16%") {
+        return llvm::ConstantInt::get(d->llvmContext, llvm::APInt(16, value->getValue().toInt(), true));
+    } else if (ty->getName() == "i32%") {
+        return llvm::ConstantInt::get(d->llvmContext, llvm::APInt(32, value->getValue().toLong(), true));
+    } else if (ty->getName() == "i64%") {
+        return llvm::ConstantInt::get(d->llvmContext, llvm::APInt(64, value->getValue().toLongLong(), true));
+    } else if (ty->getName() == "f32%") {
+        return llvm::ConstantFP::get(d->llvmContext, llvm::APFloat(value->getValue().toFloat()));
+    } else if (ty->getName() == "f64%") {
+        return llvm::ConstantFP::get(d->llvmContext, llvm::APFloat(value->getValue().toDouble()));
+    }
     return nullptr;
 }
 
@@ -2479,17 +2497,17 @@ llvm::Type * LILIREmitter::llvmTypeFromLILType(LILType * type)
         } else {
             return llvm::Type::getInt1Ty(d->llvmContext);
         }
-    } else if (typestr == "i8"){
+    } else if (typestr == "i8" || typestr == "i8%"){
         ret = llvm::Type::getInt8Ty(d->llvmContext);
-    } else if (typestr == "i16"){
+    } else if (typestr == "i16" || typestr == "i16%"){
         ret = llvm::Type::getInt16Ty(d->llvmContext);
-    } else if (typestr == "i32"){
+    } else if (typestr == "i32" || typestr == "i32%"){
         ret = llvm::Type::getInt32Ty(d->llvmContext);
-    } else if (typestr == "i64"){
+    } else if (typestr == "i64" || typestr == "i64%"){
         ret = llvm::Type::getInt64Ty(d->llvmContext);
-    } else if (typestr == "f32"){
+    } else if (typestr == "f32" || typestr == "f32%"){
         ret = llvm::Type::getFloatTy(d->llvmContext);
-    } else if (typestr == "f64"){
+    } else if (typestr == "f64" || typestr == "f64%"){
         ret = llvm::Type::getDoubleTy(d->llvmContext);
     } else if (typestr == "cstr"){
         auto charType = llvm::IntegerType::get(d->llvmContext, 8);

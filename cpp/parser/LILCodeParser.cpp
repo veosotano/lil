@@ -1140,7 +1140,8 @@ bool LILCodeParser::isPunctuation(std::shared_ptr<LILToken> token) const
         case TokenTypeLineComment:
         case TokenTypeBlockComment:
         case TokenTypeInstructionSign:
-        case TokenTypePercentageNumber:
+        case TokenTypePercentageNumberInt:
+        case TokenTypePercentageNumberFP:
             return false;
     }
     return false;
@@ -1365,37 +1366,19 @@ bool LILCodeParser::readTypeSimple()
             return this->readFunctionType();
         } else if (tokenStr == "ptr"){
             return this->readPointerType();
+        } else if (tokenStr == "array") {
+//            return this->readArrayType();
+        } else if (tokenStr == "map") {
+//            return this->readMapType();
         }
+
         LIL_START_NODE(NodeTypeType)
 
         d->receiver->receiveNodeData(ParserEventType, tokenStr);
         this->readNextToken();
-        LIL_CHECK_FOR_END
-        if (
-            tokenStr == "array"
-            || tokenStr == "map"
-        ) {
-            LIL_EXPECT(TokenTypeParenthesisOpen, "open parenthesis");
-            d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
-            this->readNextToken();
-            LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-            bool done = false;
-            while(!done){
-                done = true;
-                if (d->currentToken->isA(TokenTypeComma)) {
-                    done = false;
-                    d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
-                    this->readNextToken();
-                    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-                }
-                bool tyValid = this->readType();
-                if (tyValid) {
-                    d->receiver->receiveNodeCommit();
-                }
-                LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-            }
-            LIL_EXPECT(TokenTypeParenthesisClose, "close parenthesis");
-            d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+        
+        if (d->currentToken->isA(TokenTypePercentSign)) {
+            d->receiver->receiveNodeData(ParserEventType, d->currentToken->getString());
             this->readNextToken();
         }
         LIL_END_NODE_SKIP(false)
@@ -1981,11 +1964,21 @@ bool LILCodeParser::readBasicValue(NodeType &nodeType)
             LIL_END_NODE_SKIP(false)
         }
 
-        case TokenTypePercentageNumber:
+        case TokenTypePercentageNumberInt:
         {
             LIL_START_NODE(NodeTypePercentage)
             d->receiver->receiveNodeData(ParserEventPercentageLiteral, d->currentToken->getString());
             this->readNextToken();
+            d->receiver->receiveNodeData(ParserEventNumberInt, "");
+            nodeType = __nodeType;
+            LIL_END_NODE_SKIP(false)
+        }
+        case TokenTypePercentageNumberFP:
+        {
+            LIL_START_NODE(NodeTypePercentage)
+            d->receiver->receiveNodeData(ParserEventPercentageLiteral, d->currentToken->getString());
+            this->readNextToken();
+            d->receiver->receiveNodeData(ParserEventNumberFP, "");
             nodeType = __nodeType;
             LIL_END_NODE_SKIP(false)
         }
@@ -2079,11 +2072,21 @@ bool LILCodeParser::readBasicValue(NodeType &nodeType)
                     nodeType = __nodeType;
                     LIL_END_NODE_SKIP(false)
                 }
-                else if (d->currentToken->isA(TokenTypePercentageNumber))
+                else if (d->currentToken->isA(TokenTypePercentageNumberInt))
                 {
                     LIL_START_NODE(NodeTypePercentage)
                     d->receiver->receiveNodeData(ParserEventPercentageLiteral, d->currentToken->getString());
                     this->readNextToken();
+                    d->receiver->receiveNodeData(ParserEventNumberInt, "");
+                    nodeType = __nodeType;
+                    LIL_END_NODE_SKIP(false)
+                }
+                else if (d->currentToken->isA(TokenTypePercentageNumberFP))
+                {
+                    LIL_START_NODE(NodeTypePercentage)
+                    d->receiver->receiveNodeData(ParserEventPercentageLiteral, d->currentToken->getString());
+                    this->readNextToken();
+                    d->receiver->receiveNodeData(ParserEventNumberFP, "");
                     nodeType = __nodeType;
                     LIL_END_NODE_SKIP(false)
                 }

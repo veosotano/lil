@@ -70,7 +70,8 @@ LILString LILToken::tokenStringRepresentation(TokenType type)
         types[TokenTypeIdentifier] = "TokenTypeIdentifier";
         types[TokenTypeNumberInt] = "TokenTypeNumberInt";
         types[TokenTypeNumberFP] = "TokenTypeNumberFP";
-        types[TokenTypePercentageNumber] = "TokenTypePercentageNumber";
+        types[TokenTypePercentageNumberInt] = "TokenTypePercentageNumberInt";
+        types[TokenTypePercentageNumberFP] = "TokenTypePercentageNumberFP";
         types[TokenTypeHexNumber] = "TokenTypeHexNumber";
         types[TokenTypeDoubleQuoteString] = "TokenTypeDoubleQuoteString";
         types[TokenTypeSingleQuoteString] = "TokenTypeSingleQuoteString";
@@ -146,5 +147,5 @@ LILString LILToken::toString()
 
 bool LILToken::isNumeric()
 {
-    return this->type == TokenTypeNumberInt || this->type == TokenTypeNumberFP || this->type == TokenTypePercentageNumber;
+    return this->type == TokenTypeNumberInt || this->type == TokenTypeNumberFP || this->type == TokenTypePercentageNumberInt || this->type == TokenTypePercentageNumberFP;
 }

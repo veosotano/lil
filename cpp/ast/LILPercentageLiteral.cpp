@@ -17,13 +17,13 @@
 using namespace LIL;
 
 LILPercentageLiteral::LILPercentageLiteral()
-: LIL::LILNode( NodeTypePercentage )
+: LILTypedNode( NodeTypePercentage )
 {
-    this->_value = 0.;
+
 }
 
 LILPercentageLiteral::LILPercentageLiteral(const LILPercentageLiteral & other)
-: LILNode(other)
+: LILTypedNode(other)
 {
     this->_value = other._value;
 }
@@ -35,7 +35,12 @@ std::shared_ptr<LILPercentageLiteral> LILPercentageLiteral::clone() const
 
 std::shared_ptr<LILClonable> LILPercentageLiteral::cloneImpl() const
 {
-    return std::shared_ptr<LILPercentageLiteral>(new LILPercentageLiteral(*this));
+    std::shared_ptr<LILPercentageLiteral> clone(new LILPercentageLiteral(*this));
+    //clone LILTypedNode
+    if (this->_type) {
+        clone->setType(this->_type->clone());
+    }
+    return clone;
 }
 
 LILPercentageLiteral::~LILPercentageLiteral()
@@ -45,20 +50,28 @@ LILPercentageLiteral::~LILPercentageLiteral()
 
 LILString LILPercentageLiteral::stringRep()
 {
-    return LILString::number(this->_value) + "%";
+    return this->_value + "%";
 }
 
 void LILPercentageLiteral::receiveNodeData(const LIL::LILString &data)
 {
-    this->setValue(data.toDouble());
+    this->setValue(data);
 }
 
-void LILPercentageLiteral::setValue(LILUnitF64 newValue)
+bool LILPercentageLiteral::equalTo(std::shared_ptr<LILNode> otherNode)
 {
-    this->_value = newValue;
+    if ( ! LILTypedNode::equalTo(otherNode)) return false;
+    std::shared_ptr<LILPercentageLiteral> castedNode = std::static_pointer_cast<LILPercentageLiteral>(otherNode);
+    if ( this->_value != castedNode->_value ) return false;
+    return true;
 }
 
-LILUnitF64 LILPercentageLiteral::getValue() const
+LILString LILPercentageLiteral::getValue() const
 {
     return this->_value;
+}
+
+void LILPercentageLiteral::setValue(LILString newValue)
+{
+    this->_value = newValue;
 }
