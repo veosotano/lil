@@ -49,6 +49,10 @@ std::shared_ptr<LILClonable> LILFunctionCall::cloneImpl() const
     if (this->_returnType) {
         clone->setReturnType(this->_returnType->clone());
     }
+    clone->clearArguments();
+    for (auto arg : this->getArguments()) {
+        clone->addArgument(arg->clone());
+    }
 
     return clone;
 }
@@ -181,6 +185,11 @@ void LILFunctionCall::setArguments(std::vector<std::shared_ptr<LILNode>> args)
     for (auto arg : args) {
         this->addArgument(arg);
     }
+}
+
+void LILFunctionCall::clearArguments()
+{
+    this->clearChildNodes();
 }
 
 std::vector<std::shared_ptr<LILNode>> LILFunctionCall::getArguments() const
