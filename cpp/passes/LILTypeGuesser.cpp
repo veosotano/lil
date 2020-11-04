@@ -442,7 +442,7 @@ void LILTypeGuesser::_process(LILNumberLiteral * value)
     auto sharedVal = value->shared_from_this();
     if (ty1 && ty1->getIsWeakType()) {
         std::shared_ptr<LILType>ty2 = this->recursiveFindTypeFromAncestors(sharedVal);
-        if (ty2->getIsNullable()) {
+        if (ty2 && ty2->getIsNullable()) {
             ty2 = ty2->clone();
             ty2->setIsNullable(false);
         }
@@ -450,11 +450,21 @@ void LILTypeGuesser::_process(LILNumberLiteral * value)
         if (ty3) {
             if (ty3->getIsWeakType()) {
                 auto multiTy = std::static_pointer_cast<LILMultipleType>(ty3);
-                value->setType(multiTy->getTypes().front());
+                auto ret = multiTy->getTypes().front();
+                value->setType(ret);
+                this->setTypeOnAncestorIfNeeded(sharedVal, ret);
             } else {
                 value->setType(ty3);
                 this->setTypeOnAncestorIfNeeded(sharedVal, ty3);
             }
+        }
+        else
+        {
+            //decay to default
+            auto intType = std::make_shared<LILType>();
+            intType->setName("i64");
+            value->setType(intType);
+            this->setTypeOnAncestorIfNeeded(sharedVal, intType);
         }
     }
 }
