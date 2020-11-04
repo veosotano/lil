@@ -915,6 +915,9 @@ bool LILCodeParser::isFunctionCall(bool isPastIdentifier) const
     }
     else if (d->currentToken->isA(TokenTypeIdentifier))
     {
+        if (this->isFlowControl()) {
+            return false;
+        }
         if (this->isBuiltinFunctionCall())
             return true;
 
