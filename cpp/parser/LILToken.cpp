@@ -99,8 +99,11 @@ LILString LILToken::tokenStringRepresentation(TokenType type)
         types[TokenTypeSquareBracketOpen] = "TokenTypeSquareBracketOpen";
         types[TokenTypeSquareBracketClose] = "TokenTypeSquareBracketClose";
     }
-
-    return types[type];
+    
+    if (types.count(type)){
+        return types[type];
+    }
+    return "";
 }
 
 LILString LILToken::getString()

@@ -551,7 +551,10 @@ llvm::Value * LILIREmitter::_emit(LILVarDecl * value)
         auto ty = value->getType();
         if (!ty->isA(TypeTypeFunction)) {
             //backup if needed
-            auto namedValue = d->namedValues[name];
+            llvm::Value * namedValue = nullptr;
+            if (d->namedValues.count(name)) {
+                namedValue = d->namedValues[name];
+            }
             if (namedValue) {
                 d->hiddenLocals.back()[name] = namedValue;
             }
@@ -1419,6 +1422,9 @@ llvm::Function * LILIREmitter::_emitMethod(LILFunctionDecl * value, LILClassDecl
     std::vector<llvm::Type*> types;
 
     std::string className = classValue->getName().data();
+    if (d->classTypes.count(className) == 0) {
+        return nullptr;
+    }
     auto classType = d->classTypes[className];
     llvm::Type * classPtrType = llvm::PointerType::get(classType, 0);
 

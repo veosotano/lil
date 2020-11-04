@@ -63,7 +63,10 @@ std::shared_ptr<LILNode> LILVarNode::getVar(LILString name)
 
 std::shared_ptr<LILNode> LILVarNode::getVariable(LILString name)
 {
-    return this->_localVars[name];
+    if (this->_localVars.count(name)) {
+        return this->_localVars[name];
+    }
+    return nullptr;
 }
 
 bool LILVarNode::hasLocalVar(LILString name)
