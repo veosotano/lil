@@ -113,7 +113,7 @@ const std::vector<std::shared_ptr<LILNode>> & LILClassDecl::getMethods() const
 
 LILString LILClassDecl::getName() const
 {
-    return this->getType()->getName().data();
+    return this->getType()->getName();
 }
 
 std::shared_ptr<LILNode> LILClassDecl::getFieldNamed(const LILString & name) const
