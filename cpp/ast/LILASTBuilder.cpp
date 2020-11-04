@@ -684,7 +684,38 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
                     
                     if (ty)
                     {
-                        std::static_pointer_cast<LILNumberLiteral>(this->currentNode)->setType(ty);
+                        if (ty->isA(TypeTypeMultiple)) {
+                            auto multiTy = std::static_pointer_cast<LILMultipleType>(ty);
+                            bool intFound = false;
+                            for (auto ty : multiTy->getTypes()) {
+                                auto name = ty->getName();
+                                if (name == "i64") {
+                                    intFound = true;
+                                    break;
+                                }
+                            }
+                            if (intFound) {
+                                std::shared_ptr<LILType> intTy = std::make_shared<LILType>();
+                                intTy->setName("i64");
+                                std::static_pointer_cast<LILNumberLiteral>(this->currentNode)->setType(intTy);
+                            } else {
+                                bool floatFound = false;
+                                for (auto ty : multiTy->getTypes()) {
+                                    auto name = ty->getName();
+                                    if (name == "f64") {
+                                        floatFound = true;
+                                        break;
+                                    }
+                                }
+                                if (floatFound) {
+                                    std::shared_ptr<LILType> floatTy = std::make_shared<LILType>();
+                                    floatTy->setName("f64");
+                                    std::static_pointer_cast<LILNumberLiteral>(this->currentNode)->setType(floatTy);
+                                }
+                            }
+                        } else {
+                            std::static_pointer_cast<LILNumberLiteral>(this->currentNode)->setType(ty);
+                        }
                     }
                     else
                     {
