@@ -13,6 +13,7 @@
  ********************************************************************/
 
 #include "LILFlowControlCall.h"
+#include "LILFunctionType.h"
 #include "LILType.h"
 
 using namespace LIL;
@@ -118,6 +119,19 @@ std::shared_ptr<LILNode> LILFlowControlCall::getArgument() const
     auto childNodes = this->getChildNodes();
     if (childNodes.size() > 0) {
         return childNodes.front();;
+    }
+    return nullptr;
+}
+
+std::shared_ptr<LILType> LILFlowControlCall::getType() const
+{
+    const auto & parent = this->getParentNode();
+    if (parent) {
+        auto parentTy = parent->getType();
+        if (parentTy && parentTy->isA(TypeTypeFunction)) {
+            auto fnTy = std::static_pointer_cast<LILFunctionType>(parentTy);
+            return fnTy->getReturnType();
+        }
     }
     return nullptr;
 }
