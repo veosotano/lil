@@ -340,17 +340,14 @@ void LILASTBuilder::receiveNodeCommit()
                             this->rootNode->setLocalVariable(vd->getName(), vd);
 
                         } else if (this->_isMain) {
-                            auto mainFn = this->rootNode->getMainFn();
-                            //set local variable
-                            mainFn->setLocalVariable(vd->getName(), vd);
-                            auto initVal = vd->getInitVal();
-                            if (initVal) {
-                                if (initVal->isA(NodeTypeFunctionDecl)) {
-                                    this->rootNode->addNode(this->currentNode);
-                                } else {
-                                    mainFn->addEvaluable(this->currentNode);
-                                }
+                            auto ty = vd->getType();
+                            if (ty && ty->isA(TypeTypeFunction)) {
+                                this->rootNode->addNode(this->currentNode);
+                                this->rootNode->setLocalVariable(vd->getName(), this->currentNode);
                             } else {
+                                auto mainFn = this->rootNode->getMainFn();
+                                //set local variable
+                                mainFn->setLocalVariable(vd->getName(), vd);
                                 mainFn->addEvaluable(this->currentNode);
                             }
                         }
