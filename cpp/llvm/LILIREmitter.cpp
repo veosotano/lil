@@ -1009,6 +1009,7 @@ llvm::Value * LILIREmitter::_emit(LILValuePath * value)
         llvm::Value * llvmSubject = nullptr;
         std::shared_ptr<LILClassDecl> classDecl;
         LILString className;
+        LILString instanceName;
         LILString stringRep;
 
         if (firstNode->isA(NodeTypeVarName)) {
@@ -1016,8 +1017,8 @@ llvm::Value * LILIREmitter::_emit(LILValuePath * value)
             std::shared_ptr<LILNode> subjectNode = this->findNodeForVarName(vn.get());
             if (subjectNode && subjectNode->isA(NodeTypeVarDecl)) {
                 auto vd = std::static_pointer_cast<LILVarDecl>(subjectNode);
-                className = vd->getName();
-                llvmSubject = d->namedValues[className.data()];
+                instanceName = vd->getName();
+                llvmSubject = d->namedValues[instanceName.data()];
                 if (vd->getIsExtern()) {
                     isExtern = true;
                 }
@@ -1027,7 +1028,8 @@ llvm::Value * LILIREmitter::_emit(LILValuePath * value)
                     std::cerr << "!!!!!!!!!!NODE DOES NOT POINT TO OBJECT FAIL !!!!!!!!!!!!!!!!\n";
                     return nullptr;
                 }
-                classDecl = this->findClassWithName(vdTy->getName());
+                className = vdTy->getName();
+                classDecl = this->findClassWithName(className);
                 if (!classDecl) {
                     std::cerr << "!!!!!!!!!!CLASS NOT FOUND FAIL !!!!!!!!!!!!!!!!\n";
                     return nullptr;
@@ -1039,8 +1041,10 @@ llvm::Value * LILIREmitter::_emit(LILValuePath * value)
             switch (sel->getSelectorType()) {
                 case SelectorTypeSelfSelector:
                 {
-                    llvmSubject = d->namedValues["@self"];
+                    auto ptrToSelf = d->namedValues["@self"];
+                    llvmSubject = d->irBuilder.CreateLoad(ptrToSelf);
                     classDecl = this->findAncestorClass(value->shared_from_this());
+                    className = classDecl->getName();
                     stringRep = "@self";
                     break;
                 }
@@ -1089,15 +1093,21 @@ llvm::Value * LILIREmitter::_emit(LILValuePath * value)
                         llvmSubject = this->_emitFunctionCall(fc.get(), targetFn->getName(), fnTy.get(), llvmSubject);
                         stringRep += "()";
                     }
-                    auto retTy = fnTy->getReturnType();
-                    if (!retTy->isA(TypeTypeObject)) {
-                        std::cerr << "!!!!!!!!!!NODE DOES NOT POINT TO OBJECT FAIL !!!!!!!!!!!!!!!!\n";
-                        return nullptr;
-                    }
-                    classDecl = this->findClassWithName(retTy->getName());
-                    if (!classDecl) {
-                        std::cerr << "!!!!!!!!!!CLASS NOT FOUND FAIL !!!!!!!!!!!!!!!!\n";
-                        return nullptr;
+                    
+                    if (isLastNode) {
+                        return llvmSubject;
+                    } else {
+                        auto retTy = fnTy->getReturnType();
+                        if (!retTy->isA(TypeTypeObject)) {
+                            std::cerr << "!!!!!!!!!!NODE DOES NOT POINT TO OBJECT FAIL !!!!!!!!!!!!!!!!\n";
+                            return nullptr;
+                        }
+                        className = retTy->getName();
+                        classDecl = this->findClassWithName(className);
+                        if (!classDecl) {
+                            std::cerr << "!!!!!!!!!!CLASS NOT FOUND FAIL !!!!!!!!!!!!!!!!\n";
+                            return nullptr;
+                        }
                     }
                     break;
                 }
@@ -1147,7 +1157,8 @@ llvm::Value * LILIREmitter::_emit(LILValuePath * value)
                                     std::cerr << "!!!!!!!!!!NODE DOES NOT POINT TO OBJECT FAIL !!!!!!!!!!!!!!!!\n";
                                     return nullptr;
                                 }
-                                classDecl = this->findClassWithName(retTy->getName());
+                                className = retTy->getName();
+                                classDecl = this->findClassWithName(className);
                                 if (!classDecl) {
                                     std::cerr << "!!!!!!!!!!CLASS NOT FOUND FAIL !!!!!!!!!!!!!!!!\n";
                                     return nullptr;
@@ -1191,7 +1202,8 @@ llvm::Value * LILIREmitter::_emit(LILValuePath * value)
                                 std::cerr << "!!!!!!!!!!NODE DOES NOT POINT TO OBJECT FAIL !!!!!!!!!!!!!!!!\n";
                                 return nullptr;
                             }
-                            classDecl = this->findClassWithName(retTy->getName());
+                            className = retTy->getName();
+                            classDecl = this->findClassWithName(className);
                             if (!classDecl) {
                                 std::cerr << "!!!!!!!!!!CLASS NOT FOUND FAIL !!!!!!!!!!!!!!!!\n";
                                 return nullptr;
