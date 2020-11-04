@@ -13,6 +13,8 @@
  ********************************************************************/
 
 #include "LILStringLiteral.h"
+#include "LILObjectType.h"
+#include "LILType.h"
 
 using namespace LIL;
 
@@ -82,4 +84,26 @@ void LILStringLiteral::setIsCString(bool value)
 bool LILStringLiteral::getIsCString() const
 {
     return this->_isCStr;
+}
+
+std::shared_ptr<LILType> LILStringLiteral::getType() const
+{
+    if (this->getIsCString())
+    {
+        static std::shared_ptr<LILType> cStrTy;
+        if (!cStrTy) {
+            cStrTy = std::make_shared<LILType>();
+            cStrTy->setName("cstr");
+        }
+        return cStrTy;
+    }
+    else
+    {
+        static std::shared_ptr<LILObjectType> strTy;
+        if (!strTy) {
+            strTy = std::make_shared<LILObjectType>();
+            strTy->setName("string");
+        }
+        return strTy;
+    }
 }

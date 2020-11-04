@@ -33,6 +33,7 @@ namespace LIL
         bool equalTo(std::shared_ptr<LILNode> otherNode);
         void setIsCString(bool value);
         bool getIsCString() const;
+        std::shared_ptr<LILType> getType() const override;
 
     private:
         LILString _value;
