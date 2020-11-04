@@ -642,17 +642,14 @@ bool LILCodeParser::isAssignment() const
                         switch (peekToken->getType())
                         {
                             case TokenTypeObjectSign:
+                            case TokenTypeBlockOpen:
+                            case TokenTypeSemicolon:
                             {
                                 ret = false;
                                 done = true;
                                 break;
                             }
-
-                            case TokenTypeBlockOpen:
-                                ret = false;
-                                done = true;
-                                break;
-
+                                
                             default:
                                 break;
                         }
