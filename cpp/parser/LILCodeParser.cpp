@@ -3660,6 +3660,7 @@ bool LILCodeParser::readEvaluables()
                     if (this->atEndOfSource())
                         return ret;
                     evalsDone = false;
+                    continue;
                 }
                 if (this->isFlowControlCall())
                 {
