@@ -1021,14 +1021,7 @@ std::shared_ptr<LILType> LILTypeGuesser::getNodeType(std::shared_ptr<LILNode> no
         }
         case NodeTypeStringLiteral:
         {
-            auto strLit = std::static_pointer_cast<LILStringLiteral>(node);
-            std::shared_ptr<LILType> type = std::make_shared<LILType>();
-            if (strLit->getIsCString()) {
-                type->setName("cstr");
-            } else {
-                type->setName("str");
-            }
-            return type;
+            return node->getType();
         }
         case NodeTypeStringFunction:
         {

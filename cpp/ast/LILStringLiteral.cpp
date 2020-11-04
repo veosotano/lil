@@ -14,7 +14,7 @@
 
 #include "LILStringLiteral.h"
 #include "LILObjectType.h"
-#include "LILType.h"
+#include "LILPointerType.h"
 
 using namespace LIL;
 
@@ -90,9 +90,9 @@ std::shared_ptr<LILType> LILStringLiteral::getType() const
 {
     if (this->getIsCString())
     {
-        static std::shared_ptr<LILType> cStrTy;
+        static std::shared_ptr<LILPointerType> cStrTy;
         if (!cStrTy) {
-            cStrTy = std::make_shared<LILType>();
+            cStrTy = std::make_shared<LILPointerType>();
             cStrTy->setName("cstr");
         }
         return cStrTy;
