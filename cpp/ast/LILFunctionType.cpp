@@ -122,7 +122,7 @@ LILString LILFunctionType::stringRep()
     std::shared_ptr<LILFunctionType> retTy = std::static_pointer_cast<LILFunctionType>(this->getReturnType());
     if (retTy) {
         name += "=>";
-        name += retTy->getName();
+        name += retTy->stringRep();
     }
 
     return name;
