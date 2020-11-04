@@ -402,7 +402,12 @@ LILToStrInfo LILToStringVisitor::_stringify(LILClassDecl * value)
 LILToStrInfo LILToStringVisitor::_stringify(LILObjectDefinition * value)
 {
     LILToStrInfo ret;
-    ret.value = "Object definition:";
+    auto ty = value->getType();
+    if (ty) {
+        ret.value = "Object definition (" + ty->stringRep() + "): ";
+    } else {
+        ret.value = "Object definition: ";
+    }
     this->stringifyChildren(value->getNodes(), ret);
     return ret;
 }
@@ -550,7 +555,19 @@ LILToStrInfo LILToStringVisitor::_stringify(LILFunctionDecl * value)
 LILToStrInfo LILToStringVisitor::_stringify(LILFunctionCall * value)
 {
     LILToStrInfo ret;
-    ret.value = "Function call: "+value->stringRep();
+    LILString typeStr;
+    auto fcTypes = value->getArgumentTypes();
+    for (size_t i=0, j=fcTypes.size(); i<j; ++i) {
+        auto type = fcTypes[i];
+        typeStr += type->stringRep();
+        if (i<j-1) {
+            typeStr += ",";
+        }
+    }
+    if (typeStr.length() > 0) {
+        typeStr = " (" + typeStr + ")";
+    }
+    ret.value = "Function call:"+ typeStr +" "+value->stringRep();
     this->stringifyChildren(value->getArguments(), ret);
     return ret;
 }
