@@ -1119,6 +1119,10 @@ std::shared_ptr<LILType> LILTypeGuesser::getNodeType(std::shared_ptr<LILNode> no
             return this->recursiveFindTypeFromAncestors(node);
             break;
         }
+        case NodeTypePropertyName:
+        {
+            return this->recursiveFindTypeFromAncestors(node);
+        }
         default:
             return nullptr;
     }
