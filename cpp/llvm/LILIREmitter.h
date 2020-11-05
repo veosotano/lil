@@ -81,6 +81,7 @@ namespace LIL
         llvm::Value * _emit(LILNumberLiteral * value);
         llvm::Value * _emit(LILPercentageLiteral * value);
         llvm::Value * _emit(LILExpression * value);
+        llvm::Value * _emitCast(LILExpression * value);
         llvm::Value * _emit(LILStringLiteral * value);
         llvm::Value * _emit(LILStringFunction * value);
         llvm::Value * _emit(LILNullLiteral * value);

@@ -49,6 +49,7 @@ namespace LIL
         bool isValuePath() const;
         bool isExpression() const;
         bool isUnaryExpression() const;
+        bool isCast() const;
         bool isObjectSelector() const;
         bool isColorInstruction() const;
         bool isComparisonSign() const;

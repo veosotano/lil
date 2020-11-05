@@ -480,6 +480,7 @@ bool LILCodeParser::isExpression() const
         case TokenTypeAsterisk:
         case TokenTypeSlash:
         case TokenTypePercentSign:
+        case TokenTypeFatArrow:
         {
             d->lexer->resetPeek();
             return true;
@@ -505,6 +506,11 @@ bool LILCodeParser::isUnaryExpression() const
     }
     d->lexer->resetPeek();
     return false;
+}
+
+bool LILCodeParser::isCast() const
+{
+    return d->currentToken->isA(TokenTypeFatArrow);
 }
 
 bool LILCodeParser::isObjectSelector() const
@@ -1861,13 +1867,19 @@ bool LILCodeParser::readExpressionInner()
 
     bool isValid = false;
 
+    bool isCast = this->isCast();
     d->receiver->receiveNodeData(ParserEventExpressionSign, d->currentToken->getString());
     this->readNextToken();
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
 
-    bool outIsSV = false;
-    NodeType svExpTy = NodeTypeInvalid;
-    isValid = this->readExpression(outIsSV, svExpTy);
+    if (isCast) {
+        isValid = this->readType();
+    } else {
+        bool outIsSV = false;
+        NodeType svExpTy = NodeTypeInvalid;
+        isValid = this->readExpression(outIsSV, svExpTy);
+    }
+
     if (isValid)
     {
         d->receiver->receiveNodeCommit();

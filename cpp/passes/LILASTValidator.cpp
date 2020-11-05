@@ -294,6 +294,14 @@ void LILASTValidator::_validate(LILExpression * value)
         case NodeTypeFunctionCall:
             break;
             
+        case NodeTypeType:
+        {
+            if (!value->isA(ExpressionTypeCast)) {
+                this->illegalNodeType(right.get(), value);
+            }
+            break;
+        }
+            
         default:
         {
             this->illegalNodeType(right.get(), value);

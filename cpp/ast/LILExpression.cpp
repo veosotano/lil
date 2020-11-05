@@ -55,6 +55,8 @@ LILString LILExpression::expressionTypeToString(ExpressionType type)
             return "bitwise and";
         case ExpressionTypeBitwiseOr:
             return "bitwise or";
+        case ExpressionTypeCast:
+            return "cast";
 
         default:
             break;

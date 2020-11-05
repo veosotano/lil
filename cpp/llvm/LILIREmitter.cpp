@@ -143,7 +143,11 @@ llvm::Value * LILIREmitter::emit(LILNode * node)
         case NodeTypeExpression:
         {
             LILExpression * value = static_cast<LILExpression *>(node);
-            return this->_emit(value);
+            if (value->isA(ExpressionTypeCast)) {
+                return this->_emitCast(value);
+            } else {
+                return this->_emit(value);
+            }
         }
         case NodeTypeStringLiteral:
         {
@@ -315,6 +319,24 @@ llvm::Value * LILIREmitter::_emit(LILPercentageLiteral * value)
         return llvm::ConstantFP::get(d->llvmContext, llvm::APFloat(value->getValue().toDouble()));
     }
     return nullptr;
+}
+
+llvm::Value * LILIREmitter::_emitCast(LILExpression * value)
+{
+    std::shared_ptr<LILNode> left = value->getLeft();
+    if (!left) {
+        std::cerr << "LEFT NODE WAS NULL FAIL!!!!!!!!!!!!!!!!\n";
+        return nullptr;
+    }
+    std::shared_ptr<LILNode> right = value->getRight();
+    if (!right || !right->isA(NodeTypeType)) {
+        std::cerr << "RIGHT NODE WAS NOT TYPE FAIL!!!!!!!!!!!!!!!!\n";
+        return nullptr;
+    }
+
+    llvm::Value * leftV = this->emit(left.get());
+    auto rightTy = std::static_pointer_cast<LILType>(right);
+    return d->irBuilder.CreateBitCast(leftV, this->llvmTypeFromLILType(rightTy.get()));
 }
 
 llvm::Value * LILIREmitter::_emit(LILExpression * value)

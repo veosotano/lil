@@ -146,6 +146,7 @@ namespace LIL
         ExpressionTypeLogicalOr,
         ExpressionTypeBitwiseAnd,
         ExpressionTypeBitwiseOr,
+        ExpressionTypeCast,
     };
 
     enum FunctionCallType

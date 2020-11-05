@@ -901,6 +901,9 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
                 else if (data == "|") {
                     exp->setExpressionType(ExpressionTypeBitwiseOr);
                 }
+                else if (data == "=>") {
+                    exp->setExpressionType(ExpressionTypeCast);
+                }
             }
             else if (eventType == ParserEventNumberLiteral)
             {
