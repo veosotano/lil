@@ -2675,13 +2675,13 @@ llvm::Value * LILIREmitter::emitNullable(LILNode * node, LILType * targetTy)
 
         //is null member
         auto nullBit = llvm::ConstantInt::get(
-                                              d->llvmContext,
-                                              llvm::APInt(
-                                                          1,
-                                                          (node->isA(NodeTypeNull) ? 1 : 0),
-                                                          false
-                                                          )
-                                              );
+            d->llvmContext,
+            llvm::APInt(
+                1,
+                (node->isA(NodeTypeNull) ? 0 : 1),
+                false
+            )
+        );
         std::vector<llvm::Value *> gepIndices2;
         gepIndices2.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
         gepIndices2.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 1, false)));
