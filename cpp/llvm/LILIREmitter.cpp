@@ -709,11 +709,15 @@ llvm::Value * LILIREmitter::_emit(LILObjectDefinition * value)
                 callValues.push_back(this->emit(theVal.get()));
             } else {
                 auto gep = this->_emitGEP(alloca, classValue->getName(), theIndex, varName, 0);
-                if (vd->getType()->isA(TypeTypeObject)) {
-                    d->currentAlloca = gep;
-                    this->emit(theVal.get());
+                d->currentAlloca = gep;
+                auto vdTy = vd->getType();
+                llvm::Value * llvmValue;
+                if (vdTy->getIsNullable()) {
+                    llvmValue = this->emitNullable(theVal.get(), vdTy.get());
                 } else {
-                    llvm::Value * llvmValue = this->emit(theVal.get());
+                    llvmValue = this->emit(theVal.get());
+                }
+                if (llvmValue) {
                     d->irBuilder.CreateStore(llvmValue, gep);
                 }
             }
