@@ -227,6 +227,11 @@ const bool LILString::operator==(const LILString &other) const
     return d->string == other.data();
 }
 
+const bool LILString::operator==(const char * other) const
+{
+    return d->string == other;
+}
+
 float LILString::toFloat() const
 {
     LILString val = this->stripQuotes();

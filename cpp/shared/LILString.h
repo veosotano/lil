@@ -58,6 +58,7 @@ namespace LIL
         void truncate(size_t pos);
 
         const bool operator==(const LILString &other) const;
+        const bool operator==(const char * other) const;
         friend inline bool operator!=(const LILString &s1, const LILString &s2) { return !(s1 == s2); }
         float toFloat() const;
         double toDouble() const;
