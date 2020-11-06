@@ -2112,10 +2112,12 @@ llvm::Value * LILIREmitter::_emitIfIs(LILFlowControl * value)
 
     auto currentLlvmValue = d->namedValues[nameData];
     
-    std::vector<llvm::Value *> gepIndices;
-    gepIndices.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
-    gepIndices.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
-    d->namedValues[nameData] = llvm::GetElementPtrInst::Create(this->llvmTypeFromLILType(ty.get()), currentLlvmValue, gepIndices, nameData, d->irBuilder.GetInsertBlock());
+    if (currentLlvmValue->getType()->isStructTy()) {
+        std::vector<llvm::Value *> gepIndices;
+        gepIndices.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
+        gepIndices.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
+        d->namedValues[nameData] = llvm::GetElementPtrInst::Create(this->llvmTypeFromLILType(ty.get()), currentLlvmValue, gepIndices, nameData, d->irBuilder.GetInsertBlock());
+    }
 
     //configure the body of the if
     d->irBuilder.SetInsertPoint(bodyBB);
