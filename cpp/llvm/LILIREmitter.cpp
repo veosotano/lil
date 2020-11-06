@@ -2642,23 +2642,13 @@ llvm::StructType * LILIREmitter::extractStructFromClass(LILClassDecl * value)
 llvm::Value * LILIREmitter::emitNullable(LILNode * node, LILType * targetTy)
 {
     if (targetTy->isA(TypeTypePointer)) {
-        switch (node->getNodeType()) {
-            case NodeTypeVarName:
-            case NodeTypeValuePath:
-            case NodeTypeFunctionCall:
-            {
-                return this->emit(node);
-            }
-            case NodeTypeNull:
-            {
-                auto ptrTy = static_cast<LILPointerType *>(targetTy);
-                auto argTy = ptrTy->getArgument();
-                auto argLlvmTy = this->llvmTypeFromLILType(argTy.get());
-                return llvm::ConstantPointerNull::get(argLlvmTy->getPointerTo());
-            }
-            default:
-                std::cerr << "UNKNOWN NODE TYPE FAIL!!!!!!!!!!!!!!!!\n\n";
-                return nullptr;
+        if (node->isA(NodeTypeNull)) {
+            auto ptrTy = static_cast<LILPointerType *>(targetTy);
+            auto argTy = ptrTy->getArgument();
+            auto argLlvmTy = this->llvmTypeFromLILType(argTy.get());
+            return llvm::ConstantPointerNull::get(argLlvmTy->getPointerTo());
+        } else {
+            return this->emit(node);
         }
     }
     if (targetTy->isA(TypeTypeObject)) {
