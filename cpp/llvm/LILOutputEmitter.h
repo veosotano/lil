@@ -40,6 +40,7 @@ namespace LIL
         LILString getDir() const;
         void setSource(LILString source);
         LILString getSource() const;
+        bool hasErrors() const;
         
         void run(LILCodeUnit * cu);
         void compileToO(std::string outName, LILCodeUnit * cu);

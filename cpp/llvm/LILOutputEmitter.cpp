@@ -247,3 +247,8 @@ LILString LILOutputEmitter::getSource() const
 {
     return d->source;
 }
+
+bool LILOutputEmitter::hasErrors() const
+{
+    return d->pm->hasErrors();
+}

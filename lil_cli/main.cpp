@@ -230,7 +230,7 @@ int main(int argc, const char * argv[]) {
     codeUnit->run();
     
     if (codeUnit->hasErrors()) {
-        return 0;
+        return -1;
     }
     
     std::unique_ptr<LILOutputEmitter> outEmitter = std::make_unique<LILOutputEmitter>();
@@ -250,5 +250,8 @@ int main(int argc, const char * argv[]) {
         }
     }
     
+    if (outEmitter->hasErrors()) {
+        return -1;
+    }
     return 0;
 }
