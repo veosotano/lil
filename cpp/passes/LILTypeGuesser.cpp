@@ -46,6 +46,9 @@ void LILTypeGuesser::performVisit(std::shared_ptr<LILRootNode> rootNode)
     this->setRootNode(rootNode);
     auto nodes = rootNode->getNodes();
     for (const auto & node : nodes) {
+        this->preprocessTypes(node);
+    }
+    for (const auto & node : nodes) {
         this->connectCallsWithDecls(node);
     }
     for (const auto & node : nodes) {
@@ -62,6 +65,20 @@ void LILTypeGuesser::performVisit(std::shared_ptr<LILRootNode> rootNode)
     }
     for (const auto & node : nodes) {
         this->process(node.get());
+    }
+}
+
+void LILTypeGuesser::preprocessTypes(std::shared_ptr<LILNode> node)
+{
+    for (auto childNode : node->getChildNodes()) {
+        this->preprocessTypes(childNode);
+    }
+
+    if (!node->isA(NodeTypeType)) {
+        auto ty = node->getType();
+        if (ty) {
+            this->_process(ty.get());
+        }
     }
 }
 
@@ -250,12 +267,6 @@ void LILTypeGuesser::process(LILNode * node)
     if (LILNode::isContainerNode(node->getNodeType())) {
         if (!node->isA(NodeTypeClassDecl) || !static_cast<LILClassDecl *>(node)->getIsExtern()) {
             this->processChildren(node->getChildNodes());
-            if (!node->isA(NodeTypeType)) {
-                auto ty = node->getType();
-                if (ty) {
-                    this->process(ty.get());
-                }
-            }
         }
     }
     if (this->getDebug()) {
@@ -563,8 +574,52 @@ void LILTypeGuesser::_process(LILNullLiteral * value)
 
 void LILTypeGuesser::_process(LILType * value)
 {
-    if (value->isA(TypeTypeMultiple)) {
-        static_cast<LILMultipleType *>(value)->sortTypes();
+    switch (value->getTypeType()) {
+        case TypeTypePointer:
+        {
+            //transform the cstr alias into pointer to i8
+            if (value->getName() == "cstr") {
+                auto ptrTy = static_cast<LILPointerType *>(value);
+                value->setName("ptr");
+                auto charType = std::make_shared<LILType>();
+                charType->setName("i8");
+                ptrTy->setArgument(charType);
+            } else {
+                auto ptrTy = static_cast<LILPointerType *>(value);
+                auto arg = ptrTy->getArgument();
+                if (arg) {
+                    this->_process(arg.get());
+                }
+            }
+            break;
+        }
+        case TypeTypeMultiple:
+        {
+            auto multiTy = static_cast<LILMultipleType *>(value);
+            multiTy->sortTypes();
+            
+            for (auto childTy : multiTy->getTypes()) {
+                this->_process(childTy.get());
+            }
+            break;
+        }
+        case TypeTypeFunction:
+        {
+            auto fnTy = static_cast<LILFunctionType *>(value);
+            for (auto childNode : fnTy->getArguments()) {
+                LILType * ty;
+                if (childNode->isA(NodeTypeVarDecl)) {
+                    ty = childNode->getType().get();
+                } else if (childNode->isA(NodeTypeType)) {
+                    ty = static_cast<LILType *>(childNode.get());
+                }
+                this->_process(ty);
+            }
+            break;
+        }
+
+        default:
+            break;
     }
 }
 

@@ -1370,7 +1370,7 @@ bool LILCodeParser::readTypeSimple()
         LILString tokenStr = d->currentToken->getString();
         if (tokenStr == "fn") {
             return this->readFunctionType();
-        } else if (tokenStr == "ptr"){
+        } else if (tokenStr == "ptr" || tokenStr == "cstr"){
             return this->readPointerType();
         } else if (tokenStr == "array") {
 //            return this->readArrayType();
@@ -1494,21 +1494,21 @@ bool LILCodeParser::readPointerType()
     d->receiver->receiveNodeData(ParserEventType, d->currentToken->getString());
     this->readNextToken();
     LIL_CHECK_FOR_END
-    
-    LIL_EXPECT(TokenTypeParenthesisOpen, "open parenthesis");
-    d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
-    this->readNextToken();
-    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-    
-    bool tyValid = this->readType();
-    if (tyValid) {
-        d->receiver->receiveNodeCommit();
+
+    if (d->currentToken->isA(TokenTypeParenthesisOpen)){
+        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+        this->readNextToken();
+        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+        bool tyValid = this->readType();
+        if (tyValid) {
+            d->receiver->receiveNodeCommit();
+        }
+        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+
+        LIL_EXPECT(TokenTypeParenthesisClose, "close parenthesis");
+        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+        this->readNextToken();
     }
-    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-    
-    LIL_EXPECT(TokenTypeParenthesisClose, "close parenthesis");
-    d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
-    this->readNextToken();
 
     LIL_END_NODE_SKIP(false)
 }

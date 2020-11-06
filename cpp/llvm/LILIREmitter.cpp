@@ -2527,9 +2527,6 @@ llvm::Type * LILIREmitter::llvmTypeFromLILType(LILType * type)
         ret = llvm::Type::getFloatTy(d->llvmContext);
     } else if (typestr == "f64" || typestr == "f64%"){
         ret = llvm::Type::getDoubleTy(d->llvmContext);
-    } else if (typestr == "cstr"){
-        auto charType = llvm::IntegerType::get(d->llvmContext, 8);
-        return charType->getPointerTo();
     } else if (typestr == "null") {
         return llvm::Type::getVoidTy(d->llvmContext);
     }
@@ -2694,22 +2691,6 @@ llvm::Value * LILIREmitter::emitNullable(LILNode * node, LILType * targetTy)
             default:
                 break;
         }
-    } else if (name == "cstr"){
-        switch (node->getNodeType()) {
-            case NodeTypeStringLiteral:
-            {
-                return this->emit(node);
-            }
-            case NodeTypeNull:
-            {
-                auto charType = llvm::IntegerType::get(d->llvmContext, 8);
-                return llvm::ConstantPointerNull::get(charType->getPointerTo());
-            }
-                
-            default:
-                break;
-        }
-        
     }
     else if (
         name == "i8"
@@ -2903,9 +2884,6 @@ size_t LILIREmitter::getSizeOfType(std::shared_ptr<LILType> ty) const
             } else if (name == "f32") {
                 ret = 32;
             } else if (name == "f64") {
-                ret = 64;
-            } else if (name == "cstr"){
-                //FIXME: what about 32 bit systems?
                 ret = 64;
             }
             break;

@@ -93,7 +93,10 @@ std::shared_ptr<LILType> LILStringLiteral::getType() const
         static std::shared_ptr<LILPointerType> cStrTy;
         if (!cStrTy) {
             cStrTy = std::make_shared<LILPointerType>();
-            cStrTy->setName("cstr");
+            cStrTy->setName("ptr");
+            auto charTy = std::make_shared<LILType>();
+            charTy->setName("i8");
+            cStrTy->setArgument(charTy);
         }
         return cStrTy;
     }

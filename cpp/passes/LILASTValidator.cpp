@@ -397,16 +397,7 @@ void LILASTValidator::_validate(LILType * value)
         {
             auto ptrTy = static_cast<LILPointerType *>(value);
             auto arg = ptrTy->getArgument();
-            if (!arg) {
-                LILErrorMessage ei;
-                ei.message =  "Pointer types need a subtype";
-                LILNode::SourceLocation sl = value->getSourceLocation();
-                ei.file = sl.file;
-                ei.line = sl.line;
-                ei.column = sl.column;
-                this->errors.push_back(ei);
-            }
-            if (!arg->LILNode::isA(NodeTypeType)) {
+            if (arg && !arg->LILNode::isA(NodeTypeType)) {
                     this->illegalNodeType(arg.get(), value);
             }
             if (this->getDebug() && !this->hasErrors()) {
