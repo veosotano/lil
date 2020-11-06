@@ -457,17 +457,17 @@ void LILTypeGuesser::_process(LILNumberLiteral * value)
             ty2 = ty2->clone();
             ty2->setIsNullable(false);
         }
-        auto ty3 = LILType::merge(ty1, ty2);
-        if (ty3) {
-            if (ty3->getIsWeakType()) {
-                auto multiTy = std::static_pointer_cast<LILMultipleType>(ty3);
-                auto ret = multiTy->getTypes().front();
-                value->setType(ret);
-                this->setTypeOnAncestorIfNeeded(sharedVal, ret);
-            } else {
-                value->setType(ty3);
-                this->setTypeOnAncestorIfNeeded(sharedVal, ty3);
+        if (ty2 && ty2->isA(TypeTypePointer)) {
+            auto ptrTy = std::static_pointer_cast<LILPointerType>(ty2);
+            auto argTy = ptrTy->getArgument();
+            if (argTy) {
+                ty2 = argTy;
             }
+        }
+        auto ty3 = LILType::merge(ty1, ty2);
+        if (ty3 && !ty3->getIsWeakType()) {
+            value->setType(ty3);
+            this->setTypeOnAncestorIfNeeded(sharedVal, ty3);
         }
         else
         {
@@ -942,10 +942,13 @@ std::shared_ptr<LILType> LILTypeGuesser::recursiveFindTypeFromAncestors(std::sha
                             return nullptr;
                         }
                     }
-                
                 } else {
-                    //std::cerr << "ASSIGNMENT INSIDE UNKNOWN PARENT FAIL!!!!";
-                    return nullptr;
+                    auto subject = asgmt->getSubject();
+                    if (subject->isA(NodeTypeVarName)) {
+                        return this->findTypeForVarName(std::static_pointer_cast<LILVarName>(subject));
+                    } else if (subject->isA(NodeTypeValuePath)) {
+                        return this->findTypeForValuePath(std::static_pointer_cast<LILValuePath>(subject));
+                    }
                 }
                 
                 break;
@@ -1029,9 +1032,19 @@ void LILTypeGuesser::setTypeOnAncestorIfNeeded(std::shared_ptr<LILNode> value, s
             case NodeTypeExpression:
             {
                 auto exp = std::static_pointer_cast<LILExpression>(parent);
-                if (!exp->getType()) {
+                auto expTy = exp->getType();
+                if (!expTy || expTy->getIsWeakType()) {
                     exp->setType(ty);
                     this->setTypeOnAncestorIfNeeded(exp, ty);
+                }
+                break;
+            }
+            case NodeTypeVarDecl:
+            {
+                auto vd = std::static_pointer_cast<LILVarDecl>(parent);
+                auto vdTy = vd->getType();
+                if (!vdTy || vdTy->getIsWeakType()) {
+                    vd->setType(ty);
                 }
                 break;
             }
