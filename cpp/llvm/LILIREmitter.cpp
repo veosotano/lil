@@ -2784,7 +2784,12 @@ llvm::Value * LILIREmitter::emitNullable(LILNode * node, LILType * targetTy)
 
 llvm::Value * LILIREmitter::emitForMultipleType(LIL::LILNode *node, std::shared_ptr<LILMultipleType> multiTy)
 {
-    if (node->getType()->equalTo(multiTy)) {
+    auto ty = node->getType();
+    if (!ty) {
+        std::cerr << "NODE HAD NO TY FAIL!!!!!!!!!!!!!!!!\n\n";
+        return nullptr;
+    }
+    if (ty->equalTo(multiTy)) {
         return this->emit(node);
     }
     
