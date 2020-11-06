@@ -38,6 +38,7 @@ std::shared_ptr<LILFlowControlCall> LILFlowControlCall::clone() const
 std::shared_ptr<LILClonable> LILFlowControlCall::cloneImpl() const
 {
     std::shared_ptr<LILFlowControlCall> clone(new LILFlowControlCall(*this));
+    LILNode::cloneChildNodes(clone);
     return clone;
 }
 

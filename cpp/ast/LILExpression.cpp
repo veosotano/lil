@@ -86,6 +86,8 @@ std::shared_ptr<LILExpression> LILExpression::clone() const
 std::shared_ptr<LILClonable> LILExpression::cloneImpl() const
 {
     std::shared_ptr<LILExpression> clone(new LILExpression(*this));
+    clone->clearChildNodes();
+
     if (this->_leftNode)
     {
         clone->setLeft(this->_leftNode->clone());

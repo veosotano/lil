@@ -101,6 +101,7 @@ std::shared_ptr<LILFunctionDecl> LILFunctionDecl::clone() const
 std::shared_ptr<LILClonable> LILFunctionDecl::cloneImpl() const
 {
     std::shared_ptr<LILFunctionDecl> clone(new LILFunctionDecl(*this));
+    clone->clearChildNodes();
 
     clone->_body.clear();
     for (auto it = this->_body.begin(); it != this->_body.end(); ++it)

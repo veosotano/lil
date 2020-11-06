@@ -90,7 +90,6 @@ LILString LILPointerType::stringRep()
 
 void LILPointerType::setArgument(std::shared_ptr<LILType> node)
 {
-    this->addNode(node);
     this->_argument = node;
 }
 

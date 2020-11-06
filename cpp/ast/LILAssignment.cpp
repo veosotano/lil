@@ -37,8 +37,13 @@ std::shared_ptr<LILAssignment> LILAssignment::clone() const
 std::shared_ptr<LILClonable> LILAssignment::cloneImpl() const
 {
     std::shared_ptr<LILAssignment> clone(new LILAssignment(*this));
-    clone->_subject = this->_subject->clone();
-    clone->_value = this->_value->clone();
+    clone->clearChildNodes();
+    if (this->_subject) {
+        clone->setSubject(this->_subject->clone());
+    }
+    if (this->_value) {
+        clone->_value = this->_value->clone();
+    }
 
     //clone LILTypedNode
     if (this->_type) {

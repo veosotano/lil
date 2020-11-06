@@ -41,6 +41,8 @@ std::shared_ptr<LILClassDecl> LILClassDecl::clone() const
 std::shared_ptr<LILClonable> LILClassDecl::cloneImpl() const
 {
     std::shared_ptr<LILClassDecl> clone(new LILClassDecl(*this));
+    clone->clearChildNodes();
+
     clone->setType(this->_type->clone());
     clone->setInheritType(this->_inheritType->clone());
     //clone LILTypedNode
@@ -75,7 +77,6 @@ std::shared_ptr<LILNode> LILClassDecl::getInheritType() const
 
 void LILClassDecl::setInheritType(std::shared_ptr<LILNode> newType)
 {
-    this->addNode(newType);
     this->_inheritType = newType;
 }
 

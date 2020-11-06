@@ -243,7 +243,7 @@ std::shared_ptr<LILClonable> LILNode::cloneImpl() const
 
 void LILNode::cloneChildNodes(std::shared_ptr<LILNode> clone) const
 {
-    clone->_childNodes.clear();
+    clone->clearChildNodes();
     for (auto child : this->getChildNodes()) {
         clone->addNode(child->clone());
     }

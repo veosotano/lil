@@ -37,6 +37,8 @@ std::shared_ptr<LILObjectDefinition> LILObjectDefinition::clone() const
 std::shared_ptr<LILClonable> LILObjectDefinition::cloneImpl() const
 {
     std::shared_ptr<LILObjectDefinition> clone(new LILObjectDefinition(*this));
+    clone->clearChildNodes();
+
     for (auto it = this->_propDefs.begin(); it!=this->_propDefs.end(); ++it)
     {
         clone->addProperty((*it)->clone());

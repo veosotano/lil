@@ -42,16 +42,14 @@ std::shared_ptr<LILFunctionCall> LILFunctionCall::clone() const
 std::shared_ptr<LILClonable> LILFunctionCall::cloneImpl() const
 {
     std::shared_ptr<LILFunctionCall> clone(new LILFunctionCall(*this));
+    LILNode::cloneChildNodes(clone);
+
     clone->_argumentTypes.clear();
     for (auto ty : this->_argumentTypes) {
         clone->_argumentTypes.push_back(ty->clone());
     }
     if (this->_returnType) {
         clone->setReturnType(this->_returnType->clone());
-    }
-    clone->clearArguments();
-    for (auto arg : this->getArguments()) {
-        clone->addArgument(arg->clone());
     }
 
     return clone;

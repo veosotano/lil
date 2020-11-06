@@ -38,6 +38,8 @@ std::shared_ptr<LILRule> LILRule::clone() const
 std::shared_ptr<LILClonable> LILRule::cloneImpl() const
 {
     std::shared_ptr<LILRule> clone(new LILRule(*this));
+    clone->clearChildNodes();
+
     for (auto it = this->_selectorChains.begin(); it!=this->_selectorChains.end(); ++it)
     {
         clone->addSelectorChain((*it)->clone());
