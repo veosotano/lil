@@ -2038,59 +2038,22 @@ llvm::Value * LILIREmitter::_emitIfIs(LILFlowControl * value)
         std::cerr << "UNKNOWN FIRST ARG FAIL!!!!!!!!!!!!!!!!\n\n";
         return nullptr;
     }
-
-    if (ty->getIsNullable()) {
+    
+    if (ty->isA(TypeTypeMultiple))
+    {
+        std::cerr << "UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!\n\n";
+        return nullptr;
+    }
+    else if (ty->getIsNullable())
+    {
         auto lastArgTy = std::static_pointer_cast<LILType>(lastArg);
         
-        if (lastArgTy->getName() == "bool")
+        if (lastArgTy->getName() == "null")
         {
-            llvm::Value * firstArgIr = this->emit(firstArg.get());
-            condition = d->irBuilder.CreateICmpULT(firstArgIr, llvm::ConstantInt::get(d->llvmContext, llvm::APInt(2, 2, false)), "if.cond");
-        }
-        else if (lastArgTy->getName() == "cstr")
-        {
-            llvm::Value * firstArgIr = this->emit(firstArg.get());
-            auto temp = d->irBuilder.CreatePtrToInt(firstArgIr, llvm::Type::getInt64Ty(d->llvmContext));
-            condition = d->irBuilder.CreateICmpNE(temp, llvm::ConstantInt::get(d->llvmContext, llvm::APInt(64, 0, false)), "if.cond");
-        }
-        else if (
-            lastArgTy->getName() == "i8"
-            || lastArgTy->getName() == "i16"
-            || lastArgTy->getName() == "i32"
-            || lastArgTy->getName() == "i64"
-            || lastArgTy->getName() == "i128"
-            || lastArgTy->getName() == "f32"
-            || lastArgTy->getName() == "f64"
-        )
-        {
-            auto llvmSubject = this->emitPointer(firstArg.get());
-            std::vector<llvm::Value *> idList;
-            idList.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
-            idList.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 1, false)));
-            auto temp = llvm::GetElementPtrInst::Create(this->llvmTypeFromLILType(ty.get()), llvmSubject, idList, "isNull", d->irBuilder.GetInsertBlock());
-            auto temp2 = d->irBuilder.CreateLoad(temp);
-            condition = d->irBuilder.CreateICmpNE(temp2, llvm::ConstantInt::get(d->llvmContext, llvm::APInt(1, 1, false)), "if.cond");
-        }
-        else if (lastArgTy->isA(TypeTypePointer))
-        {
-            llvm::Value * firstArgIr = this->emit(firstArg.get());
-            auto temp = d->irBuilder.CreatePtrToInt(firstArgIr, llvm::Type::getInt64Ty(d->llvmContext));
-            condition = d->irBuilder.CreateICmpNE(temp, llvm::ConstantInt::get(d->llvmContext, llvm::APInt(64, 0, false)), "if.cond");
-        }
-        else if (lastArgTy->isA(TypeTypeObject))
-        {
-            auto llvmSubject = this->emitPointer(firstArg.get());
-            std::vector<llvm::Value *> idList;
-            idList.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
-            idList.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 1, false)));
-            auto temp = llvm::GetElementPtrInst::Create(this->llvmTypeFromLILType(ty.get()), llvmSubject, idList, "isNull", d->irBuilder.GetInsertBlock());
-            auto temp2 = d->irBuilder.CreateLoad(temp);
-            condition = d->irBuilder.CreateICmpNE(temp2, llvm::ConstantInt::get(d->llvmContext, llvm::APInt(1, 1, false)), "if.cond");
-        }
-        else
-        {
-            std::cerr << "UNKNOWN LAST ARG FAIL!!!!!!!!!!!!!!!!\n\n";
-            return nullptr;
+            auto firstArgTy = firstArg->getType();
+            condition = this->_emitIfIsConditionForNullable(true, firstArgTy.get(), firstArg.get());
+        } else {
+            condition = this->_emitIfIsConditionForNullable(false, lastArgTy.get(), firstArg.get());
         }
     }
 
@@ -2157,6 +2120,68 @@ llvm::Value * LILIREmitter::_emitIfIs(LILFlowControl * value)
     fun->getBasicBlockList().push_back(mergeBB);
     d->irBuilder.SetInsertPoint(mergeBB);
     return nullptr;
+}
+
+llvm::Value * LILIREmitter::_emitIfIsConditionForNullable(bool negated, LILType * ty, LILNode * val)
+{
+    llvm::Value * ret = nullptr;
+    if (ty->getName() == "bool")
+    {
+        llvm::Value * ir = this->emit(val);
+        auto upperBitValue = llvm::ConstantInt::get(d->llvmContext, llvm::APInt(2, 2, false));
+        if (negated) {
+            ret = d->irBuilder.CreateICmpUGT(ir, upperBitValue, "if.cond");
+        } else {
+            ret = d->irBuilder.CreateICmpULT(ir, upperBitValue, "if.cond");
+        }
+    }
+    else if (ty->isA(TypeTypePointer))
+    {
+        llvm::Value * ir = this->emit(val);
+        auto temp = d->irBuilder.CreatePtrToInt(ir, llvm::Type::getInt64Ty(d->llvmContext));
+        auto nullValue = llvm::ConstantInt::get(d->llvmContext, llvm::APInt(64, 0, false));
+        if (negated) {
+            ret = d->irBuilder.CreateICmpEQ(temp, nullValue, "if.cond");
+        } else {
+            ret = d->irBuilder.CreateICmpNE(temp, nullValue, "if.cond");
+        }
+    }
+    else if (
+        ty->getName() == "i8"
+        || ty->getName() == "i16"
+        || ty->getName() == "i32"
+        || ty->getName() == "i64"
+        || ty->getName() == "i128"
+        || ty->getName() == "f32"
+        || ty->getName() == "f64"
+        || ty->isA(TypeTypeObject)
+        || ty->getName() == "i8%"
+        || ty->getName() == "i16%"
+        || ty->getName() == "i32%"
+        || ty->getName() == "i64%"
+        || ty->getName() == "i128%"
+        || ty->getName() == "f32%"
+        || ty->getName() == "f64%"
+    ) {
+        auto llvmSubject = this->emitPointer(val);
+        std::vector<llvm::Value *> idList;
+        idList.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
+        idList.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 1, false)));
+        auto temp = llvm::GetElementPtrInst::Create(this->llvmTypeFromLILType(ty), llvmSubject, idList, "hasValue", d->irBuilder.GetInsertBlock());
+        auto temp2 = d->irBuilder.CreateLoad(temp);
+        auto nullValue = llvm::ConstantInt::get(d->llvmContext, llvm::APInt(1, 0, false));
+        if (negated) {
+            ret = d->irBuilder.CreateICmpEQ(temp2, nullValue, "if.cond");
+        } else {
+            ret = d->irBuilder.CreateICmpNE(temp2, nullValue, "if.cond");
+        }
+    }
+    else
+    {
+        std::cerr << "UNKNOWN TYPE FOR IF IS FAIL!!!!!!!!!!!!!!!!\n\n";
+        return nullptr;
+    }
+    return ret;
 }
 
 llvm::Value * LILIREmitter::_emitFor(LILFlowControl * value)
