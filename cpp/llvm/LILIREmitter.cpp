@@ -958,6 +958,24 @@ llvm::Value * LILIREmitter::_emit(LILAssignment * value)
                         }
                         
                     } else {
+                        //get index of field into struct
+                        auto fields = classDecl->getFields();
+                        size_t theIndex = 0;
+                        std::shared_ptr<LILVarDecl> fieldVd;
+                        for (size_t i=0, j=fields.size(); i<j; ++i) {
+                            fieldVd = std::static_pointer_cast<LILVarDecl>(fields[i]);
+                            if (fieldVd->getName() == pn->getName()) {
+                                theIndex = i;
+                                break;
+                            }
+                        }
+                        if (!fieldVd) {
+                            std::cerr << "!!!!!!!!!!FIELD NOT FOUND FAIL !!!!!!!!!!!!!!!!\n";
+                            return nullptr;
+                        }
+                        
+                        std::string name = pn->getName().data();
+                        llvmSubject = this->_emitGEP(llvmSubject, className, theIndex, stringRep, 0);
                         
                         if (isLastNode) {
                             auto ty = value->getType();
@@ -971,25 +989,6 @@ llvm::Value * LILIREmitter::_emit(LILAssignment * value)
                                 return d->irBuilder.CreateStore(llvmValue, llvmSubject);
                             }
                         } else {
-                            
-                            //get index of field into struct
-                            auto fields = classDecl->getFields();
-                            size_t theIndex = 0;
-                            std::shared_ptr<LILVarDecl> fieldVd;
-                            for (size_t i=0, j=fields.size(); i<j; ++i) {
-                                fieldVd = std::static_pointer_cast<LILVarDecl>(fields[i]);
-                                if (fieldVd->getName() == pn->getName()) {
-                                    theIndex = i;
-                                    break;
-                                }
-                            }
-                            if (!fieldVd) {
-                                std::cerr << "!!!!!!!!!!FIELD NOT FOUND FAIL !!!!!!!!!!!!!!!!\n";
-                                return nullptr;
-                            }
-                            
-                            std::string name = pn->getName().data();
-                            llvmSubject = this->_emitGEP(llvmSubject, className, theIndex, stringRep, 0);
                             auto ty = fieldVd->getType();
                             if (!ty->isA(TypeTypeFunction)) {
                                 std::cerr << "!!!!!!!!!!TYPE IS NOT FUNCTION TYPE FAIL !!!!!!!!!!!!!!!!\n";
