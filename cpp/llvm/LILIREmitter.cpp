@@ -825,8 +825,10 @@ llvm::Value * LILIREmitter::_emit(LILAssignment * value)
             switch (sel->getSelectorType()) {
                 case SelectorTypeSelfSelector:
                 {
-                    llvmSubject = d->namedValues["@self"];
+                    auto selfPtr = d->namedValues["@self"];
+                    llvmSubject = d->irBuilder.CreateLoad(selfPtr);
                     classDecl = this->findAncestorClass(value->shared_from_this());
+                    className = classDecl->getName();
                     stringRep = "@self";
                     break;
                 }
