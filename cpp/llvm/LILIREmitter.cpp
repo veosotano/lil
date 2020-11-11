@@ -347,6 +347,10 @@ llvm::Value * LILIREmitter::_emitCast(LILExpression * value)
 
     llvm::Value * leftV = this->emit(left.get());
     auto rightTy = std::static_pointer_cast<LILType>(right);
+    auto leftTy = left->getType();
+    if (leftTy && leftTy->equalTo(rightTy)) {
+        return leftV;
+    }
     return d->irBuilder.CreateBitCast(leftV, this->llvmTypeFromLILType(rightTy.get()));
 }
 
