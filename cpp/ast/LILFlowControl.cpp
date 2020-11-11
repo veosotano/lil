@@ -146,6 +146,11 @@ const std::vector<std::shared_ptr<LILNode>> & LILFlowControl::getArguments() con
     return this->_arguments;
 }
 
+void LILFlowControl::clearArguments()
+{
+    this->_arguments.clear();
+}
+
 void LILFlowControl::addThen(std::shared_ptr<LILNode> node)
 {
     this->addNode(node);

@@ -15,11 +15,13 @@
 #include "LILTypeValidator.h"
 #include "LILAssignment.h"
 #include "LILClassDecl.h"
+#include "LILConversionDecl.h"
 #include "LILErrorMessage.h"
 #include "LILFunctionCall.h"
 #include "LILFunctionType.h"
 #include "LILObjectType.h"
 #include "LILPropertyName.h"
+#include "LILTypeDecl.h"
 #include "LILValuePath.h"
 #include "LILVarDecl.h"
 #include "LILVarName.h"
@@ -76,6 +78,13 @@ void LILTypeValidator::validate(std::shared_ptr<LILNode> node)
         {
             auto od = std::static_pointer_cast<LILObjectDefinition>(node);
             this->_validate(od);
+            break;
+        }
+            
+        case NodeTypeVarDecl:
+        {
+            auto vd = std::static_pointer_cast<LILVarDecl>(node);
+            this->_validate(vd);
             break;
         }
             
@@ -138,7 +147,7 @@ void LILTypeValidator::_validate(std::shared_ptr<LILFunctionCall> fc)
                         ei.message =  "Missing argument in call: "+vp->stringRep()+" needs one argument";
                     }
                 } else {
-                    ei.message =  "Mismatch of numberof arguments: "+vp->stringRep()+" needs "+LILString::number((LILUnitI64)fnTyArgs.size()) + " arguments and was given " + LILString::number((LILUnitI64)args.size());
+                    ei.message =  "Mismatch of number of arguments: "+vp->stringRep()+" needs "+LILString::number((LILUnitI64)fnTyArgs.size()) + " arguments and was given " + LILString::number((LILUnitI64)args.size());
                 }
                 LILNode::SourceLocation sl = fc->getSourceLocation();
                 ei.file = sl.file;
@@ -166,7 +175,89 @@ void LILTypeValidator::_validate(std::shared_ptr<LILFunctionCall> fc)
             ei.column = sl.column;
             this->errors.push_back(ei);
         }
+        
+        auto ty = localNode->getType();
+        if (!localNode->isA(NodeTypeVarDecl) || !ty || !ty->isA(TypeTypeFunction)) {
+            LILErrorMessage ei;
+            ei.message =  fc->getName()+" is not a function.";
+            LILNode::SourceLocation sl = fc->getSourceLocation();
+            ei.file = sl.file;
+            ei.line = sl.line;
+            ei.column = sl.column;
+            this->errors.push_back(ei);
+        }
+        auto fnTy = std::static_pointer_cast<LILFunctionType>(ty);
+        auto fnTyArgs = fnTy->getArguments();
+        auto fcArgTys = fc->getArgumentTypes();
+        auto fcArgs = fc->getArguments();
+        if (fcArgs.size() != fcArgTys.size()) {
+            std::cerr << "!!!!!!! SIZE OF FUNCTION CALL ARGS AND ARGUMENT TYPES WAS NOT THE SAME FAIL !!!!!!!\n";
+            return;
+        }
+        if (!fnTy->getIsVariadic() && fnTyArgs.size() != fcArgTys.size()) {
+            LILErrorMessage ei;
+            ei.message =  "Function "+fc->getName()+" requires " + LILString::number((LILUnitI64)fnTyArgs.size()) + " arguments and " + LILString::number((LILUnitI64)fcArgTys.size()) + " were given.";
+            LILNode::SourceLocation sl = fc->getSourceLocation();
+            ei.file = sl.file;
+            ei.line = sl.line;
+            ei.column = sl.column;
+            this->errors.push_back(ei);
+        }
+        
+        auto conversions = this->getRootNode()->getConversions();
+        
+        size_t i = 0;
+        for (auto fnTyArg : fnTyArgs) {
+            if (fcArgTys.size() > i) {
+                auto fcArgTy = fcArgTys[i];
+
+                std::shared_ptr<LILType> argTy;
+                LILString argName;
+                if (fnTyArg->isA(NodeTypeType))
+                {
+                    argTy = std::static_pointer_cast<LILType>(fnTyArg);
+                    argName = LILString::number((LILUnitI64)i+1);
+                }
+                else if (fnTyArg->isA(NodeTypeVarDecl))
+                {
+                    argTy = fnTyArg->getType();
+                    auto vd = std::static_pointer_cast<LILVarDecl>(fnTyArg);
+                    argName = vd->getName();
+                }
+                if (argTy->equalTo(fcArgTy) || this->_isDefinitionOf(fcArgTy, argTy)) {
+                    continue;
+                } else {
+                    LILString conversionName = fcArgTy->stringRep();
+                    conversionName += "_to_";
+                    conversionName += argTy->stringRep();
+                    if (conversions.count(conversionName)) {
+                        continue;
+                    }
+                }
+                LILErrorMessage ei;
+                ei.message =  "Type mismatch while calling " + fc->getName() + ": argument " + argName + " needs type "+argTy->stringRep()+" but was given "+fcArgTy->stringRep();
+                LILNode::SourceLocation sl = fcArgs[i]->getSourceLocation();
+                ei.file = sl.file;
+                ei.line = sl.line;
+                ei.column = sl.column;
+                this->errors.push_back(ei);
+            }
+
+            i += 1;
+        }
     }
+}
+
+bool LILTypeValidator::_isDefinitionOf(std::shared_ptr<LILType> nativeTy, std::shared_ptr<LILType> customTy)
+{
+    auto rootNode = this->getRootNode();
+    auto types = rootNode->getTypes();
+    for (auto type : types) {
+        if (type->getName() == customTy->getName()) {
+            return type->getType()->equalTo(nativeTy);
+        }
+    }
+    return false;
 }
 
 void LILTypeValidator::_validate(std::shared_ptr<LILObjectDefinition> od)
@@ -230,6 +321,25 @@ void LILTypeValidator::_validate(std::shared_ptr<LILObjectDefinition> od)
             ei.line = sl.line;
             ei.column = sl.column;
             this->errors.push_back(ei);
+        }
+    }
+}
+
+void LILTypeValidator::_validate(std::shared_ptr<LILVarDecl> vd)
+{
+    auto ty = vd->getType();
+    if (!ty->isA(TypeTypeFunction)) {
+        for (auto initVal : vd->getInitVals()) {
+            auto ivTy = initVal->getType();
+            if (!ty->equalTo(ivTy)) {
+                LILErrorMessage ei;
+                ei.message =  "Type mismatch: cannot assign type "+ivTy->getName()+" to var."+ty->getName() + " " + vd->getName();
+                LILNode::SourceLocation sl = initVal->getSourceLocation();
+                ei.file = sl.file;
+                ei.line = sl.line;
+                ei.column = sl.column;
+                this->errors.push_back(ei);
+            }
         }
     }
 }

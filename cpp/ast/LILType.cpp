@@ -144,6 +144,48 @@ std::shared_ptr<LILType> LILType::make(LILString name)
     return ret;
 }
 
+bool LILType::isBuiltInType(LILString name)
+{
+    if (
+        name == "i8"
+        || name == "i16"
+        || name == "i32"
+        || name == "i64"
+        || name == "i128"
+        || name == "f32"
+        || name == "f64"
+        || name == "bool"
+        || name == "cstr"
+        || name == "str"
+        || name == "null"
+        || name == "i8%"
+        || name == "i16%"
+        || name == "i32%"
+        || name == "i64%"
+        || name == "f32%"
+        || name == "f64%"
+        ) {
+        return true;
+    }
+    return false;
+}
+
+bool LILType::isNumberType(LILString name)
+{
+    if (
+        name == "i8"
+        || name == "i16"
+        || name == "i32"
+        || name == "i64"
+        || name == "i128"
+        || name == "f32"
+        || name == "f64"
+    ) {
+        return true;
+    }
+    return false;
+}
+
 LILType::LILType()
 : LIL::LILNode(NodeTypeType)
 , _typeType(TypeTypeSingle)

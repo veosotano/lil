@@ -23,6 +23,7 @@
 #include "LILBoolLiteral.h"
 #include "LILClassDecl.h"
 #include "LILCombinator.h"
+#include "LILConversionDecl.h"
 #include "LILExpression.h"
 #include "LILFilter.h"
 #include "LILFlag.h"
@@ -87,6 +88,7 @@ namespace LIL
         llvm::Value * _emit(LILNullLiteral * value);
         llvm::Value * _emit(LILType * value);
         llvm::Value * _emit(LILVarDecl * value);
+        llvm::Value * _emit(LILConversionDecl * value);
         llvm::Value * _emit(LILClassDecl * value);
         llvm::Value * _emit(LILObjectDefinition * value);
         llvm::Value * _emit(LILAssignment * value);

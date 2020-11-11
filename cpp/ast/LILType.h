@@ -27,6 +27,8 @@ namespace LIL
         static bool sortTyAlphabeticallyCompare(std::shared_ptr<LILType> typeA, std::shared_ptr<LILType> typeB) {
             return typeA->getName().data() < typeB->getName().data();
         };
+        static bool isBuiltInType(LILString name);
+        static bool isNumberType(LILString name);
 
         LILType();
         LILType(TypeType type);

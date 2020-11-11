@@ -33,6 +33,7 @@ namespace LIL
 
         void addArgument(std::shared_ptr<LILNode> arg);
         const std::vector<std::shared_ptr<LILNode>> & getArguments() const;
+        void clearArguments();
         void addThen(std::shared_ptr<LILNode> node);
         const std::vector<std::shared_ptr<LILNode>> & getThen() const;
         void setThen(std::vector<std::shared_ptr<LILNode>> newThen);

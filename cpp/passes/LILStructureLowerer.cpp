@@ -107,6 +107,13 @@ void LILStructureLowerer::process(std::shared_ptr<LILNode> node)
             std::shared_ptr<LILVarDecl> value = std::static_pointer_cast<LILVarDecl>(node);
             return this->_process(value);
         }
+        case NodeTypeAliasDecl:
+        case NodeTypeTypeDecl:
+        case NodeTypeConversionDecl:
+        {
+            //do nothing
+            break;
+        }
         case NodeTypeClassDecl:
         {
             std::shared_ptr<LILClassDecl> value = std::static_pointer_cast<LILClassDecl>(node);

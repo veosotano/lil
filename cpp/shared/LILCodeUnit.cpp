@@ -18,6 +18,7 @@
 
 #include "LILNeedsImporter.h"
 #include "LILASTValidator.h"
+#include "LILConversionInserter.h"
 #include "LILFieldSorter.h"
 #include "LILTypeValidator.h"
 #include "LILMethodInserter.h"
@@ -27,6 +28,7 @@
 #include "LILStructureLowerer.h"
 #include "LILToStringVisitor.h"
 #include "LILTypeGuesser.h"
+#include "LILTypeResolver.h"
 
 using namespace LIL;
 
@@ -53,6 +55,8 @@ namespace LIL
         , debugFieldSorter(false)
         , debugParameterSorter(false)
         , debugTypeValidator(false)
+        , debugConversionInserter(false)
+        , debugTypeResolver(false)
         {
         }
         LILString file;
@@ -75,6 +79,8 @@ namespace LIL
         bool debugFieldSorter;
         bool debugParameterSorter;
         bool debugTypeValidator;
+        bool debugConversionInserter;
+        bool debugTypeResolver;
     };
 }
 
@@ -222,6 +228,26 @@ void LILCodeUnit::runPasses()
     }
 
     if (d->isMain) {
+        //conversion inserting
+        auto convInserter = std::make_unique<LILConversionInserter>();
+        convInserter->setDebug(d->debugConversionInserter);
+        d->pm->addPass(std::move(convInserter));
+        if (verbose) {
+            auto stringVisitor = std::make_unique<LILToStringVisitor>();
+            stringVisitor->setPrintHeadline(false);
+            d->pm->addPass(std::move(stringVisitor));
+        }
+
+        //type resolving
+        auto tyResolver = std::make_unique<LILTypeResolver>();
+        tyResolver->setDebug(d->debugTypeResolver);
+        d->pm->addPass(std::move(tyResolver));
+        if (verbose) {
+            auto stringVisitor = std::make_unique<LILToStringVisitor>();
+            stringVisitor->setPrintHeadline(false);
+            d->pm->addPass(std::move(stringVisitor));
+        }
+        
         //structure lowering
         auto structureLowerer = std::make_unique<LILStructureLowerer>();
         structureLowerer->setDebug(d->debugStructureLowerer);
@@ -317,6 +343,16 @@ void LILCodeUnit::setDebugNameLowerer(bool value)
 void LILCodeUnit::setDebugTypeValidator(bool value)
 {
     d->debugTypeValidator = value;
+}
+
+void LILCodeUnit::setDebugConversionInserter(bool value)
+{
+    d->debugConversionInserter = value;
+}
+
+void LILCodeUnit::setDebugTypeResolver(bool value)
+{
+    d->debugTypeResolver = value;
 }
 
 bool LILCodeUnit::hasErrors() const

@@ -13,6 +13,7 @@
  ********************************************************************/
 
 #include "LILASTValidator.h"
+#include "LILRootNode.h"
 
 using namespace LIL;
 
@@ -116,6 +117,24 @@ void LILASTValidator::validate(LILNode * node)
         case NodeTypeVarDecl:
         {
             LILVarDecl * value = static_cast<LILVarDecl *>(node);
+            this->_validate(value);
+            break;
+        }
+        case NodeTypeAliasDecl:
+        {
+            LILAliasDecl * value = static_cast<LILAliasDecl *>(node);
+            this->_validate(value);
+            break;
+        }
+        case NodeTypeTypeDecl:
+        {
+            LILTypeDecl * value = static_cast<LILTypeDecl *>(node);
+            this->_validate(value);
+            break;
+        }
+        case NodeTypeConversionDecl:
+        {
+            LILConversionDecl * value = static_cast<LILConversionDecl *>(node);
             this->_validate(value);
             break;
         }
@@ -359,25 +378,7 @@ void LILASTValidator::_validate(LILType * value)
         case TypeTypeSingle:
         {
             auto name = value->getName();
-            if (
-                name != "i8"
-                && name != "i16"
-                && name != "i32"
-                && name != "i64"
-                && name != "i128"
-                && name != "f32"
-                && name != "f64"
-                && name != "bool"
-                && name != "cstr"
-                && name != "str"
-                && name != "null"
-                && name != "i8%"
-                && name != "i16%"
-                && name != "i32%"
-                && name != "i64%"
-                && name != "f32%"
-                && name != "f64%"
-                ) {
+            if (!this->_isCustomType(name) && !LILType::isBuiltInType(name)) {
                 LILErrorMessage ei;
                 ei.message =  "Invalid type name "+name;
                 LILNode::SourceLocation sl = value->getSourceLocation();
@@ -386,6 +387,7 @@ void LILASTValidator::_validate(LILType * value)
                 ei.column = sl.column;
                 this->errors.push_back(ei);
             }
+            
             break;
         }
         case TypeTypeObject:
@@ -414,12 +416,111 @@ void LILASTValidator::_validate(LILType * value)
     }
 }
 
+bool LILASTValidator::_isCustomType(LILString name) const
+{
+    auto rootNode = this->getRootNode();
+    auto aliases = rootNode->getAliases();
+    for (auto alias : aliases) {
+        if (alias->getName() == name) {
+            return true;
+        }
+    }
+    auto types = rootNode->getTypes();
+    for (auto type : types) {
+        if (type->getName() == name) {
+            return true;
+        }
+    }
+    return false;
+}
 
 void LILASTValidator::_validate(LILVarDecl * value)
 {
     auto ty = value->getType();
     if (ty) {
         this->validate(ty.get());
+    }
+}
+
+void LILASTValidator::_validate(LILAliasDecl * value)
+{
+    if (value->getName() == "") {
+        LILErrorMessage ei;
+        ei.message =  "Alias declaration needs a name";
+        LILNode::SourceLocation sl = value->getSourceLocation();
+        ei.file = sl.file;
+        ei.line = sl.line;
+        ei.column = sl.column;
+        this->errors.push_back(ei);
+    }
+    
+    auto target = value->getType();
+    if (!target) {
+        LILErrorMessage ei;
+        ei.message =  "Alias declaration needs a target type";
+        LILNode::SourceLocation sl = value->getSourceLocation();
+        ei.file = sl.file;
+        ei.line = sl.line;
+        ei.column = sl.column;
+        this->errors.push_back(ei);
+    }
+}
+
+void LILASTValidator::_validate(LILTypeDecl * value)
+{
+    if (value->getName() == "") {
+        LILErrorMessage ei;
+        ei.message =  "Type declaration needs a name";
+        LILNode::SourceLocation sl = value->getSourceLocation();
+        ei.file = sl.file;
+        ei.line = sl.line;
+        ei.column = sl.column;
+        this->errors.push_back(ei);
+    }
+    
+    auto target = value->getType();
+    if (!target) {
+        LILErrorMessage ei;
+        ei.message =  "Type declaration needs a target type";
+        LILNode::SourceLocation sl = value->getSourceLocation();
+        ei.file = sl.file;
+        ei.line = sl.line;
+        ei.column = sl.column;
+        this->errors.push_back(ei);
+    }
+}
+
+void LILASTValidator::_validate(LILConversionDecl * value)
+{
+    auto varDecl = value->getVarDecl();
+    if (!varDecl) {
+        LILErrorMessage ei;
+        ei.message =  "Conversion declaration needs a variable declaration";
+        LILNode::SourceLocation sl = value->getSourceLocation();
+        ei.file = sl.file;
+        ei.line = sl.line;
+        ei.column = sl.column;
+        this->errors.push_back(ei);
+    }
+    auto target = value->getType();
+    if (!target) {
+        LILErrorMessage ei;
+        ei.message =  "Conversiond declaration needs a target type";
+        LILNode::SourceLocation sl = value->getSourceLocation();
+        ei.file = sl.file;
+        ei.line = sl.line;
+        ei.column = sl.column;
+        this->errors.push_back(ei);
+    }
+    auto body = value->getEvaluables();
+    if (body.size() == 0) {
+        LILErrorMessage ei;
+        ei.message =  "Conversion declaration was empty";
+        LILNode::SourceLocation sl = value->getSourceLocation();
+        ei.file = sl.file;
+        ei.line = sl.line;
+        ei.column = sl.column;
+        this->errors.push_back(ei);
     }
 }
 

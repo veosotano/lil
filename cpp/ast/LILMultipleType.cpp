@@ -111,3 +111,25 @@ void LILMultipleType::sortTypes()
 {
     std::sort(this->_types.begin(), this->_types.end(), LILType::sortTyAlphabeticallyCompare);
 }
+
+size_t LILMultipleType::indexOfType(LILType * ty) const
+{
+    size_t theIndex = 1;
+    bool found = false;
+    for (auto mtTy : this->getTypes()) {
+        if (ty->equalTo(mtTy)) {
+            found = true;
+            break;
+        }
+        theIndex += 1;
+    }
+    //when it's null
+    if (!found) {
+        if (!this->getIsNullable()) {
+            std::cerr << "TYPE NOT FOUND IN MULTIPLE TYPE FAIL!!!!!!!!!!!!!!!!\n\n";
+            return -1;
+        }
+        theIndex = 0;
+    }
+    return theIndex;
+}

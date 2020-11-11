@@ -40,6 +40,8 @@ namespace LIL
 
         void sortTypes();
         
+        size_t indexOfType(LILType * ty) const;
+        
     protected:
         virtual std::shared_ptr<LILClonable> cloneImpl() const;
         

@@ -1562,7 +1562,8 @@ bool LILCodeParser::readVarDecl()
     if (
         d->currentToken->isA(TokenTypeSemicolon)
         || d->currentToken->isA(TokenTypeParenthesisClose)
-        ||  d->currentToken->isA(TokenTypeBlockClose)
+        || d->currentToken->isA(TokenTypeBlockClose)
+        || d->currentToken->isA(TokenTypeFatArrow)
     ) {
         LIL_END_NODE_SKIP(false)
     }
@@ -1584,6 +1585,155 @@ bool LILCodeParser::readVarDecl()
     }
 
     LIL_END_NODE
+}
+
+bool LILCodeParser::readAliasDecl()
+{
+    //skip the var decl keyword
+    if ( d->currentToken->getString() != "alias" ) {
+        d->receiver->receiveError("Unexpected identifier while reading alias decl", d->file, d->line, d->column);
+        return false;
+    }
+
+    LIL_START_NODE(NodeTypeAliasDecl)
+    d->receiver->receiveNodeData(ParserEventAliasDecl, d->currentToken->getString());
+
+    this->readNextToken();
+    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+
+    //read the variable name
+    LIL_EXPECT(TokenTypeIdentifier, "identifier")
+
+    LILString name = d->currentToken->getString();
+
+    d->receiver->receiveNodeData(ParserEventType, d->currentToken->getString());
+
+    std::shared_ptr<LILToken> theIdentifier = d->currentToken;
+
+    this->readNextToken();
+    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+
+    LIL_EXPECT(TokenTypeFatArrow, "fat arrow");
+    d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+
+    this->readNextToken();
+    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+
+    bool typeValid = this->readType();
+    if (typeValid) {
+        d->receiver->receiveNodeCommit();
+    }
+
+    LIL_END_NODE_SKIP(false);
+}
+
+bool LILCodeParser::readTypeDecl()
+{
+    //skip the type decl keyword
+    if ( d->currentToken->getString() != "type" ) {
+        d->receiver->receiveError("Unexpected identifier while reading type decl", d->file, d->line, d->column);
+        return false;
+    }
+    
+    LIL_START_NODE(NodeTypeTypeDecl)
+    d->receiver->receiveNodeData(ParserEventAliasDecl, d->currentToken->getString());
+    
+    this->readNextToken();
+    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+    
+    //read the variable name
+    LIL_EXPECT(TokenTypeIdentifier, "identifier")
+    
+    LILString name = d->currentToken->getString();
+    
+    d->receiver->receiveNodeData(ParserEventType, d->currentToken->getString());
+    
+    std::shared_ptr<LILToken> theIdentifier = d->currentToken;
+    
+    this->readNextToken();
+    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+    
+    LIL_EXPECT(TokenTypeFatArrow, "fat arrow");
+    d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+    
+    this->readNextToken();
+    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+    
+    bool typeValid = this->readType();
+    if (typeValid) {
+        d->receiver->receiveNodeCommit();
+    }
+    
+    LIL_END_NODE_SKIP(false);
+}
+
+bool LILCodeParser::readConversionDecl()
+{
+    //skip the conversion decl keyword
+    if ( d->currentToken->getString() != "conversion" ) {
+        d->receiver->receiveError("Unexpected identifier while reading conversion decl", d->file, d->line, d->column);
+        return false;
+    }
+
+    LIL_START_NODE(NodeTypeConversionDecl)
+    d->receiver->receiveNodeData(ParserEventConversionDecl, d->currentToken->getString());
+
+    this->readNextToken();
+    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+
+    //open parenthesis
+    bool needsParenthesisClose  = false;
+    if (d->currentToken->isA(TokenTypeParenthesisOpen)){
+        needsParenthesisClose = true;
+        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+        this->readNextToken();
+        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+    }
+
+    LIL_EXPECT(TokenTypeIdentifier, "identifier");
+    if (d->currentToken->getString() != "var") {
+        d->receiver->receiveError("Expected var keyword", d->file, d->line, d->column);
+    }
+    bool vdValid = this->readVarDecl();
+    if (vdValid) {
+        d->receiver->receiveNodeCommit();
+    }
+    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+    
+    LIL_EXPECT(TokenTypeFatArrow, "fat arrow");
+    d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+    this->readNextToken();
+    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+    bool tyValid = this->readType();
+    if (tyValid) {
+        d->receiver->receiveNodeCommit();
+    }
+
+    if (needsParenthesisClose) {
+        LIL_EXPECT(TokenTypeParenthesisClose, "closing parenthesis");
+        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+        this->readNextToken();
+    }
+    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+
+    LIL_EXPECT(TokenTypeBlockOpen, "block open")
+    d->receiver->receiveNodeData(ParserEventFunctionBody, "");
+    d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+    this->readNextToken();
+    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+    
+    //read the inner part of the block
+    //readEvaluables auto commits
+    this->readEvaluables();
+    
+    if (!this->atEndOfSource())
+    {
+        //block close
+        LIL_EXPECT(TokenTypeBlockClose, "block close")
+        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+        this->readNextToken();
+    }
+    LIL_END_NODE_SKIP(false)
 }
 
 bool LILCodeParser::readAssignment(bool allowValuePath, bool firstIsVar, bool firstPartAlreadyRead)
@@ -1917,14 +2067,23 @@ bool LILCodeParser::readUnaryExpression()
 bool LILCodeParser::readSingleValue(NodeType &nodeType)
 {
     if (d->currentToken->isA(TokenTypeIdentifier)) {
-
-        if (d->currentToken->getString() == "class")
+        auto tokenStr = d->currentToken->getString();
+        if (tokenStr == "class")
         {
             return this->readClassDecl();
         }
-        if (d->currentToken->getString() == "var")
+        if (tokenStr == "var")
         {
             return this->readVarDecl();
+        }
+        if (tokenStr == "alias") {
+            return this->readAliasDecl();
+        }
+        if (tokenStr == "type") {
+            return this->readTypeDecl();
+        }
+        if (tokenStr == "conversion") {
+            return this->readConversionDecl();
         }
         if (this->isFunctionDecl())
         {

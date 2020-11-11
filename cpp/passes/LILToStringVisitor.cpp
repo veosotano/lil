@@ -129,6 +129,24 @@ LILToStrInfo LILToStringVisitor::stringify(LILNode * node)
             info = this->_stringify(value);
             break;
         }
+        case NodeTypeAliasDecl:
+        {
+            LILAliasDecl * value = static_cast<LILAliasDecl *>(node);
+            info = this->_stringify(value);
+            break;
+        }
+        case NodeTypeTypeDecl:
+        {
+            LILTypeDecl * value = static_cast<LILTypeDecl *>(node);
+            info = this->_stringify(value);
+            break;
+        }
+        case NodeTypeConversionDecl:
+        {
+            LILConversionDecl * value = static_cast<LILConversionDecl *>(node);
+            info = this->_stringify(value);
+            break;
+        }
         case NodeTypeClassDecl:
         {
             LILClassDecl * value = static_cast<LILClassDecl *>(node);
@@ -363,6 +381,65 @@ LILToStrInfo LILToStringVisitor::_stringify(LILVarDecl * value)
     for (auto node : value->getInitVals()) {
         ret.children.push_back(this->stringify(node.get()));
     }
+    return ret;
+}
+
+LILToStrInfo LILToStringVisitor::_stringify(LILAliasDecl *value)
+{
+    LILToStrInfo ret;
+
+    auto name = value->getName();
+    auto target = value->getType();
+    
+    if (!target) {
+        return ret;
+    }
+    
+    ret.value = "Alias declaration: "+name+" => "+target->stringRep();
+    
+    return ret;
+}
+
+LILToStrInfo LILToStringVisitor::_stringify(LILTypeDecl *value)
+{
+    LILToStrInfo ret;
+    
+    auto name = value->getName();
+    auto target = value->getType();
+    
+    if (!target) {
+        return ret;
+    }
+    
+    ret.value = "Type declaration: "+name+" => "+target->stringRep();
+    
+    return ret;
+}
+
+LILToStrInfo LILToStringVisitor::_stringify(LILConversionDecl *value)
+{
+    LILToStrInfo ret;
+
+    auto varDecl = value->getVarDecl();
+    if (!varDecl) {
+        return ret;
+    }
+    ret.value = "Conversion declaration " + value->stringRep();
+
+    LILToStrInfo argumentsInfo;
+    argumentsInfo.value = "Arguments:";
+    argumentsInfo.children.push_back(this->_stringify(varDecl.get()));
+    ret.children.push_back(argumentsInfo);
+
+    LILToStrInfo bodyInfo;
+    bodyInfo.value = "Body:";
+    auto body = value->getEvaluables();
+    for (auto it = body.begin(); it!=body.end(); ++it)
+    {
+        bodyInfo.children.push_back(this->stringify((*it).get()));
+    };
+    ret.children.push_back(bodyInfo);
+
     return ret;
 }
 

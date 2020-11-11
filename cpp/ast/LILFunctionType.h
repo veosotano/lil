@@ -36,6 +36,7 @@ namespace LIL
         void addArgument(std::shared_ptr<LILNode> node);
         void prependArgument(std::shared_ptr<LILNode> node);
         std::vector<std::shared_ptr<LILNode>> getArguments() const;
+        void setArguments(std::vector<std::shared_ptr<LILNode>> args);
         void setReturnType(std::shared_ptr<LILType> node);
         std::shared_ptr<LILType> getReturnType() const;
         void setReceivesReturnType(bool value);

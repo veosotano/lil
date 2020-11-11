@@ -50,6 +50,12 @@ LILString LILNode::nodeTypeToString(NodeType nodeType)
             return "type";
         case NodeTypeVarDecl:
             return "var declaration";
+        case NodeTypeAliasDecl:
+            return "alias declaration";
+        case NodeTypeTypeDecl:
+            return "type declaration";
+        case NodeTypeConversionDecl:
+            return "conversion declaration";
         case NodeTypeAssignment:
             return "assignment";
         case NodeTypeValuePath:
@@ -141,6 +147,9 @@ bool LILNode::isContainerNode(NodeType nodeType)
         case NodeTypePointerType:
         case NodeTypeObjectType:
         case NodeTypeVarDecl:
+        case NodeTypeAliasDecl:
+        case NodeTypeTypeDecl:
+        case NodeTypeConversionDecl:
         case NodeTypeAssignment:
         case NodeTypeExpression:
         case NodeTypeUnaryExpression:

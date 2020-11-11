@@ -87,6 +87,9 @@ namespace LIL
         //---
         NodeTypeVarName,
         NodeTypeVarDecl,
+        NodeTypeAliasDecl,
+        NodeTypeTypeDecl,
+        NodeTypeConversionDecl,
         NodeTypeAssignment,
         NodeTypePropertyName,
         NodeTypeValuePath,
@@ -164,6 +167,7 @@ namespace LIL
         FunctionCallTypePointerTo,
         FunctionCallTypeValueOf,
         FunctionCallTypeSet,
+        FunctionCallTypeConversion,
     };
 
     enum FunctionDeclType
@@ -401,6 +405,9 @@ namespace LIL
         ParserEventType,
         ParserEventReturnType,
         ParserEventVarDecl,
+        ParserEventAliasDecl,
+        ParserEventTypeDecl,
+        ParserEventConversionDecl,
         ParserEventVarName,
         ParserEventExtern,
         ParserEventObjectDefinition,

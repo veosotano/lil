@@ -153,6 +153,15 @@ std::vector<std::shared_ptr<LILNode>> LILFunctionType::getArguments() const
     return this->_arguments;
 }
 
+void LILFunctionType::setArguments(std::vector<std::shared_ptr<LILNode>> args)
+{
+    this->clearChildNodes();
+    this->_arguments.clear();
+    for (auto node : args) {
+        this->addArgument(node);
+    }
+}
+
 void LILFunctionType::setReturnType(std::shared_ptr<LILType> node)
 {
     this->addNode(node);

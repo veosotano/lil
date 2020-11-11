@@ -64,6 +64,7 @@ namespace LIL
         void visit(LILNode * node) override;
         void performVisit(std::shared_ptr<LILRootNode> rootNode) override;
         void preprocessTypes(std::shared_ptr<LILNode> node);
+        std::shared_ptr<LILType> _process(std::shared_ptr<LILType> value);
         void connectCallsWithDecls(std::shared_ptr<LILNode> node);
         void propagateStrongTypes(std::shared_ptr<LILNode> node);
         void _propagateStrongType(std::shared_ptr<LILNode> node, std::shared_ptr<LILType> ty);
@@ -81,7 +82,6 @@ namespace LIL
         void _process(LILStringLiteral * value);
         void _process(LILStringFunction * value);
         void _process(LILNullLiteral * value);
-        void _process(LILType * value);
         void _process(LILVarDecl * value);
         void _process(LILClassDecl * value);
         void _process(LILObjectDefinition * value);

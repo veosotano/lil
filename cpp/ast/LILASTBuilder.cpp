@@ -14,10 +14,12 @@
 
 #include "LILASTBuilder.h"
 #include "LILNode.h"
+#include "LILAliasDecl.h"
 #include "LILAssignment.h"
 #include "LILBoolLiteral.h"
 #include "LILClassDecl.h"
 #include "LILCombinator.h"
+#include "LILConversionDecl.h"
 #include "LILExpression.h"
 #include "LILFilter.h"
 #include "LILFlag.h"
@@ -44,6 +46,7 @@
 #include "LILStringFunction.h"
 #include "LILStringLiteral.h"
 #include "LILType.h"
+#include "LILTypeDecl.h"
 #include "LILVarDecl.h"
 #include "LILVarName.h"
 
@@ -159,6 +162,24 @@ void LILASTBuilder::receiveNodeStart(NodeType nodeType)
         {
             this->state.push_back(BuilderStateVarDecl);
             this->currentContainer.push_back(std::make_shared<LILVarDecl>());
+            break;
+        }
+        case NodeTypeAliasDecl:
+        {
+            this->state.push_back(BuilderStateAliasDecl);
+            this->currentContainer.push_back(std::make_shared<LILAliasDecl>());
+            break;
+        }
+        case NodeTypeTypeDecl:
+        {
+            this->state.push_back(BuilderStateTypeDecl);
+            this->currentContainer.push_back(std::make_shared<LILTypeDecl>());
+            break;
+        }
+        case NodeTypeConversionDecl:
+        {
+            this->state.push_back(BuilderStateConversionDecl);
+            this->currentContainer.push_back(std::make_shared<LILConversionDecl>());
             break;
         }
         case NodeTypeVarName:
@@ -359,7 +380,24 @@ void LILASTBuilder::receiveNodeCommit()
                         this->rootNode->addClass(std::static_pointer_cast<LILClassDecl>(this->currentNode));
                         break;
                     }
-                        
+                    case NodeTypeAliasDecl:
+                    {
+                        this->rootNode->addNode(this->currentNode);
+                        this->rootNode->addAlias(std::static_pointer_cast<LILAliasDecl>(this->currentNode));
+                        break;
+                    }
+                    case NodeTypeTypeDecl:
+                    {
+                        this->rootNode->addNode(this->currentNode);
+                        this->rootNode->addType(std::static_pointer_cast<LILTypeDecl>(this->currentNode));
+                        break;
+                    }
+                    case NodeTypeConversionDecl:
+                    {
+                        this->rootNode->addNode(this->currentNode);
+                        this->rootNode->addConversion(std::static_pointer_cast<LILConversionDecl>(this->currentNode));
+                        break;
+                    }
                     case NodeTypeInstruction:
                     {
                         auto instr = std::static_pointer_cast<LILInstruction>(this->currentNode);
@@ -479,6 +517,49 @@ void LILASTBuilder::receiveNodeCommit()
                             }
                         }
                     }
+                }
+            }
+            break;
+        }
+        case BuilderStateAliasDecl:
+        {
+            if (this->currentNode) {
+                auto ad = std::static_pointer_cast<LILAliasDecl>(this->currentContainer.back());
+                if (this->currentNode->isA(NodeTypeType)) {
+                    auto ty = std::static_pointer_cast<LILType>(this->currentNode);
+                    ad->setType(ty);
+                } else {
+                    std::cerr << "Error: Unknown node type for alias declaration.\n";
+                    break;
+                }
+            }
+            break;
+        }
+        case BuilderStateTypeDecl:
+        {
+            if (this->currentNode) {
+                auto td = std::static_pointer_cast<LILTypeDecl>(this->currentContainer.back());
+                if (this->currentNode->isA(NodeTypeType)) {
+                    auto ty = std::static_pointer_cast<LILType>(this->currentNode);
+                    td->setType(ty);
+                } else {
+                    std::cerr << "Error: Unknown node type for type declaration.\n";
+                    break;
+                }
+            }
+            break;
+        }
+        case BuilderStateConversionDecl:
+        {
+            if (this->currentNode)
+            {
+                auto cd = std::static_pointer_cast<LILConversionDecl>(this->currentContainer.back());
+                if (this->currentNode->isA(NodeTypeVarDecl)) {
+                    cd->setVarDecl(std::static_pointer_cast<LILVarDecl>(this->currentNode));
+                } else if (this->currentNode->isA(NodeTypeType)){
+                    cd->setType(std::static_pointer_cast<LILType>(this->currentNode));
+                } else {
+                    cd->addEvaluable(this->currentNode);
                 }
             }
             break;

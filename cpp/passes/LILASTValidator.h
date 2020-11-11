@@ -18,11 +18,12 @@
 #include "LILVisitor.h"
 #include "LILErrorMessage.h"
 #include "LILNode.h"
-
+#include "LILAliasDecl.h"
 #include "LILAssignment.h"
 #include "LILBoolLiteral.h"
 #include "LILClassDecl.h"
 #include "LILCombinator.h"
+#include "LILConversionDecl.h"
 #include "LILExpression.h"
 #include "LILFilter.h"
 #include "LILFlag.h"
@@ -45,6 +46,7 @@
 #include "LILSimpleSelector.h"
 #include "LILStringFunction.h"
 #include "LILStringLiteral.h"
+#include "LILTypeDecl.h"
 #include "LILVarDecl.h"
 #include "LILVarName.h"
 
@@ -70,7 +72,12 @@ namespace LIL
         void _validate(LILStringFunction * value);
         void _validate(LILNullLiteral * value);
         void _validate(LILType * value);
+        bool _isCustomType(LILString name) const;
+        bool _isBuiltInType(LILString name) const;
         void _validate(LILVarDecl * value);
+        void _validate(LILAliasDecl * value);
+        void _validate(LILTypeDecl * value);
+        void _validate(LILConversionDecl * value);
         void _validate(LILClassDecl * value);
         void _validate(LILObjectDefinition * value);
         void _validate(LILAssignment * value);

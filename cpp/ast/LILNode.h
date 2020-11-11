@@ -40,6 +40,8 @@ namespace LIL {
         friend class LILASTValidator;
         friend class LILTypeGuesser;
         friend class LILTypeValidator;
+        friend class LILConversionInserter;
+        friend class LILTypeResolver;
         
         static LILString nodeTypeToString(NodeType nodeType);
         LILNode(NodeType type);
@@ -105,12 +107,12 @@ namespace LIL {
         virtual std::shared_ptr<LILClonable> cloneImpl() const;
         void cloneChildNodes(std::shared_ptr<LILNode> clone) const;
         const std::vector<std::shared_ptr<LILNode> > & getChildNodes() const;
+        std::vector<std::shared_ptr<LILNode> > _childNodes;
 
     private:
         LILDocument * document;
         NodeType nodeType;
         std::weak_ptr<LILNode> _parentNode;
-        std::vector<std::shared_ptr<LILNode> > _childNodes;
         LILString _hostProperty;
         LILUnitI64 _specificity;
         LILNode::SourceLocation _sourceLocation;

@@ -59,6 +59,8 @@ namespace LIL
         void setDebugFieldSorter(bool value);
         void setDebugParameterSorter(bool value);
         void setDebugTypeValidator(bool value);
+        void setDebugConversionInserter(bool value);
+        void setDebugTypeResolver(bool value);
         bool hasErrors() const;
 
     private:

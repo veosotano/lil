@@ -13,6 +13,7 @@
  ********************************************************************/
 
 #include "LILTypeGuesser.h"
+#include "LILAliasDecl.h"
 #include "LILVarNode.h"
 #include "LILObjectType.h"
 
@@ -73,13 +74,146 @@ void LILTypeGuesser::preprocessTypes(std::shared_ptr<LILNode> node)
     for (auto childNode : node->getChildNodes()) {
         this->preprocessTypes(childNode);
     }
+    
+    if (node->isA(FlowControlTypeIfIs)) {
+        auto fc = std::static_pointer_cast<LILFlowControl>(node);
+        auto args = fc->getArguments();
+        if (args.size() != 2) {
+            std::cerr << "IF IS BLOCK DID NOT HAVE 2 ARGUMENTS FAIL!!!!!\n";
+            return;
+        }
+        auto lastArg = args.back();
+        if (!lastArg->isA(NodeTypeType)) {
+            std::cerr << "IF IS BLOCK HAD NO TYPE ARG FAIL!!!!!\n";
+            return;
+        }
+        auto ty = std::static_pointer_cast<LILType>(lastArg);
+        auto newTy = this->_process(ty);
+        if (newTy) {
+            fc->clearArguments();
+            fc->addArgument(args.front());
+            fc->addArgument(newTy);
+        }
+        return;
+    }
+    if (node->isA(ExpressionTypeCast)) {
+        auto exp = std::static_pointer_cast<LILExpression>(node);
+        auto right = exp->getRight();
+        if (!right->isA(NodeTypeType)) {
+            std::cerr << "RIGHT NODE OF CAST WAS NOT TYPE FAIL!!!!!\n";
+            return;
+        }
+        auto ty = std::static_pointer_cast<LILType>(right);
+        auto newTy = this->_process(ty);
+        if (newTy) {
+            exp->setRight(newTy);
+        }
+        return;
+    }
 
     if (!node->isA(NodeTypeType)) {
-        auto ty = node->getType();
-        if (ty) {
-            this->_process(ty.get());
+        auto typedNode = std::dynamic_pointer_cast<LILTypedNode>(node);
+        if (typedNode) {
+            auto ty = node->getType();
+            if (ty) {
+                auto newTy = this->_process(ty);
+                if (newTy) {
+                    typedNode->setType(newTy);
+                }
+            }
         }
     }
+}
+
+std::shared_ptr<LILType> LILTypeGuesser::_process(std::shared_ptr<LILType> value)
+{
+    std::shared_ptr<LILType> ret = nullptr;
+    switch (value->getTypeType()) {
+        case TypeTypePointer:
+        {
+            //transform the cstr alias into pointer to i8
+            auto ptrTy = std::static_pointer_cast<LILPointerType>(value);
+            if (value->getName() == "cstr") {
+                value->setName("ptr");
+                auto charType = std::make_shared<LILType>();
+                charType->setName("i8");
+                ptrTy->setArgument(charType);
+            } else {
+                auto arg = ptrTy->getArgument();
+                if (arg) {
+                    this->_process(arg);
+                }
+            }
+            break;
+        }
+        case TypeTypeMultiple:
+        {
+            auto multiTy = std::static_pointer_cast<LILMultipleType>(value);
+            multiTy->sortTypes();
+            
+            for (auto childTy : multiTy->getTypes()) {
+                this->_process(childTy);
+            }
+            break;
+        }
+        case TypeTypeFunction:
+        {
+            auto fnTy = std::static_pointer_cast<LILFunctionType>(value);
+            std::vector<std::shared_ptr<LILNode>> newArgs;
+            bool changed = false;
+            for (auto childNode : fnTy->getArguments()) {
+                std::shared_ptr<LILType> ty;
+                if (childNode->isA(NodeTypeVarDecl)) {
+                    auto vd = std::static_pointer_cast<LILVarDecl>(childNode);
+                    ty = vd->getType();
+                    auto newTy = this->_process(ty);
+                    if (newTy) {
+                        vd->setType(newTy);
+                        changed = true;
+                    }
+                    newArgs.push_back(vd);
+                } else if (childNode->isA(NodeTypeType)) {
+                    ty = std::static_pointer_cast<LILType>(childNode);
+                    auto newTy = this->_process(ty);
+                    if (newTy) {
+                        newArgs.push_back(newTy);
+                        changed = true;
+                    } else {
+                        newArgs.push_back(ty);
+                    }
+                }
+            }
+            if (changed) {
+                fnTy->setArguments(newArgs);
+            }
+            break;
+        }
+        case TypeTypeSingle:
+        {
+            auto name = value->getName();
+            if (!LILType::isBuiltInType(name)) {
+                auto rootNode = this->getRootNode();
+                auto aliases = rootNode->getAliases();
+                for (auto alias : aliases) {
+                    if (alias->getName() == name) {
+                        auto aliasTy = alias->getType();
+                        auto newTy = this->_process(aliasTy);
+                        if (newTy) {
+                            ret = newTy;
+                        } else {
+                            ret = aliasTy;
+                        }
+                        break;
+                    }
+                }
+            }
+            break;
+        }
+            
+        default:
+            break;
+    }
+    return ret;
 }
 
 void LILTypeGuesser::connectCallsWithDecls(std::shared_ptr<LILNode> node)
@@ -321,6 +455,13 @@ void LILTypeGuesser::process(LILNode * node)
             this->_process(value);
             break;
         }
+        case NodeTypeAliasDecl:
+        case NodeTypeTypeDecl:
+        case NodeTypeConversionDecl:
+        {
+            //do nothing
+            break;
+        }
         case NodeTypeClassDecl:
         {
             LILClassDecl * value = static_cast<LILClassDecl *>(node);
@@ -431,8 +572,7 @@ void LILTypeGuesser::process(LILNode * node)
         }
         case NodeTypeType:
         {
-            LILType * value = static_cast<LILType *>(node);
-            this->_process(value);
+            //do nothing
             break;
         }
 
@@ -444,7 +584,7 @@ void LILTypeGuesser::process(LILNode * node)
 
 void LILTypeGuesser::_process(LILBoolLiteral * value)
 {
-
+    
 }
 
 void LILTypeGuesser::_process(LILNumberLiteral * value)
@@ -570,57 +710,6 @@ void LILTypeGuesser::_process(LILStringFunction * value)
 void LILTypeGuesser::_process(LILNullLiteral * value)
 {
 
-}
-
-void LILTypeGuesser::_process(LILType * value)
-{
-    switch (value->getTypeType()) {
-        case TypeTypePointer:
-        {
-            //transform the cstr alias into pointer to i8
-            if (value->getName() == "cstr") {
-                auto ptrTy = static_cast<LILPointerType *>(value);
-                value->setName("ptr");
-                auto charType = std::make_shared<LILType>();
-                charType->setName("i8");
-                ptrTy->setArgument(charType);
-            } else {
-                auto ptrTy = static_cast<LILPointerType *>(value);
-                auto arg = ptrTy->getArgument();
-                if (arg) {
-                    this->_process(arg.get());
-                }
-            }
-            break;
-        }
-        case TypeTypeMultiple:
-        {
-            auto multiTy = static_cast<LILMultipleType *>(value);
-            multiTy->sortTypes();
-            
-            for (auto childTy : multiTy->getTypes()) {
-                this->_process(childTy.get());
-            }
-            break;
-        }
-        case TypeTypeFunction:
-        {
-            auto fnTy = static_cast<LILFunctionType *>(value);
-            for (auto childNode : fnTy->getArguments()) {
-                LILType * ty;
-                if (childNode->isA(NodeTypeVarDecl)) {
-                    ty = childNode->getType().get();
-                } else if (childNode->isA(NodeTypeType)) {
-                    ty = static_cast<LILType *>(childNode.get());
-                }
-                this->_process(ty);
-            }
-            break;
-        }
-
-        default:
-            break;
-    }
 }
 
 void LILTypeGuesser::_process(LILVarDecl * value)

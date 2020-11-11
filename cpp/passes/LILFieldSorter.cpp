@@ -95,6 +95,13 @@ void LILFieldSorter::process(LILNode * node)
             this->_process(value);
             break;
         }
+        case NodeTypeAliasDecl:
+        case NodeTypeTypeDecl:
+        case NodeTypeConversionDecl:
+        {
+            //do nothing
+            break;
+        }
         case NodeTypeClassDecl:
         {
             LILClassDecl * value = static_cast<LILClassDecl *>(node);

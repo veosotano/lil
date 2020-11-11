@@ -17,10 +17,12 @@
 
 #include "LILVisitor.h"
 #include "LILNode.h"
+#include "LILAliasDecl.h"
 #include "LILAssignment.h"
 #include "LILBoolLiteral.h"
 #include "LILClassDecl.h"
 #include "LILCombinator.h"
+#include "LILConversionDecl.h"
 #include "LILExpression.h"
 #include "LILFilter.h"
 #include "LILFlag.h"
@@ -42,6 +44,7 @@
 #include "LILStringFunction.h"
 #include "LILStringLiteral.h"
 #include "LILType.h"
+#include "LILTypeDecl.h"
 #include "LILVarDecl.h"
 #include "LILVarName.h"
 
@@ -66,6 +69,9 @@ namespace LIL
         LILToStrInfo _stringify(LILNullLiteral * value);
         LILToStrInfo _stringify(LILType * value);
         LILToStrInfo _stringify(LILVarDecl * value);
+        LILToStrInfo _stringify(LILAliasDecl * value);
+        LILToStrInfo _stringify(LILTypeDecl * value);
+        LILToStrInfo _stringify(LILConversionDecl * value);
         LILToStrInfo _stringify(LILClassDecl * value);
         LILToStrInfo _stringify(LILObjectDefinition * value);
         LILToStrInfo _stringify(LILAssignment * value);

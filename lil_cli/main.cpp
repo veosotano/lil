@@ -51,6 +51,8 @@ int main(int argc, const char * argv[]) {
     bool debugMethodInserter = false;
     bool debugNameLowerer = false;
     bool debugTypeValidator = false;
+    bool debugConversionInserter = false;
+    bool debugTypeResolver = false;
     bool debugIREmitter = false;
     int warningLevel = 0;
     std::string outName;
@@ -148,6 +150,14 @@ int main(int argc, const char * argv[]) {
             debugTypeValidator = true;
             ++i;
             
+        } else if (command == "--debug-conversion-inserter") {
+            debugConversionInserter = true;
+            ++i;
+            
+        } else if (command == "--debug-type-resolver") {
+            debugTypeResolver = true;
+            ++i;
+            
         } else if (command == "--debug-ir-emitter") {
             debugIREmitter = true;
             ++i;
@@ -223,6 +233,8 @@ int main(int argc, const char * argv[]) {
     codeUnit->setDebugMethodInserter(debugMethodInserter);
     codeUnit->setDebugNameLowerer(debugNameLowerer);
     codeUnit->setDebugTypeValidator(debugTypeValidator);
+    codeUnit->setDebugConversionInserter(debugConversionInserter);
+    codeUnit->setDebugTypeResolver(debugTypeResolver);
     codeUnit->setFile(inName);
     codeUnit->setDir(directory);
     codeUnit->setSource(lilStr);

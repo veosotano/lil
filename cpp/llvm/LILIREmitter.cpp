@@ -169,6 +169,17 @@ llvm::Value * LILIREmitter::emit(LILNode * node)
             LILVarDecl * value = static_cast<LILVarDecl *>(node);
             return this->_emit(value);
         }
+        case NodeTypeAliasDecl:
+        case NodeTypeTypeDecl:
+        {
+            //do nothing
+            return nullptr;
+        }
+        case NodeTypeConversionDecl:
+        {
+            LILConversionDecl * value = static_cast<LILConversionDecl *>(node);
+            return this->_emit(value);
+        }
         case NodeTypeClassDecl:
         {
             LILClassDecl * value = static_cast<LILClassDecl *>(node);
@@ -631,6 +642,37 @@ llvm::Value * LILIREmitter::_emit(LILVarDecl * value)
             }
         }
     }
+    return nullptr;
+}
+
+llvm::Value * LILIREmitter::_emit(LILConversionDecl * value)
+{
+    auto vd = value->getVarDecl();
+    auto encodedName = value->encodedName();
+    auto body = value->getEvaluables();
+    auto ty = value->getType();
+    if (!vd || body.size() == 0 || !ty) {
+        std::cout << "!!!! EMIT CONVERSION DECL FAIL !!!!!!\n\n";
+        return nullptr;
+    }
+    
+    auto fd = std::make_shared<LILFunctionDecl>();
+    fd->setFunctionDeclType(FunctionDeclTypeFn);
+    auto fnTy = std::make_shared<LILFunctionType>();
+    fnTy->setName("fn");
+    fnTy->addArgument(vd);
+    fnTy->setReturnType(ty);
+    
+    fd->setHasOwnType(true);
+    fd->setType(fnTy);
+    
+    LILString fnName = "_lil_conversion_"+encodedName;
+    fd->setName(fnName);
+
+    fd->setBody(body);
+    
+    this->_emitFn(fd.get());
+    
     return nullptr;
 }
 
@@ -1693,6 +1735,19 @@ llvm::Value * LILIREmitter::_emit(LILFunctionCall * value)
             auto ptr = this->emit(args[0].get());
             auto val = this->emit(args[1].get());
             return d->irBuilder.CreateStore(val, ptr);
+        }
+        case FunctionCallTypeConversion:
+        {
+            LILString name = value->getName();
+            auto conv = this->getRootNode()->getConversionNamed(name);
+            
+            auto fnTy = std::make_shared<LILFunctionType>();
+            fnTy->setName("fn");
+            for (auto arg : value->getArguments()) {
+                fnTy->addArgument(arg);
+            }
+            fnTy->setReturnType(conv->getType());
+            return this->_emitFunctionCall(value, "_lil_conversion_"+name, fnTy.get(), nullptr);
         }
         default:
         {
