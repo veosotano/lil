@@ -1418,7 +1418,7 @@ llvm::Function * LILIREmitter::_emitFnSignature(std::string name, const std::sha
 llvm::Function * LILIREmitter::_emitFnSignature(std::string name, std::vector<llvm::Type*> types, const std::shared_ptr<LILFunctionType> fnTy)
 {
     std::shared_ptr<LILType> retTy = fnTy->getReturnType();
-    llvm::Type * returnType;
+    llvm::Type * returnType = nullptr;
     if (retTy) {
         returnType = this->llvmTypeFromLILType(retTy.get());
     }
