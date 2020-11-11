@@ -18,13 +18,13 @@
 using namespace LIL;
 
 LILVarName::LILVarName()
-: LIL::LILNode(NodeTypeVarName)
+: LILTypedNode(NodeTypeVarName)
 {
     
 }
 
 LILVarName::LILVarName(const LILVarName &other)
-: LILNode(other)
+: LILTypedNode(other)
 {
     this->_name = other._name;
 }
@@ -37,6 +37,10 @@ std::shared_ptr<LILVarName> LILVarName::clone() const
 std::shared_ptr<LILClonable> LILVarName::cloneImpl() const
 {
     std::shared_ptr<LILVarName> clone(new LILVarName(*this));
+    //clone LILTypedNode
+    if (this->_type) {
+        clone->setType(this->_type->clone());
+    }
     return clone;
 }
 
@@ -63,16 +67,4 @@ void LILVarName::setName(LILString newName)
 const LILString LILVarName::getName() const
 {
     return this->_name;
-}
-
-std::shared_ptr<LILType> LILVarName::getType() const
-{
-    auto varNode = this->getClosestVarNode();
-    if (varNode) {
-        auto remoteNode = varNode->getVar(this->getName());
-        if (remoteNode) {
-            return remoteNode->getType();
-        }
-    }
-    return nullptr;
 }

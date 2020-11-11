@@ -15,11 +15,11 @@
 #ifndef LILVARNAME_H
 #define LILVARNAME_H
 
-#include "LILNode.h"
+#include "LILTypedNode.h"
 
 namespace LIL
 {
-    class LILVarName : public LILNode
+    class LILVarName : public LILTypedNode
     {
     public:
         LILVarName();
@@ -33,9 +33,7 @@ namespace LIL
 
         void setName(LILString newName);
         const LILString getName() const;
-        
-        std::shared_ptr<LILType> getType() const override;
-        
+
     protected:
         std::shared_ptr<LILClonable> cloneImpl() const override;
         

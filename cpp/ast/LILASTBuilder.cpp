@@ -84,8 +84,8 @@ void LILASTBuilder::receiveNodeStart(NodeType nodeType)
         case NodeTypeNumberLiteral:
         {
             std::shared_ptr<LILNumberLiteral> num = std::make_shared<LILNumberLiteral>();
-            this->currentNode = num;
             this->state.push_back(BuilderStateNumber);
+            this->currentContainer.push_back(num);
             break;
         }
         case NodeTypePercentage:
@@ -397,6 +397,14 @@ void LILASTBuilder::receiveNodeCommit()
             }
             break;
         }
+        case BuilderStateNumber:
+        {
+            if (this->currentNode && this->currentNode->isA(NodeTypeType)) {
+                auto num = std::static_pointer_cast<LILNumberLiteral>(this->currentContainer.back());
+                num->setType(std::static_pointer_cast<LILType>(this->currentNode));
+            }
+            break;
+        }
         case BuilderStateStringFunction:
         {
             std::shared_ptr<LILStringFunction> str = std::static_pointer_cast<LILStringFunction>(this->currentContainer.back());
@@ -668,80 +676,92 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
 
     switch (this->state.back())
     {
+        case BuilderStateBool:
+        {
+            auto bl = std::static_pointer_cast<LILBoolLiteral>(this->currentNode);
+            std::shared_ptr<LILType> type = std::make_shared<LILType>();
+            type->setName("bool");
+            bl->setType(type);
+            bl->receiveNodeData(data);
+            break;
+        }
         case BuilderStateNumber:
         {
-            if (this->currentNode)
+            auto num = std::static_pointer_cast<LILNumberLiteral>(this->currentContainer.back());
+            if (eventType == ParserEventNumberInt)
             {
-                if (eventType == ParserEventNumberInt)
-                {
-                    std::shared_ptr<LILType> ty;
-                    if (this->currentContainer.size() > 0) {
-                        auto cont = this->currentContainer.back();
-                        if (cont->isA(NodeTypeVarDecl)) {
-                            ty = cont->getType();
-                        }
+                std::shared_ptr<LILType> parentTy;
+                std::shared_ptr<LILType> type;
+                if (this->currentContainer.size() > 1) {
+                    auto cont = this->currentContainer[this->currentContainer.size()-2];
+                    if (cont->isA(NodeTypeVarDecl)) {
+                        parentTy = cont->getType();
                     }
-                    
-                    if (ty)
-                    {
-                        if (ty->isA(TypeTypeMultiple)) {
-                            auto multiTy = std::static_pointer_cast<LILMultipleType>(ty);
-                            bool intFound = false;
+                }
+                
+                if (parentTy)
+                {
+                    if (parentTy->isA(TypeTypeMultiple)) {
+                        auto multiTy = std::static_pointer_cast<LILMultipleType>(parentTy);
+                        bool intFound = false;
+                        for (auto ty : multiTy->getTypes()) {
+                            auto name = ty->getName();
+                            if (name == "i64") {
+                                intFound = true;
+                                break;
+                            }
+                        }
+                        if (intFound) {
+                            std::shared_ptr<LILType> intTy = std::make_shared<LILType>();
+                            intTy->setName("i64");
+                            type = intTy;
+                        } else {
+                            bool floatFound = false;
                             for (auto ty : multiTy->getTypes()) {
                                 auto name = ty->getName();
-                                if (name == "i64") {
-                                    intFound = true;
+                                if (name == "f64") {
+                                    floatFound = true;
                                     break;
                                 }
                             }
-                            if (intFound) {
-                                std::shared_ptr<LILType> intTy = std::make_shared<LILType>();
-                                intTy->setName("i64");
-                                std::static_pointer_cast<LILNumberLiteral>(this->currentNode)->setType(intTy);
-                            } else {
-                                bool floatFound = false;
-                                for (auto ty : multiTy->getTypes()) {
-                                    auto name = ty->getName();
-                                    if (name == "f64") {
-                                        floatFound = true;
-                                        break;
-                                    }
-                                }
-                                if (floatFound) {
-                                    std::shared_ptr<LILType> floatTy = std::make_shared<LILType>();
-                                    floatTy->setName("f64");
-                                    std::static_pointer_cast<LILNumberLiteral>(this->currentNode)->setType(floatTy);
-                                }
+                            if (floatFound) {
+                                std::shared_ptr<LILType> floatTy = std::make_shared<LILType>();
+                                floatTy->setName("f64");
+                                type = floatTy;
                             }
-                        } else {
-                            std::static_pointer_cast<LILNumberLiteral>(this->currentNode)->setType(ty);
+                        }
+                    } else {
+                        auto parentTyName = parentTy->getName();
+                        if (
+                            LILType::isBuiltInType(parentTyName)
+                            && LILType::isNumberType(parentTyName)
+                            ) {
+                            type = parentTy;
                         }
                     }
-                    else
-                    {
-                        std::shared_ptr<LILMultipleType> type = std::make_shared<LILMultipleType>();
-                        std::shared_ptr<LILType> type1 = std::make_shared<LILType>();
-                        type1->setName("i64");
-                        type->addType(type1);
-                        std::shared_ptr<LILType> type2 = std::make_shared<LILType>();
-                        type2->setName("f64");
-                        type->addType(type2);
-                        type->setIsWeakType(true);
-                        std::static_pointer_cast<LILNumberLiteral>(this->currentNode)->setType(type);
-                    }
                 }
-                else if (eventType == ParserEventNumberFP)
-                {
-                    auto ty = std::make_shared<LILType>();
-                    ty->setName("f64");
-                    std::static_pointer_cast<LILNumberLiteral>(this->currentNode)->setType(ty);
+                
+                if (type) {
+                    num->setType(type);
                 } else {
-                    this->currentNode->receiveNodeData(data);
+                    std::shared_ptr<LILMultipleType> weakType = std::make_shared<LILMultipleType>();
+                    std::shared_ptr<LILType> type1 = std::make_shared<LILType>();
+                    type1->setName("i64");
+                    weakType->addType(type1);
+                    std::shared_ptr<LILType> type2 = std::make_shared<LILType>();
+                    type2->setName("f64");
+                    weakType->addType(type2);
+                    weakType->setIsWeakType(true);
+                    num->setType(weakType);
                 }
             }
-            else if (this->currentContainer.size() > 0)
+            else if (eventType == ParserEventNumberFP)
             {
-                this->currentContainer.back()->receiveNodeData(data);
+                auto ty = std::make_shared<LILType>();
+                ty->setName("f64");
+                num->setType(ty);
+            } else {
+                num->receiveNodeData(data);
             }
             break;
         }

@@ -215,6 +215,11 @@ std::shared_ptr<LILType> LILFunctionCall::getReturnType() const
     return this->_returnType;
 }
 
+std::shared_ptr<LILType> LILFunctionCall::getType() const
+{
+    return this->getReturnType();
+}
+
 std::shared_ptr<LILValuePath> LILFunctionCall::getSubject() const
 {
     switch (this->_functionCallType) {

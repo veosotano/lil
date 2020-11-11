@@ -12,14 +12,14 @@
  *
  ********************************************************************/
 
-#ifndef LILSTATEMENT_H
-#define LILSTATEMENT_H
+#ifndef LILVALUEPATH_H
+#define LILVALUEPATH_H
 
-#include "LILNode.h"
+#include "LILTypedNode.h"
 
 namespace LIL
 {
-    class LILValuePath : public LILNode
+    class LILValuePath : public LILTypedNode
     {
     public:
         LILValuePath();

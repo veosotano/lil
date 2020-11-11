@@ -17,13 +17,13 @@
 using namespace LIL;
 
 LILBoolLiteral::LILBoolLiteral()
-: LILNode(NodeTypeBoolLiteral)
+: LILTypedNode(NodeTypeBoolLiteral)
 {
 
 }
 
 LILBoolLiteral::LILBoolLiteral(const LILBoolLiteral & other)
-: LILNode(other)
+: LILTypedNode(other)
 {
     this->_value = other._value;
     this->_originalRep = other._originalRep;
@@ -31,7 +31,12 @@ LILBoolLiteral::LILBoolLiteral(const LILBoolLiteral & other)
 
 std::shared_ptr<LILBoolLiteral> LILBoolLiteral::clone() const
 {
-    return std::static_pointer_cast<LILBoolLiteral> (this->cloneImpl());
+    auto clone = std::static_pointer_cast<LILBoolLiteral> (this->cloneImpl());
+    //clone LILTypedNode
+    if (this->_type) {
+        clone->setType(this->_type->clone());
+    }
+    return clone;
 }
 
 std::shared_ptr<LILClonable> LILBoolLiteral::cloneImpl() const
@@ -80,7 +85,7 @@ LILString LILBoolLiteral::stringRep()
 
 bool LILBoolLiteral::equalTo(std::shared_ptr<LILNode> otherNode)
 {
-    if ( ! LILNode::equalTo(otherNode)) return false;
+    if ( ! LILTypedNode::equalTo(otherNode)) return false;
     std::shared_ptr<LILBoolLiteral> castedNode = std::static_pointer_cast<LILBoolLiteral>(otherNode);
     if ( this->_value != castedNode->_value ) return false;
     return true;

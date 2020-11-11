@@ -17,14 +17,14 @@
 using namespace LIL;
 
 LILValuePath::LILValuePath()
-: LIL::LILNode(NodeTypeValuePath)
+: LILTypedNode(NodeTypeValuePath)
 , _preventEmitCallToIVar(false)
 {
 
 }
 
 LILValuePath::LILValuePath(const LILValuePath &other)
-: LILNode(other)
+: LILTypedNode(other)
 , _preventEmitCallToIVar(other._preventEmitCallToIVar)
 {
 
@@ -39,6 +39,10 @@ std::shared_ptr<LILClonable> LILValuePath::cloneImpl() const
 {
     std::shared_ptr<LILValuePath> clone(new LILValuePath(*this));
     LILNode::cloneChildNodes(clone);
+    //clone LILTypedNode
+    if (this->_type) {
+        clone->setType(this->_type->clone());
+    }
     return clone;
 }
 

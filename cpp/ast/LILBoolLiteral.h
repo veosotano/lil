@@ -15,11 +15,11 @@
 #ifndef LILBOOLLITERAL_H
 #define LILBOOLLITERAL_H
 
-#include "LILNode.h"
+#include "LILTypedNode.h"
 
 namespace LIL
 {
-    class LILBoolLiteral : public LILNode
+    class LILBoolLiteral : public LILTypedNode
     {
     public:
         LILBoolLiteral();

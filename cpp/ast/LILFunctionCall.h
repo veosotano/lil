@@ -48,6 +48,8 @@ namespace LIL
         
         void setReturnType(std::shared_ptr<LILType> retTy);
         std::shared_ptr<LILType> getReturnType() const;
+
+        std::shared_ptr<LILType> getType() const override;
         
         std::shared_ptr<LILValuePath> getSubject() const;
         void setName(LILString newName);

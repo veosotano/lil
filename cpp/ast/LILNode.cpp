@@ -131,6 +131,7 @@ void LILNode::accept(LILVisitor *visitor)
 bool LILNode::isContainerNode(NodeType nodeType)
 {
     switch (nodeType) {
+        case NodeTypeNumberLiteral:
         case NodeTypeStringFunction:
         case NodeTypeValuePath:
         case NodeTypeRule:
@@ -213,12 +214,7 @@ bool LILNode::isTypedNode() const
 
 std::shared_ptr<LILType> LILNode::getType() const
 {
-    const auto & parent = this->getParentNode();
-    if (parent) {
-        return parent->getType();
-    } else {
-        return nullptr;
-    }
+    return nullptr;
 }
 
 void LILNode::setSourceLocation(LILNode::SourceLocation loc)

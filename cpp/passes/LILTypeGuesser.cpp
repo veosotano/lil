@@ -684,7 +684,10 @@ void LILTypeGuesser::_process(LILAssignment * value)
 
 void LILTypeGuesser::_process(LILValuePath * value)
 {
-
+    auto ty = this->findTypeForValuePath(std::static_pointer_cast<LILValuePath>(value->shared_from_this()));
+    if (ty) {
+        value->setType(ty);
+    }
 }
 
 void LILTypeGuesser::_process(LILPropertyName * value)
@@ -724,6 +727,10 @@ void LILTypeGuesser::_process(LILFlag * value)
 
 void LILTypeGuesser::_process(LILVarName * value)
 {
+    auto ty = this->findTypeForVarName(std::static_pointer_cast<LILVarName>(value->shared_from_this()));
+    if (ty) {
+        value->setType(ty);
+    }
 }
 
 void LILTypeGuesser::_process(LILFunctionDecl * value)
