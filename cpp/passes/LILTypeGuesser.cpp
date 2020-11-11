@@ -293,6 +293,14 @@ void LILTypeGuesser::_propagateStrongType(std::shared_ptr<LILNode> node, std::sh
             break;
         }
             
+        case NodeTypeUnaryExpression:
+        {
+            auto uexp = std::static_pointer_cast<LILUnaryExpression>(node);
+            uexp->setType(ty);
+            this->_propagateStrongType(uexp->getValue(), ty);
+            break;
+        }
+            
         case NodeTypeFunctionDecl:
         {
             for (auto bNod : std::static_pointer_cast<LILFunctionDecl>(node)->getBody()) {
@@ -428,6 +436,12 @@ void LILTypeGuesser::process(LILNode * node)
         case NodeTypeExpression:
         {
             LILExpression * value = static_cast<LILExpression *>(node);
+            this->_process(value);
+            break;
+        }
+        case NodeTypeUnaryExpression:
+        {
+            LILUnaryExpression * value = static_cast<LILUnaryExpression *>(node);
             this->_process(value);
             break;
         }
@@ -695,6 +709,30 @@ void LILTypeGuesser::_process(LILExpression * value)
         rightTN->setType(ty);
     }
     value->setType(ty);
+}
+
+void LILTypeGuesser::_process(LILUnaryExpression * value)
+{
+    auto existingTy = value->getType();
+    if (existingTy) {
+        return;
+    }
+
+    std::shared_ptr<LILNode> val = value->getValue();
+
+    if (!val) {
+        return;
+    }
+
+    std::shared_ptr<LILType> valTy;
+    if (val->isTypedNode())
+    {
+        const auto & valTN = std::static_pointer_cast<LILTypedNode>(val);
+        valTy = valTN->getType();
+    } else {
+        valTy = this->getNodeType(val);
+    }
+    value->setType(valTy);
 }
 
 void LILTypeGuesser::_process(LILStringLiteral * value)

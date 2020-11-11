@@ -30,6 +30,7 @@ namespace LIL
         BuilderStateStringFunction,
         BuilderStateNull,
         BuilderStateExpression,
+        BuilderStateUnaryExpression,
         BuilderStateType,
         BuilderStateMultipleType,
         BuilderStateFunctionType,

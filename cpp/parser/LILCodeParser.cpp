@@ -494,18 +494,25 @@ bool LILCodeParser::isExpression() const
 
 bool LILCodeParser::isUnaryExpression() const
 {
-    std::shared_ptr<LILToken> peekToken = d->lexer->peekNextToken();
-    if (peekToken && peekToken->isA(TokenTypeWhitespace))
-    {
-        peekToken = d->lexer->peekNextToken();
+    std::shared_ptr<LILToken> peekToken;
+    peekToken = d->currentToken;
+    if (!this->isUnaryExpressionSign(peekToken)) {
+        return false;
     }
-    if (peekToken && peekToken->isA(TokenTypeParenthesisOpen))
-    {
-        d->lexer->resetPeek();
-        return true;
-    }
+    peekToken = d->lexer->peekNextToken();
+    bool ret = peekToken->isA(TokenTypeColon);
     d->lexer->resetPeek();
-    return false;
+    return ret;
+}
+
+//this function only checks the sign before the colon
+bool LILCodeParser::isUnaryExpressionSign(std::shared_ptr<LILToken> theToken) const
+{
+    return  theToken->isA(TokenTypePlusSign)
+            || theToken->isA(TokenTypeMinusSign)
+            || theToken->isA(TokenTypeAsterisk)
+            || theToken->isA(TokenTypeSlash)
+    ;
 }
 
 bool LILCodeParser::isCast() const
@@ -573,8 +580,13 @@ bool LILCodeParser::isAssignment() const
             {
                 peekToken = d->lexer->peekNextToken();
             }
+            //it might be a unary expression
+            if ( this->isUnaryExpressionSign( peekToken ) ) {
+                d->lexer->resetPeek();
+                return false;
+            }
             //if the next token is a colon, it is either an assignment or a filter
-            if (peekToken->isA(TokenTypeColon))
+            else if (peekToken->isA(TokenTypeColon))
             {
                 peekToken = d->lexer->peekNextToken();
                 if (!peekToken)
@@ -2013,11 +2025,13 @@ bool LILCodeParser::readExpression(bool &outIsSingleValue, NodeType & outType)
 
 bool LILCodeParser::readExpressionInner()
 {
-    LIL_START_NODE(NodeTypeExpression)
-
-    bool isValid = false;
-
     bool isCast = this->isCast();
+    if (this->isUnaryExpression()) {
+        return this->readUnaryExpression();
+    }
+    LIL_START_NODE(NodeTypeExpression)
+    
+    bool isValid = false;
     d->receiver->receiveNodeData(ParserEventExpressionSign, d->currentToken->getString());
     this->readNextToken();
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
@@ -2042,11 +2056,9 @@ bool LILCodeParser::readUnaryExpression()
 {
     LIL_START_NODE(NodeTypeUnaryExpression)
 
-    d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+    d->receiver->receiveNodeData(ParserEventExpressionSign, d->currentToken->getString());
     this->readNextToken();
-    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-
-    LIL_EXPECT(TokenTypeParenthesisOpen, "parenthesis open")
+    LIL_CHECK_FOR_END
     d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
     this->readNextToken();
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
@@ -2058,10 +2070,7 @@ bool LILCodeParser::readUnaryExpression()
 
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
 
-    LIL_EXPECT(TokenTypeParenthesisClose, "parenthesis close")
-    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-
-    LIL_END_NODE
+    LIL_END_NODE_SKIP(false)
 }
 
 bool LILCodeParser::readSingleValue(NodeType &nodeType)

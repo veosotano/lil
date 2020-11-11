@@ -135,10 +135,6 @@ namespace LIL
         ExpressionTypeSubtraction,
         ExpressionTypeMultiplication,
         ExpressionTypeDivision,
-        ExpressionTypeUnarySum,
-        ExpressionTypeUnarySubtraction,
-        ExpressionTypeUnaryMultiplication,
-        ExpressionTypeUnaryDivision,
         ExpressionTypeEqualComparison,
         ExpressionTypeNotEqualComparison,
         ExpressionTypeBiggerComparison,
@@ -150,6 +146,15 @@ namespace LIL
         ExpressionTypeBitwiseAnd,
         ExpressionTypeBitwiseOr,
         ExpressionTypeCast,
+    };
+    
+    enum UnaryExpressionType
+    {
+        UnaryExpressionTypeNone = 0,
+        UnaryExpressionTypeSum,
+        UnaryExpressionTypeSubtraction,
+        UnaryExpressionTypeMultiplication,
+        UnaryExpressionTypeDivision,
     };
 
     enum FunctionCallType

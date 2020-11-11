@@ -47,6 +47,7 @@
 #include "LILStringFunction.h"
 #include "LILStringLiteral.h"
 #include "LILTypeDecl.h"
+#include "LILUnaryExpression.h"
 #include "LILVarDecl.h"
 #include "LILVarName.h"
 
@@ -68,6 +69,7 @@ namespace LIL
         void _validate(LILNumberLiteral * value);
         void _validate(LILPercentageLiteral * value);
         void _validate(LILExpression * value);
+        void _validate(LILUnaryExpression * value);
         void _validate(LILStringLiteral * value);
         void _validate(LILStringFunction * value);
         void _validate(LILNullLiteral * value);

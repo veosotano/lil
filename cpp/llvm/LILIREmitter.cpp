@@ -149,6 +149,11 @@ llvm::Value * LILIREmitter::emit(LILNode * node)
                 return this->_emit(value);
             }
         }
+        case NodeTypeUnaryExpression:
+        {
+            LILUnaryExpression * value = static_cast<LILUnaryExpression *>(node);
+            return this->_emit(value);
+        }
         case NodeTypeStringLiteral:
         {
             LILStringLiteral * value = static_cast<LILStringLiteral *>(node);
@@ -369,7 +374,12 @@ llvm::Value * LILIREmitter::_emit(LILExpression * value)
         std::cerr << "!!!!!!!!!!LEFT AND RIGHT TYPE DONT MATCH FAIL!!!!!!!!!!!!!!!!\n";
         return nullptr;
     }
-    switch (value->getExpressionType()) {
+    return this->_emitExpression(value->getExpressionType(), leftV, rightV);
+}
+
+llvm::Value * LILIREmitter::_emitExpression(ExpressionType expType, llvm::Value * leftV, llvm::Value * rightV)
+{
+    switch (expType) {
         case ExpressionTypeSum:
         {
             switch (leftV->getType()->getTypeID()) {
@@ -552,6 +562,23 @@ llvm::Value * LILIREmitter::_emit(LILExpression * value)
     std::cerr << "!!!!!!!!!!EMIT EXPRESSION FAIL!!!!!!!!!!!!!!!!\n";
     return nullptr;
 
+}
+
+llvm::Value * LILIREmitter::_emit(LILUnaryExpression * value)
+{
+    std::shared_ptr<LILNode> val = value->getValue();
+    llvm::Value * subject = this->emitPointer(value->getSubject().get());
+    llvm::Value * valV = this->emit(val.get());
+    if (!valV) {
+        std::cerr << "!!!!!!!!!!VALUE EMIT FAIL!!!!!!!!!!!!!!!!\n";
+        return nullptr;
+    }
+    auto temp = d->irBuilder.CreateLoad(subject);
+    llvm::Value * expVal = this->_emitExpression(LILUnaryExpression::uexpToExpType(value->getUnaryExpressionType()), temp, valV);
+    if (expVal) {
+        d->irBuilder.CreateStore(expVal, subject);
+    }
+    return nullptr;
 }
 
 llvm::Value * LILIREmitter::_emit(LILStringLiteral * value)

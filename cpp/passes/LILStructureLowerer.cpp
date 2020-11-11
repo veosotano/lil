@@ -87,6 +87,11 @@ void LILStructureLowerer::process(std::shared_ptr<LILNode> node)
             std::shared_ptr<LILExpression> value = std::static_pointer_cast<LILExpression>(node);
             return this->_process(value);
         }
+        case NodeTypeUnaryExpression:
+        {
+            std::shared_ptr<LILUnaryExpression> value = std::static_pointer_cast<LILUnaryExpression>(node);
+            return this->_process(value);
+        }
         case NodeTypeStringLiteral:
         {
             std::shared_ptr<LILStringLiteral> value = std::static_pointer_cast<LILStringLiteral>(node);
@@ -225,6 +230,10 @@ void LILStructureLowerer::_process(std::shared_ptr<LILPercentageLiteral> value)
 }
 
 void LILStructureLowerer::_process(std::shared_ptr<LILExpression> value)
+{
+}
+
+void LILStructureLowerer::_process(std::shared_ptr<LILUnaryExpression> value)
 {
 }
 

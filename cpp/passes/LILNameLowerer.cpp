@@ -71,6 +71,12 @@ void LILNameLowerer::process(LILNode * node)
             this->_process(value);
             break;
         }
+        case NodeTypeUnaryExpression:
+        {
+            LILUnaryExpression * value = static_cast<LILUnaryExpression *>(node);
+            this->_process(value);
+            break;
+        }
         case NodeTypeStringLiteral:
         {
             LILStringLiteral * value = static_cast<LILStringLiteral *>(node);
@@ -231,6 +237,11 @@ void LILNameLowerer::_process(LILPercentageLiteral * value)
 }
 
 void LILNameLowerer::_process(LILExpression * value)
+{
+
+}
+
+void LILNameLowerer::_process(LILUnaryExpression * value)
 {
 
 }

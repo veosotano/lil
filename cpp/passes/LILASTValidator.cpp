@@ -90,6 +90,12 @@ void LILASTValidator::validate(LILNode * node)
             this->_validate(value);
             break;
         }
+        case NodeTypeUnaryExpression:
+        {
+            LILUnaryExpression * value = static_cast<LILUnaryExpression *>(node);
+            this->_validate(value);
+            break;
+        }
         case NodeTypeStringLiteral:
         {
             LILStringLiteral * value = static_cast<LILStringLiteral *>(node);
@@ -324,6 +330,25 @@ void LILASTValidator::_validate(LILExpression * value)
         default:
         {
             this->illegalNodeType(right.get(), value);
+            break;
+        }
+    }
+}
+
+void LILASTValidator::_validate(LILUnaryExpression * value)
+{
+    auto val = value->getValue();
+    switch (val->getNodeType()) {
+        case NodeTypeNumberLiteral:
+        case NodeTypeExpression:
+        case NodeTypeValuePath:
+        case NodeTypeVarName:
+        case NodeTypeFunctionCall:
+            break;
+            
+        default:
+        {
+            this->illegalNodeType(val.get(), value);
             break;
         }
     }

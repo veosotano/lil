@@ -70,6 +70,12 @@ void LILParameterSorter::process(LILNode * node)
             this->_process(value);
             break;
         }
+        case NodeTypeUnaryExpression:
+        {
+            LILUnaryExpression * value = static_cast<LILUnaryExpression *>(node);
+            this->_process(value);
+            break;
+        }
         case NodeTypeStringLiteral:
         {
             LILStringLiteral * value = static_cast<LILStringLiteral *>(node);
@@ -239,6 +245,11 @@ void LILParameterSorter::_process(LILExpression * value)
 {
     this->process(value->getLeft().get());
     this->process(value->getRight().get());
+}
+
+void LILParameterSorter::_process(LILUnaryExpression * value)
+{
+    this->process(value->getValue().get());
 }
 
 void LILParameterSorter::_process(LILStringLiteral * value)

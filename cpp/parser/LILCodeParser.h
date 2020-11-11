@@ -49,6 +49,8 @@ namespace LIL
         bool isValuePath() const;
         bool isExpression() const;
         bool isUnaryExpression() const;
+        //this function only checks the sign before the colon
+        bool isUnaryExpressionSign(std::shared_ptr<LILToken> theToken) const;
         bool isCast() const;
         bool isObjectSelector() const;
         bool isColorInstruction() const;

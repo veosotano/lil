@@ -27,14 +27,6 @@ LILString LILExpression::expressionTypeToString(ExpressionType type)
             return "multiplication";
         case ExpressionTypeDivision:
             return "division";
-        case ExpressionTypeUnarySum:
-            return "unary sum";
-        case ExpressionTypeUnarySubtraction:
-            return "unary subtraction";
-        case ExpressionTypeUnaryMultiplication:
-            return "unary multiplication";
-        case ExpressionTypeUnaryDivision:
-            return "unary division";
         case ExpressionTypeEqualComparison:
             return "equal comparison";
         case ExpressionTypeNotEqualComparison:

@@ -45,6 +45,7 @@
 #include "LILStringLiteral.h"
 #include "LILType.h"
 #include "LILTypeDecl.h"
+#include "LILUnaryExpression.h"
 #include "LILVarDecl.h"
 #include "LILVarName.h"
 
@@ -64,6 +65,7 @@ namespace LIL
         LILToStrInfo _stringify(LILNumberLiteral * value);
         LILToStrInfo _stringify(LILPercentageLiteral * value);
         LILToStrInfo _stringify(LILExpression * value);
+        LILToStrInfo _stringify(LILUnaryExpression * value);
         LILToStrInfo _stringify(LILStringLiteral * value);
         LILToStrInfo _stringify(LILStringFunction * value);
         LILToStrInfo _stringify(LILNullLiteral * value);

@@ -45,6 +45,7 @@
 #include "LILStringFunction.h"
 #include "LILStringLiteral.h"
 #include "LILType.h"
+#include "LILUnaryExpression.h"
 #include "LILVarDecl.h"
 #include "LILVarName.h"
 
@@ -65,6 +66,7 @@ namespace LIL
         void _process(std::shared_ptr<LILNumberLiteral> value);
         void _process(std::shared_ptr<LILPercentageLiteral> value);
         void _process(std::shared_ptr<LILExpression> value);
+        void _process(std::shared_ptr<LILUnaryExpression> value);
         void _process(std::shared_ptr<LILStringLiteral> value);
         void _process(std::shared_ptr<LILStringFunction> value);
         void _process(std::shared_ptr<LILNullLiteral> value);

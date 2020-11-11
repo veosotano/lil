@@ -99,6 +99,12 @@ LILToStrInfo LILToStringVisitor::stringify(LILNode * node)
             info = this->_stringify(value);
             break;
         }
+        case NodeTypeUnaryExpression:
+        {
+            LILUnaryExpression * value = static_cast<LILUnaryExpression *>(node);
+            info = this->_stringify(value);
+            break;
+        }
         case NodeTypeStringLiteral:
         {
             LILStringLiteral * value = static_cast<LILStringLiteral *>(node);
@@ -309,6 +315,20 @@ LILToStrInfo LILToStringVisitor::_stringify(LILExpression * value)
     LILString expstr = LILString("Expression"+ typestr +": ") + LILExpression::expressionTypeToString(value->getExpressionType());
     ret.value = expstr;
     this->stringifyChildren(value->getNodes(), ret);
+    return ret;
+}
+
+LILToStrInfo LILToStringVisitor::_stringify(LILUnaryExpression * value)
+{
+    LILToStrInfo ret;
+    LILNode * type = value->getType().get();
+    LILString typestr;
+    if (type) {
+        typestr = " (" + type->stringRep() + ")";
+    }
+    LILString expstr = LILString("Unary expression"+ typestr +": ") + LILUnaryExpression::expressionTypeToString(value->getUnaryExpressionType());
+    ret.value = expstr;
+    ret.children.push_back(this->stringify(value->getValue().get()));
     return ret;
 }
 

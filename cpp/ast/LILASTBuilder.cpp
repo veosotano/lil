@@ -47,6 +47,7 @@
 #include "LILStringLiteral.h"
 #include "LILType.h"
 #include "LILTypeDecl.h"
+#include "LILUnaryExpression.h"
 #include "LILVarDecl.h"
 #include "LILVarName.h"
 
@@ -123,6 +124,18 @@ void LILASTBuilder::receiveNodeStart(NodeType nodeType)
             {
                 std::shared_ptr<LILExpression> exp = std::make_shared<LILExpression>();
                 exp->setLeft(this->currentNode);
+                this->currentContainer.push_back(exp);
+                this->currentNode.reset();
+            }
+            break;
+        }
+        case NodeTypeUnaryExpression:
+        {
+            this->state.push_back(BuilderStateUnaryExpression);
+            if (this->currentNode)
+            {
+                std::shared_ptr<LILUnaryExpression> exp = std::make_shared<LILUnaryExpression>();
+                exp->setSubject(this->currentNode);
                 this->currentContainer.push_back(exp);
                 this->currentNode.reset();
             }
@@ -461,6 +474,12 @@ void LILASTBuilder::receiveNodeCommit()
             {
                 exp->setRight(this->currentNode);
             }
+            break;
+        }
+        case BuilderStateUnaryExpression:
+        {
+            std::shared_ptr<LILUnaryExpression> uexp = std::static_pointer_cast<LILUnaryExpression>(this->currentContainer.back());
+            uexp->setValue(this->currentNode);
             break;
         }
         case BuilderStateMultipleType:
