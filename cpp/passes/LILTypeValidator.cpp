@@ -225,12 +225,14 @@ void LILTypeValidator::_validate(std::shared_ptr<LILFunctionCall> fc)
                     argName = vd->getName();
                 }
                 if (argTy->equalTo(fcArgTy) || this->_isDefinitionOf(fcArgTy, argTy)) {
+                    i += 1;
                     continue;
                 } else {
                     LILString conversionName = fcArgTy->stringRep();
                     conversionName += "_to_";
                     conversionName += argTy->stringRep();
                     if (conversions.count(conversionName)) {
+                        i += 1;
                         continue;
                     }
                 }
