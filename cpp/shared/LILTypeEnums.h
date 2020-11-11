@@ -400,7 +400,7 @@ namespace LIL
         ParserEventInherits,
         ParserEventType,
         ParserEventReturnType,
-        ParserEventVariableDeclaration,
+        ParserEventVarDecl,
         ParserEventVarName,
         ParserEventExtern,
         ParserEventObjectDefinition,

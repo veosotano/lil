@@ -1525,7 +1525,7 @@ bool LILCodeParser::readVarDecl()
     }
 
     LIL_START_NODE(NodeTypeVarDecl)
-    d->receiver->receiveNodeData(ParserEventVariableDeclaration, d->currentToken->getString());
+    d->receiver->receiveNodeData(ParserEventVarDecl, d->currentToken->getString());
 
     this->readNextToken();
     LIL_CHECK_FOR_END

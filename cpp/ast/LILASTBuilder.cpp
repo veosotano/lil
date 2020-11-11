@@ -1103,7 +1103,7 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
             if (eventType == ParserEventExtern) {
                 vd->setIsExtern(true);
             } else {
-                if (eventType == ParserEventVariableDeclaration) {
+                if (eventType == ParserEventVarDecl) {
                     if (data == "ivar") {
                         vd->setIsIVar(true);
                     } else if (data == "vvar") {
