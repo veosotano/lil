@@ -4012,14 +4012,23 @@ bool LILCodeParser::readEvaluables()
                 }
                 else if (d->currentToken->isA(TokenTypeIdentifier))
                 {
-                    bool vnValid = this->readVarName();
-                    if (!vnValid) {
+                    NodeType outType;
+                    bool outIsSingleValue = false;
+                    bool expValid = this->readExpression(outIsSingleValue, outType);
+                    if (!expValid) {
                         return false;
                     }
-                    bool ppValid = this->readValuePath(true);
-                    if (ppValid) {
+                    if (outIsSingleValue) {
+                        if (outType == NodeTypeVarName && this->isValuePath()) {
+                            bool ppValid = this->readValuePath(true);
+                            if (ppValid) {
+                                d->receiver->receiveNodeCommit();
+                            }
+                        }
+                    } else {
                         d->receiver->receiveNodeCommit();
                     }
+
                     if (this->atEndOfSource())
                         return ret;
                     this->skip(TokenTypeWhitespace);
