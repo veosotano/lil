@@ -735,6 +735,10 @@ void LILASTBuilder::receiveNodeCommit()
                 } else {
                     fc->addThen(this->currentNode);
                 }
+                if (this->currentNode->isA(NodeTypeVarDecl)) {
+                    auto vd = std::static_pointer_cast<LILVarDecl>(this->currentNode);
+                    fc->setLocalVariable(vd->getName(), vd);
+                }
             } else {
                 fc->addArgument(this->currentNode);
             }
