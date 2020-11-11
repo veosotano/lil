@@ -333,7 +333,7 @@ void LILTypeValidator::_validate(std::shared_ptr<LILVarDecl> vd)
             auto ivTy = initVal->getType();
             if (!ty->equalTo(ivTy)) {
                 LILErrorMessage ei;
-                ei.message =  "Type mismatch: cannot assign type "+ivTy->getName()+" to var."+ty->getName() + " " + vd->getName();
+                ei.message =  "Type mismatch: cannot assign type "+ivTy->stringRep()+" to var."+ty->stringRep() + " " + vd->getName();
                 LILNode::SourceLocation sl = initVal->getSourceLocation();
                 ei.file = sl.file;
                 ei.line = sl.line;
