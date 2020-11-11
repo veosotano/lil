@@ -4573,8 +4573,9 @@ bool LILCodeParser::readSingleArgumentFunctionCall(const LILString & name)
     }
     
     NodeType outNodeType;
-    bool svValid = this->readSingleValue(outNodeType);
-    if (svValid) {
+    bool outIsSingleValue = false;
+    bool expValid = this->readExpression(outIsSingleValue, outNodeType);
+    if (expValid) {
         d->receiver->receiveNodeCommit();
     } else {
         LIL_CANCEL_NODE
