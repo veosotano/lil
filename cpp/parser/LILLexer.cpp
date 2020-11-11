@@ -929,7 +929,7 @@ std::shared_ptr<LILToken> LILLexer::readMinusSignOrThinArrow()
         this->readNextChar();
         return ret;
     } else {
-        std::shared_ptr<LILToken> ret = std::make_shared<LILToken>(TokenTypeMinusSign, d->currentChar, d->currentLine, d->currentColumn - 1, d->index);
+        std::shared_ptr<LILToken> ret = std::make_shared<LILToken>(TokenTypeMinusSign, cc, d->currentLine, d->currentColumn - 1, d->index);
         //do not read next char here, since it was already read
         return ret;
     }
