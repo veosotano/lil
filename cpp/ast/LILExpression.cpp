@@ -179,6 +179,11 @@ LILString LILExpression::stringRep()
             tempstr += " | ";
             break;
         }
+        case ExpressionTypeCast:
+        {
+            tempstr += " => ";
+            break;
+        }
         default:
             break;
     }
