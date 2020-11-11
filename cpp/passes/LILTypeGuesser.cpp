@@ -1260,6 +1260,12 @@ std::shared_ptr<LILType> LILTypeGuesser::getNodeType(std::shared_ptr<LILNode> no
         case NodeTypeExpression:
         {
             std::shared_ptr<LILExpression> exp = std::static_pointer_cast<LILExpression>(node);
+            if (exp->isA(ExpressionTypeCast)) {
+                auto right = exp->getRight();
+                if (right && right->isA(NodeTypeType)) {
+                    return std::static_pointer_cast<LILType>(right);
+                }
+            }
             return this->getExpType(exp);
         }
         case NodeTypeFunctionDecl:
