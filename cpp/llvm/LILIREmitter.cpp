@@ -2871,13 +2871,7 @@ llvm::Value * LILIREmitter::emitForMultipleType(LIL::LILNode *node, std::shared_
     llvm::Value * llvmIr = this->emit(node);
 
     if (llvmIr) {
-        auto nodeType = this->llvmTypeFromLILType(node->getType().get())->getPointerTo();
-        if (member1->getType() != nodeType) {
-            auto castedPtr = d->irBuilder.CreateBitCast(member1, nodeType);
-            d->irBuilder.CreateStore(llvmIr, castedPtr);
-        } else {
-            d->irBuilder.CreateStore(llvmIr, member1);
-        }
+        d->irBuilder.CreateStore(llvmIr, d->currentAlloca);
     }
 
     d->currentAlloca = mtAlloca;
