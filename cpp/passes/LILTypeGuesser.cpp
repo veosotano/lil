@@ -1602,6 +1602,7 @@ std::shared_ptr<LILType> LILTypeGuesser::findReturnTypeForFunctionCall(std::shar
             auto firstArg = fc->getArguments().front();
             auto firstArgType = this->getNodeType(firstArg);
             auto newPtrTy = std::make_shared<LILPointerType>();
+            newPtrTy->setName("ptr");
             newPtrTy->setArgument(firstArgType);
             return newPtrTy;
         }
