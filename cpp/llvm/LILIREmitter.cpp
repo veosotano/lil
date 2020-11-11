@@ -2081,39 +2081,49 @@ llvm::Value * LILIREmitter::_emitIfIs(LILFlowControl * value)
     std::shared_ptr<LILVarDecl> subject;
     if (firstArg->isA(NodeTypeVarName)) {
         auto vn = std::static_pointer_cast<LILVarName>(firstArg);
-        auto subjectNode = this->findNodeForVarName(vn.get());
-        if (!subjectNode || !subjectNode->isA(NodeTypeVarDecl)) {
-            std::cerr << "NODE NOT FOUND FAIL!!!!!!!!!!!!!!!!\n\n";
+        ty = vn->getType();
+        auto subjNode = this->findNodeForVarName(vn.get());
+        if (!subjNode->isA(NodeTypeVarDecl)) {
+            std::cerr << "SUBJECT NODE WAS NOT VAR DECL FAIL!!!!!!!!!!!!!!!!\n\n";
             return nullptr;
         }
-        subject = std::static_pointer_cast<LILVarDecl>(subjectNode);
-        ty = subject->getType();
-        if (ty->isA(TypeTypeMultiple)) {
-            std::cerr << "UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!\n\n";
-            return nullptr;
-        }
-        
+        subject = std::static_pointer_cast<LILVarDecl>(subjNode);
+    } else if (firstArg->isA(NodeTypeValuePath)){
+        auto vp = std::static_pointer_cast<LILValuePath>(firstArg);
+        ty = vp->getType();
+//        auto subjNode = this->findNodeForValuePath(vp.get());
+//        if (!subjNode->isA(NodeTypeVarDecl)) {
+//            std::cerr << "SUBJECT NODE WAS NOT VAR DECL FAIL!!!!!!!!!!!!!!!!\n\n";
+//            return nullptr;
+//        }
+//        subject = std::static_pointer_cast<LILVarDecl>(subjNode);
     } else {
         std::cerr << "UNKNOWN FIRST ARG FAIL!!!!!!!!!!!!!!!!\n\n";
         return nullptr;
     }
-    
-    if (ty->isA(TypeTypeMultiple))
-    {
-        std::cerr << "UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!\n\n";
+    if (!ty) {
+        std::cerr << "TYPE OF ARGUMENT TO IF IS WAS NULL!!!!!!!!!!!!!!!!\n\n";
         return nullptr;
+    }
+    
+    auto lastArgTy = std::static_pointer_cast<LILType>(lastArg);
+    bool isMultiple = ty->isA(TypeTypeMultiple);
+
+    if (isMultiple)
+    {
+        condition = this->_emitIfIsConditionForMT(false, lastArgTy.get(), static_cast<LILMultipleType *>(ty.get()), firstArg.get());
     }
     else if (ty->getIsNullable())
     {
-        auto lastArgTy = std::static_pointer_cast<LILType>(lastArg);
-        
         if (lastArgTy->getName() == "null")
         {
-            auto firstArgTy = firstArg->getType();
-            condition = this->_emitIfIsConditionForNullable(true, firstArgTy.get(), firstArg.get());
+            condition = this->_emitIfIsConditionForNullable(true, ty.get(), firstArg.get());
         } else {
             condition = this->_emitIfIsConditionForNullable(false, lastArgTy.get(), firstArg.get());
         }
+    } else {
+        std::cerr << "!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!!!\n\n";
+        return nullptr;
     }
 
     llvm::Function * fun = d->irBuilder.GetInsertBlock()->getParent();
@@ -2121,26 +2131,40 @@ llvm::Value * LILIREmitter::_emitIfIs(LILFlowControl * value)
     llvm::BasicBlock * elseBB = llvm::BasicBlock::Create(d->llvmContext, "if.false");
     llvm::BasicBlock * mergeBB = llvm::BasicBlock::Create(d->llvmContext, "if.end");
     
-    d->irBuilder.CreateCondBr(condition, bodyBB, elseBB);
-    
-    //hide the nullable var
-    auto newTy = subject->getType()->clone();
-    newTy->setIsNullable(false);
+    //shadow the original var with the specific one
+    std::shared_ptr<LILType> newTy;
+    if (isMultiple){
+        newTy = lastArgTy->clone();
+    } else {
+        newTy = subject->getType()->clone();
+        newTy->setIsNullable(false);
+    }
     auto newVar = subject->clone();
     newVar->setType(newTy);
     auto name = subject->getName();
     auto nameData = name.data();
     value->setLocalVariable(name, newVar);
-
+    
     auto currentLlvmValue = d->namedValues[nameData];
     
-    if (currentLlvmValue->getType()->isStructTy()) {
+    bool needsGep = false;
+    auto llvmTy = currentLlvmValue->getType();
+    if (llvmTy->isPointerTy()) {
+        auto ptrLlvmTy = llvm::cast<llvm::PointerType>(llvmTy);
+        auto elemLlvmTy = ptrLlvmTy->getElementType();
+        if (elemLlvmTy->isStructTy()) {
+            needsGep = true;
+        }
+    }
+    if (needsGep) {
         std::vector<llvm::Value *> gepIndices;
         gepIndices.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
         gepIndices.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
         d->namedValues[nameData] = llvm::GetElementPtrInst::Create(this->llvmTypeFromLILType(ty.get()), currentLlvmValue, gepIndices, nameData, d->irBuilder.GetInsertBlock());
     }
-
+    
+    d->irBuilder.CreateCondBr(condition, bodyBB, elseBB);
+    
     //configure the body of the if
     d->irBuilder.SetInsertPoint(bodyBB);
     
@@ -2179,6 +2203,32 @@ llvm::Value * LILIREmitter::_emitIfIs(LILFlowControl * value)
     fun->getBasicBlockList().push_back(mergeBB);
     d->irBuilder.SetInsertPoint(mergeBB);
     return nullptr;
+}
+
+llvm::Value * LILIREmitter::_emitIfIsConditionForMT(bool negated, LILType * ty, LILMultipleType * multiTy, LILNode * val)
+{
+    size_t theIndex = multiTy->indexOfType(ty);
+    auto typeIndex = llvm::ConstantInt::get(
+        d->llvmContext,
+        llvm::APInt(
+            8,
+            theIndex,
+            false
+        )
+    );
+    
+    auto llvmIr = this->emitPointer(val);
+    
+    std::vector<llvm::Value *> gepIndices2;
+    gepIndices2.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
+    gepIndices2.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 1, false)));
+    auto member2 = d->irBuilder.CreateGEP(llvmIr, gepIndices2);
+    auto member2Value = d->irBuilder.CreateLoad(member2);
+    if (negated) {
+        return d->irBuilder.CreateICmpNE(typeIndex, member2Value);
+    } else {
+        return d->irBuilder.CreateICmpEQ(typeIndex, member2Value);
+    }
 }
 
 llvm::Value * LILIREmitter::_emitIfIsConditionForNullable(bool negated, LILType * ty, LILNode * val)

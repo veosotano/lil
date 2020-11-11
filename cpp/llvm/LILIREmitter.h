@@ -119,6 +119,7 @@ namespace LIL
         llvm::Value * _emitIf(LILFlowControl * value);
         llvm::Value * _emitIfIs(LILFlowControl * value);
         llvm::Value * _emitIfIsConditionForNullable(bool negated, LILType * ty, LILNode * val);
+        llvm::Value * _emitIfIsConditionForMT(bool negated, LILType * ty, LILMultipleType * multiTy, LILNode * val);
         llvm::Value * _emitFor(LILFlowControl * value);
         llvm::Value * _emitLoop(LILFlowControl * value);
         llvm::Value * _emit(LILFlowControlCall * value);
