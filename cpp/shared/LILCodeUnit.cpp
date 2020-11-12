@@ -149,6 +149,17 @@ void LILCodeUnit::run()
 
 void LILCodeUnit::buildAST()
 {
+    if (d->isMain) {
+        auto rootNode = this->getRootNode();
+        auto needsInstr = std::make_shared<LILInstruction>();
+        needsInstr->setInstructionType(InstructionTypeNeeds);
+        needsInstr->setName("needs");
+        auto strConst = std::make_shared<LILStringLiteral>();
+        strConst->setValue("\"std/lil.lil\"");
+        needsInstr->setArgument(strConst);
+        rootNode->addNode(needsInstr);
+    }
+
     d->parser->parseString(d->source);
 }
 
