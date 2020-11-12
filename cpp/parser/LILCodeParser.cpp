@@ -1382,7 +1382,7 @@ bool LILCodeParser::readTypeSimple()
         LILString tokenStr = d->currentToken->getString();
         if (tokenStr == "fn") {
             return this->readFunctionType();
-        } else if (tokenStr == "ptr" || tokenStr == "cstr"){
+        } else if (tokenStr == "ptr"){
             return this->readPointerType();
         } else if (tokenStr == "array") {
 //            return this->readArrayType();

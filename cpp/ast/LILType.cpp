@@ -155,8 +155,6 @@ bool LILType::isBuiltInType(LILString name)
         || name == "f32"
         || name == "f64"
         || name == "bool"
-        || name == "cstr"
-        || name == "str"
         || name == "null"
         || name == "i8%"
         || name == "i16%"

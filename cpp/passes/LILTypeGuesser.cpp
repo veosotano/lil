@@ -131,17 +131,12 @@ std::shared_ptr<LILType> LILTypeGuesser::_process(std::shared_ptr<LILType> value
     switch (value->getTypeType()) {
         case TypeTypePointer:
         {
-            //transform the cstr alias into pointer to i8
             auto ptrTy = std::static_pointer_cast<LILPointerType>(value);
-            if (value->getName() == "cstr") {
-                value->setName("ptr");
-                auto charType = std::make_shared<LILType>();
-                charType->setName("i8");
-                ptrTy->setArgument(charType);
-            } else {
-                auto arg = ptrTy->getArgument();
-                if (arg) {
-                    this->_process(arg);
+            auto arg = ptrTy->getArgument();
+            if (arg) {
+                auto newTy = this->_process(arg);
+                if (newTy) {
+                    ptrTy->setArgument(newTy);
                 }
             }
             break;
@@ -151,8 +146,19 @@ std::shared_ptr<LILType> LILTypeGuesser::_process(std::shared_ptr<LILType> value
             auto multiTy = std::static_pointer_cast<LILMultipleType>(value);
             multiTy->sortTypes();
             
+            std::vector<std::shared_ptr<LILType>> tys;
+            bool changed = false;
             for (auto childTy : multiTy->getTypes()) {
-                this->_process(childTy);
+                auto newTy = this->_process(childTy);
+                if (newTy) {
+                    changed = true;
+                    tys.push_back(newTy);
+                } else {
+                    tys.push_back(childTy);
+                }
+            }
+            if (changed) {
+                multiTy->setTypes(tys);
             }
             break;
         }
