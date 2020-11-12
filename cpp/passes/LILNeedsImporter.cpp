@@ -74,7 +74,8 @@ void LILNeedsImporter::performVisit(std::shared_ptr<LILRootNode> rootNode)
                 
                 std::unique_ptr<LILCodeUnit> codeUnit = std::make_unique<LILCodeUnit>();
                 codeUnit->setFile(path);
-                codeUnit->setDir(this->getDir());
+                LILString dir = this->_getDir(path);
+                codeUnit->setDir(dir);
                 std::ifstream file(path.data(), std::ios::in);
                 if (file.fail()) {
                     std::cerr << "\nERROR: Failed to read the file "+path.data()+"\n\n";
@@ -312,5 +313,26 @@ void LILNeedsImporter::_getNodesForImport(std::vector<std::shared_ptr<LILNode>> 
             default:
                 break;
         }
+    }
+}
+
+LILString LILNeedsImporter::_getDir(LILString path) const
+{
+    std::string dir = path.data();
+    size_t i = 0;
+    size_t pos = 0;
+    bool found = false;
+    for (std::string::iterator it = dir.begin(); it != dir.end(); ++it) {
+        char cc = *it;
+        if (cc == '/' || cc == '\\') {
+            found = true;
+            pos = i;
+        }
+        i += 1;
+    }
+    if (found) {
+        return dir.substr(0, pos);
+    } else {
+        return "";
     }
 }
