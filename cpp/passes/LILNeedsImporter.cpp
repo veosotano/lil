@@ -15,6 +15,7 @@
 #include <glob.h>
 
 #include "LILNeedsImporter.h"
+#include "LILAliasDecl.h"
 #include "LILClassDecl.h"
 #include "LILCodeUnit.h"
 #include "LILFunctionDecl.h"
@@ -22,6 +23,7 @@
 #include "LILObjectType.h"
 #include "LILRootNode.h"
 #include "LILStringLiteral.h"
+#include "LILTypeDecl.h"
 #include "LILVarDecl.h"
 
 using namespace LIL;
@@ -119,6 +121,20 @@ void LILNeedsImporter::performVisit(std::shared_ptr<LILRootNode> rootNode)
                         rootNode->getMainFn()->addEvaluable(vd);
                     }
                 }
+                break;
+            }
+            case NodeTypeAliasDecl:
+            {
+                auto ad = std::static_pointer_cast<LILAliasDecl>(newNode);
+                rootNode->addNode(ad);
+                rootNode->addAlias(ad);
+                break;
+            }
+            case NodeTypeTypeDecl:
+            {
+                auto td = std::static_pointer_cast<LILTypeDecl>(newNode);
+                rootNode->addNode(td);
+                rootNode->addType(td);
                 break;
             }
             case NodeTypeClassDecl:
@@ -286,7 +302,13 @@ void LILNeedsImporter::_getNodesForImport(std::vector<std::shared_ptr<LILNode>> 
                 break;
             }
                 
-                
+            case NodeTypeAliasDecl:
+            case NodeTypeTypeDecl:
+            {
+                newNodes->push_back(node->clone());
+                break;
+            }
+
             default:
                 break;
         }
