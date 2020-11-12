@@ -724,11 +724,17 @@ LILToStrInfo LILToStringVisitor::_stringify(LILFlowControlCall * value)
 LILToStrInfo LILToStringVisitor::_stringify(LILInstruction * value)
 {
     LILToStrInfo ret;
+    LILString tempStr;
     if (value->getIsColorInstruction()) {
         ret.value = "Color: #"+value->stringRep();
     } else {
-        ret.value = "Instruction: #"+value->stringRep();
+        tempStr = "Instruction: #"+value->stringRep();
+        auto arg = value->getArgument();
+        if (arg) {
+            ret.children.push_back(this->stringify(arg.get()));
+        }
     }
+    ret.value = tempStr;
     
     return ret;
 }
