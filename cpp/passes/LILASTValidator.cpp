@@ -252,6 +252,12 @@ void LILASTValidator::validate(LILNode * node)
             this->_validate(value);
             break;
         }
+        case NodeTypeForeignLang:
+        {
+            LILForeignLang * value = static_cast<LILForeignLang *>(node);
+            this->_validate(value);
+            break;
+        }
 
         default:
             std::cerr << "Error: unkonwn node type to validate\n";
@@ -668,6 +674,7 @@ void LILASTValidator::_validate(LILFunctionDecl * value)
                     case NodeTypeUnaryExpression:
                     case NodeTypeFlowControlCall:
                     case NodeTypeFlowControl:
+                    case NodeTypeForeignLang:
                     {
                         break;
                     }
@@ -808,6 +815,13 @@ void LILASTValidator::_validate(LILFlowControlCall * value)
 }
 
 void LILASTValidator::_validate(LILInstruction * value)
+{
+    if (this->getDebug()) {
+        std::cerr << "Nothing to do. OK\n";
+    }
+}
+
+void LILASTValidator::_validate(LILForeignLang * value)
 {
     if (this->getDebug()) {
         std::cerr << "Nothing to do. OK\n";

@@ -32,6 +32,7 @@ namespace LIL
         virtual void receiveNodeData(ParserEvent eventType, const LILString & data) = 0;
         virtual void receiveSourceLocation(LILString file, size_t startLine, size_t startCol, LILRange newRange) {};
         virtual void receiveError(LILString message, LILString file, size_t startLine, size_t startCol) {};
+        virtual void receiveForeignLang(const LILString & language, const LILString & content) {};
     };
 }
 

@@ -20,8 +20,11 @@
 #include "LILPointerType.h"
 #include "LILRootNode.h"
 
+#include "LLVMIRParser.h"
+
 #include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/STLExtras.h"
+#include "llvm/ADT/StringRef.h"
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/DerivedTypes.h"
@@ -30,11 +33,16 @@
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/LegacyPassManager.h"
 #include "llvm/IR/Module.h"
+#include "llvm/IR/ModuleSummaryIndex.h"
 #include "llvm/IR/Type.h"
 #include "llvm/IR/Verifier.h"
+#include "llvm/Support/MemoryBuffer.h"
+#include "llvm/Support/SourceMgr.h"
 #include "llvm/Transforms/InstCombine/InstCombine.h"
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/Scalar/GVN.h"
+#include "llvm/AsmParser/Parser.h"
+#include "llvm/AsmParser/LLParser.h"
 
 
 
@@ -273,6 +281,11 @@ llvm::Value * LILIREmitter::emit(LILNode * node)
         case NodeTypeInstruction:
         {
             LILInstruction * value = static_cast<LILInstruction *>(node);
+            return this->_emit(value);
+        }
+        case NodeTypeForeignLang:
+        {
+            LILForeignLang * value = static_cast<LILForeignLang *>(node);
             return this->_emit(value);
         }
 
@@ -2481,6 +2494,68 @@ llvm::Value * LILIREmitter::_emit(LILInstruction * value)
 {
     std::cerr << "!!!!!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!\n";
     return nullptr;
+}
+
+llvm::Value * LILIREmitter::_emit(LILForeignLang * value)
+{
+    if (value->getLanguage() == "llvm") {
+        llvm::StringRef llvmStr = value->getContent().data().c_str();
+        std::unique_ptr<llvm::MemoryBuffer> llvmBuf = llvm::MemoryBuffer::getMemBuffer(llvmStr);
+        llvm::SMDiagnostic err;
+        llvm::SourceMgr sourceMgr;
+
+        auto parent = value->getParentNode();
+        switch (parent->getNodeType()) {
+            case NodeTypeFunctionDecl:
+            case NodeTypeFlowControl:
+            {
+                if (this->getVerbose()) {
+                    std::cerr << "\n=====  PARSING LLVM IR  ====\n\n";
+                }
+
+                llvm::LLVMIRParser llParser(llvmBuf->getBuffer(), sourceMgr, err, d->llvmContext, this);
+                llParser.run();
+                
+                if (this->getVerbose()) {
+                    std::cerr << "\n\n== Finished parsing LLVM IR. ==\n\n";
+                }
+                break;
+            }
+            case NodeTypeRoot:
+            {
+                llvm::ModuleSummaryIndex index(true);
+                auto buf = llvmBuf.get();
+                sourceMgr.AddNewSourceBuffer(std::move(llvmBuf), llvm::SMLoc());
+                llvm::parseAssemblyInto(*buf, d->llvmModule.get(), &index, err);
+                break;
+            }
+            default:
+                break;
+        }
+    }
+    
+    return nullptr;
+}
+
+void LILIREmitter::receiveLLVMIRData(llvm::LLVMIRParserEvent eventType, std::string data)
+{
+    switch (eventType) {
+        case llvm::LLVMIRParserEventGlobalID:
+        case llvm::LLVMIRParserEventGlobalVar:
+        {
+            std::cerr << "@" + data;
+            break;
+        }
+        case llvm::LLVMIRParserEventLocalVar:
+        case llvm::LLVMIRParserEventLocalVarID:
+        {
+            std::cerr << "%" + data;
+            break;
+        }
+        default:
+            std::cerr << data;
+            break;
+    }
 }
 
 llvm::Value * LILIREmitter::emitPointer(LILNode * node)

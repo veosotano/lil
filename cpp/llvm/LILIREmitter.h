@@ -31,6 +31,7 @@
 #include "LILFlowControlCall.h"
 #include "LILFunctionCall.h"
 #include "LILFunctionDecl.h"
+#include "LILForeignLang.h"
 #include "LILInstruction.h"
 #include "LILNullLiteral.h"
 #include "LILNumberLiteral.h"
@@ -50,6 +51,8 @@
 #include "LILVarDecl.h"
 #include "LILVarName.h"
 
+#include "LLVMIRParser.h"
+
 namespace llvm {
     class AllocaInst;
     class Value;
@@ -68,7 +71,7 @@ namespace LIL
     class LILMultipleType;
     class LILIREmitterPrivate;
 
-    class LILIREmitter : public LILVisitor
+    class LILIREmitter : public LILVisitor , llvm::LLVMIRParserReceiver
     {
     public:
         LILIREmitter(LILString name);
@@ -129,6 +132,9 @@ namespace LIL
         llvm::Value * _emitReturn(LILFlowControlCall * value);
         llvm::Value * _emitRepeat(LILFlowControlCall * value);
         llvm::Value * _emit(LILInstruction * value);
+        llvm::Value * _emit(LILForeignLang * value);
+        
+        void receiveLLVMIRData(llvm::LLVMIRParserEvent eventType, std::string data) override;
 
         llvm::Value * emitPointer(LILNode * node);
         llvm::Value * _emitPointer(LILValuePath * vp);

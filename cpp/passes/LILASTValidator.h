@@ -29,6 +29,7 @@
 #include "LILFlag.h"
 #include "LILFlowControl.h"
 #include "LILFlowControlCall.h"
+#include "LILForeignLang.h"
 #include "LILFunctionCall.h"
 #include "LILFunctionDecl.h"
 #include "LILInstruction.h"
@@ -98,6 +99,7 @@ namespace LIL
         void _validate(LILFlowControl * value);
         void _validate(LILFlowControlCall * value);
         void _validate(LILInstruction * value);
+        void _validate(LILForeignLang * value);
         inline void validateChildren(const std::vector<std::shared_ptr<LILNode>> & children);
     };
 }

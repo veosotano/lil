@@ -64,6 +64,7 @@ namespace LIL
         std::shared_ptr<LILToken> readCommentOrSymbol();
         std::shared_ptr<LILToken> readDotChars();
         std::shared_ptr<LILToken> readComparator();
+        std::shared_ptr<LILToken> readComparatorOrForeignLang();
         std::shared_ptr<LILToken> readEqualSignOrFatArrow();
         std::shared_ptr<LILToken> readMinusSignOrThinArrow();
         std::shared_ptr<LILToken> readInvalidChar();

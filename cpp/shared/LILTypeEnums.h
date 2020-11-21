@@ -63,6 +63,7 @@ namespace LIL
         TokenTypeVerticalBar,
         TokenTypeThinArrow,
         TokenTypeFatArrow,
+        TokenTypeForeignLang,
     };
 
     enum NodeType
@@ -115,6 +116,7 @@ namespace LIL
         NodeTypeNativeMethod,
         NodeTypeWhitespaceNode,
         NodeTypeCommentNode,
+        NodeTypeForeignLang,
         NodeTypeInvalid,
     };
 
@@ -447,6 +449,7 @@ namespace LIL
         ParserEventColorRRGGBBA,
         ParserEventColorRRGGBBAA,
         ParserEventOther,
+        ParserEventForeignLang,
         ParserEventInvalid,
     };
 

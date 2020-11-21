@@ -58,6 +58,7 @@ namespace LIL
         BuilderStateFunctionCall,
         BuilderStateFlowControl,
         BuilderStateFlowControlCall,
+        BuilderStateForeignLang,
     };
     class LILNode;
     class LILRootNode;

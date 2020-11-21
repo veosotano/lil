@@ -28,6 +28,7 @@
 #include "LILFunctionCall.h"
 #include "LILFlowControl.h"
 #include "LILFlowControlCall.h"
+#include "LILForeignLang.h"
 #include "LILInstruction.h"
 #include "LILMultipleType.h"
 #include "LILNumberLiteral.h"
@@ -334,6 +335,12 @@ void LILASTBuilder::receiveNodeStart(NodeType nodeType)
             this->currentContainer.push_back(std::make_shared<LILInstruction>());
             break;
         }
+        case NodeTypeForeignLang:
+        {
+            this->state.push_back(BuilderStateForeignLang);
+            this->currentNode = std::make_shared<LILForeignLang>();
+            break;
+        }
         default:
             std::cerr << "Error: Unknown node type\n";
             break;
@@ -427,7 +434,11 @@ void LILASTBuilder::receiveNodeCommit()
                         }
                         break;
                     }
-
+                    case NodeTypeForeignLang:
+                    {
+                        rootNode->addNode(this->currentNode);
+                        break;
+                    }
                     default:
                         this->rootNode->getMainFn()->addEvaluable(this->currentNode);
                         break;
@@ -1265,6 +1276,15 @@ void LILASTBuilder::receiveError(LILString message, LILString file, size_t start
     ei.line = startLine;
     ei.column = startCol;
     this->errors.push_back(ei);
+}
+
+void LILASTBuilder::receiveForeignLang(const LILString & language, const LILString & content)
+{
+    if (this->currentNode && this->currentNode->isA(NodeTypeForeignLang)) {
+        auto fl = std::static_pointer_cast<LILForeignLang>(this->currentNode);
+        fl->setLanguage(language);
+        fl->setContent(content);
+    }
 }
 
 bool LILASTBuilder::hasErrors() const

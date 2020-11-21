@@ -18,6 +18,7 @@
 #include "../shared/utf8/utf8.h"
 
 #include "LILToken.h"
+#include "LILForeignLangToken.h"
 #include "LILStringToken.h"
 
 //#define LILLEXERDEBUG
@@ -298,8 +299,10 @@ std::shared_ptr<LILToken> LILLexer::readNextToken()
             return this->readEqualSignOrFatArrow();
 
         case '>':
-        case '<':
             return this->readComparator();
+
+        case '<':
+            return this->readComparatorOrForeignLang();
 
         case '[':
             ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeSquareBracketOpen, cc, d->currentLine, d->currentColumn - 1, d->index));
@@ -853,6 +856,109 @@ std::shared_ptr<LILToken> LILLexer::readDotChars()
         }
     }
     return ret;
+}
+
+std::shared_ptr<LILToken> LILLexer::readComparatorOrForeignLang()
+{
+    const size_t line = d->currentLine;
+    const size_t column = d->currentColumn - 1;
+    const size_t index = d->index;
+    std::shared_ptr<LILToken> ret;
+    LILChar peekChar;
+    auto iterator = d->iterator;
+    LILString completeString;
+    if (d->currentChar == '<') {
+        bool done = false;
+        bool isTag = false;
+        while (!done) {
+            done = true;
+            if (this->atEndOfSource())
+            {
+                break;
+            }
+            peekChar = utf8::peek_next(iterator, d->bufferEnd);
+            if (isLatin1Letter(peekChar)) {
+                done = false;
+            } else if (peekChar == '>') {
+                isTag = true;
+            }
+            iterator += 1;
+        }
+        if (isTag) {
+            //add the initial <
+            completeString += d->currentChar;
+            this->readNextChar();
+            //read the foreign language name
+            done = false;
+            while (!done) {
+                done = true;
+                if (this->atEndOfSource())
+                {
+                    break;
+                }
+                if (d->currentChar != '>') {
+                    this->storeCurrentCharAndReadNext();
+                    done = false;
+                }
+            }
+            auto token = std::make_shared<LILForeignLangToken>(TokenTypeForeignLang, line, column, index);
+            auto languageStr = this->extractCurrentTokenText();
+            completeString += languageStr;
+            token->setLanguage(languageStr);
+            //add the > to the complete string
+            completeString += d->currentChar;
+
+            this->readNextChar();
+
+            //read the content of the tag
+            done = false;
+            while (!done) {
+                done = true;
+                if (this->atEndOfSource())
+                {
+                    break;
+                }
+                if (d->currentChar == '<') {
+                    peekChar = utf8::peek_next(d->iterator, d->bufferEnd);
+                    if (peekChar != '/') {
+                        this->storeCurrentCharAndReadNext();
+                        done = false;
+                    }
+                } else {
+                    this->storeCurrentCharAndReadNext();
+                    done = false;
+                }
+            }
+            auto contentStr = this->extractCurrentTokenText();
+            completeString += contentStr;
+            token->setContent(contentStr);
+
+            //read the closing tag
+            done = false;
+            while (!done) {
+                done = true;
+                if (this->atEndOfSource())
+                {
+                    break;
+                }
+                if (d->currentChar != '>') {
+                    this->storeCurrentCharAndReadNext();
+                    done = false;
+                }
+            }
+            this->storeCurrentCharAndReadNext();
+            completeString += this->extractCurrentTokenText();
+
+            token->setString(completeString);
+
+            return token;
+        } else {
+            this->readNextChar();
+            auto token = std::make_shared<LILToken>(TokenTypeSmallerComparator, d->currentChar, line, column, index);
+            return token;
+        }
+    }
+    return nullptr;
 }
 
 /*!

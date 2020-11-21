@@ -15,6 +15,7 @@
 
 #include "LILShared.h"
 #include "LILCodeParser.h"
+#include "LILForeignLangToken.h"
 #include "LILLexer.h"
 #include "LILStringToken.h"
 #include "LILToken.h"
@@ -2317,6 +2318,11 @@ bool LILCodeParser::readBasicValue(NodeType &nodeType)
 
             break;
         }
+        case TokenTypeForeignLang:
+        {
+            nodeType = NodeTypeForeignLang;
+            return this->readForeignLang();
+        }
         default:
             break;
     }
@@ -4115,6 +4121,33 @@ bool LILCodeParser::readEvaluables()
                 evalsDone = false;
             }
         }
+        else if (d->currentToken->isA(TokenTypeForeignLang))
+        {
+            bool flValid = this->readForeignLang();
+            if (flValid) {
+                d->receiver->receiveNodeCommit();
+            } else {
+                d->receiver->receiveError(LILString::format("Error while reading foreign language on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
+            }
+            if (this->atEndOfSource())
+                return ret;
+            this->skip(TokenTypeWhitespace);
+            if (this->atEndOfSource())
+                return ret;
+            if (d->currentToken->isA(TokenTypeSemicolon))
+            {
+                evalsDone = false;
+                //skip the semicolon
+                d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+                this->readNextToken();
+                if (this->atEndOfSource())
+                    return false;
+                
+                this->skip(TokenTypeWhitespace);
+                if (this->atEndOfSource())
+                    return ret;
+            }
+        }
     }
     return ret;
 }
@@ -5259,5 +5292,15 @@ bool LILCodeParser::readContinueFlowControlCall()
     this->readNextToken();
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
     
+    LIL_END_NODE_SKIP(false)
+}
+
+bool LILCodeParser::readForeignLang()
+{
+    LIL_START_NODE(NodeTypeForeignLang);
+    auto flTok = std::static_pointer_cast<LILForeignLangToken>(d->currentToken);
+    d->receiver->receiveNodeData(ParserEventForeignLang, d->currentToken->getString());
+    d->receiver->receiveForeignLang(flTok->getLanguage(), flTok->getContent());
+    this->readNextToken();
     LIL_END_NODE_SKIP(false)
 }

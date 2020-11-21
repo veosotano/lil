@@ -102,6 +102,8 @@ LILString LILNode::nodeTypeToString(NodeType nodeType)
             return "flow control";
         case NodeTypeFlowControlCall:
             return "flow control call";
+        case NodeTypeForeignLang:
+            return "foreign language";
 
         default:
             return "ERROR: unknown node type";

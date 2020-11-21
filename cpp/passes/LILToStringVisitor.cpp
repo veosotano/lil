@@ -261,6 +261,12 @@ LILToStrInfo LILToStringVisitor::stringify(LILNode * node)
             info = this->_stringify(value);
             break;
         }
+        case NodeTypeForeignLang:
+        {
+            LILForeignLang * value = static_cast<LILForeignLang *>(node);
+            info = this->_stringify(value);
+            break;
+        }
 
         default:
             std::cerr << "Error: unkonwn node type to stringify\n";
@@ -736,6 +742,13 @@ LILToStrInfo LILToStringVisitor::_stringify(LILInstruction * value)
     }
     ret.value = tempStr;
     
+    return ret;
+}
+
+LILToStrInfo LILToStringVisitor::_stringify(LILForeignLang * value)
+{
+    LILToStrInfo ret;
+    ret.value = "Foreign lang: <"+value->getLanguage()+">";
     return ret;
 }
 
