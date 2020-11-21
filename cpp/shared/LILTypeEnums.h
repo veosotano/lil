@@ -448,7 +448,6 @@ namespace LIL
         ParserEventColorRRGGBB,
         ParserEventColorRRGGBBA,
         ParserEventColorRRGGBBAA,
-        ParserEventOther,
         ParserEventForeignLang,
         ParserEventInvalid,
     };

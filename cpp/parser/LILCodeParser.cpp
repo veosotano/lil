@@ -223,7 +223,7 @@ void LILCodeParser::skip(TokenType type)
         }
         else
         {
-            d->receiver->receiveNodeData(ParserEventOther, d->currentToken->getString());
+            d->receiver->receiveNodeData(ParserEventInvalid, d->currentToken->getString());
             this->readNextToken();
         }
     }
