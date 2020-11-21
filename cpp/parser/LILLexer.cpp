@@ -181,9 +181,9 @@ void LILLexer::readNextChar()
     {
         d->currentChar = LILChar(utf8::next(d->iterator, d->bufferEnd));
 #ifdef LILLEXERDEBUG
-        const char parsedChar = static_cast<const char>(d->currentChar.data());
+        wchar_t theChar = (wchar_t)d->currentChar.data();
         std::cerr << "read char: ";
-        std::cerr << parsedChar;
+        std::wcerr << theChar;
         std::cerr << "\n";
 #endif
     }

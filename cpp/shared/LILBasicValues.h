@@ -29,6 +29,7 @@
 #include <sstream>
 #include <cmath>
 #include <iostream>
+#include <cwchar>
 
 namespace LIL
 {
