@@ -78,8 +78,8 @@ namespace LIL
         virtual ~LILIREmitter();
         void reset();
         llvm::Module * getLLVMModule() const;
-        void initializeVisit();
-        virtual void visit(LILNode * node);
+        void initializeVisit() override;
+        virtual void visit(LILNode * node) override;
 
         llvm::Value * emit(LILNode * node);
         llvm::Value * _emit(LILBoolLiteral * value);

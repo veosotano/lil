@@ -72,13 +72,14 @@ namespace LIL
         LILASTBuilder();
         virtual ~LILASTBuilder();
 
-        void reset();
-        void receiveNodeStart(NodeType nodeType);
-        void receiveNodeEnd(NodeType nodeType);
-        void receiveNodeCommit();
-        void receiveNodeData(ParserEvent eventType, const LILString &data);
-        void receiveSourceLocation(LILString file, size_t startLine, size_t startCol, LILRange newRange);
-        void receiveError(LILString message, LILString file, size_t startLine, size_t startCol);
+        void reset() override;
+        void receiveNodeStart(NodeType nodeType) override;
+        void receiveNodeEnd(NodeType nodeType) override;
+        void receiveNodeCommit() override;
+        void receiveNodeData(ParserEvent eventType, const LILString &data) override;
+        void receiveSourceLocation(LILString file, size_t startLine, size_t startCol, LILRange newRange) override;
+        void receiveError(LILString message, LILString file, size_t startLine, size_t startCol) override;
+        void receiveForeignLang(const LILString & language, const LILString & content) override;
 
         std::shared_ptr<LILRootNode> getRootNode() const;
         bool hasErrors() const;
