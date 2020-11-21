@@ -48,6 +48,14 @@ LILString LILNode::nodeTypeToString(NodeType nodeType)
             return "var name";
         case NodeTypeType:
             return "type";
+        case NodeTypeFunctionType:
+            return "funtion type";
+        case NodeTypeObjectType:
+            return "object type";
+        case NodeTypePointerType:
+            return "pointer type";
+        case NodeTypeMultipleType:
+            return "multiple type";
         case NodeTypeVarDecl:
             return "var declaration";
         case NodeTypeAliasDecl:
