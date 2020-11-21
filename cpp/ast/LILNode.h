@@ -69,6 +69,7 @@ namespace LIL {
         std::shared_ptr<LILNode> getParentNode() const;
         void setParentNode(std::shared_ptr<LILNode> newParent);
         virtual void removeFromParentNode();
+        const std::vector<std::shared_ptr<LILNode> > & getChildNodes() const;
         virtual void addNode(std::shared_ptr<LILNode> child);
         virtual void removeNode(std::shared_ptr<LILNode> child);
         virtual void prependNode(std::shared_ptr<LILNode> child);
@@ -106,7 +107,6 @@ namespace LIL {
     protected:
         virtual std::shared_ptr<LILClonable> cloneImpl() const;
         void cloneChildNodes(std::shared_ptr<LILNode> clone) const;
-        const std::vector<std::shared_ptr<LILNode> > & getChildNodes() const;
         std::vector<std::shared_ptr<LILNode> > _childNodes;
 
     private:
