@@ -380,16 +380,18 @@ void LILASTBuilder::receiveNodeCommit()
                             this->rootNode->addNode(this->currentNode);
                             this->rootNode->setLocalVariable(vd->getName(), vd);
 
-                        } else if (this->_isMain) {
+                        } else {
                             auto ty = vd->getType();
                             if (ty && ty->isA(TypeTypeFunction)) {
                                 this->rootNode->addNode(this->currentNode);
                                 this->rootNode->setLocalVariable(vd->getName(), this->currentNode);
-                            } else {
+                            } else if (this->_isMain) {
                                 auto mainFn = this->rootNode->getMainFn();
                                 //set local variable
                                 mainFn->setLocalVariable(vd->getName(), vd);
                                 mainFn->addEvaluable(this->currentNode);
+                            } else {
+                                std::cerr << "TOP LEVEL EXPRESSIONS ARE NOT ALLOWED YET\n";
                             }
                         }
                         break;
