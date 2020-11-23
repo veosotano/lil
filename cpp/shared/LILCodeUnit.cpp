@@ -57,6 +57,7 @@ namespace LIL
         , debugTypeValidator(false)
         , debugConversionInserter(false)
         , debugTypeResolver(false)
+        , needsStdLil(true)
         {
         }
         LILString file;
@@ -81,6 +82,7 @@ namespace LIL
         bool debugTypeValidator;
         bool debugConversionInserter;
         bool debugTypeResolver;
+        bool needsStdLil;
     };
 }
 
@@ -131,6 +133,16 @@ LILString LILCodeUnit::getSource() const
     return d->source;
 }
 
+void LILCodeUnit::setNeedsStdLil(bool value)
+{
+    d->needsStdLil = value;
+}
+
+bool LILCodeUnit::getNeedsStdLil() const
+{
+    return d->needsStdLil;
+}
+
 void LILCodeUnit::run()
 {
     bool verbose = d->verbose;
@@ -149,7 +161,7 @@ void LILCodeUnit::run()
 
 void LILCodeUnit::buildAST()
 {
-    if (d->isMain) {
+    if (d->needsStdLil) {
         auto rootNode = this->getRootNode();
         auto needsInstr = std::make_shared<LILInstruction>();
         needsInstr->setInstructionType(InstructionTypeNeeds);

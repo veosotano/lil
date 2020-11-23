@@ -40,6 +40,8 @@ namespace LIL
         LILString getDir() const;
         void setSource(LILString source);
         LILString getSource() const;
+        void setNeedsStdLil(bool value);
+        bool getNeedsStdLil() const;
 
         void run();
         void buildAST();

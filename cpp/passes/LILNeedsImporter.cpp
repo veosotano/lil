@@ -73,6 +73,7 @@ void LILNeedsImporter::performVisit(std::shared_ptr<LILRootNode> rootNode)
                 }
                 
                 std::unique_ptr<LILCodeUnit> codeUnit = std::make_unique<LILCodeUnit>();
+                codeUnit->setNeedsStdLil(false);
                 codeUnit->setFile(path);
                 LILString dir = this->_getDir(path);
                 codeUnit->setDir(dir);
