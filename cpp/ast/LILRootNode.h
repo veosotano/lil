@@ -39,6 +39,8 @@ namespace LIL {
         std::shared_ptr<LILFunctionDecl> getMainFn() const;
         std::shared_ptr<LILVarDecl> getMainFnVarDecl() const;
         const std::vector<std::shared_ptr<LILNode>> & getNodes() const;
+        void clearNodes();
+        void appendNodes(const std::vector<std::shared_ptr<LILNode>> & nodes);
 
         void addClass(std::shared_ptr<LILClassDecl> value);
         const std::vector<std::shared_ptr<LILClassDecl>> & getClasses() const;

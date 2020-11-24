@@ -56,6 +56,7 @@ void LILNeedsImporter::performVisit(std::shared_ptr<LILRootNode> rootNode)
     this->setRootNode(rootNode);
     
     std::vector<std::shared_ptr<LILNode>> nodes = rootNode->getNodes();
+    rootNode->clearNodes();
     std::vector<std::shared_ptr<LILNode>> newNodes;
     std::vector<std::shared_ptr<LILNode>> remainingNodes;
     for (auto node : nodes) {
@@ -74,6 +75,13 @@ void LILNeedsImporter::performVisit(std::shared_ptr<LILRootNode> rootNode)
                 
                 std::unique_ptr<LILCodeUnit> codeUnit = std::make_unique<LILCodeUnit>();
                 codeUnit->setNeedsStdLil(false);
+                auto newRoot = codeUnit->getRootNode();
+                for (auto alias : rootNode->getAliases()) {
+                    newRoot->addAlias(alias->clone());
+                }
+                for (auto type : rootNode->getTypes()) {
+                    newRoot->addType(type->clone());
+                }
                 codeUnit->setFile(path);
                 LILString dir = this->_getDir(path);
                 codeUnit->setDir(dir);
@@ -89,88 +97,20 @@ void LILNeedsImporter::performVisit(std::shared_ptr<LILRootNode> rootNode)
                 codeUnit->setDebugAST(this->getDebugAST());
                 codeUnit->setVerbose(this->getVerbose());
                 codeUnit->run();
-                auto rootNode = codeUnit->getRootNode();
-                this->_getNodesForImport(&newNodes, rootNode);
+                this->_getNodesForImport(&newNodes, newRoot);
                 
                 if (this->getVerbose()) {
                     std::cerr << "\nEnd of file " << path.data() << "\n\n========================================\n\n";
                 }
+                
+                this->_importNewNodes(newNodes, rootNode);
+                newNodes.clear();
             }
         } else {
             remainingNodes.push_back(node);
         }
     }
-    for (auto newNode : newNodes) {
-        switch (newNode->getNodeType()) {
-            case NodeTypeVarDecl:
-            {
-                auto vd = std::static_pointer_cast<LILVarDecl>(newNode);
-                
-                //set local variable
-                rootNode->setLocalVariable(vd->getName(), vd);
-                
-                if (vd->getIsExtern()) {
-                    rootNode->addNode(vd);
-                } else {
-                    auto initVal = vd->getInitVal();
-                    if (initVal) {
-                        if (initVal->isA(NodeTypeFunctionDecl)) {
-                            rootNode->addNode(vd);
-                        } else {
-                            rootNode->getMainFn()->addEvaluable(vd);
-                        }
-                    } else {
-                        rootNode->getMainFn()->addEvaluable(vd);
-                    }
-                }
-                break;
-            }
-            case NodeTypeAliasDecl:
-            {
-                auto ad = std::static_pointer_cast<LILAliasDecl>(newNode);
-                rootNode->addNode(ad);
-                rootNode->addAlias(ad);
-                break;
-            }
-            case NodeTypeTypeDecl:
-            {
-                auto td = std::static_pointer_cast<LILTypeDecl>(newNode);
-                rootNode->addNode(td);
-                rootNode->addType(td);
-                break;
-            }
-            case NodeTypeClassDecl:
-            {
-                auto cd = std::static_pointer_cast<LILClassDecl>(newNode);
-                rootNode->addNode(cd);
-                rootNode->addClass(cd);
-                break;
-            }
-                
-            case NodeTypeInstruction:
-            {
-                auto instr = std::static_pointer_cast<LILInstruction>(newNode);
-                switch (instr->getInstructionType()) {
-                    case InstructionTypeNeeds:
-                    {
-                        rootNode->addNode(instr);
-                        rootNode->addDependency(instr);
-                        break;
-                    }
-                        
-                    default:
-                        break;
-                }
-                break;
-            }
-                
-            default:
-                rootNode->getMainFn()->addEvaluable(newNode);
-                break;
-        }
-    }
-    newNodes.insert(newNodes.begin() + newNodes.size(), remainingNodes.begin(), remainingNodes.end());
-    rootNode->setChildNodes(newNodes);
+    rootNode->appendNodes(remainingNodes);
 }
 
 void LILNeedsImporter::setDir(LILString dir)
@@ -312,6 +252,79 @@ void LILNeedsImporter::_getNodesForImport(std::vector<std::shared_ptr<LILNode>> 
             }
 
             default:
+                break;
+        }
+    }
+}
+
+void LILNeedsImporter::_importNewNodes(std::vector<std::shared_ptr<LILNode> > &newNodes, std::shared_ptr<LILRootNode> rootNode) const
+{
+    for (auto newNode : newNodes) {
+        switch (newNode->getNodeType()) {
+            case NodeTypeVarDecl:
+            {
+                auto vd = std::static_pointer_cast<LILVarDecl>(newNode);
+                
+                //set local variable
+                rootNode->setLocalVariable(vd->getName(), vd);
+                
+                if (vd->getIsExtern()) {
+                    rootNode->addNode(vd);
+                } else {
+                    auto initVal = vd->getInitVal();
+                    if (initVal) {
+                        if (initVal->isA(NodeTypeFunctionDecl)) {
+                            rootNode->addNode(vd);
+                        } else {
+                            rootNode->getMainFn()->addEvaluable(vd);
+                        }
+                    } else {
+                        rootNode->getMainFn()->addEvaluable(vd);
+                    }
+                }
+                break;
+            }
+            case NodeTypeAliasDecl:
+            {
+                auto ad = std::static_pointer_cast<LILAliasDecl>(newNode);
+                rootNode->addNode(ad);
+                rootNode->addAlias(ad);
+                break;
+            }
+            case NodeTypeTypeDecl:
+            {
+                auto td = std::static_pointer_cast<LILTypeDecl>(newNode);
+                rootNode->addNode(td);
+                rootNode->addType(td);
+                break;
+            }
+            case NodeTypeClassDecl:
+            {
+                auto cd = std::static_pointer_cast<LILClassDecl>(newNode);
+                rootNode->addNode(cd);
+                rootNode->addClass(cd);
+                break;
+            }
+                
+            case NodeTypeInstruction:
+            {
+                auto instr = std::static_pointer_cast<LILInstruction>(newNode);
+                switch (instr->getInstructionType()) {
+                    case InstructionTypeNeeds:
+                    {
+                        rootNode->addNode(instr);
+                        rootNode->addDependency(instr);
+                        break;
+                    }
+                        
+                    default:
+                        break;
+                }
+                break;
+            }
+                
+            default:
+                rootNode->getMainFn()->addEvaluable(newNode);
                 break;
         }
     }

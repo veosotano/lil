@@ -80,6 +80,16 @@ const std::vector<std::shared_ptr<LILNode>> & LILRootNode::getNodes() const
     return this->getChildNodes();
 }
 
+void LILRootNode::clearNodes()
+{
+    this->clearChildNodes();
+}
+
+void LILRootNode::appendNodes(const std::vector<std::shared_ptr<LILNode>> & nodes)
+{
+    this->_childNodes.insert(this->_childNodes.begin() + this->_childNodes.size(), nodes.begin(), nodes.end());
+}
+
 void LILRootNode::addClass(std::shared_ptr<LILClassDecl> value)
 {
     this->_classes.push_back(value);
