@@ -801,7 +801,7 @@ llvm::Value * LILIREmitter::_emit(LILObjectDefinition * value)
             if (needsCall) {
                 callValues.push_back(this->emit(theVal.get()));
             } else {
-                auto gep = this->_emitGEP(alloca, classValue->getName(), theIndex, varName, 0);
+                auto gep = this->_emitGEP(alloca, classValue->getName(), theIndex, varName, true);
                 d->currentAlloca = gep;
                 auto vdTy = vd->getType();
                 llvm::Value * llvmValue;
@@ -1068,7 +1068,7 @@ llvm::Value * LILIREmitter::_emit(LILAssignment * value)
                         }
                         
                         std::string name = pn->getName().data();
-                        llvmSubject = this->_emitGEP(llvmSubject, className, theIndex, stringRep, 0);
+                        llvmSubject = this->_emitGEP(llvmSubject, currentTy->getName(), theIndex, stringRep, true);
                         
                         if (isLastNode) {
                             auto ty = value->getType();
@@ -1307,7 +1307,7 @@ llvm::Value * LILIREmitter::_emit(LILValuePath * value)
                         }
 
                         std::string name = pn->getName().data();
-                        llvmSubject = this->_emitGEP(llvmSubject, className, theIndex, stringRep, 0);
+                        llvmSubject = this->_emitGEP(llvmSubject, currentTy->getName(), theIndex, stringRep, true);
                         if (isLastNode) {
                             return d->irBuilder.CreateLoad(llvmSubject, name.data());
                         } else {
@@ -1343,20 +1343,27 @@ llvm::Value * LILIREmitter::_emit(LILValuePath * value)
     return nullptr;
 }
 
-llvm::Value * LILIREmitter::_emitGEP(llvm::Value * llvmValue, LILString className, LILUnitI32 fieldIndex, LILString fieldName, LILUnitI32 arrayIndex)
+llvm::Value * LILIREmitter::_emitGEP(llvm::Value * llvmValue, LILString className, LILUnitI32 fieldIndex, LILString fieldName, bool stepThroughPointer)
 {
     auto name = className.data();
     if (d->classTypes.count(name)) {
-        return this->_emitGEP(llvmValue, d->classTypes[name], fieldIndex, fieldName, arrayIndex);
+        return this->_emitGEP(llvmValue, d->classTypes[name], true, fieldIndex, fieldName, stepThroughPointer, false, 0);
     }
     return nullptr;
 }
 
-llvm::Value * LILIREmitter::_emitGEP(llvm::Value * llvmValue, llvm::Type * llvmType, LILUnitI32 fieldIndex, LILString fieldName, LILUnitI32 arrayIndex)
+llvm::Value * LILIREmitter::_emitGEP(llvm::Value * llvmValue, llvm::Type * llvmType, bool useField, LILUnitI32 fieldIndex, LILString fieldName, bool stepThroughPointer, bool useArrayIndex, LILUnitI32 arrayIndex)
 {
     std::vector<llvm::Value *> idList;
-    idList.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
-    idList.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, fieldIndex, false)));
+    if (stepThroughPointer) {
+        idList.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
+    }
+    if (useArrayIndex) {
+        idList.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, arrayIndex, false)));
+    }
+    if (useField) {
+        idList.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, fieldIndex, false)));
+    }
     return llvm::GetElementPtrInst::Create(llvmType, llvmValue, idList, fieldName.data(), d->irBuilder.GetInsertBlock());
 }
 
@@ -2691,7 +2698,7 @@ llvm::Value * LILIREmitter::_emitPointer(LILValuePath * value)
                     }
                     
                     std::string name = pn->getName().data();
-                    llvmSubject = this->_emitGEP(llvmSubject, className, theIndex, stringRep, 0);
+                    llvmSubject = this->_emitGEP(llvmSubject, className, theIndex, stringRep, true);
                     break;
                 }
                     

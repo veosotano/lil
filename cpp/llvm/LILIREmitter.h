@@ -99,8 +99,8 @@ namespace LIL
         llvm::Value * _emit(LILObjectDefinition * value);
         llvm::Value * _emit(LILAssignment * value);
         llvm::Value * _emit(LILValuePath * value);
-        llvm::Value * _emitGEP(llvm::Value * llvmValue, LILString className, LILUnitI32 fieldIndex, LILString fieldName, LILUnitI32 arrayIndex);
-        llvm::Value * _emitGEP(llvm::Value * llvmValue, llvm::Type * llvmType, LILUnitI32 fieldIndex, LILString fieldName, LILUnitI32 arrayIndex);
+        llvm::Value * _emitGEP(llvm::Value * llvmValue, LILString className, LILUnitI32 fieldIndex, LILString fieldName, bool stepThroughPointer);
+        llvm::Value * _emitGEP(llvm::Value * llvmValue, llvm::Type * llvmType, bool useField, LILUnitI32 fieldIndex, LILString fieldName, bool stepThroughPointer, bool useArrayIndex, LILUnitI32 arrayIndex);
         llvm::Value * _emit(LILPropertyName * value);
         llvm::Value * _emit(LILVarName * value);
         llvm::Value * _emit(LILRule * value);
