@@ -104,6 +104,8 @@ namespace LIL {
         LILString getHostProperty() const;
         void setHostProperty(LILString newValue);
 
+        bool hidden;
+
     protected:
         virtual std::shared_ptr<LILClonable> cloneImpl() const;
         void cloneChildNodes(std::shared_ptr<LILNode> clone) const;
@@ -116,7 +118,6 @@ namespace LIL {
         LILString _hostProperty;
         LILUnitI64 _specificity;
         LILNode::SourceLocation _sourceLocation;
-
     };
 }
 

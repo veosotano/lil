@@ -41,6 +41,9 @@ namespace LIL
         void setArgument(std::shared_ptr<LILNode> value);
         std::shared_ptr<LILNode> getArgument() const;
         
+        void setVerbose(bool value);
+        bool getVerbose() const;
+        
     protected:
         virtual std::shared_ptr<LILClonable> cloneImpl() const  override;
         
@@ -49,6 +52,7 @@ namespace LIL
         std::shared_ptr<LILNode> _argument;
         InstructionType _instructionType;
         bool _isColorInstruction;
+        bool _verbose;
     };
 }
 

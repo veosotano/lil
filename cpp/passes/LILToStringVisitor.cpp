@@ -52,8 +52,10 @@ void LILToStringVisitor::initializeVisit()
 
 void LILToStringVisitor::visit(LILNode *node)
 {
-    LILToStrInfo info = this->stringify(node);
-    this->printInfo(info, 0, LILToStringVisitorNoItems);
+    if (!node->hidden) {
+        LILToStrInfo info = this->stringify(node);
+        this->printInfo(info, 0, LILToStringVisitorNoItems);
+    }
 }
 
 void LILToStringVisitor::printInfo(LILToStrInfo info, size_t indents, std::vector<size_t> moreItems)

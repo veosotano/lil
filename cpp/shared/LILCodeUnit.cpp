@@ -45,6 +45,7 @@ namespace LIL
         , pm(std::make_unique<LILPassManager>())
         , isMain(false)
         , verbose(false)
+        , debugLilStd(false)
         , debugNeedsImporter(false)
         , debugAST(false)
         , debugASTValidator(false)
@@ -70,6 +71,7 @@ namespace LIL
         bool isMain;
 
         bool verbose;
+        bool debugLilStd;
         bool debugNeedsImporter;
         bool debugAST;
         bool debugASTValidator;
@@ -170,6 +172,10 @@ void LILCodeUnit::buildAST()
         strConst->setValue("\"std/lil.lil\"");
         needsInstr->setArgument(strConst);
         rootNode->addNode(needsInstr);
+        if (!d->debugLilStd) {
+            needsInstr->setVerbose(false);
+            needsInstr->hidden = true;
+        }
     }
 
     d->parser->parseString(d->source);
@@ -321,6 +327,11 @@ void LILCodeUnit::setDebugAST(bool value)
     if(d->astBuilder){
         d->astBuilder->setDebugAST(value);
     }
+}
+
+void LILCodeUnit::setDebugLilStd(bool value)
+{
+    d->debugLilStd = value;
 }
 
 void LILCodeUnit::setDebugNeedsImporter(bool value)

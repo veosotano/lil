@@ -69,7 +69,7 @@ void LILNeedsImporter::performVisit(std::shared_ptr<LILRootNode> rootNode)
             LILString argStr = std::static_pointer_cast<LILStringLiteral>(arg)->getValue().stripQuotes();
             auto paths = this->_resolveFilePaths(argStr);
             for (auto path : paths) {
-                if (this->getVerbose()) {
+                if (this->getVerbose() && instr->getVerbose()) {
                     std::cerr << "Start of file " << path.data() << "\n\n========================================\n\n";
                 }
                 
@@ -95,15 +95,15 @@ void LILNeedsImporter::performVisit(std::shared_ptr<LILRootNode> rootNode)
                 LILString lilStr(buffer.str());
                 codeUnit->setSource(lilStr);
                 codeUnit->setDebugAST(this->getDebugAST());
-                codeUnit->setVerbose(this->getVerbose());
+                codeUnit->setVerbose(this->getVerbose() && instr->getVerbose());
                 codeUnit->run();
                 this->_getNodesForImport(&newNodes, newRoot);
                 
-                if (this->getVerbose()) {
+                if (this->getVerbose() && instr->getVerbose()) {
                     std::cerr << "\nEnd of file " << path.data() << "\n\n========================================\n\n";
                 }
                 
-                this->_importNewNodes(newNodes, rootNode);
+                this->_importNewNodes(newNodes, rootNode, !(this->getVerbose() && instr->getVerbose()));
                 newNodes.clear();
             }
         } else {
@@ -257,9 +257,12 @@ void LILNeedsImporter::_getNodesForImport(std::vector<std::shared_ptr<LILNode>> 
     }
 }
 
-void LILNeedsImporter::_importNewNodes(std::vector<std::shared_ptr<LILNode> > &newNodes, std::shared_ptr<LILRootNode> rootNode) const
+void LILNeedsImporter::_importNewNodes(std::vector<std::shared_ptr<LILNode> > &newNodes, std::shared_ptr<LILRootNode> rootNode, bool hidden) const
 {
     for (auto newNode : newNodes) {
+        if (hidden) {
+            newNode->hidden = true;
+        }
         switch (newNode->getNodeType()) {
             case NodeTypeVarDecl:
             {

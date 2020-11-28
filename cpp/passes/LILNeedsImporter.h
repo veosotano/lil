@@ -39,7 +39,7 @@ namespace LIL
         std::vector<LILString> _resolveFilePaths(LILString argStr) const;
         std::vector<std::string> _glob(const std::string& pattern) const;
         void _getNodesForImport(std::vector<std::shared_ptr<LILNode>> * newNodes, std::shared_ptr<LILRootNode> rootNode) const;
-        void _importNewNodes(std::vector<std::shared_ptr<LILNode>> & newNodes, std::shared_ptr<LILRootNode> rootNode) const;
+        void _importNewNodes(std::vector<std::shared_ptr<LILNode>> & newNodes, std::shared_ptr<LILRootNode> rootNode, bool hidden) const;
         LILString _getDir(LILString path) const;
     };
 }

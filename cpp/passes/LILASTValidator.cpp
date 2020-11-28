@@ -409,7 +409,7 @@ void LILASTValidator::_validate(LILType * value)
         case TypeTypeSingle:
         {
             auto name = value->getName();
-            if (!this->_isCustomType(name) && !LILType::isBuiltInType(name)) {
+            if (!LILType::isBuiltInType(name) && !this->_isCustomType(name)) {
                 LILErrorMessage ei;
                 ei.message =  "Invalid type name "+name;
                 LILNode::SourceLocation sl = value->getSourceLocation();

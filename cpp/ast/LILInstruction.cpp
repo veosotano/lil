@@ -20,6 +20,7 @@ LILInstruction::LILInstruction()
 : LIL::LILNode(NodeTypeInstruction)
 , _instructionType(InstructionTypeNone)
 , _isColorInstruction(false)
+, _verbose(true)
 {
     this->_instructionType = InstructionTypeNone;
 }
@@ -31,6 +32,7 @@ LILInstruction::LILInstruction(const LILInstruction &other)
     this->_name = other._name;
     this->_isColorInstruction = other._isColorInstruction;
     this->_argument = other._argument;
+    this->_verbose = other._verbose;
 }
 
 std::shared_ptr<LILInstruction> LILInstruction::clone() const
@@ -132,4 +134,14 @@ void LILInstruction::setArgument(std::shared_ptr<LILNode> value)
 std::shared_ptr<LILNode> LILInstruction::getArgument() const
 {
     return this->_argument;
+}
+
+void LILInstruction::setVerbose(bool value)
+{
+    this->_verbose = value;
+}
+
+bool LILInstruction::getVerbose() const
+{
+    return this->_verbose;
 }

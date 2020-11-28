@@ -37,10 +37,13 @@ int main(int argc, const char * argv[]) {
         return 0;
     }
     
+    bool isMain = true;
+    bool isMainFlag = false;
     bool printOnly = false;
     bool compileToO = false;
     bool compileToS = false;
     bool verbose = false;
+    bool debugLilStd = false;
     bool debugNeedsImporter = false;
     bool debugAST = false;
     bool debugFieldSorter = false;
@@ -63,6 +66,9 @@ int main(int argc, const char * argv[]) {
         if (command == "-c" || command == "--just-compile") {
             //compile to .o file
             compileToO = true;
+            if (!isMainFlag) {
+                isMain = false;
+            }
             if (compileToS) {
                 compileToS = false;
             }
@@ -110,6 +116,17 @@ int main(int argc, const char * argv[]) {
             ++i;
             
         
+        } else if (command == "--is-main") {
+            //force is main to be true
+            isMain = true;
+            isMainFlag = true;
+            ++i;
+            
+            
+        } else if (command == "--debug-lil-std") {
+            debugLilStd = true;
+            ++i;
+
         } else if (command == "--debug-needs-importer") {
             debugNeedsImporter = true;
             ++i;
@@ -221,8 +238,9 @@ int main(int argc, const char * argv[]) {
     std::string directory(cwdBuf);
     
     std::unique_ptr<LILCodeUnit> codeUnit = std::make_unique<LILCodeUnit>();
-    codeUnit->setIsMain(true);
+    codeUnit->setIsMain(isMain);
     codeUnit->setVerbose(verbose);
+    codeUnit->setDebugLilStd(debugLilStd);
     codeUnit->setDebugNeedsImporter(debugNeedsImporter);
     codeUnit->setDebugAST(debugAST);
     codeUnit->setDebugASTValidator(debugASTValidator);

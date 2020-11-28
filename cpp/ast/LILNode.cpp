@@ -119,20 +119,24 @@ LILString LILNode::nodeTypeToString(NodeType nodeType)
 }
 
 LILNode::LILNode(NodeType type)
+: nodeType(type)
+, _specificity(1)
+, document(nullptr)
+, hidden(false)
 {
-    this->nodeType = type;
-    this->_specificity = 1;
-    this->document = nullptr;
+    
 }
 
 LILNode::LILNode(const LILNode &orig)
+: nodeType(orig.nodeType)
+, _specificity(orig._specificity)
+, document(orig.document)
+, _sourceLocation(orig._sourceLocation)
+, _childNodes(orig._childNodes)
+, _parentNode(orig._parentNode)
+, hidden(orig.hidden)
 {
-    this->nodeType = orig.nodeType;
-    this->_specificity = orig._specificity;
-    this->document = orig.document;
-    this->_sourceLocation = orig._sourceLocation;
-    this->_childNodes = orig._childNodes;
-    this->_parentNode = orig._parentNode;
+    
 }
 LILNode::~LILNode()
 {
@@ -284,6 +288,8 @@ bool LILNode::equalTo(std::shared_ptr<LILNode> otherNode)
     //check wether the same amount of child nodes
     size_t nodesSize = this->_childNodes.size();
     if (nodesSize != otherNode->_childNodes.size()) return false;
+    //compare hidden flag
+    if (otherNode->hidden != this->hidden) return false;
     //compare the child nodes
     for (size_t i = 0; i<nodesSize; ++i)
     {
