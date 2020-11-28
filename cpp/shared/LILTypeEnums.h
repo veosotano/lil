@@ -84,6 +84,7 @@ namespace LIL
         NodeTypeMultipleType,
         NodeTypeFunctionType,
         NodeTypePointerType,
+        NodeTypeStaticArrayType,
         NodeTypeObjectType,
         //---
         NodeTypeVarName,
@@ -114,6 +115,7 @@ namespace LIL
         NodeTypeArray,
         NodeTypeIndexAccessor,
         NodeTypeNativeMethod,
+        NodeTypeValueList,
         NodeTypeWhitespaceNode,
         NodeTypeCommentNode,
         NodeTypeForeignLang,
@@ -128,6 +130,7 @@ namespace LIL
         TypeTypeFunction,
         TypeTypePointer,
         TypeTypeObject,
+        TypeTypeStaticArray,
     };
 
     enum ExpressionType

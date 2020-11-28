@@ -269,6 +269,18 @@ LILToStrInfo LILToStringVisitor::stringify(LILNode * node)
             info = this->_stringify(value);
             break;
         }
+        case NodeTypeValueList:
+        {
+            LILValueList * value = static_cast<LILValueList *>(node);
+            info = this->_stringify(value);
+            break;
+        }
+        case NodeTypeIndexAccessor:
+        {
+            LILIndexAccessor * value = static_cast<LILIndexAccessor *>(node);
+            info = this->_stringify(value);
+            break;
+        }
 
         default:
             std::cerr << "Error: unkonwn node type to stringify\n";
@@ -751,6 +763,24 @@ LILToStrInfo LILToStringVisitor::_stringify(LILForeignLang * value)
 {
     LILToStrInfo ret;
     ret.value = "Foreign lang: <"+value->getLanguage()+">";
+    return ret;
+}
+
+LILToStrInfo LILToStringVisitor::_stringify(LILValueList * value)
+{
+    LILToStrInfo ret;
+    ret.value = "Value list";
+    this->stringifyChildren(value->getValues(), ret);
+    return ret;
+}
+
+LILToStrInfo LILToStringVisitor::_stringify(LILIndexAccessor * value)
+{
+    LILToStrInfo ret;
+    ret.value = "Index accessor: [";
+    auto argInfo = this->stringify(value->getArgument().get());
+    ret.value += argInfo.value;
+    ret.value += "]";
     return ret;
 }
 

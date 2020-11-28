@@ -75,6 +75,7 @@ namespace LIL
         bool readTypeSimple();
         bool readFunctionType();
         bool readPointerType();
+        bool readStaticArrayType();
         bool readVarDecl();
         bool readAliasDecl();
         bool readTypeDecl();
@@ -88,6 +89,7 @@ namespace LIL
         bool readUnaryExpression();
         bool readSingleValue(NodeType &nodeType);
         bool readBasicValue(NodeType &nodeType);
+        bool readValueList();
         bool readStringLiteral();
         bool readStringFunction();
         bool readStringArgument();

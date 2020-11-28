@@ -56,6 +56,8 @@ LILString LILNode::nodeTypeToString(NodeType nodeType)
             return "pointer type";
         case NodeTypeMultipleType:
             return "multiple type";
+        case NodeTypeStaticArrayType:
+            return "static array type";
         case NodeTypeVarDecl:
             return "var declaration";
         case NodeTypeAliasDecl:
@@ -112,6 +114,8 @@ LILString LILNode::nodeTypeToString(NodeType nodeType)
             return "flow control call";
         case NodeTypeForeignLang:
             return "foreign language";
+        case NodeTypeValueList:
+            return "value list";
 
         default:
             return "ERROR: unknown node type";
@@ -160,6 +164,7 @@ bool LILNode::isContainerNode(NodeType nodeType)
         case NodeTypeFunctionType:
         case NodeTypePointerType:
         case NodeTypeObjectType:
+        case NodeTypeStaticArrayType:
         case NodeTypeVarDecl:
         case NodeTypeAliasDecl:
         case NodeTypeTypeDecl:
@@ -176,6 +181,8 @@ bool LILNode::isContainerNode(NodeType nodeType)
         case NodeTypeSimpleSelector:
         case NodeTypeSelectorChain:
         case NodeTypeInstruction:
+        case NodeTypeValueList:
+        case NodeTypeIndexAccessor:
             return true;
         default:
             return false;

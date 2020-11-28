@@ -219,6 +219,18 @@ void LILParameterSorter::process(LILNode * node)
         {
             break;
         }
+        case NodeTypeValueList:
+        {
+            LILValueList * value = static_cast<LILValueList *>(node);
+            this->_process(value);
+            break;
+        }
+        case NodeTypeIndexAccessor:
+        {
+            LILIndexAccessor * value = static_cast<LILIndexAccessor *>(node);
+            this->_process(value);
+            break;
+        }
             
         default:
             std::cerr << "Error: unkonwn node type to process\n";
@@ -534,6 +546,19 @@ void LILParameterSorter::_process(LILFlowControlCall * value)
 
 void LILParameterSorter::_process(LILInstruction * value)
 {
+}
+
+void LILParameterSorter::_process(LILValueList * value)
+{
+    this->processChildren(value->getValues());
+}
+
+void LILParameterSorter::_process(LILIndexAccessor * value)
+{
+    auto arg = value->getArgument();
+    if (arg) {
+        this->process(arg.get());
+    }
 }
 
 void LILParameterSorter::processChildren(const std::vector<std::shared_ptr<LILNode> > &children)

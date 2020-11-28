@@ -258,6 +258,18 @@ void LILASTValidator::validate(LILNode * node)
             this->_validate(value);
             break;
         }
+        case NodeTypeValueList:
+        {
+            LILValueList * value = static_cast<LILValueList *>(node);
+            this->_validate(value);
+            break;
+        }
+        case NodeTypeIndexAccessor:
+        {
+            LILIndexAccessor * value = static_cast<LILIndexAccessor *>(node);
+            this->_validate(value);
+            break;
+        }
 
         default:
             std::cerr << "Error: unkonwn node type to validate\n";
@@ -825,6 +837,36 @@ void LILASTValidator::_validate(LILForeignLang * value)
 {
     if (this->getDebug()) {
         std::cerr << "Nothing to do. OK\n";
+    }
+}
+
+void LILASTValidator::_validate(LILValueList * value)
+{
+    if (this->getDebug()) {
+        std::cerr << "Nothing to do. OK\n";
+    }
+}
+
+void LILASTValidator::_validate(LILIndexAccessor * value)
+{
+    auto arg = value->getArgument();
+    if (arg) {
+        switch (arg->getNodeType()) {
+            case NodeTypeNumberLiteral:
+            case NodeTypeStringLiteral:
+            case NodeTypeStringFunction:
+            case NodeTypeExpression:
+            case NodeTypeVarName:
+            case NodeTypeValuePath:
+            case NodeTypeFunctionCall:
+                break;
+            default:
+                this->illegalNodeType(arg.get(), value);
+                break;
+        }
+        if (this->getDebug() && !this->hasErrors()) {
+            std::cerr << "The argument is a " + LILNode::nodeTypeToString(arg->getNodeType()).data() +". OK\n";
+        }
     }
 }
 

@@ -953,8 +953,8 @@ std::shared_ptr<LILToken> LILLexer::readComparatorOrForeignLang()
 
             return token;
         } else {
-            this->readNextChar();
             auto token = std::make_shared<LILToken>(TokenTypeSmallerComparator, d->currentChar, line, column, index);
+            this->readNextChar();
             return token;
         }
     }

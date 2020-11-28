@@ -48,6 +48,7 @@
 #include "LILStringLiteral.h"
 #include "LILType.h"
 #include "LILUnaryExpression.h"
+#include "LILValueList.h"
 #include "LILVarDecl.h"
 #include "LILVarName.h"
 
@@ -133,6 +134,7 @@ namespace LIL
         llvm::Value * _emitRepeat(LILFlowControlCall * value);
         llvm::Value * _emit(LILInstruction * value);
         llvm::Value * _emit(LILForeignLang * value);
+        llvm::Value * _emit(LILValueList * value);
         
         void receiveLLVMIRData(llvm::LLVMIRParserEvent eventType, std::string data) override;
 

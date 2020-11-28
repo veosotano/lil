@@ -16,6 +16,7 @@
 #include "LILAliasDecl.h"
 #include "LILVarNode.h"
 #include "LILObjectType.h"
+#include "LILStaticArrayType.h"
 
 using namespace LIL;
 
@@ -32,7 +33,7 @@ void LILTypeGuesser::initializeVisit()
     if (this->getVerbose()) {
         std::cerr << "\n\n";
         std::cerr << "============================\n";
-        std::cerr << "==== VAR TYPE GUESSING  ====\n";
+        std::cerr << "=====  TYPE GUESSING   =====\n";
         std::cerr << "============================\n\n";
     }
 }
@@ -590,6 +591,18 @@ void LILTypeGuesser::process(LILNode * node)
             this->_process(value);
             break;
         }
+        case NodeTypeValueList:
+        {
+            LILValueList * value = static_cast<LILValueList *>(node);
+            this->_process(value);
+            break;
+        }
+        case NodeTypeIndexAccessor:
+        {
+            LILIndexAccessor * value = static_cast<LILIndexAccessor *>(node);
+            this->_process(value);
+            break;
+        }
         case NodeTypeType:
         {
             //do nothing
@@ -923,6 +936,14 @@ void LILTypeGuesser::_process(LILFlowControlCall * value)
 }
 
 void LILTypeGuesser::_process(LILInstruction * value)
+{
+}
+
+void LILTypeGuesser::_process(LILValueList * value)
+{
+}
+
+void LILTypeGuesser::_process(LILIndexAccessor * value)
 {
 }
 
@@ -1646,6 +1667,7 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(std::shared_ptr<LI
 {
     auto nodes = vp->getNodes();
     std::shared_ptr<LILNode> firstNode;
+    std::shared_ptr<LILType> currentTy;
     if (nodes.size() == 1) {
         firstNode = nodes.front();
         if (firstNode->isA(NodeTypeVarName)) {
@@ -1653,44 +1675,42 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(std::shared_ptr<LI
         }
     } else if (nodes.size() > 1){
         firstNode = nodes.front();
-        std::shared_ptr<LILClassDecl> classDecl;
-
         if (firstNode->isA(NodeTypeVarName)) {
             std::shared_ptr<LILType> subjTy = this->findTypeForVarName(std::static_pointer_cast<LILVarName>(firstNode));
-            if (subjTy && subjTy->isA(TypeTypeObject)) {
-                auto objTy = std::static_pointer_cast<LILObjectType>(subjTy);
-                classDecl = this->findClassWithName(objTy->getName().data());
+            if (subjTy) {
+                currentTy = subjTy;
+            } else {
+                std::cerr << "SUBJ TY WAS NULL FAIL!!!!";
+                return nullptr;
             }
         }
         else if (firstNode->isA(SelectorTypeSelfSelector)) {
-            classDecl = this->findAncestorClass(firstNode);
+            auto classDecl = this->findAncestorClass(firstNode);
+            currentTy = classDecl->getType();
         }
-        if (!classDecl) {
-            return nullptr;
-        }
+        bool isLast = false;
         for (size_t i=1, j=nodes.size(); i<j; ++i) {
+            isLast = i==j-1;
             auto node = nodes[i];
             switch (node->getNodeType()) {
                 case NodeTypePropertyName:
                 {
                     auto pn = std::static_pointer_cast<LILPropertyName>(node);
                     auto pnName = pn->getName();
+                    if (!currentTy->isA(TypeTypeObject)) {
+                        std::cerr << "CURRENT TY WAS NOT OBJECT TY FAIL!!!!";
+                        return nullptr;
+                    }
+                    auto classDecl = this->findClassWithName(currentTy->getName().data());
                     auto field = classDecl->getFieldNamed(pnName);
                     auto fieldTy = this->getNodeType(field);
-                    if (i==j-1) {
-                        return fieldTy;
-                    } else {
-                        if (fieldTy && fieldTy->isA(TypeTypeObject)) {
-                            auto fieldObjTy = std::static_pointer_cast<LILObjectType>(fieldTy);
-                            classDecl = this->findClassWithName(fieldObjTy->getName().data());
-                        }
-                    }
-                    
+                    currentTy = fieldTy;
                     break;
                 }
                 case NodeTypeFunctionCall:
                 {
                     auto fc = std::static_pointer_cast<LILFunctionCall>(node);
+                    auto classDecl = this->findClassWithName(currentTy->getName().data());
                     auto method = classDecl->getMethodNamed(fc->getName());
                     auto methTy = method->getType();
                     if (!methTy->isA(TypeTypeFunction)) {
@@ -1698,12 +1718,31 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(std::shared_ptr<LI
                         return nullptr;
                     }
                     auto fnTy = std::static_pointer_cast<LILFunctionType>(methTy);
-                    return fnTy->getReturnType();
+                    auto retTy = fnTy->getReturnType();
+                    if (retTy) {
+                        currentTy = retTy;
+                    } else {
+                        std::cerr << "RET TY WAS NULL FAIL!!!!";
+                        return nullptr;
+                    }
+                }
+                case NodeTypeIndexAccessor:
+                {
+                    if (!currentTy->isA(TypeTypeStaticArray)) {
+                        std::cerr << "METHOD TYPE IS NOT ARRAY TYPE FAIL!!!!";
+                        return nullptr;
+                    }
+                    auto saTy = std::static_pointer_cast<LILStaticArrayType>(currentTy);
+                    currentTy = saTy->getType();
+                    break;
                 }
 
                 default:
                     std::cerr << "!!!!!!!!!!VALUE PATH NODE TYPE FAIL!!!!!!!!!!!!!!!!\n";
                     break;
+            }
+            if (isLast) {
+                return currentTy;
             }
         }
     }

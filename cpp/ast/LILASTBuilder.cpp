@@ -29,6 +29,7 @@
 #include "LILFlowControl.h"
 #include "LILFlowControlCall.h"
 #include "LILForeignLang.h"
+#include "LILIndexAccessor.h"
 #include "LILInstruction.h"
 #include "LILMultipleType.h"
 #include "LILNumberLiteral.h"
@@ -44,11 +45,13 @@
 #include "LILSelector.h"
 #include "LILSelectorChain.h"
 #include "LILSimpleSelector.h"
+#include "LILStaticArrayType.h"
 #include "LILStringFunction.h"
 #include "LILStringLiteral.h"
 #include "LILType.h"
 #include "LILTypeDecl.h"
 #include "LILUnaryExpression.h"
+#include "LILValueList.h"
 #include "LILVarDecl.h"
 #include "LILVarName.h"
 
@@ -164,6 +167,18 @@ void LILASTBuilder::receiveNodeStart(NodeType nodeType)
         {
             this->state.push_back(BuilderStatePointerType);
             this->currentContainer.push_back(std::make_shared<LILPointerType>());
+            break;
+        }
+        case NodeTypeStaticArrayType:
+        {
+            this->state.push_back(BuilderStateStaticArrayType);
+            if (this->currentNode && this->currentNode->isA(NodeTypeType))
+            {
+                std::shared_ptr<LILStaticArrayType> sat = std::make_shared<LILStaticArrayType>();
+                sat->setType(std::static_pointer_cast<LILType>(this->currentNode));
+                this->currentContainer.push_back(sat);
+                this->currentNode.reset();
+            }
             break;
         }
         case NodeTypeObjectType:
@@ -339,6 +354,24 @@ void LILASTBuilder::receiveNodeStart(NodeType nodeType)
         {
             this->state.push_back(BuilderStateForeignLang);
             this->currentNode = std::make_shared<LILForeignLang>();
+            break;
+        }
+        case NodeTypeValueList:
+        {
+            this->state.push_back(BuilderStateValueList);
+            if (this->currentNode)
+            {
+                std::shared_ptr<LILValueList> sat = std::make_shared<LILValueList>();
+                sat->addValue(this->currentNode);
+                this->currentContainer.push_back(sat);
+                this->currentNode.reset();
+            }
+            break;
+        }
+        case NodeTypeIndexAccessor:
+        {
+            this->state.push_back(BuilderStateIndexAccessor);
+            this->currentContainer.push_back(std::make_shared<LILIndexAccessor>());
             break;
         }
         default:
@@ -520,6 +553,14 @@ void LILASTBuilder::receiveNodeCommit()
             if (this->currentNode) {
                 std::shared_ptr<LILPointerType> ty = std::static_pointer_cast<LILPointerType>(this->currentContainer.back());
                 ty->setArgument(std::static_pointer_cast<LILType>(this->currentNode));
+            }
+            break;
+        }
+        case BuilderStateStaticArrayType:
+        {
+            if (this->currentNode) {
+                std::shared_ptr<LILStaticArrayType> ty = std::static_pointer_cast<LILStaticArrayType>(this->currentContainer.back());
+                ty->setArgument(this->currentNode);
             }
             break;
         }
@@ -767,6 +808,19 @@ void LILASTBuilder::receiveNodeCommit()
         {
             auto instr = std::static_pointer_cast<LILInstruction>(this->currentContainer.back());
             instr->setArgument(this->currentNode);
+            break;
+        }
+
+        case BuilderStateValueList:
+        {
+            auto vl = std::static_pointer_cast<LILValueList>(this->currentContainer.back());
+            vl->addValue(this->currentNode);
+            break;
+        }
+        case BuilderStateIndexAccessor:
+        {
+            auto ia = std::static_pointer_cast<LILIndexAccessor>(this->currentContainer.back());
+            ia->setArgument(this->currentNode);
             break;
         }
         default:

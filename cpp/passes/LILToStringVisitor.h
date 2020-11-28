@@ -31,6 +31,7 @@
 #include "LILForeignLang.h"
 #include "LILFunctionCall.h"
 #include "LILFunctionDecl.h"
+#include "LILIndexAccessor.h"
 #include "LILInstruction.h"
 #include "LILNullLiteral.h"
 #include "LILNumberLiteral.h"
@@ -47,6 +48,7 @@
 #include "LILType.h"
 #include "LILTypeDecl.h"
 #include "LILUnaryExpression.h"
+#include "LILValueList.h"
 #include "LILVarDecl.h"
 #include "LILVarName.h"
 
@@ -94,6 +96,8 @@ namespace LIL
         LILToStrInfo _stringify(LILFlowControlCall * value);
         LILToStrInfo _stringify(LILInstruction * value);
         LILToStrInfo _stringify(LILForeignLang * value);
+        LILToStrInfo _stringify(LILValueList * value);
+        LILToStrInfo _stringify(LILIndexAccessor * value);
         LILString stringForIndent(size_t indents, std::vector<size_t> moreItems);
         inline void stringifyChildren(const std::vector<std::shared_ptr<LILNode>> & children, LILToStrInfo & info);
     };

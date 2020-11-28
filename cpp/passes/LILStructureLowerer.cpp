@@ -209,6 +209,16 @@ void LILStructureLowerer::process(std::shared_ptr<LILNode> node)
             std::shared_ptr<LILInstruction> value = std::static_pointer_cast<LILInstruction>(node);
             return this->_process(value);
         }
+        case NodeTypeValueList:
+        {
+            std::shared_ptr<LILValueList> value = std::static_pointer_cast<LILValueList>(node);
+            return this->_process(value);
+        }
+        case NodeTypeIndexAccessor:
+        {
+            std::shared_ptr<LILIndexAccessor> value = std::static_pointer_cast<LILIndexAccessor>(node);
+            return this->_process(value);
+        }
 
         default:
             std::cerr << "Error: unkonwn node type to process\n";
@@ -495,6 +505,21 @@ void LILStructureLowerer::_process(std::shared_ptr<LILFlowControlCall> value)
 void LILStructureLowerer::_process(std::shared_ptr<LILInstruction> value)
 {
 }
+
+void LILStructureLowerer::_process(std::shared_ptr<LILValueList> value)
+{
+    this->processChildren(value->getValues());
+}
+
+
+void LILStructureLowerer::_process(std::shared_ptr<LILIndexAccessor> value)
+{
+    auto arg = value->getArgument();
+    if (arg) {
+        this->process(arg);
+    }
+}
+
 
 void LILStructureLowerer::processChildren(const std::vector<std::shared_ptr<LILNode> > &children)
 {

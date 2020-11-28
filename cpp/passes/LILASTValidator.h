@@ -32,6 +32,7 @@
 #include "LILForeignLang.h"
 #include "LILFunctionCall.h"
 #include "LILFunctionDecl.h"
+#include "LILIndexAccessor.h"
 #include "LILInstruction.h"
 #include "LILNullLiteral.h"
 #include "LILNumberLiteral.h"
@@ -49,6 +50,7 @@
 #include "LILStringLiteral.h"
 #include "LILTypeDecl.h"
 #include "LILUnaryExpression.h"
+#include "LILValueList.h"
 #include "LILVarDecl.h"
 #include "LILVarName.h"
 
@@ -100,6 +102,8 @@ namespace LIL
         void _validate(LILFlowControlCall * value);
         void _validate(LILInstruction * value);
         void _validate(LILForeignLang * value);
+        void _validate(LILValueList * value);
+        void _validate(LILIndexAccessor * value);
         inline void validateChildren(const std::vector<std::shared_ptr<LILNode>> & children);
     };
 }

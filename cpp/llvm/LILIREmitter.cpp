@@ -16,9 +16,11 @@
 #include "LILIREmitter.h"
 
 #include "LILFunctionType.h"
+#include "LILIndexAccessor.h"
 #include "LILMultipleType.h"
 #include "LILPointerType.h"
 #include "LILRootNode.h"
+#include "LILStaticArrayType.h"
 
 #include "LLVMIRParser.h"
 
@@ -286,6 +288,11 @@ llvm::Value * LILIREmitter::emit(LILNode * node)
         case NodeTypeForeignLang:
         {
             LILForeignLang * value = static_cast<LILForeignLang *>(node);
+            return this->_emit(value);
+        }
+        case NodeTypeValueList:
+        {
+            LILValueList * value = static_cast<LILValueList *>(node);
             return this->_emit(value);
         }
 
@@ -886,8 +893,8 @@ llvm::Value * LILIREmitter::_emit(LILAssignment * value)
         auto firstNode = *it;
         bool isExtern = false;
         llvm::Value * llvmSubject = nullptr;
-        std::shared_ptr<LILClassDecl> classDecl;
-        LILString className;
+        std::shared_ptr<LILType> currentTy;
+        LILString instanceName;
         LILString stringRep;
         
         if (firstNode->isA(NodeTypeVarName)) {
@@ -895,22 +902,18 @@ llvm::Value * LILIREmitter::_emit(LILAssignment * value)
             std::shared_ptr<LILNode> subjectNode = this->findNodeForVarName(vn.get());
             if (subjectNode && subjectNode->isA(NodeTypeVarDecl)) {
                 auto vd = std::static_pointer_cast<LILVarDecl>(subjectNode);
-                className = vd->getName();
-                llvmSubject = d->namedValues[className.data()];
+                instanceName = vd->getName();
+                llvmSubject = d->namedValues[instanceName.data()];
                 if (vd->getIsExtern()) {
                     isExtern = true;
                 }
                 stringRep = vn->getName();
                 auto vdTy = vd->getType();
-                if (!vdTy->isA(TypeTypeObject)) {
-                    std::cerr << "!!!!!!!!!!NODE DOES NOT POINT TO OBJECT FAIL !!!!!!!!!!!!!!!!\n";
+                if (!vdTy) {
+                    std::cerr << "TYPE OF VAR DECL WAS NULL FAIL !!!!!!!!!!!!!!!!\n";
                     return nullptr;
                 }
-                classDecl = this->findClassWithName(vdTy->getName());
-                if (!classDecl) {
-                    std::cerr << "!!!!!!!!!!CLASS NOT FOUND FAIL !!!!!!!!!!!!!!!!\n";
-                    return nullptr;
-                }
+                currentTy = vdTy;
             }
         } else {
             //selector
@@ -920,8 +923,8 @@ llvm::Value * LILIREmitter::_emit(LILAssignment * value)
                 {
                     auto selfPtr = d->namedValues["@self"];
                     llvmSubject = d->irBuilder.CreateLoad(selfPtr);
-                    classDecl = this->findAncestorClass(value->shared_from_this());
-                    className = classDecl->getName();
+                    auto classDecl = this->findAncestorClass(value->shared_from_this());
+                    currentTy = classDecl->getType();
                     stringRep = "@self";
                     break;
                 }
@@ -948,7 +951,12 @@ llvm::Value * LILIREmitter::_emit(LILAssignment * value)
                         return nullptr;
                     }
                     auto fc = std::static_pointer_cast<LILFunctionCall>(currentNode);
-                    
+
+                    auto classDecl = this->findClassWithName(currentTy->getName());
+                    if (!classDecl) {
+                        std::cerr << "!!!!!!!!!!CLASS NOT FOUND FAIL !!!!!!!!!!!!!!!!\n";
+                        return nullptr;
+                    }
                     auto method = classDecl->getMethodNamed(fc->getName());
                     if (!method->isA(NodeTypeVarDecl)) {
                         std::cerr << "!!!!!!!!!!NODE IS NOT VAR DECL FAIL !!!!!!!!!!!!!!!!\n";
@@ -999,8 +1007,12 @@ llvm::Value * LILIREmitter::_emit(LILAssignment * value)
                     auto pn = std::static_pointer_cast<LILPropertyName>(currentNode);
                     const auto & pnName = pn->getName();
                     stringRep += "." + pnName;
-                    
-                    
+
+                    auto classDecl = this->findClassWithName(currentTy->getName());
+                    if (!classDecl) {
+                        std::cerr << "!!!!!!!!!!CLASS NOT FOUND FAIL !!!!!!!!!!!!!!!!\n";
+                        return nullptr;
+                    }
                     auto field = classDecl->getFieldNamed(pnName);
                     if (!field->isA(NodeTypeVarDecl)) {
                         std::cerr << "!!!!!!!!!!NODE IS NOT VAR DECL FAIL !!!!!!!!!!!!!!!!\n";
@@ -1036,15 +1048,11 @@ llvm::Value * LILIREmitter::_emit(LILAssignment * value)
                                 }
                                 auto fnTy = std::static_pointer_cast<LILFunctionType>(ty);
                                 auto retTy = fnTy->getReturnType();
-                                if (!retTy->isA(TypeTypeObject)) {
-                                    std::cerr << "!!!!!!!!!!NODE DOES NOT POINT TO OBJECT FAIL !!!!!!!!!!!!!!!!\n";
+                                if (!retTy) {
+                                    std::cerr << "RET TY WAS NULL FAIL !!!!!!!!!!!!!!\n";
                                     return nullptr;
                                 }
-                                classDecl = this->findClassWithName(retTy->getName());
-                                if (!classDecl) {
-                                    std::cerr << "!!!!!!!!!!CLASS NOT FOUND FAIL !!!!!!!!!!!!!!!!\n";
-                                    return nullptr;
-                                }
+                                currentTy = retTy;
                             }
                         } else {
                             std::cerr << "!!!!!!!!!!COULD NOT FIND METHOD FAIL!!!!!!!!!!!!!!!!\n";
@@ -1103,6 +1111,40 @@ llvm::Value * LILIREmitter::_emit(LILAssignment * value)
                     break;
                 }
                     
+                case NodeTypeIndexAccessor:
+                {
+                    auto ia = std::static_pointer_cast<LILIndexAccessor>(currentNode);
+                    auto arg = ia->getArgument();
+                    switch (currentTy->getTypeType()) {
+                        case TypeTypeStaticArray:
+                        {
+                            auto saTy = std::static_pointer_cast<LILStaticArrayType>(currentTy);
+                            
+                            std::vector<llvm::Value *> idList;
+                            //step through the pointer
+                            idList.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
+                            //add the index into the array
+                            auto argIr = this->emit(arg.get());
+                            if (!argIr) {
+                                std::cerr << "CODEGEN OF ARGUMENT OF INDEX ACCESSOR FAILED!!!!!!!!!!!!!!!!\n";
+                                return nullptr;
+                            }
+                            idList.push_back(argIr);
+                            llvmSubject = llvm::GetElementPtrInst::Create(this->llvmTypeFromLILType(currentTy.get()), llvmSubject, idList, "", d->irBuilder.GetInsertBlock());
+                            if (isLastNode) {
+                                return d->irBuilder.CreateStore(llvmValue, llvmSubject);
+                            } else {
+                                currentTy = saTy->getType();
+                            }
+                            break;
+                        }
+                        default:
+                            std::cerr << "!!!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!\n";
+                            return nullptr;
+                    }
+                    break;
+                }
+                    
                 default:
                     break;
             }
@@ -1127,8 +1169,7 @@ llvm::Value * LILIREmitter::_emit(LILValuePath * value)
         auto firstNode = *it;
         bool isExtern = false;
         llvm::Value * llvmSubject = nullptr;
-        std::shared_ptr<LILClassDecl> classDecl;
-        LILString className;
+        std::shared_ptr<LILType> currentTy;
         LILString instanceName;
         LILString stringRep;
 
@@ -1144,16 +1185,11 @@ llvm::Value * LILIREmitter::_emit(LILValuePath * value)
                 }
                 stringRep = vn->getName();
                 auto vdTy = vd->getType();
-                if (!vdTy->isA(TypeTypeObject)) {
-                    std::cerr << "!!!!!!!!!!NODE DOES NOT POINT TO OBJECT FAIL !!!!!!!!!!!!!!!!\n";
+                if (!vdTy) {
+                    std::cerr << "TYPE OF VAR DECL WAS NULL FAIL !!!!!!!!!!!!!!!!\n";
                     return nullptr;
                 }
-                className = vdTy->getName();
-                classDecl = this->findClassWithName(className);
-                if (!classDecl) {
-                    std::cerr << "!!!!!!!!!!CLASS NOT FOUND FAIL !!!!!!!!!!!!!!!!\n";
-                    return nullptr;
-                }
+                currentTy = vdTy;
             }
         } else {
             //selector
@@ -1163,8 +1199,8 @@ llvm::Value * LILIREmitter::_emit(LILValuePath * value)
                 {
                     auto ptrToSelf = d->namedValues["@self"];
                     llvmSubject = d->irBuilder.CreateLoad(ptrToSelf);
-                    classDecl = this->findAncestorClass(value->shared_from_this());
-                    className = classDecl->getName();
+                    auto classDecl = this->findAncestorClass(value->shared_from_this());
+                    currentTy = classDecl->getType();
                     stringRep = "@self";
                     break;
                 }
@@ -1180,11 +1216,19 @@ llvm::Value * LILIREmitter::_emit(LILValuePath * value)
             auto currentNode = *it;
             ++it;
             bool isLastNode = it == childNodes.end();
+            if (llvmSubject == nullptr) {
+                std::cerr << "!!!!!!!!!!SUBJECT OF VALUE PATH WAS NULL!!!!!!!!!!!!!!!!\n";
+                return nullptr;
+            }
             switch (currentNode->getNodeType()) {
                 case NodeTypeFunctionCall:
                 {
                     auto fc = std::static_pointer_cast<LILFunctionCall>(currentNode);
-
+                    auto classDecl = this->findClassWithName(currentTy->getName());
+                    if (!classDecl) {
+                        std::cerr << "!!!!!!!!!!CLASS NOT FOUND FAIL !!!!!!!!!!!!!!!!\n";
+                        return nullptr;
+                    }
                     auto method = classDecl->getMethodNamed(fc->getName());
                     if (!method->isA(NodeTypeVarDecl)) {
                         std::cerr << "!!!!!!!!!!NODE IS NOT VAR DECL FAIL !!!!!!!!!!!!!!!!\n";
@@ -1218,30 +1262,31 @@ llvm::Value * LILIREmitter::_emit(LILValuePath * value)
                         return llvmSubject;
                     } else {
                         auto retTy = fnTy->getReturnType();
-                        if (!retTy->isA(TypeTypeObject)) {
-                            std::cerr << "!!!!!!!!!!NODE DOES NOT POINT TO OBJECT FAIL !!!!!!!!!!!!!!!!\n";
+                        if (!retTy) {
+                            std::cerr << "RETURN TYPE WAS NULL FAIL !!!!!!!!!!!!!!!!\n";
                             return nullptr;
                         }
-                        className = retTy->getName();
-                        classDecl = this->findClassWithName(className);
-                        if (!classDecl) {
-                            std::cerr << "!!!!!!!!!!CLASS NOT FOUND FAIL !!!!!!!!!!!!!!!!\n";
-                            return nullptr;
-                        }
+                        currentTy = retTy;
                     }
                     break;
                 }
 
                 case NodeTypePropertyName:
                 {
-                    if (llvmSubject == nullptr) {
-                        std::cerr << "!!!!!!!!!!SUBJECT OF VALUE PATH WAS NULL!!!!!!!!!!!!!!!!\n";
-                        return nullptr;
-                    }
                     auto pn = std::static_pointer_cast<LILPropertyName>(currentNode);
                     const auto & pnName = pn->getName();
                     stringRep += "." + pnName;
 
+                    if (!currentTy->isA(TypeTypeObject)) {
+                        std::cerr << "CURRENT TYPE WAS NOT OBJECT TYPE FAIL !!!!!!!!!!!!!!!!\n";
+                        return nullptr;
+                    }
+
+                    auto classDecl = this->findClassWithName(currentTy->getName());
+                    if (!classDecl) {
+                        std::cerr << "!!!!!!!!!!CLASS NOT FOUND FAIL !!!!!!!!!!!!!!!!\n";
+                        return nullptr;
+                    }
                     auto field = classDecl->getFieldNamed(pnName);
                     if (!field->isA(NodeTypeVarDecl)) {
                         std::cerr << "!!!!!!!!!!NODE IS NOT VAR DECL FAIL !!!!!!!!!!!!!!!!\n";
@@ -1273,16 +1318,11 @@ llvm::Value * LILIREmitter::_emit(LILValuePath * value)
                                 }
                                 auto fnTy = std::static_pointer_cast<LILFunctionType>(ty);
                                 auto retTy = fnTy->getReturnType();
-                                if (!retTy->isA(TypeTypeObject)) {
-                                    std::cerr << "!!!!!!!!!!NODE DOES NOT POINT TO OBJECT FAIL !!!!!!!!!!!!!!!!\n";
+                                if (!retTy) {
+                                    std::cerr << "RET TY WAS NULL FAIL !!!!!!!!!!!!!!\n";
                                     return nullptr;
                                 }
-                                className = retTy->getName();
-                                classDecl = this->findClassWithName(className);
-                                if (!classDecl) {
-                                    std::cerr << "!!!!!!!!!!CLASS NOT FOUND FAIL !!!!!!!!!!!!!!!!\n";
-                                    return nullptr;
-                                }
+                                currentTy = retTy;
                             }
                         } else {
                             std::cerr << "!!!!!!!!!!COULD NOT FIND GETTER FAIL!!!!!!!!!!!!!!!!\n";
@@ -1311,24 +1351,42 @@ llvm::Value * LILIREmitter::_emit(LILValuePath * value)
                         if (isLastNode) {
                             return d->irBuilder.CreateLoad(llvmSubject, name.data());
                         } else {
-                            auto ty = fieldVd->getType();
-                            if (!ty->isA(TypeTypeFunction)) {
-                                std::cerr << "!!!!!!!!!!TYPE IS NOT FUNCTION TYPE FAIL !!!!!!!!!!!!!!!!\n";
-                                return nullptr;
-                            }
-                            auto fnTy = std::static_pointer_cast<LILFunctionType>(ty);
-                            auto retTy = fnTy->getReturnType();
-                            if (!retTy->isA(TypeTypeObject)) {
-                                std::cerr << "!!!!!!!!!!NODE DOES NOT POINT TO OBJECT FAIL !!!!!!!!!!!!!!!!\n";
-                                return nullptr;
-                            }
-                            className = retTy->getName();
-                            classDecl = this->findClassWithName(className);
-                            if (!classDecl) {
-                                std::cerr << "!!!!!!!!!!CLASS NOT FOUND FAIL !!!!!!!!!!!!!!!!\n";
-                                return nullptr;
-                            }
+                            currentTy = fieldVd->getType();
                         }
+                    }
+                    break;
+                }
+                    
+                case NodeTypeIndexAccessor:
+                {
+                    auto ia = std::static_pointer_cast<LILIndexAccessor>(currentNode);
+                    auto arg = ia->getArgument();
+                    switch (currentTy->getTypeType()) {
+                        case TypeTypeStaticArray:
+                        {
+                            auto saTy = std::static_pointer_cast<LILStaticArrayType>(currentTy);
+                            
+                            std::vector<llvm::Value *> idList;
+                            //step through the pointer
+                            idList.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
+                            //add the index into the array
+                            auto argIr = this->emit(arg.get());
+                            if (!argIr) {
+                                std::cerr << "CODEGEN OF ARGUMENT OF INDEX ACCESSOR FAILED!!!!!!!!!!!!!!!!\n";
+                                return nullptr;
+                            }
+                            idList.push_back(argIr);
+                            llvmSubject = llvm::GetElementPtrInst::Create(this->llvmTypeFromLILType(currentTy.get()), llvmSubject, idList, "", d->irBuilder.GetInsertBlock());
+                            if (isLastNode) {
+                                return d->irBuilder.CreateLoad(llvmSubject);
+                            } else {
+                                currentTy = saTy->getType();
+                            }
+                            break;
+                        }
+                        default:
+                            std::cerr << "!!!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!\n";
+                            return nullptr;
                     }
                     break;
                 }
@@ -2544,6 +2602,20 @@ llvm::Value * LILIREmitter::_emit(LILForeignLang * value)
     return nullptr;
 }
 
+llvm::Value * LILIREmitter::_emit(LILValueList * value)
+{
+    auto ty = value->getType();
+    //FIXME: optimize this into a global and memcpy when profitable
+    size_t i = 0;
+    for (auto node : value->getValues()) {
+        auto ir = this->emit(node.get());
+        auto gep = this->_emitGEP(d->currentAlloca, this->llvmTypeFromLILType(ty.get()), false, 0, "", true, true, i);
+        d->irBuilder.CreateStore(ir, gep);
+        i += 1;
+    }
+    return nullptr;
+}
+
 void LILIREmitter::receiveLLVMIRData(llvm::LLVMIRParserEvent eventType, std::string data)
 {
     switch (eventType) {
@@ -2764,6 +2836,28 @@ llvm::Type * LILIREmitter::llvmTypeFromLILType(LILType * type)
             return classTy;
         }
     }
+    else if (type->isA(TypeTypeStaticArray))
+    {
+        auto sa = static_cast<LILStaticArrayType *>(type);
+        auto arrTy = sa->getType();
+        if (!arrTy) {
+            std::cerr << "STATIC ARRAY TYPE HAD NO ELEM TYPE FAIL!!!!!!!!!!!!!!!!\n";
+            return nullptr;
+        }
+        auto arrType = this->llvmTypeFromLILType(arrTy.get());
+        auto arg = sa->getArgument();
+        if (!arg->isA(NodeTypeNumberLiteral)) {
+            std::cerr << "STATIC ARRAY ARGUMENT WAS NOT NUMBER FAIL!!!!!!!!!!!!!!!!\n";
+            return nullptr;
+        }
+        auto num = std::static_pointer_cast<LILNumberLiteral>(arg);
+        auto numStr = num->getValue().data();
+        auto numCstr = numStr.c_str();
+        char * endPtr;
+        auto numElements = std::strtoull(numCstr, &endPtr, 10);
+        return llvm::ArrayType::get(arrType, numElements);
+    }
+
     LILString typestr = type->getName();
     llvm::Type * ret = nullptr;
     if (typestr == "bool") {

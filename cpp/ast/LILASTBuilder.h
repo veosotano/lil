@@ -35,6 +35,7 @@ namespace LIL
         BuilderStateMultipleType,
         BuilderStateFunctionType,
         BuilderStatePointerType,
+        BuilderStateStaticArrayType,
         BuilderStateObjectType,
         BuilderStateVarDecl,
         BuilderStateAliasDecl,
@@ -59,6 +60,8 @@ namespace LIL
         BuilderStateFlowControl,
         BuilderStateFlowControlCall,
         BuilderStateForeignLang,
+        BuilderStateValueList,
+        BuilderStateIndexAccessor,
     };
     class LILNode;
     class LILRootNode;

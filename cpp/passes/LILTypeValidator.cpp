@@ -333,6 +333,16 @@ void LILTypeValidator::_validate(std::shared_ptr<LILVarDecl> vd)
     if (!ty->isA(TypeTypeFunction)) {
         for (auto initVal : vd->getInitVals()) {
             auto ivTy = initVal->getType();
+            if (!ivTy) {
+                LILErrorMessage ei;
+                ei.message =  "FATAL ERROR: type of value of " + vd->getName() + " was null";
+                LILNode::SourceLocation sl = initVal->getSourceLocation();
+                ei.file = sl.file;
+                ei.line = sl.line;
+                ei.column = sl.column;
+                this->errors.push_back(ei);
+                return;
+            }
             if (!ty->equalTo(ivTy)) {
                 LILErrorMessage ei;
                 ei.message =  "Type mismatch: cannot assign type "+ivTy->stringRep()+" to var."+ty->stringRep() + " " + vd->getName();

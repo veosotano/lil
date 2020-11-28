@@ -443,8 +443,12 @@ bool LILCodeParser::isValuePath() const
                 return true;
             }
         }
-        else if (peekToken && peekToken->isA(TokenTypeParenthesisOpen))
-        {
+        else if (
+            peekToken && (
+                peekToken->isA(TokenTypeParenthesisOpen)
+                || peekToken->isA(TokenTypeSquareBracketOpen)
+            )
+        ){
             d->lexer->resetPeek();
             return true;
         }
@@ -644,6 +648,13 @@ bool LILCodeParser::isAssignment() const
                     //this can't be a property definition -- either a syntax error or a selector chain
                     ret = false;
                 }
+            } else if (peekToken->isA(TokenTypeSquareBracketOpen)) {
+                while (peekToken && !peekToken->isA(TokenTypeSquareBracketClose) && !peekToken->isA(TokenTypeBlockClose) && !peekToken->isA(TokenTypeBlockOpen))
+                {
+                    peekToken = d->lexer->peekNextToken();
+                }
+                peekToken = d->lexer->peekNextToken();
+                done = false;
             }
             else
             {
@@ -1316,12 +1327,22 @@ bool LILCodeParser::readType()
     auto peekToken = d->lexer->peekNextToken();
     if (peekToken) {
         bool expectParenthesisClose = false;
+        bool expectSquareBracketClose = false;
         if (peekToken->isA(TokenTypeParenthesisOpen)) {
             peekToken = d->lexer->peekNextToken();
             expectParenthesisClose = true;
         }
-        if (peekToken && peekToken->isA(TokenTypeIdentifier)) {
+        if (peekToken->isA(TokenTypeSquareBracketOpen)) {
             peekToken = d->lexer->peekNextToken();
+            expectSquareBracketClose = true;
+        }
+        if (peekToken && (peekToken->isA(TokenTypeIdentifier) || peekToken->isA(TokenTypeNumberInt))) {
+            peekToken = d->lexer->peekNextToken();
+        }
+        if (expectSquareBracketClose) {
+            if (peekToken->isA(TokenTypeSquareBracketClose)) {
+                peekToken = d->lexer->peekNextToken();
+            }
         }
         if (expectParenthesisClose) {
             if (peekToken->isA(TokenTypeParenthesisClose)) {
@@ -1336,7 +1357,25 @@ bool LILCodeParser::readType()
     d->lexer->resetPeek();
 
     if (!isMultiple) {
-        return this->readTypeSimple();
+        bool tyValid = this->readTypeSimple();
+        if (tyValid) {
+            if (d->currentToken->isA(TokenTypeSquareBracketOpen)) {
+                tyValid = this->readStaticArrayType();
+
+                if (this->atEndOfSource()) {
+                    return false;
+                }
+                this->skip(TokenTypeWhitespace);
+
+                if (tyValid) {
+                    return true;
+                }
+            } else {
+                //not static array, valid state
+                return true;
+            }
+        }
+        return false;
     }
 
     LIL_START_NODE(NodeTypeMultipleType);
@@ -1351,6 +1390,9 @@ bool LILCodeParser::readType()
 
         bool tyValid = this->readTypeSimple();
         if (tyValid) {
+            if (d->currentToken->isA(TokenTypeSquareBracketOpen)) {
+                this->readStaticArrayType();
+            }
             d->receiver->receiveNodeCommit();
         } else {
             valid = false;
@@ -1518,10 +1560,33 @@ bool LILCodeParser::readPointerType()
         }
         LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
 
-        LIL_EXPECT(TokenTypeParenthesisClose, "close parenthesis");
+        LIL_EXPECT(TokenTypeParenthesisClose, "close parenthesis")
         d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
         this->readNextToken();
     }
+
+    LIL_END_NODE_SKIP(false)
+}
+
+//this function assumes the type of the array has already been parsed
+bool LILCodeParser::readStaticArrayType()
+{
+    LIL_START_NODE(NodeTypeStaticArrayType)
+    d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+    this->readNextToken();
+    LIL_CHECK_FOR_END
+
+    bool outIsSingleValue;
+    NodeType outType;
+    bool expValid = this->readExpression(outIsSingleValue, outType);
+    if (expValid) {
+        d->receiver->receiveNodeCommit();
+    }
+    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+
+    LIL_EXPECT(TokenTypeSquareBracketClose, "closing square bracket")
+    d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+    this->readNextToken();
 
     LIL_END_NODE_SKIP(false)
 }
@@ -1592,6 +1657,12 @@ bool LILCodeParser::readVarDecl()
     NodeType svExpTy = NodeTypeInvalid;
     bool svIsValid = this->readExpression(outIsSingleValue, svExpTy);
     if (svIsValid){
+        if (d->currentToken->isA(TokenTypeComma)) {
+            bool vlValid = this->readValueList();
+            if (!vlValid) {
+                LIL_CANCEL_NODE
+            }
+        }
         d->receiver->receiveNodeCommit();
     } else {
         LIL_CANCEL_NODE
@@ -2327,6 +2398,32 @@ bool LILCodeParser::readBasicValue(NodeType &nodeType)
             break;
     }
     return false;
+}
+
+bool LILCodeParser::readValueList()
+{
+    LIL_START_NODE(NodeTypeValueList)
+    bool valid;
+    bool outIsSV;
+    NodeType outType;
+    while (d->currentToken->isA(TokenTypeComma)) {
+        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+        this->readNextToken();
+
+        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+
+        valid = this->readExpression(outIsSV, outType);
+        if (valid) {
+            d->receiver->receiveNodeCommit();
+        } else {
+            LIL_CANCEL_NODE
+        }
+        if (this->atEndOfSource()) {
+            LIL_END_NODE
+        }
+        this->skip(TokenTypeWhitespace);
+    }
+    LIL_END_NODE
 }
 
 bool LILCodeParser::readStringLiteral()

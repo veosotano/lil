@@ -214,6 +214,18 @@ void LILNameLowerer::process(LILNode * node)
         {
             break;
         }
+        case NodeTypeValueList:
+        {
+            LILValueList * value = static_cast<LILValueList *>(node);
+            this->_process(value);
+            break;
+        }
+        case NodeTypeIndexAccessor:
+        {
+            LILIndexAccessor * value = static_cast<LILIndexAccessor *>(node);
+            this->_process(value);
+            break;
+        }
 
         default:
             std::cerr << "Error: unkonwn node type to process\n";
@@ -427,6 +439,19 @@ void LILNameLowerer::_process(LILFlowControl * value)
 
 void LILNameLowerer::_process(LILInstruction * value)
 {
+}
+
+void LILNameLowerer::_process(LILValueList * value)
+{
+    this->processChildren(value->getValues());
+}
+
+void LILNameLowerer::_process(LILIndexAccessor * value)
+{
+    auto arg = value->getArgument();
+    if (arg) {
+        this->process(arg.get());
+    }
 }
 
 void LILNameLowerer::processChildren(const std::vector<std::shared_ptr<LILNode> > &children)

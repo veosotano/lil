@@ -31,6 +31,7 @@
 #include "LILFunctionCall.h"
 #include "LILFunctionDecl.h"
 #include "LILFunctionType.h"
+#include "LILIndexAccessor.h"
 #include "LILInstruction.h"
 #include "LILNullLiteral.h"
 #include "LILNumberLiteral.h"
@@ -49,6 +50,7 @@
 #include "LILStringLiteral.h"
 #include "LILType.h"
 #include "LILUnaryExpression.h"
+#include "LILValueList.h"
 #include "LILVarDecl.h"
 #include "LILVarName.h"
 
@@ -103,6 +105,8 @@ namespace LIL
         void _process(LILFlowControl * value);
         void _process(LILFlowControlCall * value);
         void _process(LILInstruction * value);
+        void _process(LILValueList * value);
+        void _process(LILIndexAccessor * value);
 
         std::shared_ptr<LILType> recursiveFindTypeFromAncestors(std::shared_ptr<LILNode> value) const;
         std::shared_ptr<LILFunctionType> findFnTypeForFunctionCall(std::shared_ptr<LILFunctionCall> fc) const;
