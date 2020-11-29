@@ -2700,7 +2700,7 @@ llvm::Value * LILIREmitter::_emitPointer(LILValuePath * value)
         bool isExtern = false;
         std::shared_ptr<LILVarDecl> vd;
         llvm::Value * llvmSubject = nullptr;
-        LILString className;
+        LILString instanceName;
         LILString stringRep;
         
         if (firstNode->isA(NodeTypeVarName)) {
@@ -2709,8 +2709,8 @@ llvm::Value * LILIREmitter::_emitPointer(LILValuePath * value)
             std::shared_ptr<LILNode> subjectNode = this->findNodeForVarName(vn.get());
             if (subjectNode && subjectNode->isA(NodeTypeVarDecl)) {
                 vd = std::static_pointer_cast<LILVarDecl>(subjectNode);
-                className = vd->getName();
-                llvmSubject = d->namedValues[className.data()];
+                instanceName = vd->getName();
+                llvmSubject = d->namedValues[instanceName.data()];
                 if (vd->getIsExtern()) {
                     isExtern = true;
                 }
@@ -2770,7 +2770,7 @@ llvm::Value * LILIREmitter::_emitPointer(LILValuePath * value)
                     }
                     
                     std::string name = pn->getName().data();
-                    llvmSubject = this->_emitGEP(llvmSubject, className, theIndex, stringRep, true);
+                    llvmSubject = this->_emitGEP(llvmSubject, objTy->getName(), theIndex, stringRep, true);
                     break;
                 }
                     
