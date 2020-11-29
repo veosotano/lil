@@ -81,6 +81,7 @@ namespace LIL
         void _process(LILBoolLiteral * value);
         void _process(LILNumberLiteral * value);
         void _process(LILPercentageLiteral * value);
+        void _processCast(LILExpression * value);
         void _process(LILExpression * value);
         void _process(LILUnaryExpression * value);
         void _process(LILStringLiteral * value);

@@ -443,7 +443,11 @@ void LILTypeGuesser::process(LILNode * node)
         case NodeTypeExpression:
         {
             LILExpression * value = static_cast<LILExpression *>(node);
-            this->_process(value);
+            if (value->isA(ExpressionTypeCast)) {
+                this->_processCast(value);
+            } else {
+                this->_process(value);
+            }
             break;
         }
         case NodeTypeUnaryExpression:
@@ -684,6 +688,22 @@ void LILTypeGuesser::_process(LILPercentageLiteral * value)
             this->setTypeOnAncestorIfNeeded(sharedVal, intType);
         }
     }
+}
+
+void LILTypeGuesser::_processCast(LILExpression * value)
+{
+    auto existingTy = value->getType();
+    if (existingTy) {
+        return;
+    }
+    
+    auto rightNode = value->getRight();
+    if (!rightNode->isA(NodeTypeType)) {
+        std::cerr << "RIGHT NODE OF CAST WAS NOT A TYPE FAIL!!!!!!!!\n";
+        return;
+    }
+    auto ty = std::static_pointer_cast<LILType>(rightNode);
+    value->setType(ty);
 }
 
 void LILTypeGuesser::_process(LILExpression * value)
