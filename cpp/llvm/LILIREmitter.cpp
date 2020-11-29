@@ -610,34 +610,49 @@ llvm::Value * LILIREmitter::_emit(LILUnaryExpression * value)
 
 llvm::Value * LILIREmitter::_emit(LILStringLiteral * value)
 {
-    if (value->getIsCString()) {
-        LILString stringLiteral = value->getValue();
-        LILString stringWithoutQuotes = stringLiteral.stripQuotes();
-        LILString stringEscaped = stringWithoutQuotes.replaceEscapes();
-        auto str = stringEscaped.data();
-        auto charType = llvm::IntegerType::get(d->llvmContext, 8);
-
-        std::vector<llvm::Constant *> chars(str.length());
-        for(unsigned int i = 0; i < str.size(); i++) {
-            chars[i] = llvm::ConstantInt::get(charType, str[i]);
-        }
-
-        //add \0
-        chars.push_back(llvm::ConstantInt::get(charType, 0));
-
-        auto stringType = llvm::ArrayType::get(charType, chars.size());
-
-        auto globalDeclaration = new llvm::GlobalVariable(*(d->llvmModule.get()), stringType, true, llvm::GlobalVariable::ExternalLinkage, nullptr, ".str");
-
-        globalDeclaration->setInitializer(llvm::ConstantArray::get(stringType, chars));
-        globalDeclaration->setConstant(true);
-        globalDeclaration->setLinkage(llvm::GlobalValue::LinkageTypes::PrivateLinkage);
-        globalDeclaration->setUnnamedAddr (llvm::GlobalValue::UnnamedAddr::Global);
-
-        return llvm::ConstantExpr::getBitCast(globalDeclaration, charType->getPointerTo());
+    LILString stringLiteral = value->getValue();
+    LILString stringWithoutQuotes = stringLiteral.stripQuotes();
+    LILString stringEscaped = stringWithoutQuotes.replaceEscapes();
+    auto str = stringEscaped.data();
+    auto charType = llvm::IntegerType::get(d->llvmContext, 8);
+    auto strLength = str.length();
+    std::vector<llvm::Constant *> chars(strLength);
+    for(unsigned int i = 0; i < str.size(); i++) {
+        chars[i] = llvm::ConstantInt::get(charType, str[i]);
     }
-    std::cerr << "!!!!!!!!!!EMIT STRING LITERAL FAIL!!!!!!!!!!!!!!!!\n";
-    return nullptr;
+
+    //add \0
+    chars.push_back(llvm::ConstantInt::get(charType, 0));
+
+    auto stringType = llvm::ArrayType::get(charType, chars.size());
+    
+    auto globalDeclaration = new llvm::GlobalVariable(*(d->llvmModule.get()), stringType, true, llvm::GlobalVariable::ExternalLinkage, nullptr, "str");
+    
+    globalDeclaration->setInitializer(llvm::ConstantArray::get(stringType, chars));
+    globalDeclaration->setConstant(true);
+    globalDeclaration->setLinkage(llvm::GlobalValue::LinkageTypes::PrivateLinkage);
+    globalDeclaration->setUnnamedAddr (llvm::GlobalValue::UnnamedAddr::Global);
+    
+    auto i8PtrTy = charType->getPointerTo();
+    auto castedGlobal = llvm::ConstantExpr::getBitCast(globalDeclaration, i8PtrTy);
+    
+    if (value->getIsCString()) {
+        return castedGlobal;
+    }
+    else
+    {
+        auto stringTy = d->classTypes["string"];
+        //store the length
+        auto lengthGep = this->_emitGEP(d->currentAlloca, stringTy, true, 0, "length", true, false, 0);
+        d->irBuilder.CreateStore(llvm::ConstantInt::get(llvm::IntegerType::getInt64Ty(d->llvmContext), strLength), lengthGep);
+        //store the chars
+        auto bufferGep = this->_emitGEP(d->currentAlloca, stringTy, true, 1, "buffer", true, false, 0);
+        auto castedBuffer = d->irBuilder.CreatePointerCast(bufferGep, i8PtrTy);
+        //length is +1 because we want the \0 too
+        d->irBuilder.CreateMemCpy(castedBuffer, 4, castedGlobal, 4, strLength+1);
+        return nullptr;
+        
+    }
 }
 
 llvm::Value * LILIREmitter::_emit(LILStringFunction * value)
