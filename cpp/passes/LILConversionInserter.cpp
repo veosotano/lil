@@ -105,6 +105,9 @@ void LILConversionInserter::process(std::shared_ptr<LILFunctionCall> fc)
         size_t i = 0;
         for (auto fcArg : fcArgs)
         {
+            if (i > fnTyArgs.size()-1) {
+                break;
+            }
             auto fnTyArg = fnTyArgs[i];
             auto fcArgTy = fcArg->getType();
             std::shared_ptr<LILType> argTy;
