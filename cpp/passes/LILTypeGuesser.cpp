@@ -1759,6 +1759,7 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(std::shared_ptr<LI
                         std::cerr << "RET TY WAS NULL FAIL!!!!\n";
                         return nullptr;
                     }
+                    break;
                 }
                 case NodeTypeIndexAccessor:
                 {
