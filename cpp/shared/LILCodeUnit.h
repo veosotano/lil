@@ -65,6 +65,8 @@ namespace LIL
         void setDebugConversionInserter(bool value);
         void setDebugTypeResolver(bool value);
         bool hasErrors() const;
+        void addAlreadyImportedFile(const LILString & path);
+        bool isAlreadyImported(const LILString & path);
 
     private:
         LILCodeUnitPrivate * d;

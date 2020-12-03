@@ -254,6 +254,7 @@ int main(int argc, const char * argv[]) {
     codeUnit->setDebugConversionInserter(debugConversionInserter);
     codeUnit->setDebugTypeResolver(debugTypeResolver);
     codeUnit->setFile(inName);
+    codeUnit->addAlreadyImportedFile(directory+"/"+inName);
     codeUnit->setDir(directory);
     codeUnit->setSource(lilStr);
     

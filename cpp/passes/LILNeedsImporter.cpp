@@ -69,12 +69,21 @@ void LILNeedsImporter::performVisit(std::shared_ptr<LILRootNode> rootNode)
             LILString argStr = std::static_pointer_cast<LILStringLiteral>(arg)->getValue().stripQuotes();
             auto paths = this->_resolveFilePaths(argStr);
             for (auto path : paths) {
+                if (this->isAlreadyImported(path)) {
+                    if (this->getVerbose() && instr->getVerbose()) {
+                        std::cerr << "File " << path.data() << " was already imported. Skipping.\n\n";
+                    }
+                    continue;
+                }
                 if (this->getVerbose() && instr->getVerbose()) {
                     std::cerr << "Start of file " << path.data() << "\n\n========================================\n\n";
                 }
                 
                 std::unique_ptr<LILCodeUnit> codeUnit = std::make_unique<LILCodeUnit>();
                 codeUnit->setNeedsStdLil(false);
+                for (auto aif : this->_alreadyImportedFiles) {
+                    codeUnit->addAlreadyImportedFile(aif);
+                }
                 auto newRoot = codeUnit->getRootNode();
                 for (auto alias : rootNode->getAliases()) {
                     newRoot->addAlias(alias->clone());
@@ -132,6 +141,22 @@ void LILNeedsImporter::setDebugAST(bool value)
 {
     this->_debugAST = value;
 }
+
+void LILNeedsImporter::addAlreadyImportedFile(const LILString & path)
+{
+    this->_alreadyImportedFiles.push_back(path);
+}
+
+bool LILNeedsImporter::isAlreadyImported(const LILString & path)
+{
+    for (auto str : this->_alreadyImportedFiles) {
+        if (str == path) {
+            return true;
+        }
+    }
+    return false;
+}
+
 
 std::vector<LILString> LILNeedsImporter::_resolveFilePaths(LILString argStr) const
 {

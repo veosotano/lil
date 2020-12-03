@@ -32,6 +32,8 @@ namespace LIL
         LILString getDir() const;
         bool getDebugAST() const;
         void setDebugAST(bool value);
+        void addAlreadyImportedFile(const LILString & path);
+        bool isAlreadyImported(const LILString & path);
 
     private:
         LILString _dir;
@@ -41,6 +43,7 @@ namespace LIL
         void _getNodesForImport(std::vector<std::shared_ptr<LILNode>> * newNodes, std::shared_ptr<LILRootNode> rootNode) const;
         void _importNewNodes(std::vector<std::shared_ptr<LILNode>> & newNodes, std::shared_ptr<LILRootNode> rootNode, bool hidden) const;
         LILString _getDir(LILString path) const;
+        std::vector<LILString> _alreadyImportedFiles;
     };
 }
 

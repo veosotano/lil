@@ -67,6 +67,7 @@ namespace LIL
         std::unique_ptr<LILASTBuilder> astBuilder;
         std::unique_ptr<LILCodeParser> parser;
         std::unique_ptr<LILPassManager> pm;
+        std::vector<LILString> alreadyImportedFiles;
 
         bool isMain;
 
@@ -392,4 +393,19 @@ void LILCodeUnit::setDebugTypeResolver(bool value)
 bool LILCodeUnit::hasErrors() const
 {
     return d->astBuilder->hasErrors() || d->pm->hasErrors();
+}
+
+void LILCodeUnit::addAlreadyImportedFile(const LILString & path)
+{
+    d->alreadyImportedFiles.push_back(path);
+}
+
+bool LILCodeUnit::isAlreadyImported(const LILString & path)
+{
+    for (auto str : d->alreadyImportedFiles) {
+        if (str == path) {
+            return true;
+        }
+    }
+    return false;
 }
