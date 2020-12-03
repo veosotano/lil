@@ -27,10 +27,10 @@ namespace LIL
         LILExpression(const LILExpression & other);
         std::shared_ptr<LILExpression> clone() const;
         virtual ~LILExpression();
-        LILString stringRep();
+        LILString stringRep() override;
 
-        bool isA(ExpressionType otherType) const;
-        ExpressionType getExpressionType() const;
+        bool isA(ExpressionType otherType) const override;
+        ExpressionType getExpressionType() const override;
         void setExpressionType(ExpressionType newType);
 
         void setLeft(std::shared_ptr<LILNode> newLeft);
@@ -40,7 +40,7 @@ namespace LIL
         const std::vector<std::shared_ptr<LILNode>> & getNodes() const;
 
     protected:
-        virtual std::shared_ptr<LILClonable> cloneImpl() const;
+        std::shared_ptr<LILClonable> cloneImpl() const override;
         std::shared_ptr<LILNode> _leftNode;
         std::shared_ptr<LILNode> _rightNode;
 
