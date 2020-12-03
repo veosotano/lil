@@ -21,6 +21,7 @@ namespace LIL {
     public:
         LILString value;
         std::vector<LILToStrInfo> children;
+        bool isExported;
     };
 }
 
@@ -61,6 +62,7 @@ void LILToStringVisitor::visit(LILNode *node)
 void LILToStringVisitor::printInfo(LILToStrInfo info, size_t indents, std::vector<size_t> moreItems)
 {
     std::cerr << this->stringForIndent(indents, moreItems).chardata();
+    if(info.isExported) std::cerr << "[exp] ";
     std::cerr << info.value.chardata();
     std::cerr << "\n";
     for (auto it = info.children.begin(); it!=info.children.end(); ++it){
@@ -286,6 +288,7 @@ LILToStrInfo LILToStringVisitor::stringify(LILNode * node)
             std::cerr << "Error: unkonwn node type to stringify\n";
             break;
     }
+    info.isExported = node->getIsExported();
     return info;
 }
 
@@ -365,6 +368,7 @@ LILToStrInfo LILToStringVisitor::_stringify(LILStringFunction * value)
     LILToStrInfo ret;
     ret.value = "String function:";
     LILToStrInfo startInfo;
+    startInfo.isExported = false;
     startInfo.value = value->getStartChunk()+"\"";
     ret.children.push_back(startInfo);
 
@@ -375,12 +379,14 @@ LILToStrInfo LILToStringVisitor::_stringify(LILStringFunction * value)
 
         if (midChunks.size() > i) {
             LILToStrInfo midInfo;
+            midInfo.isExported = false;
             midInfo.value = LILString("\"")+midChunks[i]+"\"";
             ret.children.push_back(midInfo);
         }
         
     }
     LILToStrInfo endInfo;
+    endInfo.isExported = false;
     endInfo.value = LILString("\"")+value->getEndChunk();
     ret.children.push_back(endInfo);
     return ret;
@@ -467,6 +473,7 @@ LILToStrInfo LILToStringVisitor::_stringify(LILConversionDecl *value)
     ret.value = "Conversion declaration " + value->stringRep();
 
     LILToStrInfo argumentsInfo;
+    argumentsInfo.isExported = false;
     argumentsInfo.value = "Arguments:";
     argumentsInfo.children.push_back(this->_stringify(varDecl.get()));
     ret.children.push_back(argumentsInfo);
@@ -489,6 +496,7 @@ LILToStrInfo LILToStringVisitor::_stringify(LILClassDecl * value)
     LILString externStr = value->getIsExtern() ? "extern " : "";
     ret.value = "Class declaration: " + externStr;
     LILToStrInfo typeInfo;
+    typeInfo.isExported = false;
     std::shared_ptr<LILNode> typeNode = value->getType();
     if (typeNode) {
         ret.children.push_back(this->stringify(typeNode.get()));
@@ -496,12 +504,14 @@ LILToStrInfo LILToStringVisitor::_stringify(LILClassDecl * value)
     std::shared_ptr<LILNode> inheritTypeNode = value->getInheritType();
     if (inheritTypeNode) {
         LILToStrInfo inheritInfo;
+        inheritInfo.isExported = false;
         inheritInfo.value = "Inherited type: "+inheritTypeNode->stringRep();
         ret.children.push_back(inheritInfo);
     }
     std::vector<std::shared_ptr<LILNode>> fields = value->getFields();
     if (fields.size() > 0) {
         LILToStrInfo fieldsInfo;
+        fieldsInfo.isExported = false;
         fieldsInfo.value = "Fields:";
         this->stringifyChildren(fields, fieldsInfo);
         ret.children.push_back(fieldsInfo);
@@ -509,6 +519,7 @@ LILToStrInfo LILToStringVisitor::_stringify(LILClassDecl * value)
     std::vector<std::shared_ptr<LILNode>> methods = value->getMethods();
     if (methods.size() > 0) {
         LILToStrInfo methodsInfo;
+        methodsInfo.isExported = false;
         methodsInfo.value = "Methods:";
         this->stringifyChildren(methods, methodsInfo);
         ret.children.push_back(methodsInfo);
@@ -539,12 +550,14 @@ LILToStrInfo LILToStringVisitor::_stringify(LILAssignment * value)
         ret.value = "Assignment: ";
     }
     LILToStrInfo subjInfo;
+    subjInfo.isExported = false;
     subjInfo.value = "Subject:";
     subjInfo.children.push_back(this->stringify(value->getSubject().get()));
     ret.children.push_back(subjInfo);
     auto valueNode = value->getValue();
     if (valueNode) {
         LILToStrInfo valInfo;
+        valInfo.isExported = false;
         valInfo.value = "Value:";
         valInfo.children.push_back(this->stringify(valueNode.get()));
         ret.children.push_back(valInfo);
@@ -637,6 +650,7 @@ LILToStrInfo LILToStringVisitor::_stringify(LILFunctionDecl * value)
 
     if (ty) {
         LILToStrInfo argsInfo;
+        argsInfo.isExported = false;
         argsInfo.value = "Arguments:";
         const auto & args = ty->getArguments();
         for (auto it = args.begin(); it!= args.end(); ++it)
@@ -650,6 +664,7 @@ LILToStrInfo LILToStringVisitor::_stringify(LILFunctionDecl * value)
     }
     
     LILToStrInfo bodyInfo;
+    bodyInfo.isExported = false;
     bodyInfo.value = "Body:";
     for (auto it = value->getBody().begin(); it!=value->getBody().end(); ++it)
     {
@@ -661,6 +676,7 @@ LILToStrInfo LILToStringVisitor::_stringify(LILFunctionDecl * value)
     auto finally = value->getFinally();
     if (finally) {
         LILToStrInfo finallyInfo;
+        finallyInfo.isExported = false;
         finallyInfo.value = "Finally:";
         finallyInfo.children.push_back(this->stringify(finally.get()));
         ret.children.push_back(finallyInfo);
@@ -694,6 +710,7 @@ LILToStrInfo LILToStringVisitor::_stringify(LILFlowControl * value)
     LILToStrInfo ret;
     ret.value = "Flow control: "+value->stringRep();
     LILToStrInfo argsInfo;
+    argsInfo.isExported = false;
     argsInfo.value = "Arguments:";
     for (auto it = value->getArguments().begin(); it!=value->getArguments().end(); ++it)
     {
@@ -704,6 +721,7 @@ LILToStrInfo LILToStringVisitor::_stringify(LILFlowControl * value)
     }
     
     LILToStrInfo thenInfo;
+    thenInfo.isExported = false;
     thenInfo.value = "Then:";
     for (auto it = value->getThen().begin(); it!=value->getThen().end(); ++it)
     {
@@ -716,6 +734,7 @@ LILToStrInfo LILToStringVisitor::_stringify(LILFlowControl * value)
     auto elseNodes = value->getElse();
     if (elseNodes.size() > 0) {
         LILToStrInfo thenInfo;
+        thenInfo.isExported = false;
         thenInfo.value = "Else:";
         for (auto it = value->getElse().begin(); it!=value->getElse().end(); ++it)
         {

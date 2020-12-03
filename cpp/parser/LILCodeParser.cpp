@@ -3245,6 +3245,14 @@ bool LILCodeParser::readInstruction()
                 return true;
             }
         }
+        else if (currentval == "export")
+        {
+            bool isValid = this->readExportInstr();
+            if (isValid && !this->atEndOfSource()) {
+                this->skip(TokenTypeWhitespace);
+                return true;
+            }
+        }
         else if (currentval == "new")
         {
             return this->readNewInstr();
@@ -3386,6 +3394,29 @@ bool LILCodeParser::readNeedsInstr()
     LIL_EXPECT(TokenTypeSemicolon, "semicolon");
     d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
     this->readNextToken();
+    LIL_END_NODE_SKIP(false)
+}
+
+bool LILCodeParser::readExportInstr()
+{
+    LIL_START_NODE(NodeTypeInstruction)
+    d->receiver->receiveNodeData(ParserEventInstruction, d->currentToken->getString());
+    this->readNextToken();
+    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+    
+    LIL_EXPECT(TokenTypeBlockOpen, "block open")
+    d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+    this->readNextToken();
+    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+    
+    while (!this->atEndOfSource() && !d->currentToken->isA(TokenTypeBlockClose)) {
+        this->parseNext();
+    }
+
+    LIL_EXPECT(TokenTypeBlockClose, "block close")
+    d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+    this->readNextToken();
+
     LIL_END_NODE_SKIP(false)
 }
 

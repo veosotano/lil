@@ -103,6 +103,9 @@ namespace LIL {
         void setDocument(LILDocument * newDoc);
         LILString getHostProperty() const;
         void setHostProperty(LILString newValue);
+        
+        void setIsExported(bool value);
+        bool getIsExported() const;
 
         bool hidden;
 
@@ -118,6 +121,7 @@ namespace LIL {
         LILString _hostProperty;
         LILUnitI64 _specificity;
         LILNode::SourceLocation _sourceLocation;
+        bool _isExported;
     };
 }
 

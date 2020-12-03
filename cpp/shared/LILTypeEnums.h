@@ -228,6 +228,7 @@ namespace LIL
         InstructionTypeRRGGBBAA,
         InstructionTypeConfigure,
         InstructionTypeNeeds,
+        InstructionTypeExport,
         InstructionTypeFinally,
     };
 

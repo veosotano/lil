@@ -73,6 +73,7 @@ LILString LILInstruction::stringRep()
         case InstructionTypeMove:
         case InstructionTypeDelete:
         case InstructionTypeNeeds:
+        case InstructionTypeExport:
         case InstructionTypeConfigure:
         case InstructionTypeFinally:
         {
@@ -82,7 +83,7 @@ LILString LILInstruction::stringRep()
         default:
             break;
     }
-    return "Instruction";
+    return "Unknown instruction";
 }
 
 void LILInstruction::receiveNodeData(const LILString &data)

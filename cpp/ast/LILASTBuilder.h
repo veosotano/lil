@@ -101,6 +101,8 @@ namespace LIL
         bool _isMain;
         bool _verbose;
         bool _debugAST;
+
+        void _commitNodeToRoot(std::shared_ptr<LILNode> node);
     };
 }
 

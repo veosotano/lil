@@ -127,6 +127,7 @@ LILNode::LILNode(NodeType type)
 , _specificity(1)
 , document(nullptr)
 , hidden(false)
+, _isExported(false)
 {
     
 }
@@ -139,6 +140,7 @@ LILNode::LILNode(const LILNode &orig)
 , _childNodes(orig._childNodes)
 , _parentNode(orig._parentNode)
 , hidden(orig.hidden)
+, _isExported(orig._isExported)
 {
     
 }
@@ -297,6 +299,8 @@ bool LILNode::equalTo(std::shared_ptr<LILNode> otherNode)
     if (nodesSize != otherNode->_childNodes.size()) return false;
     //compare hidden flag
     if (otherNode->hidden != this->hidden) return false;
+    //compare isExported flag
+    if (otherNode->_isExported != this->_isExported) return false;
     //compare the child nodes
     for (size_t i = 0; i<nodesSize; ++i)
     {
@@ -519,4 +523,14 @@ LILString LILNode::getHostProperty() const
 void LILNode::setHostProperty(LILString newValue)
 {
     this->_hostProperty = newValue;
+}
+
+void LILNode::setIsExported(bool value)
+{
+    this->_isExported = value;
+}
+
+bool LILNode::getIsExported() const
+{
+    return this->_isExported;
 }

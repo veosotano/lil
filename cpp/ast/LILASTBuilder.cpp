@@ -404,81 +404,8 @@ void LILASTBuilder::receiveNodeCommit()
         {
             if (this->currentNode)
             {
-                switch (this->currentNode->getNodeType()) {
-                    case NodeTypeVarDecl:
-                    {
-                        auto vd = std::static_pointer_cast<LILVarDecl>(this->currentNode);
-                        
-                        if (vd->getIsExtern()) {
-                            this->rootNode->addNode(this->currentNode);
-                            this->rootNode->setLocalVariable(vd->getName(), vd);
+                this->_commitNodeToRoot(this->currentNode);
 
-                        } else {
-                            auto ty = vd->getType();
-                            if (ty && ty->isA(TypeTypeFunction)) {
-                                this->rootNode->addNode(this->currentNode);
-                                this->rootNode->setLocalVariable(vd->getName(), this->currentNode);
-                            } else if (this->_isMain) {
-                                auto mainFn = this->rootNode->getMainFn();
-                                //set local variable
-                                mainFn->setLocalVariable(vd->getName(), vd);
-                                mainFn->addEvaluable(this->currentNode);
-                            } else {
-                                std::cerr << "TOP LEVEL EXPRESSIONS ARE NOT ALLOWED YET\n";
-                            }
-                        }
-                        break;
-                    }
-                    case NodeTypeClassDecl:
-                    {
-                        this->rootNode->addNode(this->currentNode);
-                        this->rootNode->addClass(std::static_pointer_cast<LILClassDecl>(this->currentNode));
-                        break;
-                    }
-                    case NodeTypeAliasDecl:
-                    {
-                        this->rootNode->addNode(this->currentNode);
-                        this->rootNode->addAlias(std::static_pointer_cast<LILAliasDecl>(this->currentNode));
-                        break;
-                    }
-                    case NodeTypeTypeDecl:
-                    {
-                        this->rootNode->addNode(this->currentNode);
-                        this->rootNode->addType(std::static_pointer_cast<LILTypeDecl>(this->currentNode));
-                        break;
-                    }
-                    case NodeTypeConversionDecl:
-                    {
-                        this->rootNode->addNode(this->currentNode);
-                        this->rootNode->addConversion(std::static_pointer_cast<LILConversionDecl>(this->currentNode));
-                        break;
-                    }
-                    case NodeTypeInstruction:
-                    {
-                        auto instr = std::static_pointer_cast<LILInstruction>(this->currentNode);
-                        switch (instr->getInstructionType()) {
-                            case InstructionTypeNeeds:
-                            {
-                                this->rootNode->addNode(instr);
-                                this->rootNode->addDependency(instr);
-                                break;
-                            }
-
-                            default:
-                                break;
-                        }
-                        break;
-                    }
-                    case NodeTypeForeignLang:
-                    {
-                        rootNode->addNode(this->currentNode);
-                        break;
-                    }
-                    default:
-                        this->rootNode->getMainFn()->addEvaluable(this->currentNode);
-                        break;
-                }
-            //end if currentNode
             } else if (this->_isMain) {
                 auto mainFn = this->rootNode->getMainFn();
                 if (!mainFn->hasReturn()) {
@@ -807,7 +734,21 @@ void LILASTBuilder::receiveNodeCommit()
         case BuilderStateInstruction:
         {
             auto instr = std::static_pointer_cast<LILInstruction>(this->currentContainer.back());
-            instr->setArgument(this->currentNode);
+            switch (instr->getInstructionType()) {
+                case InstructionTypeNeeds:
+                    instr->setArgument(this->currentNode);
+                    break;
+
+                case InstructionTypeExport:
+                {
+                    this->currentNode->setIsExported(true);
+                    instr->addNode(this->currentNode);
+                    break;
+                }
+                default:
+                    break;
+            }
+            
             break;
         }
 
@@ -1251,6 +1192,8 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
                     instr->setName(data);
                     if (data == "needs") {
                         instr->setInstructionType(InstructionTypeNeeds);
+                    } else if (data == "export") {
+                        instr->setInstructionType(InstructionTypeExport);
                     } else if (data == "new") {
                         instr->setInstructionType(InstructionTypeNew);
                     } else if (data == "move") {
@@ -1435,4 +1378,90 @@ void LILASTBuilder::setDebugAST(bool value)
 std::shared_ptr<LILRootNode> LILASTBuilder::getRootNode() const
 {
     return this->rootNode;
+}
+
+void LILASTBuilder::_commitNodeToRoot(std::shared_ptr<LILNode> node)
+{
+    switch (node->getNodeType()) {
+        case NodeTypeVarDecl:
+        {
+            auto vd = std::static_pointer_cast<LILVarDecl>(node);
+            
+            if (vd->getIsExtern()) {
+                this->rootNode->addNode(node);
+                this->rootNode->setLocalVariable(vd->getName(), vd);
+                
+            } else {
+                auto ty = vd->getType();
+                if (ty && ty->isA(TypeTypeFunction)) {
+                    this->rootNode->addNode(node);
+                    this->rootNode->setLocalVariable(vd->getName(), node);
+                } else if (this->_isMain) {
+                    auto mainFn = this->rootNode->getMainFn();
+                    //set local variable
+                    mainFn->setLocalVariable(vd->getName(), vd);
+                    mainFn->addEvaluable(node);
+                } else {
+                    std::cerr << "TOP LEVEL EXPRESSIONS ARE NOT ALLOWED YET\n";
+                }
+            }
+            break;
+        }
+        case NodeTypeClassDecl:
+        {
+            this->rootNode->addNode(node);
+            this->rootNode->addClass(std::static_pointer_cast<LILClassDecl>(node));
+            break;
+        }
+        case NodeTypeAliasDecl:
+        {
+            this->rootNode->addNode(node);
+            this->rootNode->addAlias(std::static_pointer_cast<LILAliasDecl>(node));
+            break;
+        }
+        case NodeTypeTypeDecl:
+        {
+            this->rootNode->addNode(node);
+            this->rootNode->addType(std::static_pointer_cast<LILTypeDecl>(node));
+            break;
+        }
+        case NodeTypeConversionDecl:
+        {
+            this->rootNode->addNode(node);
+            this->rootNode->addConversion(std::static_pointer_cast<LILConversionDecl>(node));
+            break;
+        }
+        case NodeTypeInstruction:
+        {
+            auto instr = std::static_pointer_cast<LILInstruction>(node);
+            switch (instr->getInstructionType()) {
+                case InstructionTypeNeeds:
+                {
+                    this->rootNode->addNode(instr);
+                    this->rootNode->addDependency(instr);
+                    break;
+                }
+                case InstructionTypeExport:
+                {
+                    for (auto instrNode : instr->getChildNodes()) {
+                        this->_commitNodeToRoot(instrNode);
+                    }
+                    break;
+                }
+                    
+                default:
+                    std::cerr << "UNIMPLEMENTED FAIL !!!!!!!!!! \n\n";
+                    break;
+            }
+            break;
+        }
+        case NodeTypeForeignLang:
+        {
+            rootNode->addNode(node);
+            break;
+        }
+        default:
+            this->rootNode->getMainFn()->addEvaluable(node);
+            break;
+    }
 }

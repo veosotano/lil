@@ -182,6 +182,9 @@ std::vector<std::string> LILNeedsImporter::_glob(const std::string& pattern) con
 void LILNeedsImporter::_getNodesForImport(std::vector<std::shared_ptr<LILNode>> * newNodes, std::shared_ptr<LILRootNode> rootNode) const
 {
     for (auto node : rootNode->getNodes()) {
+        if (!node->getIsExported()) {
+            continue;
+        }
         switch (node->getNodeType()) {
             case NodeTypeVarDecl:
             {
@@ -190,6 +193,7 @@ void LILNeedsImporter::_getNodesForImport(std::vector<std::shared_ptr<LILNode>> 
                 if (ty && ty->isA(TypeTypeFunction)) {
                     auto newVd = std::make_shared<LILVarDecl>();
                     newVd->setIsExtern(true);
+                    newVd->setIsExported(node->getIsExported());
                     newVd->setName(vd->getName());
                     newVd->setType(ty->clone());
                     newNodes->push_back(newVd);
@@ -203,6 +207,7 @@ void LILNeedsImporter::_getNodesForImport(std::vector<std::shared_ptr<LILNode>> 
                 
                 auto newCd = std::make_shared<LILClassDecl>();
                 newCd->setIsExtern(true);
+                newCd->setIsExported(node->getIsExported());
                 auto newTy = std::make_shared<LILObjectType>();
                 newTy->setTypeType(TypeTypeObject);
                 newTy->setName(cd->getName());

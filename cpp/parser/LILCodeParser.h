@@ -107,6 +107,7 @@ namespace LIL
         bool readInstruction();
         bool readColor();
         bool readNeedsInstr();
+        bool readExportInstr();
         bool readNewInstr();
         bool readInstructionRule();
         bool readValuePath(bool allowFunctionCall);
