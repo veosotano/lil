@@ -1220,6 +1220,9 @@ void LILTypeGuesser::setTypeOnAncestorIfNeeded(std::shared_ptr<LILNode> value, s
             case NodeTypeExpression:
             {
                 auto exp = std::static_pointer_cast<LILExpression>(parent);
+                if (exp->isA(ExpressionTypeCast)) {
+                    break;
+                }
                 auto expTy = exp->getType();
                 if (!expTy || expTy->getIsWeakType()) {
                     exp->setType(ty);
