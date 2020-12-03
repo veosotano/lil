@@ -162,6 +162,11 @@ void LILFunctionType::setArguments(std::vector<std::shared_ptr<LILNode>> args)
     }
 }
 
+void LILFunctionType::removeFirstArgument()
+{
+    this->_arguments.erase(this->_arguments.begin(), this->_arguments.begin()+1);
+}
+
 void LILFunctionType::setReturnType(std::shared_ptr<LILType> node)
 {
     this->addNode(node);

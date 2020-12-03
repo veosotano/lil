@@ -14,6 +14,8 @@
  ********************************************************************/
 
 #include "LILNameLowerer.h"
+#include "LILObjectType.h"
+#include "LILPointerType.h"
 #include "LILVarNode.h"
 
 using namespace LIL;
@@ -300,11 +302,21 @@ void LILNameLowerer::_process(LILVarDecl * value)
                     }
                     std::string parentClass = "";
                     if (parentCd) {
-                        parentClass = parentCd->getType()->getName().data();
+                        parentClass = parentCd->getName().data();
                     }
                     auto newName = this->decorate("", parentClass, fd->getName(), ty);
                     fd->setName(newName);
 
+                    if (parentCd) {
+                        auto fnTy = std::static_pointer_cast<LILFunctionType>(ty);
+                        auto ptrTy = std::make_shared<LILPointerType>();
+                        ptrTy->setName("ptr");
+                        ptrTy->setArgument(parentCd->getType()->clone());
+                        auto argVd = std::make_shared<LILVarDecl>();
+                        argVd->setName("@self");
+                        argVd->setType(ptrTy);
+                        fnTy->prependArgument(argVd);
+                    }
                     break;
                 }
 
@@ -313,6 +325,17 @@ void LILNameLowerer::_process(LILVarDecl * value)
                     break;
             }
         }
+    }
+    auto vdTy = value->getType();
+    if (vdTy && vdTy->isA(TypeTypeFunction) && initVals.size() == 0 && parentCd) {
+        auto fnTy = std::static_pointer_cast<LILFunctionType>(vdTy);
+        auto ptrTy = std::make_shared<LILPointerType>();
+        ptrTy->setName("ptr");
+        ptrTy->setArgument(parentCd->getType()->clone());
+        auto argVd = std::make_shared<LILVarDecl>();
+        argVd->setName("@self");
+        argVd->setType(ptrTy);
+        fnTy->prependArgument(argVd);
     }
 }
 

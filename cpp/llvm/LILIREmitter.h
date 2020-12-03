@@ -112,13 +112,11 @@ namespace LIL
         llvm::Value * _emit(LILFilter * value);
         llvm::Value * _emit(LILFlag * value);
         llvm::Function * _emit(LILFunctionDecl * value);
-        llvm::Function * _emitFnSignature(std::string name, const std::shared_ptr<LILFunctionType> fnTy);
-        llvm::Function * _emitFnSignature(std::string name, std::vector<llvm::Type*>, const std::shared_ptr<LILFunctionType> fnTy);
+        llvm::Function * _emitFnSignature(std::string name, LILFunctionType * fnTy);
+        llvm::Function * _emitFnSignature(std::string name, std::vector<llvm::Type*>, LILFunctionType * fnTy);
         llvm::Function * _emitFn( LILFunctionDecl * value);
         llvm::Function * _emitFnBody(llvm::Function * fun, LILFunctionDecl * value);
         llvm::Value * _emitEvaluables(const std::vector<std::shared_ptr<LILNode>> & nodes);
-        llvm::Function * _emitMethod(LILFunctionDecl * value, LILClassDecl * classValue);
-
         llvm::Value * _emit(LILFunctionCall * value);
         llvm::Value * _emitFunctionCall(LILFunctionCall * value, LILString name, LILFunctionType * fnTy, llvm::Value * instance);
         llvm::Value * _emitFunctionCallMT(LILFunctionCall * value, LILString name, std::vector<std::shared_ptr<LILType>> types, LILFunctionType * fnTy, llvm::Value * instance);

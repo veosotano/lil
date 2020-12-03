@@ -112,8 +112,10 @@ void LILTypeValidator::_validate(std::shared_ptr<LILFunctionCall> fc)
         auto vd = std::static_pointer_cast<LILVarDecl>(remoteNode);
         auto fieldTy = vd->getType();
         if (fieldTy->isA(TypeTypeMultiple)) {
-            //FIXME
+            std::cerr << "UNIMPLEMENTED FAIL !!!!!!!\n";
+            return;
         } else {
+            bool isMethod = false;
             std::shared_ptr<LILType> ty;
             if (fieldTy->isA(TypeTypeObject)) {
                 auto classDecl = this->findClassWithName(fieldTy->getName());
@@ -123,6 +125,7 @@ void LILTypeValidator::_validate(std::shared_ptr<LILFunctionCall> fc)
                 }
                 auto method = classDecl->getMethodNamed(fc->getName());
                 ty = method->getType();
+                isMethod = true;
             }
             
             if (!ty || !ty->isA(TypeTypeFunction)) {
@@ -138,7 +141,11 @@ void LILTypeValidator::_validate(std::shared_ptr<LILFunctionCall> fc)
             auto fnTy = std::static_pointer_cast<LILFunctionType>(ty);
             auto fnTyArgs = fnTy->getArguments();
             auto args = fc->getArguments();
-            if (fnTyArgs.size() != args.size()) {
+            size_t argNum = args.size();
+            if (isMethod) {
+                argNum += 1;
+            }
+            if (fnTyArgs.size() != argNum) {
                 LILErrorMessage ei;
                 if (args.size() == 0) {
                     if (fnTyArgs.size() > 1) {

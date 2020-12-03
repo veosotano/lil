@@ -759,7 +759,7 @@ llvm::Value * LILIREmitter::_emit(LILClassDecl * value)
         auto vd = std::static_pointer_cast<LILVarDecl>(methodVar);
         for (auto method : vd->getInitVals()) {
             std::shared_ptr<LILFunctionDecl> fd = std::static_pointer_cast<LILFunctionDecl>(method);
-            this->_emitMethod(fd.get(), value);
+            this->_emitFn(fd.get());
         }
     }
     return nullptr;
@@ -1268,10 +1268,13 @@ llvm::Value * LILIREmitter::_emit(LILValuePath * value)
                     }
                     auto fnTy = std::static_pointer_cast<LILFunctionType>(ty);
                     if (targetFn) {
-                        
                         llvmSubject = this->_emitFunctionCall(fc.get(), targetFn->getName(), fnTy.get(), llvmSubject);
-                        stringRep += "()";
+                    } else {
+                        auto fnTyWithoutSelf = fnTy->clone();
+                        fnTyWithoutSelf->removeFirstArgument();
+                        llvmSubject = this->_emitFunctionCall(fc.get(), this->decorate("", classDecl->getName(), vd->getName(), fnTyWithoutSelf), fnTy.get(), llvmSubject);
                     }
+                    stringRep += "()";
                     
                     if (isLastNode) {
                         return llvmSubject;
@@ -1518,7 +1521,7 @@ llvm::Function * LILIREmitter::_emit(LILFunctionDecl * value)
     return nullptr;
 }
 
-llvm::Function * LILIREmitter::_emitFnSignature(std::string name, const std::shared_ptr<LILFunctionType> fnTy)
+llvm::Function * LILIREmitter::_emitFnSignature(std::string name, LILFunctionType * fnTy)
 {
     std::vector<llvm::Type*> types;
     auto arguments = fnTy->getArguments();
@@ -1542,7 +1545,7 @@ llvm::Function * LILIREmitter::_emitFnSignature(std::string name, const std::sha
     return this->_emitFnSignature(name, types, fnTy);
 }
 
-llvm::Function * LILIREmitter::_emitFnSignature(std::string name, std::vector<llvm::Type*> types, const std::shared_ptr<LILFunctionType> fnTy)
+llvm::Function * LILIREmitter::_emitFnSignature(std::string name, std::vector<llvm::Type*> types, LILFunctionType * fnTy)
 {
     std::shared_ptr<LILType> retTy = fnTy->getReturnType();
     llvm::Type * returnType = nullptr;
@@ -1563,7 +1566,7 @@ llvm::Function * LILIREmitter::_emitFn(LILFunctionDecl * value)
 {
     auto fnTy = std::static_pointer_cast<LILFunctionType>(value->getType());
     auto arguments = fnTy->getArguments();
-    llvm::Function * fun = this->_emitFnSignature(value->getName().data(), fnTy);
+    llvm::Function * fun = this->_emitFnSignature(value->getName().data(), fnTy.get());
 
     size_t argIndex = 0;
     for (auto & llvmArg : fun->args()) {
@@ -1663,93 +1666,6 @@ llvm::Value * LILIREmitter::_emitEvaluables(const std::vector<std::shared_ptr<LI
         }
     }
     return nullptr;
-}
-
-llvm::Function * LILIREmitter::_emitMethod(LILFunctionDecl * value, LILClassDecl * classValue)
-{
-    auto fnTy = std::static_pointer_cast<LILFunctionType>(value->getType());
-    auto arguments = fnTy->getArguments();
-
-    std::vector<llvm::Type*> types;
-
-    std::string className = classValue->getName().data();
-    if (d->classTypes.count(className) == 0) {
-        return nullptr;
-    }
-    auto classType = d->classTypes[className];
-    llvm::Type * classPtrType = llvm::PointerType::get(classType, 0);
-
-    types.push_back(classPtrType);
-
-    llvm::Type * llvmTy;
-    std::shared_ptr<LILType> ty;
-    for (auto & arg : arguments) {
-        llvmTy = nullptr;
-        ty.reset();
-        if (arg->isA(NodeTypeType)) {
-            ty = std::static_pointer_cast<LILType>(arg);
-        } else if (arg->isA(NodeTypeVarDecl)){
-            ty = std::static_pointer_cast<LILVarDecl>(arg)->getType();
-        }
-        if (ty) {
-            llvmTy = this->llvmTypeFromLILType(ty.get());
-        }
-        if (llvmTy) {
-            types.push_back(llvmTy);
-        } else {
-            std::cerr << "!!!!!!!!!!EMIT METHOD FAIL!!!!!!!!!!!!!!!!\n";
-        }
-    }
-    llvm::Function * fun = this->_emitFnSignature(value->getName().data(), types, fnTy);
-
-    size_t argIndex = 0;
-    for (auto & llvmArg : fun->args()) {
-        if (argIndex == 0){
-            llvmArg.setName("@self");
-
-        } else {
-            auto arg = arguments[argIndex-1];
-            if(!arg || !arg->isA(NodeTypeVarDecl)){
-                std::cerr << "!!!!!!!!!!NODE WAS NOT VAR DECL FAIL!!!!!!!!!!!!!!!!\n";
-                return nullptr;
-            }
-
-            std::shared_ptr<LILVarDecl> vd = std::static_pointer_cast<LILVarDecl>(arg);
-            llvmArg.setName(vd->getName().data());
-        }
-
-        ++argIndex;
-    }
-
-    llvm::BasicBlock * bb = llvm::BasicBlock::Create(d->llvmContext, "entry", fun);
-    d->irBuilder.SetInsertPoint(bb);
-
-    std::map<std::string, llvm::Value *> scope;
-    d->hiddenLocals.push_back(scope);
-
-    for (llvm::Value & arg : fun->args()) {
-        llvm::AllocaInst * alloca = this->createEntryBlockAlloca(fun, arg.getName(), arg.getType());
-        d->irBuilder.CreateStore(&arg, alloca);
-        auto name = arg.getName();
-        if (d->namedValues.count(name)) {
-            d->hiddenLocals.back()[name] = d->namedValues[name];
-        }
-        d->namedValues[name] = alloca;
-    }
-
-    this->_emitFnBody(fun, value);
-
-    //clear args from local values
-    for (llvm::Value & arg : fun->args()) {
-        d->namedValues.erase(arg.getName());
-    }
-    //restore hidden locals
-    const std::map<std::string, llvm::Value *> & hiddenLocals = d->hiddenLocals.back();
-    for (auto it = hiddenLocals.begin(); it != hiddenLocals.end(); ++it) {
-        d->namedValues[it->first] = it->second;
-    }
-    d->hiddenLocals.pop_back();
-    return fun;
 }
 
 llvm::Value * LILIREmitter::_emit(LILFunctionCall * value)
@@ -1893,23 +1809,31 @@ llvm::Value * LILIREmitter::_emit(LILFunctionCall * value)
 
 llvm::Value * LILIREmitter::_emitFunctionCall(LILFunctionCall * value, LILString name, LILFunctionType * fnTy, llvm::Value * instance)
 {
+    bool isMethod = instance != nullptr;
     llvm::Function* fun = d->llvmModule->getFunction(name.data());
     auto fcArgs = value->getArguments();
     if (fun) {
         std::vector<llvm::Value *> argsvect;
 
-        if (instance != nullptr){
-            argsvect.push_back(instance);
-        }
-
         auto declArgs = fnTy->getArguments();
         auto fcArgsSize = fcArgs.size();
         auto declArgsSize = declArgs.size();
+        
+        
+        if (isMethod){
+            argsvect.push_back(instance);
+            declArgsSize -= 1;
+        }
+        
         size_t j = fcArgsSize > declArgsSize ? fcArgsSize : declArgsSize;
         for (size_t i = 0; i<j; ++i) {
+            size_t declIndex = i;
+            if (isMethod) {
+                declIndex += 1;
+            }
             std::shared_ptr<LILNode> fcArg;
             if (fcArgsSize <= i) {
-                auto vdNode = declArgs[i];;
+                auto vdNode = declArgs[declIndex];
                 if (!vdNode->isA(NodeTypeVarDecl)) {
                     std::cerr << "DECL ARG IS NOT VAR DECL FAIL!!!!!!!!\n\n";
                     return nullptr;
@@ -1929,9 +1853,8 @@ llvm::Value * LILIREmitter::_emitFunctionCall(LILFunctionCall * value, LILString
             }
             else
             {
-                auto declArg = declArgs[i];
+                auto declArg = declArgs[declIndex];
                 auto declArgTy = declArg->getType();
-                
                 
                 if (fcArg->isA(NodeTypeAssignment)) {
                     auto asgmt = std::static_pointer_cast<LILAssignment>(fcArg);
