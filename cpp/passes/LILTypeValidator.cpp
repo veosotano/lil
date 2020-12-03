@@ -181,6 +181,7 @@ void LILTypeValidator::_validate(std::shared_ptr<LILFunctionCall> fc)
             ei.line = sl.line;
             ei.column = sl.column;
             this->errors.push_back(ei);
+            return;
         }
         
         auto ty = localNode->getType();
