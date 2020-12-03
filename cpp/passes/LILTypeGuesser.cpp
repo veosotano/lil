@@ -1710,7 +1710,7 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(std::shared_ptr<LI
             if (subjTy) {
                 currentTy = subjTy;
             } else {
-                std::cerr << "SUBJ TY WAS NULL FAIL!!!!";
+                std::cerr << "SUBJ TY WAS NULL FAIL!!!!\n";
                 return nullptr;
             }
         }
@@ -1728,7 +1728,7 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(std::shared_ptr<LI
                     auto pn = std::static_pointer_cast<LILPropertyName>(node);
                     auto pnName = pn->getName();
                     if (!currentTy->isA(TypeTypeObject)) {
-                        std::cerr << "CURRENT TY WAS NOT OBJECT TY FAIL!!!!";
+                        std::cerr << "CURRENT TY WAS NOT OBJECT TY FAIL!!!!\n";
                         return nullptr;
                     }
                     auto classDecl = this->findClassWithName(currentTy->getName().data());
@@ -1744,7 +1744,7 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(std::shared_ptr<LI
                     auto method = classDecl->getMethodNamed(fc->getName());
                     auto methTy = method->getType();
                     if (!methTy->isA(TypeTypeFunction)) {
-                        std::cerr << "METHOD TYPE IS NOT FUNCTION TYPE FAIL!!!!";
+                        std::cerr << "METHOD TYPE IS NOT FUNCTION TYPE FAIL!!!!\n";
                         return nullptr;
                     }
                     auto fnTy = std::static_pointer_cast<LILFunctionType>(methTy);
@@ -1752,14 +1752,14 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(std::shared_ptr<LI
                     if (retTy) {
                         currentTy = retTy;
                     } else {
-                        std::cerr << "RET TY WAS NULL FAIL!!!!";
+                        std::cerr << "RET TY WAS NULL FAIL!!!!\n";
                         return nullptr;
                     }
                 }
                 case NodeTypeIndexAccessor:
                 {
                     if (!currentTy->isA(TypeTypeStaticArray)) {
-                        std::cerr << "METHOD TYPE IS NOT ARRAY TYPE FAIL!!!!";
+                        std::cerr << "METHOD TYPE IS NOT ARRAY TYPE FAIL!!!!\n";
                         return nullptr;
                     }
                     auto saTy = std::static_pointer_cast<LILStaticArrayType>(currentTy);
