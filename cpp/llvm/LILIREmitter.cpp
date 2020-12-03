@@ -1817,6 +1817,9 @@ llvm::Value * LILIREmitter::_emitFunctionCall(LILFunctionCall * value, LILString
 {
     bool isMethod = instance != nullptr;
     llvm::Function* fun = d->llvmModule->getFunction(name.data());
+    if (!fun) {
+        fun = this->_emitFnSignature(name.data(), fnTy);
+    }
     auto fcArgs = value->getArguments();
     if (fun) {
         std::vector<llvm::Value *> argsvect;
