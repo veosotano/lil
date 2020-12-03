@@ -670,10 +670,16 @@ llvm::Value * LILIREmitter::_emit(LILNullLiteral * value)
 llvm::Value * LILIREmitter::_emit(LILVarDecl * value)
 {
     auto name = value->getName().data();
+    auto ty = value->getType();
     if (value->getIsExtern()) {
-        return this->_emitFnSignature(name, std::static_pointer_cast<LILFunctionType>(value->getType()));
+        if (ty->isA(TypeTypeFunction)) {
+            return this->_emitFnSignature(name, static_cast<LILFunctionType *>(ty.get()));
+        } else {
+            std::cerr << "!!!!!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!\n";
+            return nullptr;
+        }
     } else {
-        auto ty = value->getType();
+        
         if (!ty->isA(TypeTypeFunction)) {
             //backup if needed
             llvm::Value * namedValue = nullptr;
