@@ -649,7 +649,7 @@ llvm::Value * LILIREmitter::_emit(LILStringLiteral * value)
         auto bufferGep = this->_emitGEP(d->currentAlloca, stringTy, true, 1, "buffer", true, false, 0);
         auto castedBuffer = d->irBuilder.CreatePointerCast(bufferGep, i8PtrTy);
         //length is +1 because we want the \0 too
-        d->irBuilder.CreateMemCpy(castedBuffer, 4, castedGlobal, 4, strLength+1);
+        d->irBuilder.CreateMemCpy(castedBuffer, 1, castedGlobal, 1, strLength+1);
         return nullptr;
         
     }
