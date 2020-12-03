@@ -2658,8 +2658,8 @@ llvm::Value * LILIREmitter::_emitPointer(LILValuePath * value)
         auto it = childNodes.begin();
         auto firstNode = *it;
         bool isExtern = false;
-        std::shared_ptr<LILVarDecl> vd;
         llvm::Value * llvmSubject = nullptr;
+        std::shared_ptr<LILType> currentTy;
         LILString instanceName;
         LILString stringRep;
         
@@ -2668,12 +2668,18 @@ llvm::Value * LILIREmitter::_emitPointer(LILValuePath * value)
             stringRep = vn->getName();
             std::shared_ptr<LILNode> subjectNode = this->findNodeForVarName(vn.get());
             if (subjectNode && subjectNode->isA(NodeTypeVarDecl)) {
-                vd = std::static_pointer_cast<LILVarDecl>(subjectNode);
+                auto vd = std::static_pointer_cast<LILVarDecl>(subjectNode);
                 instanceName = vd->getName();
                 llvmSubject = d->namedValues[instanceName.data()];
                 if (vd->getIsExtern()) {
                     isExtern = true;
                 }
+                auto vdTy = vd->getType();
+                if (!vdTy) {
+                    std::cerr << "TYPE OF VAR DECL WAS NULL FAIL !!!!!!!!!!!!!!!!\n";
+                    return nullptr;
+                }
+                currentTy = vdTy;
             }
         } else {
             //selector
@@ -2681,7 +2687,10 @@ llvm::Value * LILIREmitter::_emitPointer(LILValuePath * value)
             switch (sel->getSelectorType()) {
                 case SelectorTypeSelfSelector:
                 {
-                    llvmSubject = d->namedValues["@self"];
+                    auto ptrToSelf = d->namedValues["@self"];
+                    llvmSubject = d->irBuilder.CreateLoad(ptrToSelf);
+                    auto classDecl = this->findAncestorClass(value->shared_from_this());
+                    currentTy = classDecl->getType();
                     stringRep = "@self";
                     break;
                 }
@@ -2712,25 +2721,28 @@ llvm::Value * LILIREmitter::_emitPointer(LILValuePath * value)
                     stringRep += "." + pn->getName();
                     
                     //get index of field into struct
-                    auto ty = vd->getType();
-                    if (!ty->isA(TypeTypeObject)) {
-                        continue;
+                    if (!currentTy->isA(TypeTypeObject)) {
+                        std::cerr << "CURRENT TYPE WAS NOT OBJECT TYPE FAIL !!!!!!!!!!!!!!!!\n";
+                        return nullptr;
                     }
-                    auto objTy = std::static_pointer_cast<LILObjectType>(ty);
-                    auto classValue = this->findClassWithName(objTy->getName());
-                    auto fields = classValue->getFields();
+                    auto classDecl = this->findClassWithName(currentTy->getName());
+                    if (!classDecl) {
+                        std::cerr << "!!!!!!!!!!CLASS NOT FOUND FAIL !!!!!!!!!!!!!!!!\n";
+                        return nullptr;
+                    }
+                    auto fields = classDecl->getFields();
                     size_t theIndex = 0;
                     for (size_t i=0, j=fields.size(); i<j; ++i) {
                         auto fieldVd = std::static_pointer_cast<LILVarDecl>(fields[i]);
                         if (fieldVd->getName() == pn->getName()) {
                             theIndex = i;
-                            vd = fieldVd;
+                            currentTy = fieldVd->getType();
                             break;
                         }
                     }
                     
                     std::string name = pn->getName().data();
-                    llvmSubject = this->_emitGEP(llvmSubject, objTy->getName(), theIndex, stringRep, true);
+                    llvmSubject = this->_emitGEP(llvmSubject, classDecl->getName(), theIndex, stringRep, true);
                     break;
                 }
                     
