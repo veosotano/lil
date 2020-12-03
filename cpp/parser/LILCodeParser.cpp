@@ -330,16 +330,19 @@ void LILCodeParser::skipUntilSemicolon()
 {
     while (!this->atEndOfSource() &&!d->currentToken->isA(TokenTypeSemicolon) && !d->currentToken->isA(TokenTypeBlockClose))
     {
+        d->receiver->receiveNodeData(ParserEventInvalid, d->currentToken->getString());
         this->readNextToken();
         if (this->atEndOfSource()) return;
         if (d->currentToken->isA(TokenTypeBlockOpen))
         {
             this->skipUntilSemicolon();
             if (this->atEndOfSource()) return;
+            d->receiver->receiveNodeData(ParserEventInvalid, d->currentToken->getString());
             this->readNextToken();
             if (this->atEndOfSource()) return;
         }
     }
+    d->receiver->receiveNodeData(ParserEventInvalid, d->currentToken->getString());
     this->readNextToken();
     if (this->atEndOfSource()) return;
     this->skip(TokenTypeWhitespace);
@@ -349,16 +352,19 @@ void LILCodeParser::skipUntilEndOfValuePath()
 {
     while (!this->atEndOfSource() &&!d->currentToken->isA(TokenTypeSemicolon) && !d->currentToken->isA(TokenTypeBlockClose))
     {
+        d->receiver->receiveNodeData(ParserEventInvalid, d->currentToken->getString());
         this->readNextToken();
         if (this->atEndOfSource()) return;
         if (d->currentToken->isA(TokenTypeBlockOpen))
         {
             this->skipUntilEndOfValuePath();
             if (this->atEndOfSource()) return;
+            d->receiver->receiveNodeData(ParserEventInvalid, d->currentToken->getString());
             this->readNextToken();
             if (this->atEndOfSource()) return;
         }
     }
+    d->receiver->receiveNodeData(ParserEventInvalid, d->currentToken->getString());
     this->readNextToken();
     if (this->atEndOfSource()) return;
     this->skip(TokenTypeWhitespace);
