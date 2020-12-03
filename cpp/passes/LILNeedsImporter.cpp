@@ -81,6 +81,7 @@ void LILNeedsImporter::performVisit(std::shared_ptr<LILRootNode> rootNode)
                 
                 std::unique_ptr<LILCodeUnit> codeUnit = std::make_unique<LILCodeUnit>();
                 codeUnit->setNeedsStdLil(false);
+                codeUnit->setIsBeingImported(true);
                 for (auto aif : this->_alreadyImportedFiles) {
                     codeUnit->addAlreadyImportedFile(aif);
                 }

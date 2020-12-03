@@ -59,6 +59,7 @@ namespace LIL
         , debugConversionInserter(false)
         , debugTypeResolver(false)
         , needsStdLil(true)
+        , isBeingImported(false)
         {
         }
         LILString file;
@@ -86,6 +87,7 @@ namespace LIL
         bool debugConversionInserter;
         bool debugTypeResolver;
         bool needsStdLil;
+        bool isBeingImported;
     };
 }
 
@@ -144,6 +146,16 @@ void LILCodeUnit::setNeedsStdLil(bool value)
 bool LILCodeUnit::getNeedsStdLil() const
 {
     return d->needsStdLil;
+}
+
+void LILCodeUnit::setIsBeingImported(bool value)
+{
+    d->isBeingImported = value;
+}
+
+bool LILCodeUnit::getIsBeingImported() const
+{
+    return d->isBeingImported;
 }
 
 void LILCodeUnit::run()
@@ -260,7 +272,7 @@ void LILCodeUnit::runPasses()
         d->pm->addPass(std::move(stringVisitor));
     }
 
-    if (d->isMain) {
+    if (!this->getIsBeingImported()) {
         //conversion inserting
         auto convInserter = std::make_unique<LILConversionInserter>();
         convInserter->setDebug(d->debugConversionInserter);
@@ -291,17 +303,17 @@ void LILCodeUnit::runPasses()
             d->pm->addPass(std::move(stringVisitor));
         }
 
-        //name lowering
-        auto nameLowerer = std::make_unique<LILNameLowerer>();
-        nameLowerer->setDebug(d->debugNameLowerer);
-        d->pm->addPass(std::move(nameLowerer));
-        if (d->verbose) {
-            auto stringVisitor = std::make_unique<LILToStringVisitor>();
-            stringVisitor->setPrintHeadline(false);
-            d->pm->addPass(std::move(stringVisitor));
-        }
-
-    } //end if isMain
+    } //end if not being imported
+    
+    //name lowering
+    auto nameLowerer = new LILNameLowerer();
+    nameLowerer->setDebug(d->debugNameLowerer);
+    passes.push_back(nameLowerer);
+    if (d->verbose) {
+        auto stringVisitor = new LILToStringVisitor();
+        stringVisitor->setPrintHeadline(false);
+        d->pm->addPass(std::move(stringVisitor));
+    }
 
     //execute the passes
     d->pm->execute(d->astBuilder->getRootNode(), d->source);

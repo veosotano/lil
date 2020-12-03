@@ -42,6 +42,8 @@ namespace LIL
         LILString getSource() const;
         void setNeedsStdLil(bool value);
         bool getNeedsStdLil() const;
+        void setIsBeingImported(bool value);
+        bool getIsBeingImported() const;
 
         void run();
         void buildAST();
