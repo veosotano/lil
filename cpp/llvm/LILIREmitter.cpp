@@ -1859,6 +1859,9 @@ llvm::Value * LILIREmitter::_emitFunctionCall(LILFunctionCall * value, LILString
             if (declArgsSize <= i)
             {
                 fcArgIr = this->emit(fcArg.get());
+                if (this->_needsTemporaryVariable(fcArg.get())) {
+                    d->currentAlloca = d->irBuilder.CreateAlloca(this->llvmTypeFromLILType(fcArg->getType().get()));
+                }
             }
             else
             {
@@ -1871,6 +1874,13 @@ llvm::Value * LILIREmitter::_emitFunctionCall(LILFunctionCall * value, LILString
                 } else {
                     fcValue = fcArg;
                 }
+                
+                bool needsTempVar = this->_needsTemporaryVariable(fcValue.get());
+
+                if (needsTempVar) {
+                    d->currentAlloca = d->irBuilder.CreateAlloca(this->llvmTypeFromLILType(declArgTy.get()));
+                }
+
                 if (
                     declArgTy
                     && declArgTy->getIsNullable()
@@ -1886,6 +1896,9 @@ llvm::Value * LILIREmitter::_emitFunctionCall(LILFunctionCall * value, LILString
                     } else {
                         fcArgIr = this->emit(fcValue.get());
                     }
+                }
+                if (needsTempVar) {
+                    fcArgIr = d->irBuilder.CreateLoad(d->currentAlloca);
                 }
                 if (
                     declArgTy
@@ -3214,4 +3227,20 @@ size_t LILIREmitter::getSizeOfType(std::shared_ptr<LILType> ty) const
     return ret;
 }
 
-
+bool LILIREmitter::_needsTemporaryVariable(LILNode * node)
+{
+    switch (node->getNodeType()) {
+        case NodeTypeStringLiteral:
+        {
+            auto string = static_cast<LILStringLiteral *>(node);
+            return !string->getIsCString();
+        }
+        case NodeTypeObjectDefinition:
+        {
+            return true;
+        }
+            
+        default:
+            return false;
+    }
+}

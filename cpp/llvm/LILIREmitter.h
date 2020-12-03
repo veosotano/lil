@@ -156,6 +156,7 @@ namespace LIL
         llvm::Type * llvmTypeFromLILType(LILType * type);
         std::shared_ptr<LILFunctionDecl> chooseFnByType(std::shared_ptr<LILVarDecl> vd, std::vector<std::shared_ptr<LILType>> types);
         llvm::AllocaInst * createEntryBlockAlloca(llvm::Function * fun, const std::string & name, llvm::Type * llvmType);
+        bool _needsTemporaryVariable(LILNode * node);
         bool _debug;
     };
 }
