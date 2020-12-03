@@ -70,6 +70,9 @@ LILOutputEmitter::LILOutputEmitter()
 
 LILOutputEmitter::~LILOutputEmitter()
 {
+    if (d->irEmitter != nullptr) {
+        delete d->irEmitter;
+    }
     delete d;
 }
 
@@ -82,19 +85,7 @@ void LILOutputEmitter::run(LILCodeUnit * cu)
 {
     d->pm->setVerbose(d->verbose);
     
-    //emit IR
-    auto irEmitter = std::make_unique<LILIREmitter>(this->getFile());
-    irEmitter->setDebug(d->debugIREmitter);
-    d->irEmitter = irEmitter.get();
-    d->pm->addPass(std::move(irEmitter));
-    
-    //execute the passes
-    d->pm->execute(cu->getRootNode(), d->source);
-    
-    if (d->pm->hasErrors()) {
-        std::cerr << "Errors encountered. Exiting.\n";
-        return;
-    }
+    d->irEmitter = new LILIREmitter(this->getFile());
     
     std::error_code error_code;
     
@@ -122,6 +113,17 @@ void LILOutputEmitter::run(LILCodeUnit * cu)
     theModule->setDataLayout(d->targetMachine->createDataLayout());
     theModule->setTargetTriple(targetTriple);
     
+    //emit IR
+    d->irEmitter->setDebug(d->debugIREmitter);
+    std::vector<LILVisitor *> passes;
+    passes.push_back(d->irEmitter);
+    d->pm->execute(passes, cu->getRootNode(), d->source);
+    
+    if (d->pm->hasErrors()) {
+        std::cerr << "Errors encountered. Exiting.\n";
+        return;
+    }
+
     bool broken = llvm::verifyModule(*theModule, &llvm::errs(), nullptr);
     if (broken) {
         std::cerr << "\n\n";

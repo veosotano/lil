@@ -198,8 +198,11 @@ void LILCodeUnit::runPasses()
 {
     bool verbose = d->verbose;
 
+    std::vector<LILVisitor *> passes;
+
     if (verbose) {
-        d->pm->addPass(std::make_unique<LILToStringVisitor>());
+        auto stringVisitor = new LILToStringVisitor();
+        passes.push_back(stringVisitor);
     }
     
     //handle #needs instructions
@@ -210,97 +213,97 @@ void LILCodeUnit::runPasses()
     needsImporter->setDebug(d->debugNeedsImporter);
     needsImporter->setDir(d->dir);
     needsImporter->setDebugAST(d->debugAST);
-    d->pm->addPass(std::move(needsImporter));
+    passes.push_back(needsImporter);
     if (verbose) {
-        auto stringVisitor = std::make_unique<LILToStringVisitor>();
+        auto stringVisitor = new LILToStringVisitor();
         stringVisitor->setPrintHeadline(false);
-        d->pm->addPass(std::move(stringVisitor));
+        passes.push_back(stringVisitor);
     }
 
     //ast validation
-    auto astValidator = std::make_unique<LILASTValidator>();
+    auto astValidator = new LILASTValidator();
     astValidator->setDebug(d->debugASTValidator);
-    d->pm->addPass(std::move(astValidator));
+    passes.push_back(astValidator);
 
     //method inserter
-    auto methodInserter = std::make_unique<LILMethodInserter>();
+    auto methodInserter = new LILMethodInserter();
     methodInserter->setDebug(d->debugMethodInserter);
-    d->pm->addPass(std::move(methodInserter));
+    passes.push_back(methodInserter);
     if (verbose) {
-        auto stringVisitor = std::make_unique<LILToStringVisitor>();
+        auto stringVisitor = new LILToStringVisitor();
         stringVisitor->setPrintHeadline(false);
-        d->pm->addPass(std::move(stringVisitor));
+        passes.push_back(stringVisitor);
     }
 
     //type guessing
-    auto typeGuesser = std::make_unique<LILTypeGuesser>();
+    auto typeGuesser = new LILTypeGuesser();
     typeGuesser->setDebug(d->debugTypeGuesser);
-    d->pm->addPass(std::move(typeGuesser));
+    passes.push_back(typeGuesser);
     if (verbose) {
-        auto stringVisitor = std::make_unique<LILToStringVisitor>();
+        auto stringVisitor = new LILToStringVisitor();
         stringVisitor->setPrintHeadline(false);
-        d->pm->addPass(std::move(stringVisitor));
+        passes.push_back(stringVisitor);
     }
     
     //field sorting
-    auto fieldSorter = std::make_unique<LILFieldSorter>();
+    auto fieldSorter = new LILFieldSorter();
     fieldSorter->setDebug(d->debugFieldSorter);
-    d->pm->addPass(std::move(fieldSorter));
+    passes.push_back(fieldSorter);
     if (verbose) {
-        auto stringVisitor = std::make_unique<LILToStringVisitor>();
+        auto stringVisitor = new LILToStringVisitor();
         stringVisitor->setPrintHeadline(false);
-        d->pm->addPass(std::move(stringVisitor));
+        passes.push_back(stringVisitor);
     }
     
     //parameter sorting
-    auto parameterSorter = std::make_unique<LILParameterSorter>();
+    auto parameterSorter = new LILParameterSorter();
     parameterSorter->setDebug(d->debugParameterSorter);
-    d->pm->addPass(std::move(parameterSorter));
+    passes.push_back(parameterSorter);
     if (verbose) {
-        auto stringVisitor = std::make_unique<LILToStringVisitor>();
+        auto stringVisitor = new LILToStringVisitor();
         stringVisitor->setPrintHeadline(false);
-        d->pm->addPass(std::move(stringVisitor));
+        passes.push_back(stringVisitor);
     }
     
     //type validation
-    auto tyValidator = std::make_unique<LILTypeValidator>();
+    auto tyValidator = new LILTypeValidator();
     tyValidator->setDebug(d->debugTypeValidator);
-    d->pm->addPass(std::move(tyValidator));
+    passes.push_back(tyValidator);
     if (verbose) {
-        auto stringVisitor = std::make_unique<LILToStringVisitor>();
+        auto stringVisitor = new LILToStringVisitor();
         stringVisitor->setPrintHeadline(false);
-        d->pm->addPass(std::move(stringVisitor));
+        passes.push_back(stringVisitor);
     }
 
     if (!this->getIsBeingImported()) {
         //conversion inserting
-        auto convInserter = std::make_unique<LILConversionInserter>();
+        auto convInserter = new LILConversionInserter();
         convInserter->setDebug(d->debugConversionInserter);
-        d->pm->addPass(std::move(convInserter));
+        passes.push_back(convInserter);
         if (verbose) {
-            auto stringVisitor = std::make_unique<LILToStringVisitor>();
+            auto stringVisitor = new LILToStringVisitor();
             stringVisitor->setPrintHeadline(false);
-            d->pm->addPass(std::move(stringVisitor));
+            passes.push_back(stringVisitor);
         }
 
         //type resolving
-        auto tyResolver = std::make_unique<LILTypeResolver>();
+        auto tyResolver = new LILTypeResolver();
         tyResolver->setDebug(d->debugTypeResolver);
-        d->pm->addPass(std::move(tyResolver));
+        passes.push_back(tyResolver);
         if (verbose) {
-            auto stringVisitor = std::make_unique<LILToStringVisitor>();
+            auto stringVisitor = new LILToStringVisitor();
             stringVisitor->setPrintHeadline(false);
-            d->pm->addPass(std::move(stringVisitor));
+            passes.push_back(stringVisitor);
         }
         
         //structure lowering
-        auto structureLowerer = std::make_unique<LILStructureLowerer>();
+        auto structureLowerer = new LILStructureLowerer();
         structureLowerer->setDebug(d->debugStructureLowerer);
-        d->pm->addPass(std::move(structureLowerer));
+        passes.push_back(structureLowerer);
         if (verbose) {
-            auto stringVisitor = std::make_unique<LILToStringVisitor>();
+            auto stringVisitor = new LILToStringVisitor();
             stringVisitor->setPrintHeadline(false);
-            d->pm->addPass(std::move(stringVisitor));
+            passes.push_back(stringVisitor);
         }
 
     } //end if not being imported
@@ -312,14 +315,17 @@ void LILCodeUnit::runPasses()
     if (d->verbose) {
         auto stringVisitor = new LILToStringVisitor();
         stringVisitor->setPrintHeadline(false);
-        d->pm->addPass(std::move(stringVisitor));
+        passes.push_back(stringVisitor);
     }
 
     //execute the passes
-    d->pm->execute(d->astBuilder->getRootNode(), d->source);
+    d->pm->execute(passes, d->astBuilder->getRootNode(), d->source);
 
     if (d->pm->hasErrors()) {
         std::cerr << "Errors encountered. Exiting.\n\n";
+    }
+    for (auto pass : passes) {
+        delete pass;
     }
 }
 

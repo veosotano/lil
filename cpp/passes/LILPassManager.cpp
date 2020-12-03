@@ -14,6 +14,7 @@ using namespace LIL;
 
 LILPassManager::LILPassManager()
 : _verbose(false)
+, _hasErrors(false)
 {
     
 }
@@ -23,29 +24,20 @@ LILPassManager::~LILPassManager()
     
 }
 
-void LILPassManager::addPass(std::unique_ptr<LILVisitor> visitor)
-{
-    visitor->setVerbose(this->_verbose);
-    this->_visitors.push_back(std::move(visitor));
-}
-
-void LILPassManager::execute(std::shared_ptr<LILRootNode> rootNode, const LILString & code)
+void LILPassManager::execute(const std::vector<LILVisitor *> & visitors, std::shared_ptr<LILRootNode> rootNode, const LILString & code)
 {
     std::vector<std::shared_ptr<LILNode>> nodes = rootNode->getNodes();
-    for (const auto & visitor : this->_visitors) {
+    for (const auto & visitor : visitors) {
+        visitor->setVerbose(this->getVerbose());
         visitor->initializeVisit();
         visitor->performVisit(rootNode);
         if (visitor->hasErrors())
         {
             visitor->printErrors(code);
+            this->_hasErrors = true;
             break;
         }
     }
-}
-
-const std::vector<std::unique_ptr<LILVisitor>> & LILPassManager::getPasses() const
-{
-    return this->_visitors;
 }
 
 bool LILPassManager::getVerbose() const
@@ -59,11 +51,5 @@ void LILPassManager::setVerbose(bool value)
 
 bool LILPassManager::hasErrors() const
 {
-    for (const auto & visitor : this->_visitors) {
-        if (visitor->hasErrors())
-        {
-            return true;
-        }
-    }
-    return false;
+    return this->_hasErrors;
 }

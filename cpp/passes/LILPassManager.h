@@ -20,17 +20,16 @@ namespace LIL {
     public:
         LILPassManager();
         virtual ~LILPassManager();
-        void addPass(std::unique_ptr<LILVisitor> visitor);
-        void execute(std::shared_ptr<LILRootNode> rootNode, const LILString & code);
-        const std::vector<std::unique_ptr<LILVisitor>> & getPasses() const;
-    
+
+        void execute(const std::vector<LILVisitor *> & visitors, std::shared_ptr<LILRootNode> rootNode, const LILString & code);
+
         bool getVerbose() const;
         void setVerbose(bool value);
         bool hasErrors() const;
         
     private:
-        std::vector<std::unique_ptr<LILVisitor>> _visitors;
         bool _verbose;
+        bool _hasErrors;
     };
 }
 
