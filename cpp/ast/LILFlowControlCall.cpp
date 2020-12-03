@@ -126,12 +126,16 @@ std::shared_ptr<LILNode> LILFlowControlCall::getArgument() const
 
 std::shared_ptr<LILType> LILFlowControlCall::getType() const
 {
-    const auto & parent = this->getParentNode();
-    if (parent) {
-        auto parentTy = parent->getType();
-        if (parentTy && parentTy->isA(TypeTypeFunction)) {
-            auto fnTy = std::static_pointer_cast<LILFunctionType>(parentTy);
-            return fnTy->getReturnType();
+    auto parent = this->getParentNode();
+    while (parent) {
+        if (parent->isA(NodeTypeFunctionDecl)) {
+            auto parentTy = parent->getType();
+            if (parentTy && parentTy->isA(TypeTypeFunction)) {
+                auto fnTy = std::static_pointer_cast<LILFunctionType>(parentTy);
+                return fnTy->getReturnType();
+            }
+        } else {
+            parent = parent->getParentNode();
         }
     }
     return nullptr;
