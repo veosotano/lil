@@ -338,7 +338,7 @@ void LILTypeValidator::_validate(std::shared_ptr<LILObjectDefinition> od)
 void LILTypeValidator::_validate(std::shared_ptr<LILVarDecl> vd)
 {
     auto ty = vd->getType();
-    if (!ty->isA(TypeTypeFunction)) {
+    if (ty && !ty->isA(TypeTypeFunction)) {
         for (auto initVal : vd->getInitVals()) {
             auto ivTy = initVal->getType();
             if (!ivTy) {
