@@ -191,7 +191,10 @@ void LILCodeUnit::runPasses()
     }
     
     //handle #needs instructions
-    auto needsImporter = std::make_unique<LILNeedsImporter>();
+    auto needsImporter = new LILNeedsImporter();
+    for (auto aif : d->alreadyImportedFiles) {
+        needsImporter->addAlreadyImportedFile(aif);
+    }
     needsImporter->setDebug(d->debugNeedsImporter);
     needsImporter->setDir(d->dir);
     needsImporter->setDebugAST(d->debugAST);
