@@ -193,6 +193,13 @@ std::shared_ptr<LILType> LILTypeGuesser::_process(std::shared_ptr<LILType> value
             if (changed) {
                 fnTy->setArguments(newArgs);
             }
+            auto retTy = fnTy->getReturnType();
+            if (retTy) {
+                auto newRetTy = this->_process(retTy);
+                if (newRetTy) {
+                    fnTy->setReturnType(newRetTy);
+                }
+            }
             break;
         }
         case TypeTypeSingle:
