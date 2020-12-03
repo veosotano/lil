@@ -1733,6 +1733,10 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(std::shared_ptr<LI
                     }
                     auto classDecl = this->findClassWithName(currentTy->getName().data());
                     auto field = classDecl->getFieldNamed(pnName);
+                    if (!field) {
+                        std::cerr << "FIELD WAS NULL FAIL!!!!\n";
+                        return nullptr;
+                    }
                     auto fieldTy = this->getNodeType(field);
                     currentTy = fieldTy;
                     break;
