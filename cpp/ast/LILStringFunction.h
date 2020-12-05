@@ -26,7 +26,7 @@ namespace LIL
         LILStringFunction(const LILStringFunction & other);
         std::shared_ptr<LILStringFunction> clone() const;
         virtual ~LILStringFunction();
-        void receiveNodeData(const LIL::LILString &data);
+        void receiveNodeData(const LIL::LILString &data) override;
         void setStartChunk(LILString newValue);
         LILString getStartChunk() const;
         void addMidChunk(LILString newValue);
@@ -34,8 +34,8 @@ namespace LIL
         void setEndChunk(LILString newValue);
         LILString getEndChunk() const;
 
-        LILString stringRep();
-        bool equalTo(std::shared_ptr<LILNode> otherNode);
+        LILString stringRep() override;
+        bool equalTo(std::shared_ptr<LILNode> otherNode) override;
         
         void add(std::shared_ptr<LILNode> node);
         const std::vector<std::shared_ptr<LILNode>> & getNodes() const;
@@ -43,7 +43,7 @@ namespace LIL
         std::shared_ptr<LILType> getType() const override;
 
     private:
-        virtual std::shared_ptr<LILClonable> cloneImpl() const;
+        std::shared_ptr<LILClonable> cloneImpl() const override;
         LILString _startChunk;
         std::vector<LILString> _midChunks;
         LILString _endChunk;
