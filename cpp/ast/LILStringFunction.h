@@ -37,6 +37,7 @@ namespace LIL
         LILString stringRep();
         bool equalTo(std::shared_ptr<LILNode> otherNode);
         
+        void add(std::shared_ptr<LILNode> node);
         const std::vector<std::shared_ptr<LILNode>> & getNodes() const;
 
     private:

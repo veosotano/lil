@@ -432,7 +432,7 @@ void LILASTBuilder::receiveNodeCommit()
         case BuilderStateStringFunction:
         {
             std::shared_ptr<LILStringFunction> str = std::static_pointer_cast<LILStringFunction>(this->currentContainer.back());
-            str->addNode(this->currentNode);
+            str->add(this->currentNode);
             break;
         }
         case BuilderStateExpression:

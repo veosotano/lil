@@ -93,6 +93,11 @@ bool LILStringFunction::equalTo(std::shared_ptr<LILNode> otherNode)
     return true;
 }
 
+void LILStringFunction::add(std::shared_ptr<LILNode> node)
+{
+    this->addNode(node);
+}
+
 const std::vector<std::shared_ptr<LILNode>> & LILStringFunction::getNodes() const
 {
     return this->getChildNodes();
