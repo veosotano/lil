@@ -97,7 +97,7 @@ void LILTypeValidator::_validate(std::shared_ptr<LILFunctionCall> fc)
 {
     if (fc->isA(FunctionCallTypeValuePath)) {
         auto vp = fc->getSubject();
-        auto remoteNode = this->_findNodeForValuePath(vp);
+        auto remoteNode = this->findNodeForValuePath(vp.get());
         if (!remoteNode || !remoteNode->isA(NodeTypeVarDecl)) {
             LILErrorMessage ei;
             ei.message =  "Function "+vp->stringRep()+"() not found";
@@ -370,88 +370,4 @@ void LILTypeValidator::validateChildren(const std::vector<std::shared_ptr<LILNod
     {
         this->validate((*it));
     };
-}
-
-std::shared_ptr<LILNode> LILTypeValidator::_findNodeForValuePath(std::shared_ptr<LILValuePath> vp) const
-{
-    auto nodes = vp->getNodes();
-    std::shared_ptr<LILNode> firstNode;
-    if (nodes.size() == 1) {
-        firstNode = nodes.front();
-        if (firstNode->isA(NodeTypeVarName)) {
-            return this->findNodeForVarName(static_cast<LILVarName *>(firstNode.get()));
-        }
-    } else if (nodes.size() > 1){
-        firstNode = nodes.front();
-        std::shared_ptr<LILClassDecl> classDecl;
-        
-        if (firstNode->isA(NodeTypeVarName)) {
-            auto localNode = this->findNodeForVarName(static_cast<LILVarName *>(firstNode.get()));
-            if (localNode) {
-                auto subjTy = localNode->getType();
-                if (subjTy && subjTy->isA(TypeTypeObject)) {
-                    auto objTy = std::static_pointer_cast<LILObjectType>(subjTy);
-                    classDecl = this->findClassWithName(objTy->getName().data());
-                }
-            }
-        }
-        else if (firstNode->isA(SelectorTypeSelfSelector)) {
-            classDecl = this->findAncestorClass(firstNode);
-        }
-        if (!classDecl) {
-            return nullptr;
-        }
-        for (size_t i=1, j=nodes.size(); i<j; ++i) {
-            auto node = nodes[i];
-            switch (node->getNodeType()) {
-                case NodeTypeFunctionCall:
-                {
-                    auto fc = std::static_pointer_cast<LILFunctionCall>(node);
-                    auto method = classDecl->getMethodNamed(fc->getName());
-                    if (!method->isA(NodeTypeVarDecl)) {
-                        std::cerr << "!!!!!!!!!!NODE IS NOT VAR DECL FAIL !!!!!!!!!!!!!!!!\n";
-                        return nullptr;
-                    }
-                    auto vd = std::static_pointer_cast<LILVarDecl>(method);
-                    auto ty = vd->getType();
-                    if (!ty->isA(TypeTypeFunction)) {
-                        std::cerr << "!!!!!!!!!!TYPE IS NOT FUNCTION TYPE FAIL !!!!!!!!!!!!!!!!\n";
-                        return nullptr;
-                    }
-                    auto fnTy = std::static_pointer_cast<LILFunctionType>(ty);
-                    auto retTy = fnTy->getReturnType();
-                    if (!retTy->isA(TypeTypeObject)) {
-                        std::cerr << "!!!!!!!!!!NODE DOES NOT POINT TO OBJECT FAIL !!!!!!!!!!!!!!!!\n";
-                        return nullptr;
-                    }
-                    classDecl = this->findClassWithName(retTy->getName());
-                    if (!classDecl) {
-                        std::cerr << "!!!!!!!!!!CLASS NOT FOUND FAIL !!!!!!!!!!!!!!!!\n";
-                        return nullptr;
-                    }
-                    break;
-                }
-                case NodeTypePropertyName:
-                {
-                    auto pn = std::static_pointer_cast<LILPropertyName>(node);
-                    auto pnName = pn->getName();
-                    auto field = classDecl->getFieldNamed(pnName);
-                    if (i==j-1) {
-                        return field;
-                    } else {
-                        auto fieldTy = field->getType();
-                        if (fieldTy && fieldTy->isA(TypeTypeObject)) {
-                            auto fieldObjTy = std::static_pointer_cast<LILObjectType>(fieldTy);
-                            classDecl = this->findClassWithName(fieldObjTy->getName().data());
-                        }
-                    }
-                    break;
-                }
-                default:
-                    std::cerr << "!!!!!!!!!!VALUE PATH NODE FAIL!!!!!!!!!!!!!!!!\n";
-                    break;
-            }
-        }
-    }
-    return nullptr;
 }

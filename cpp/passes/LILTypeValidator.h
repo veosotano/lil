@@ -41,9 +41,7 @@ namespace LIL
         void _validate(std::shared_ptr<LILObjectDefinition> od);
         void _validate(std::shared_ptr<LILVarDecl> vd);
         inline void validateChildren(const std::vector<std::shared_ptr<LILNode>> & children);
-        
-    private:
-        std::shared_ptr<LILNode> _findNodeForValuePath(std::shared_ptr<LILValuePath> vp) const;
+
     };
 }
 

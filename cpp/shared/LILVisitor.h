@@ -21,6 +21,7 @@ namespace LIL
 {
     class LILClassDecl;
     class LILErrorMessage;
+    class LILValuePath;
     class LILVarName;
     class LILRootNode;
 
@@ -46,6 +47,7 @@ namespace LIL
         bool getDebug() const;
         std::shared_ptr<LILNode> findNodeForVarName(LILVarName * name) const;
         std::shared_ptr<LILNode> findNodeForName(LILString name, LILNode * parent) const;
+        std::shared_ptr<LILNode> findNodeForValuePath(LILValuePath * vp) const;
 
         LILString decorate(LILString ns, LILString className, LILString name, std::shared_ptr<LILType> type) const;
         LILString typeToString(std::shared_ptr<LILType> type) const;
