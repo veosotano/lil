@@ -55,6 +55,7 @@ namespace LIL
         void clear();
         LILString & append(const LILString &other);
         LILString & append(const LILChar &c);
+        LILString & replace(std::string & other);
         void truncate(size_t pos);
 
         const bool operator==(const LILString &other) const;

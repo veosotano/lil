@@ -51,6 +51,7 @@ int main(int argc, const char * argv[]) {
     bool debugASTValidator = false;
     bool debugTypeGuesser = false;
     bool debugStructureLowerer = false;
+    bool debugConstantFolder = false;
     bool debugMethodInserter = false;
     bool debugNameLowerer = false;
     bool debugTypeValidator = false;
@@ -163,6 +164,10 @@ int main(int argc, const char * argv[]) {
             debugStructureLowerer = true;
             ++i;
             
+        } else if (command == "--debug-constant-folder") {
+            debugConstantFolder = true;
+            ++i;
+            
         } else if (command == "--debug-type-validator") {
             debugTypeValidator = true;
             ++i;
@@ -248,6 +253,7 @@ int main(int argc, const char * argv[]) {
     codeUnit->setDebugParameterSorter(debugParameterSorter);
     codeUnit->setDebugTypeGuesser(debugTypeGuesser);
     codeUnit->setDebugStructureLowerer(debugStructureLowerer);
+    codeUnit->setDebugConstantFolder(debugConstantFolder);
     codeUnit->setDebugMethodInserter(debugMethodInserter);
     codeUnit->setDebugNameLowerer(debugNameLowerer);
     codeUnit->setDebugTypeValidator(debugTypeValidator);

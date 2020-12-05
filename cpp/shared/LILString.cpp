@@ -217,6 +217,13 @@ LILString & LILString::append(const LILChar &c)
     return *this;
 }
 
+LILString & LILString::replace(std::string & other)
+{
+    d->string.clear();
+    d->string.append(other);
+    return *this;
+}
+
 void LILString::truncate(size_t pos)
 {
     d->string.erase(d->string.begin()+pos, d->string.end());

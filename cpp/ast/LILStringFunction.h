@@ -22,6 +22,8 @@ namespace LIL
     class LILStringFunction : public LILNode
     {
     public:
+        friend class LILConstantFolder;
+        
         LILStringFunction();
         LILStringFunction(const LILStringFunction & other);
         std::shared_ptr<LILStringFunction> clone() const;

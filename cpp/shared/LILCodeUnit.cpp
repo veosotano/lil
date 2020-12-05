@@ -19,6 +19,7 @@
 #include "LILNeedsImporter.h"
 #include "LILASTValidator.h"
 #include "LILConversionInserter.h"
+#include "LILConstantFolder.h"
 #include "LILFieldSorter.h"
 #include "LILTypeValidator.h"
 #include "LILMethodInserter.h"
@@ -51,6 +52,7 @@ namespace LIL
         , debugASTValidator(false)
         , debugTypeGuesser(false)
         , debugStructureLowerer(false)
+        , debugConstantFolder(false)
         , debugMethodInserter(false)
         , debugNameLowerer(false)
         , debugFieldSorter(false)
@@ -79,6 +81,7 @@ namespace LIL
         bool debugASTValidator;
         bool debugTypeGuesser;
         bool debugStructureLowerer;
+        bool debugConstantFolder;
         bool debugMethodInserter;
         bool debugNameLowerer;
         bool debugFieldSorter;
@@ -305,6 +308,16 @@ void LILCodeUnit::runPasses()
             stringVisitor->setPrintHeadline(false);
             passes.push_back(stringVisitor);
         }
+        
+        //constant folding
+        auto constantFolder = new LILConstantFolder();
+        constantFolder->setDebug(d->debugConstantFolder);
+        passes.push_back(constantFolder);
+        if (verbose) {
+            auto stringVisitor = new LILToStringVisitor();
+            stringVisitor->setPrintHeadline(false);
+            passes.push_back(stringVisitor);
+        }
 
     } //end if not being imported
     
@@ -374,6 +387,11 @@ void LILCodeUnit::setDebugTypeGuesser(bool value)
 void LILCodeUnit::setDebugStructureLowerer(bool value)
 {
     d->debugStructureLowerer = value;
+}
+
+void LILCodeUnit::setDebugConstantFolder(bool value)
+{
+    d->debugConstantFolder = value;
 }
 
 void LILCodeUnit::setDebugFieldSorter(bool value)
