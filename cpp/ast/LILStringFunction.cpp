@@ -102,3 +102,12 @@ const std::vector<std::shared_ptr<LILNode>> & LILStringFunction::getNodes() cons
 {
     return this->getChildNodes();
 }
+
+std::shared_ptr<LILType> LILStringFunction::getType() const
+{
+    auto parentNode = this->getParentNode();
+    if (parentNode) {
+        return parentNode->getType();
+    }
+    return nullptr;
+}

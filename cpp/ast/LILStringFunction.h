@@ -39,6 +39,8 @@ namespace LIL
         
         void add(std::shared_ptr<LILNode> node);
         const std::vector<std::shared_ptr<LILNode>> & getNodes() const;
+        
+        std::shared_ptr<LILType> getType() const override;
 
     private:
         virtual std::shared_ptr<LILClonable> cloneImpl() const;
