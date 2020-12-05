@@ -1178,6 +1178,7 @@ bool LILCodeParser::isPunctuation(std::shared_ptr<LILToken> token) const
         case TokenTypeInstructionSign:
         case TokenTypePercentageNumberInt:
         case TokenTypePercentageNumberFP:
+        case TokenTypeForeignLang:
             return false;
     }
     return false;
