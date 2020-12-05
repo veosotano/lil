@@ -43,8 +43,8 @@ namespace LIL
         bool hasErrors() const;
         
         void run(LILCodeUnit * cu);
-        void compileToO(std::string outName, LILCodeUnit * cu);
-        void compileToS(std::string outName, LILCodeUnit * cu);
+        void compileToO(std::string name, LILCodeUnit * cu);
+        void compileToS(std::string name, LILCodeUnit * cu);
         void printToOutput(LILCodeUnit * cu);
         void setVerbose(bool value);
         void setDebugIREmitter(bool value);

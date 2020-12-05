@@ -132,10 +132,10 @@ void LILOutputEmitter::run(LILCodeUnit * cu)
     }
 }
 
-void LILOutputEmitter::compileToO(std::string outName, LILCodeUnit * cu)
+void LILOutputEmitter::compileToO(std::string name, LILCodeUnit * cu)
 {
     std::error_code error_code;
-    llvm::raw_fd_ostream dest(outName.data(), error_code, llvm::sys::fs::OF_None);
+    llvm::raw_fd_ostream dest(name.data(), error_code, llvm::sys::fs::OF_None);
     if (error_code) {
         std::cerr << "Error: could not open destination file.\n";
         return;
@@ -163,7 +163,7 @@ void LILOutputEmitter::compileToO(std::string outName, LILCodeUnit * cu)
     dest.flush();
 }
 
-void LILOutputEmitter::compileToS(std::string outName, LILCodeUnit * cu)
+void LILOutputEmitter::compileToS(std::string name, LILCodeUnit * cu)
 {
     std::error_code error_code;
     this->run(cu);
@@ -176,7 +176,7 @@ void LILOutputEmitter::compileToS(std::string outName, LILCodeUnit * cu)
         d->irEmitter->printIR(llvm::errs());
     }
     
-    llvm::raw_fd_ostream dest(outName.data(), error_code, llvm::sys::fs::OF_None);
+    llvm::raw_fd_ostream dest(name.data(), error_code, llvm::sys::fs::OF_None);
     if (error_code) {
         std::cerr << "Error: could not open destination file.\n";
         return;
