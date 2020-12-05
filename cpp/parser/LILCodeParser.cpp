@@ -84,7 +84,7 @@ namespace LIL
         , column(1)
         , receiver()
         , notifiesReceiver(true)
-        , allowsWhitespaceFunctionCall(true)
+        , isReadingStringArgument(false)
         {
         }
         LILAbstractParserReceiver * receiver;
@@ -101,7 +101,7 @@ namespace LIL
         size_t index;
         LILString lastObjectType;
         bool notifiesReceiver;
-        bool allowsWhitespaceFunctionCall;
+        bool isReadingStringArgument;
     };
 }
 
@@ -161,6 +161,9 @@ void LILCodeParser::parseString(const LILString & theString)
 
 void LILCodeParser::readNextToken()
 {
+    if (d->isReadingStringArgument) {
+        return;
+    }
     //read next one
     std::shared_ptr<LILToken> theToken = d->lexer->readNextToken();
     this->updateCurrentToken(theToken);
@@ -931,7 +934,7 @@ bool LILCodeParser::isFunctionCall(bool isPastIdentifier) const
             return false;
         }
         //we got whitespace, check if next thing is a valid value
-        if (!d->allowsWhitespaceFunctionCall) {
+        if (d->isReadingStringArgument) {
             return false;
         }
         std::shared_ptr<LILToken> peekToken = d->lexer->peekNextToken();
@@ -2478,10 +2481,6 @@ bool LILCodeParser::readStringFunction()
                 LIL_CANCEL_NODE
             }
 
-            if (d->currentToken->isA(TokenTypeBlockClose))
-            {
-                d->receiver->receiveNodeData(ParserEventStringFunctionArgEnd, d->currentToken->getString());
-            }
             if (this->atEndOfSource())
             {
                 LIL_CANCEL_NODE
@@ -2527,17 +2526,17 @@ bool LILCodeParser::readStringArgument()
         {
             return false;
         }
+        
+        //the block was empty, exit gracefully
+        if (d->currentToken->isA(TokenTypeBlockClose))
+        {
+            d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+            return true;
+        }
+    } else {
+        //configure to return to a string on whitespace
+        d->isReadingStringArgument = true;
     }
-
-    //the block was empty, exit gracefully
-    if (d->currentToken->isA(TokenTypeBlockClose))
-    {
-        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
-        return true;
-    }
-
-    //configure to return to a string on whitespace
-    d->allowsWhitespaceFunctionCall = false;
 
     bool valid = true;
     NodeType nodeType = NodeTypeInvalid;
@@ -2551,18 +2550,20 @@ bool LILCodeParser::readStringArgument()
         return false;
     }
 
-    this->skip(TokenTypeWhitespace);
-    if (this->atEndOfSource())
-    {
-        return false;
+    if (hasBlock) {
+        this->skip(TokenTypeWhitespace);
+        if (this->atEndOfSource())
+        {
+            return false;
+        }
     }
-
-    d->lexer->rewindToPreviousToken();
-    d->allowsWhitespaceFunctionCall = true;
 
     if (!valid || this->atEndOfSource())
         return false;
 
+    if (!hasBlock) {
+        d->isReadingStringArgument = false;
+    }
     if (d->currentToken->isA(TokenTypeBlockClose))
     {
         d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
