@@ -3404,20 +3404,26 @@ bool LILCodeParser::readExportInstr()
     d->receiver->receiveNodeData(ParserEventInstruction, d->currentToken->getString());
     this->readNextToken();
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-    
-    LIL_EXPECT(TokenTypeBlockOpen, "block open")
-    d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
-    this->readNextToken();
-    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-    
-    while (!this->atEndOfSource() && !d->currentToken->isA(TokenTypeBlockClose)) {
+
+    bool needsBlockClose = false;
+    if (d->currentToken->isA(TokenTypeBlockOpen)) {
+        needsBlockClose = true;
+        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+        this->readNextToken();
+        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+    }
+    if (needsBlockClose) {
+        while (!this->atEndOfSource() && !d->currentToken->isA(TokenTypeBlockClose)) {
+            this->parseNext();
+        }
+        LIL_EXPECT(TokenTypeBlockClose, "block close")
+        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+        this->readNextToken();
+    }
+    else
+    {
         this->parseNext();
     }
-
-    LIL_EXPECT(TokenTypeBlockClose, "block close")
-    d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
-    this->readNextToken();
-
     LIL_END_NODE_SKIP(false)
 }
 
