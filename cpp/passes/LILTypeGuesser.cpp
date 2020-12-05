@@ -1744,8 +1744,18 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(std::shared_ptr<LI
                 case NodeTypeFunctionCall:
                 {
                     auto fc = std::static_pointer_cast<LILFunctionCall>(node);
-                    auto classDecl = this->findClassWithName(currentTy->getName().data());
-                    auto method = classDecl->getMethodNamed(fc->getName());
+                    auto className = currentTy->getName().data();
+                    auto classDecl = this->findClassWithName(className);
+                    if (!classDecl) {
+                        std::cerr << "CLASS " << className << " NOT FOUND FAIL!!!!\n";
+                        return nullptr;
+                    }
+                    auto methodName = fc->getName();
+                    auto method = classDecl->getMethodNamed(methodName);
+                    if (!method) {
+                        std::cerr << "METHOD " << methodName.data() << " NOT FOUND FAIL!!!!\n";
+                        return nullptr;
+                    }
                     auto methTy = method->getType();
                     if (!methTy->isA(TypeTypeFunction)) {
                         std::cerr << "METHOD TYPE IS NOT FUNCTION TYPE FAIL!!!!\n";
