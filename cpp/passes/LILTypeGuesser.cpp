@@ -1536,8 +1536,8 @@ void LILTypeGuesser::recursiveFindReturnTypes(std::vector<std::shared_ptr<LILTyp
                         }
                         case NodeTypeStringLiteral:
                         {
-                            std::shared_ptr<LILType> type = std::make_shared<LILType>();
-                            type->setName("str");
+                            std::shared_ptr<LILObjectType> type = std::make_shared<LILObjectType>();
+                            type->setName("string");
                             returnTypes.push_back(type);
                             break;
                         }
