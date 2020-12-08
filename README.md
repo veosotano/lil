@@ -12,10 +12,10 @@ You have a full 2D/3D rendering engine at your disposal that will take care of s
 
 At the topmost of the visual hierarchy of a frame there is the `@root` object, which you can use in a selector chain, like so:
 
-    //add 10 points of padding
-    @root {
-        padding: 10;
-    }
+	//add 10 points of padding
+	@root {
+		padding: 10;
+	}
 
 Let's say we want to add a button to the app:
 
@@ -34,8 +34,8 @@ Let's say we want to add a button to the app:
 
 Now let's add a hover state:
 
-    @root {
-    	padding: 10;
+	@root {
+		padding: 10;
 
 		#new myButton {
 			width: 200;
@@ -65,11 +65,11 @@ Now we have a button we can interact with. But we would like to reuse this butto
 		}
 	};
 
-    @root {
-    	padding: 10;
+	@root {
+		padding: 10;
 
 		//apply the styles with the isA property
-       #new myButton {
+		#new myButton {
 			isA: buttonStyle;
 			content: "Press me";
 		}
@@ -100,11 +100,11 @@ But a button would be not be a real button if it doesn't do anything. Let's chan
 			background: #0;
 		}
 	};
-    @root {
-    	padding: 10;
+	@root {
+		padding: 10;
 
 		//apply the styles with the isA property
-       #new myButton {
+		#new myButton {
 			isA: buttonStyle;
 			content: "Press me";
 			on.click: button1Pressed();
@@ -117,10 +117,17 @@ But a button would be not be a real button if it doesn't do anything. Let's chan
 		}
 	}
 
-Now if you click the first button, it will print the text "Button 1 pressed" to the console, without the quotes, and if you press the second one it will output "Pressed button 2", since we passed `2` as the argument to the function. Notice that the call is not executed when it is declared but as a result of the user interaction. This is because it was expressed inside of a rule, and the compiler knows that it needs to create an anonymous function containing your code and calls it appropriately when needed.
+Now if you click the first button, it will print the text "Button 1 pressed" to the console, without the quotes, and if you press the second one it
+will output "Pressed button 2", since we passed `2` as the argument to the function. Notice that the call is not executed when it is declared but
+as a result of the user interaction. This is because it was expressed inside of a rule, and the compiler knows that it needs to create an anonymous
+function containing your code and calls it appropriately when needed.
+
+Obviously this is nowhere enough to make a full app. I'll be adding some more complete tutorials in the future, stay tuned! Also take a look at the
+specification, it is just the beginning right now, but this will all come together soon.
 
 ## Please contribute
-This is an open source project which aims to bring a great new technology to use for the general public, to make it fun to create apps and games. To be easy to learn and read, while at the same time be powerful enough to not feel limiting or having to resort to hacks to get things done.
+This is an open source project which aims to bring a great new technology to use for the general public, to make it fun to create apps and games.
+To be easy to learn and read, while at the same time be powerful enough to not feel limiting or having to resort to hacks to get things done.
 
 If you want to help bring that idea to reality, please get in touch. Any help a any skill level is appreciated.
 
@@ -134,7 +141,8 @@ In the cpp folder resides the compiler that is a custom front-end that interface
 
 The lil_cli folder contains the command line interface to the compiler. Also written in C++. Warning: WORK IN PROGRESS!!
 
-Please don't judge the quality of this project by the existing code: there is sooooo much yet to come. The examples are just basic stubs that need to be replaced with some good informative ones.
+Please don't judge the quality of this project by the existing code: there is sooooo much yet to come. The examples are just basic stubs that need to be
+replaced with some good informative ones.
 
 Hit me up on Twitter if you want to contribute, discuss or just say hi: https://twitter.com/veosotano
 
