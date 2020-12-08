@@ -119,12 +119,12 @@ But a button would be not be a real button if it doesn't do anything. Let's chan
 
 Now if you click the first button, it will print the text "Button 1 pressed" to the console, without the quotes, and if you press the second one it will output "Pressed button 2", since we passed `2` as the argument to the function. Notice that the call is not executed when it is declared but as a result of the user interaction. This is because it was expressed inside of a rule, and the compiler knows that it needs to create an anonymous function containing your code and calls it appropriately when needed.
 
-##Please contribute
+## Please contribute
 This is an open source project which aims to bring a great new technology to use for the general public, to make it fun to create apps and games. To be easy to learn and read, while at the same time be powerful enough to not feel limiting or having to resort to hacks to get things done.
 
 If you want to help bring that idea to reality, please get in touch. Any help a any skill level is appreciated.
 
-##General information
+## General information
 
 This is the main repository of the LIL language. I chose the MIT license to get started, but this is all up for discussion.
 
