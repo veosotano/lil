@@ -34,7 +34,6 @@ LILFlowControl::LILFlowControl(const LILFlowControl &other)
     this->_receivesFunctionBody = other._receivesFunctionBody;
     this->_receivesElse = other._receivesElse;
     this->_flowControlType = other._flowControlType;
-    this->_returnType = other._returnType;
 }
 
 std::shared_ptr<LILFlowControl> LILFlowControl::clone() const
@@ -61,9 +60,6 @@ std::shared_ptr<LILClonable> LILFlowControl::cloneImpl() const
     for (auto it = this->_else.begin(); it != this->_else.end(); ++it)
     {
         clone->addElse((*it)->clone());
-    }
-    if (this->_returnType) {
-        clone->setReturnType(this->_returnType->clone());
     }
     return clone;
 }
@@ -222,14 +218,4 @@ FlowControlType LILFlowControl::getFlowControlType() const
 void LILFlowControl::setFlowControlType(FlowControlType newType)
 {
     this->_flowControlType = newType;
-}
-
-void LILFlowControl::setReturnType(std::shared_ptr<LILNode> type)
-{
-    this->_returnType = type;
-}
-
-std::shared_ptr<LILNode> LILFlowControl::getReturnType() const
-{
-    return this->_returnType;
 }
