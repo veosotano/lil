@@ -21,7 +21,7 @@
 #include "LILFunctionCall.h"
 #include "LILObjectDefinition.h"
 #include "LILRootNode.h"
-
+#include "LILVarDecl.h"
 
 namespace LIL
 {
