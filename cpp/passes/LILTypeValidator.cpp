@@ -19,6 +19,7 @@
 #include "LILErrorMessage.h"
 #include "LILFunctionCall.h"
 #include "LILFunctionType.h"
+#include "LILMultipleType.h"
 #include "LILObjectType.h"
 #include "LILPropertyName.h"
 #include "LILTypeDecl.h"
@@ -234,18 +235,69 @@ void LILTypeValidator::_validate(std::shared_ptr<LILFunctionCall> fc)
                     auto vd = std::static_pointer_cast<LILVarDecl>(fnTyArg);
                     argName = vd->getName();
                 }
-                if (argTy->equalTo(fcArgTy) || this->_isDefinitionOf(fcArgTy, argTy)) {
-                    i += 1;
-                    continue;
-                } else {
-                    LILString conversionName = fcArgTy->stringRep();
-                    conversionName += "_to_";
-                    conversionName += argTy->stringRep();
-                    if (conversions.count(conversionName)) {
-                        i += 1;
+                if (argTy->isA(TypeTypeMultiple)) {
+                    auto mtTy = std::static_pointer_cast<LILMultipleType>(argTy);
+                    bool found = false;
+                    for (auto mtArgTy : mtTy->getTypes()) {
+                        if (mtArgTy->equalTo(fcArgTy) || this->_isDefinitionOf(fcArgTy, mtArgTy)) {
+                            i += 1;
+                            found = true;
+                            break;
+                        } else {
+                            LILString conversionName = fcArgTy->stringRep();
+                            conversionName += "_to_";
+                            conversionName += mtArgTy->stringRep();
+                            if (conversions.count(conversionName)) {
+                                i += 1;
+                                found = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (found) {
                         continue;
                     }
                 }
+                else if (fcArgTy->isA(TypeTypeMultiple))
+                {
+                    auto mtTy = std::static_pointer_cast<LILMultipleType>(fcArgTy);
+                    bool found = false;
+                    for (auto mtArgTy : mtTy->getTypes()) {
+                        if (argTy->equalTo(mtArgTy) || this->_isDefinitionOf(mtArgTy, argTy)) {
+                            i += 1;
+                            found = true;
+                            break;
+                        } else {
+                            LILString conversionName = mtArgTy->stringRep();
+                            conversionName += "_to_";
+                            conversionName += argTy->stringRep();
+                            if (conversions.count(conversionName)) {
+                                i += 1;
+                                found = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (found) {
+                        continue;
+                    }
+                }
+                else
+                {
+                    if (argTy->equalTo(fcArgTy) || this->_isDefinitionOf(fcArgTy, argTy)) {
+                        i += 1;
+                        continue;
+                    } else {
+                        LILString conversionName = fcArgTy->stringRep();
+                        conversionName += "_to_";
+                        conversionName += argTy->stringRep();
+                        if (conversions.count(conversionName)) {
+                            i += 1;
+                            continue;
+                        }
+                    }
+                }
+
                 LILErrorMessage ei;
                 ei.message =  "Type mismatch while calling " + fc->getName() + ": argument " + argName + " needs type "+argTy->stringRep()+" but was given "+fcArgTy->stringRep();
                 LILNode::SourceLocation sl = fcArgs[i]->getSourceLocation();
@@ -340,28 +392,40 @@ void LILTypeValidator::_validate(std::shared_ptr<LILObjectDefinition> od)
 void LILTypeValidator::_validate(std::shared_ptr<LILVarDecl> vd)
 {
     auto ty = vd->getType();
-    if (ty && !ty->isA(TypeTypeFunction)) {
-        for (auto initVal : vd->getInitVals()) {
-            auto ivTy = initVal->getType();
-            if (!ivTy) {
-                LILErrorMessage ei;
-                ei.message =  "FATAL ERROR: type of value of " + vd->getName() + " was null";
-                LILNode::SourceLocation sl = initVal->getSourceLocation();
-                ei.file = sl.file;
-                ei.line = sl.line;
-                ei.column = sl.column;
-                this->errors.push_back(ei);
-                return;
+    auto initVal = vd->getInitVal();
+    if (ty && !ty->isA(TypeTypeFunction) && initVal) {
+        auto ivTy = initVal->getType();
+        if (!ivTy) {
+            LILErrorMessage ei;
+            ei.message =  "FATAL ERROR: type of value of " + vd->getName() + " was null";
+            LILNode::SourceLocation sl = initVal->getSourceLocation();
+            ei.file = sl.file;
+            ei.line = sl.line;
+            ei.column = sl.column;
+            this->errors.push_back(ei);
+            return;
+        }
+        
+        bool found = false;
+        if (ty->isA(TypeTypeMultiple)) {
+            auto multiTy = std::static_pointer_cast<LILMultipleType>(ty);
+            for (auto mtTy : multiTy->getTypes()) {
+                if (mtTy->equalTo(ivTy)) {
+                    found = true;
+                    break;
+                }
             }
-            if (!ty->equalTo(ivTy)) {
-                LILErrorMessage ei;
-                ei.message =  "Type mismatch: cannot assign type "+ivTy->stringRep()+" to var."+ty->stringRep() + " " + vd->getName();
-                LILNode::SourceLocation sl = initVal->getSourceLocation();
-                ei.file = sl.file;
-                ei.line = sl.line;
-                ei.column = sl.column;
-                this->errors.push_back(ei);
-            }
+        } else {
+            found = ty->equalTo(ivTy);
+        }
+        if (!found) {
+            LILErrorMessage ei;
+            ei.message =  "Type mismatch: cannot assign type "+ivTy->stringRep()+" to var."+ty->stringRep() + " " + vd->getName();
+            LILNode::SourceLocation sl = initVal->getSourceLocation();
+            ei.file = sl.file;
+            ei.line = sl.line;
+            ei.column = sl.column;
+            this->errors.push_back(ei);
         }
     }
 }
