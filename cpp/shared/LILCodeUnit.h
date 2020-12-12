@@ -54,6 +54,7 @@ namespace LIL
         void setIsMain(bool value);
         void setVerbose(bool value);
         void setDebugAST(bool value);
+        void setNoLilStd(bool value);
         void setDebugLilStd(bool value);
         void setDebugNeedsImporter(bool value);
         void setDebugASTValidator(bool value);

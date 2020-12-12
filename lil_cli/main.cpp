@@ -43,6 +43,7 @@ int main(int argc, const char * argv[]) {
     bool compileToO = false;
     bool compileToS = false;
     bool verbose = false;
+    bool noLilStd = false;
     bool debugLilStd = false;
     bool debugNeedsImporter = false;
     bool debugAST = false;
@@ -122,6 +123,10 @@ int main(int argc, const char * argv[]) {
             isMainFlag = true;
             ++i;
             
+            
+        } else if (command == "--no-lil-std") {
+            noLilStd = true;
+            ++i;
             
         } else if (command == "--debug-lil-std") {
             debugLilStd = true;
@@ -240,6 +245,7 @@ int main(int argc, const char * argv[]) {
     std::unique_ptr<LILCodeUnit> codeUnit = std::make_unique<LILCodeUnit>();
     codeUnit->setIsMain(isMain);
     codeUnit->setVerbose(verbose);
+    codeUnit->setNoLilStd(noLilStd);
     codeUnit->setDebugLilStd(debugLilStd);
     codeUnit->setDebugNeedsImporter(debugNeedsImporter);
     codeUnit->setDebugAST(debugAST);
