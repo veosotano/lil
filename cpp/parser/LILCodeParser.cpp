@@ -3842,11 +3842,11 @@ bool LILCodeParser::readFnFunction()
     d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
     this->readNextToken();
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-
+    
     //read the inner part of the block
     //readEvaluables auto commits
     this->readEvaluables();
-
+    
     if (!this->atEndOfSource())
     {
         //block close
@@ -3856,7 +3856,6 @@ bool LILCodeParser::readFnFunction()
     }
     LIL_END_NODE_SKIP(false)
 }
-
 
 bool LILCodeParser::readOverrideFunction()
 {

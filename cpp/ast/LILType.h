@@ -47,17 +47,17 @@ namespace LIL
         void setStrongTypeName(LILString newName);
 
         virtual bool getIsWeakType() const;
-        
+
         TypeType getTypeType() const override;
         void setTypeType(TypeType newType);
         virtual bool isA(TypeType otherType) const override;
-        
+
         bool getIsNullable() const;
         void setIsNullable(bool newValue);
-        
+
     protected:
         virtual std::shared_ptr<LILClonable> cloneImpl() const override;
-        
+
     private:
         LILString _name;
         LILString _strongTypeName;
