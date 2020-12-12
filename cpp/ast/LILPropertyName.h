@@ -30,6 +30,7 @@ namespace LIL
         virtual void receiveNodeData(const LILString & data);
 
         LILString stringRep();
+        bool equalTo(std::shared_ptr<LILNode> otherNode) override;
 
         void setName(LILString newName);
         const LILString getName() const;

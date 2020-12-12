@@ -54,6 +54,14 @@ LILString LILPropertyName::stringRep()
     return this->_name;
 }
 
+bool LILPropertyName::equalTo(std::shared_ptr<LILNode> otherNode)
+{
+    if ( ! LILNode::equalTo(otherNode)) return false;
+    auto castedNode = std::static_pointer_cast<LILPropertyName>(otherNode);
+    if ( this->_name != castedNode->_name) return false;
+    return true;
+}
+
 void LILPropertyName::setName(LILString newName)
 {
     this->_name = newName;
