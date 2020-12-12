@@ -202,10 +202,12 @@ LILType::LILType(TypeType type)
 
 LILType::LILType(const LILType &other)
 : LILNode(other)
+, _name(other._name)
+, _strongTypeName(other._strongTypeName)
+, _typeType(other._typeType)
+, _isNullable(other._isNullable)
 {
-    this->_name = other._name;
-    this->_typeType = other._typeType;
-    this->_isNullable = other._isNullable;
+
 }
 
 std::shared_ptr<LILType> LILType::clone() const
@@ -229,6 +231,7 @@ bool LILType::equalTo(std::shared_ptr<LILNode> otherNode)
     if ( ! LILNode::equalTo(otherNode)) return false;
     std::shared_ptr<LILType> castedNode = std::static_pointer_cast<LILType>(otherNode);
     if ( this->_name != castedNode->_name ) return false;
+    if ( this->_strongTypeName != castedNode->_strongTypeName ) return false;
     if ( this->_typeType != castedNode->_typeType ) return false;
     if ( this->_isNullable != castedNode->_isNullable )  return false;
     return true;
@@ -263,6 +266,16 @@ const LILString LILType::getName() const
 void LILType::setName(LILString newName)
 {
     this->_name = newName;
+}
+
+const LILString LILType::getStrongTypeName() const
+{
+    return this->_strongTypeName;
+}
+
+void LILType::setStrongTypeName(LILString newName)
+{
+    this->_strongTypeName = newName;
 }
 
 bool LILType::getIsWeakType() const

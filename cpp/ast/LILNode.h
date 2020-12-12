@@ -41,7 +41,6 @@ namespace LIL {
         friend class LILTypeGuesser;
         friend class LILTypeValidator;
         friend class LILConversionInserter;
-        friend class LILTypeResolver;
         
         static LILString nodeTypeToString(NodeType nodeType);
         LILNode(NodeType type);

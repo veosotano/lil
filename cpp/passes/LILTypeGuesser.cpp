@@ -17,6 +17,7 @@
 #include "LILVarNode.h"
 #include "LILObjectType.h"
 #include "LILStaticArrayType.h"
+#include "LILTypeDecl.h"
 
 using namespace LIL;
 
@@ -218,6 +219,22 @@ std::shared_ptr<LILType> LILTypeGuesser::_process(std::shared_ptr<LILType> value
                             ret = aliasTy;
                         }
                         break;
+                    }
+                }
+                if (!ret) {
+                    auto types = rootNode->getTypes();
+                    for (auto type : types) {
+                        if (type->getName() == name) {
+                            auto typeTy = type->getType();
+                            auto newTy = this->_process(typeTy);
+                            if (newTy) {
+                                ret = newTy;
+                            } else {
+                                ret = typeTy;
+                            }
+                            ret->setStrongTypeName(name);
+                            break;
+                        }
                     }
                 }
             }

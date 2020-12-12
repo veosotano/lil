@@ -43,6 +43,9 @@ namespace LIL
         const LILString getName() const;
         void setName(LILString newName);
 
+        const LILString getStrongTypeName() const;
+        void setStrongTypeName(LILString newName);
+
         virtual bool getIsWeakType() const;
         
         TypeType getTypeType() const override;
@@ -57,6 +60,7 @@ namespace LIL
         
     private:
         LILString _name;
+        LILString _strongTypeName;
         TypeType _typeType;
         bool _isNullable;
     };

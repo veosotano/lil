@@ -29,7 +29,6 @@
 #include "LILStructureLowerer.h"
 #include "LILToStringVisitor.h"
 #include "LILTypeGuesser.h"
-#include "LILTypeResolver.h"
 
 using namespace LIL;
 
@@ -59,7 +58,6 @@ namespace LIL
         , debugParameterSorter(false)
         , debugTypeValidator(false)
         , debugConversionInserter(false)
-        , debugTypeResolver(false)
         , needsStdLil(true)
         , isBeingImported(false)
         {
@@ -88,7 +86,6 @@ namespace LIL
         bool debugParameterSorter;
         bool debugTypeValidator;
         bool debugConversionInserter;
-        bool debugTypeResolver;
         bool needsStdLil;
         bool isBeingImported;
     };
@@ -289,16 +286,6 @@ void LILCodeUnit::runPasses()
             passes.push_back(stringVisitor);
         }
 
-        //type resolving
-        auto tyResolver = new LILTypeResolver();
-        tyResolver->setDebug(d->debugTypeResolver);
-        passes.push_back(tyResolver);
-        if (verbose) {
-            auto stringVisitor = new LILToStringVisitor();
-            stringVisitor->setPrintHeadline(false);
-            passes.push_back(stringVisitor);
-        }
-        
         //structure lowering
         auto structureLowerer = new LILStructureLowerer();
         structureLowerer->setDebug(d->debugStructureLowerer);
@@ -422,11 +409,6 @@ void LILCodeUnit::setDebugTypeValidator(bool value)
 void LILCodeUnit::setDebugConversionInserter(bool value)
 {
     d->debugConversionInserter = value;
-}
-
-void LILCodeUnit::setDebugTypeResolver(bool value)
-{
-    d->debugTypeResolver = value;
 }
 
 bool LILCodeUnit::hasErrors() const
