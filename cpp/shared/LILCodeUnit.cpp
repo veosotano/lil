@@ -286,16 +286,6 @@ void LILCodeUnit::runPasses()
             passes.push_back(stringVisitor);
         }
 
-        //structure lowering
-        auto structureLowerer = new LILStructureLowerer();
-        structureLowerer->setDebug(d->debugStructureLowerer);
-        passes.push_back(structureLowerer);
-        if (verbose) {
-            auto stringVisitor = new LILToStringVisitor();
-            stringVisitor->setPrintHeadline(false);
-            passes.push_back(stringVisitor);
-        }
-        
         //constant folding
         auto constantFolder = new LILConstantFolder();
         constantFolder->setDebug(d->debugConstantFolder);
@@ -307,6 +297,16 @@ void LILCodeUnit::runPasses()
         }
 
     } //end if not being imported
+    
+    //structure lowering
+    auto structureLowerer = new LILStructureLowerer();
+    structureLowerer->setDebug(d->debugStructureLowerer);
+    passes.push_back(structureLowerer);
+    if (verbose) {
+        auto stringVisitor = new LILToStringVisitor();
+        stringVisitor->setPrintHeadline(false);
+        passes.push_back(stringVisitor);
+    }
     
     //name lowering
     auto nameLowerer = new LILNameLowerer();
