@@ -25,7 +25,6 @@
 
 namespace LIL
 {
-    class LILValuePath;
     class LILTypeValidator : public LILVisitor
     {
     public:

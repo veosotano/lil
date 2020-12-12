@@ -75,7 +75,6 @@ LILString LILInstruction::stringRep()
         case InstructionTypeNeeds:
         case InstructionTypeExport:
         case InstructionTypeConfigure:
-        case InstructionTypeFinally:
         {
             return this->getName();
         }

@@ -114,7 +114,6 @@ namespace LIL
         NodeTypeArgument,
         NodeTypeArray,
         NodeTypeIndexAccessor,
-        NodeTypeNativeMethod,
         NodeTypeValueList,
         NodeTypeWhitespaceNode,
         NodeTypeCommentNode,
@@ -229,7 +228,6 @@ namespace LIL
         InstructionTypeConfigure,
         InstructionTypeNeeds,
         InstructionTypeExport,
-        InstructionTypeFinally,
     };
 
     enum SelectorType
