@@ -301,6 +301,9 @@ std::shared_ptr<LILNode> LILFunctionDecl::getFinally() const
 
 void LILFunctionDecl::setFinally(std::shared_ptr<LILNode> value)
 {
+    if (this->_finally) {
+        this->removeNode(this->_finally);
+    }
     this->addNode(value);
     this->_finally = value;
 }
