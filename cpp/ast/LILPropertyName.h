@@ -27,16 +27,16 @@ namespace LIL
         std::shared_ptr<LILPropertyName> clone() const;
         virtual ~LILPropertyName();
 
-        virtual void receiveNodeData(const LILString & data);
+        void receiveNodeData(const LILString & data) override;
 
-        LILString stringRep();
+        LILString stringRep() override;
         bool equalTo(std::shared_ptr<LILNode> otherNode) override;
 
         void setName(LILString newName);
         const LILString getName() const;
 
     protected:
-        virtual std::shared_ptr<LILClonable> cloneImpl() const;
+        std::shared_ptr<LILClonable> cloneImpl() const override;
         
     private:
         LILString _name;
