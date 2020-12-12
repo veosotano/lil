@@ -169,6 +169,7 @@ std::shared_ptr<LILType> LILTypeGuesser::_process(std::shared_ptr<LILType> value
                 auto newTy = this->_process(arg);
                 if (newTy) {
                     ptrTy->setArgument(newTy);
+                    ret = ptrTy;
                 }
             }
             break;
@@ -191,6 +192,7 @@ std::shared_ptr<LILType> LILTypeGuesser::_process(std::shared_ptr<LILType> value
             }
             if (changed) {
                 multiTy->setTypes(tys);
+                ret = multiTy;
             }
             break;
         }
@@ -230,6 +232,9 @@ std::shared_ptr<LILType> LILTypeGuesser::_process(std::shared_ptr<LILType> value
                 if (newRetTy) {
                     fnTy->setReturnType(newRetTy);
                 }
+            }
+            if (changed) {
+                ret = fnTy;
             }
             break;
         }
@@ -966,6 +971,12 @@ void LILTypeGuesser::_process(LILFunctionDecl * value)
             }
         }
     } else {
+        auto newTy = this->_process(ty);
+        if (newTy) {
+            ty = newTy;
+            value->setType(newTy);
+        }
+
         auto fnTy = std::static_pointer_cast<LILFunctionType>(ty);
         auto returnTy = fnTy->getReturnType();
         if (!returnTy) {
