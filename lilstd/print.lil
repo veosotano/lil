@@ -1,0 +1,24 @@
+fn printf (cstr...)=>i32 extern;
+fn puts (cstr)=>i32 extern;
+
+#export fn print(var.bool|i64|f64|cstr|str value) {
+	if value => bool {
+		if value {
+			puts `true`;
+		} else {
+			puts `false`;
+		}
+	}
+	if value => i64 {
+		printf(`%li\n`, value);
+	}
+	if value => f64 {
+		printf(`%lf\n`, value);
+	}
+	if value => cstr {
+		puts value;
+	}
+	if value => str {
+		puts value.cstr();
+	}
+};
