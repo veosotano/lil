@@ -92,6 +92,9 @@ void LILNeedsImporter::performVisit(std::shared_ptr<LILRootNode> rootNode)
                 for (auto type : rootNode->getTypes()) {
                     newRoot->addType(type->clone());
                 }
+                for (auto classVal : rootNode->getClasses()) {
+                    newRoot->addClass(classVal);
+                }
                 codeUnit->setFile(path);
                 LILString dir = this->_getDir(path);
                 codeUnit->setDir(dir);
