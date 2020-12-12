@@ -76,7 +76,37 @@ void LILTypeGuesser::preprocessTypes(std::shared_ptr<LILNode> node)
     for (auto childNode : node->getChildNodes()) {
         this->preprocessTypes(childNode);
     }
-    
+    if (node->isA(NodeTypeFunctionDecl)) {
+        auto fd = std::static_pointer_cast<LILFunctionDecl>(node);
+        auto fnTy = fd->getFnType();
+        bool changed = false;
+        std::vector<std::shared_ptr<LILNode>> newArgs;
+        for (auto arg : fnTy->getArguments()) {
+            std::shared_ptr<LILNode> newArg;
+            if (arg->isA(NodeTypeType)) {
+                newArg = this->_process(std::static_pointer_cast<LILType>(arg));
+            } else if (arg->isA(NodeTypeVarDecl)){
+                auto vd = std::static_pointer_cast<LILVarDecl>(arg);
+                auto vdTy = vd->getType();
+                if (vdTy) {
+                    auto newVdTy = this->_process(vdTy);
+                    if (newVdTy) {
+                        vd->setType(newVdTy);
+                        newArg = vd;
+                    }
+                }
+            }
+            if (newArg) {
+                changed = true;
+                newArgs.push_back(newArg);
+            } else {
+                newArgs.push_back(arg);
+            }
+        }
+        if (changed) {
+            fnTy->setArguments(newArgs);
+        }
+    }
     if (node->isA(FlowControlTypeIfCast)) {
         auto fc = std::static_pointer_cast<LILFlowControl>(node);
         auto args = fc->getArguments();
