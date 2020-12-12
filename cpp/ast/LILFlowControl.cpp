@@ -75,7 +75,7 @@ LILString LILFlowControl::stringRep()
     {
         case FlowControlTypeNone: return "";
         case FlowControlTypeIf: return "if";
-        case FlowControlTypeIfIs: return "if is";
+        case FlowControlTypeIfCast: return "if cast";
         case FlowControlTypeElse: return "else";
         case FlowControlTypeSwitch: return "switch";
         case FlowControlTypeCase: return "case";
@@ -91,10 +91,6 @@ void LILFlowControl::receiveNodeData(const LILString &data)
     if (data == "if")
     {
         this->setFlowControlType(FlowControlTypeIf);
-    }
-    if (data == "is")
-    {
-        this->setFlowControlType(FlowControlTypeIfIs);
     }
     else if (data == "else")
     {

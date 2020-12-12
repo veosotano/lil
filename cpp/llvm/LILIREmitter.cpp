@@ -2029,9 +2029,9 @@ llvm::Value * LILIREmitter::_emit(LILFlowControl * value)
         {
             return this->_emitIf(value);
         }
-        case FlowControlTypeIfIs:
+        case FlowControlTypeIfCast:
         {
-            return this->_emitIfIs(value);
+            return this->_emitIfCast(value);
         }
         case FlowControlTypeFinally:
         {
@@ -2132,7 +2132,7 @@ llvm::Value * LILIREmitter::_emitIf(LILFlowControl * value)
     return nullptr;
 }
 
-llvm::Value * LILIREmitter::_emitIfIs(LILFlowControl * value)
+llvm::Value * LILIREmitter::_emitIfCast(LILFlowControl * value)
 {
     const auto & args = value->getArguments();
     if (args.size() == 0) {
@@ -2174,7 +2174,7 @@ llvm::Value * LILIREmitter::_emitIfIs(LILFlowControl * value)
         return nullptr;
     }
     if (!ty) {
-        std::cerr << "TYPE OF ARGUMENT TO IF IS WAS NULL!!!!!!!!!!!!!!!!\n\n";
+        std::cerr << "TYPE OF ARGUMENT TO IF CAST WAS NULL!!!!!!!!!!!!!!!!\n\n";
         return nullptr;
     }
     
@@ -2183,15 +2183,15 @@ llvm::Value * LILIREmitter::_emitIfIs(LILFlowControl * value)
 
     if (isMultiple)
     {
-        condition = this->_emitIfIsConditionForMT(false, lastArgTy.get(), static_cast<LILMultipleType *>(ty.get()), firstArg.get());
+        condition = this->_emitIfCastConditionForMT(false, lastArgTy.get(), static_cast<LILMultipleType *>(ty.get()), firstArg.get());
     }
     else if (ty->getIsNullable())
     {
         if (lastArgTy->getName() == "null")
         {
-            condition = this->_emitIfIsConditionForNullable(true, ty.get(), firstArg.get());
+            condition = this->_emitIfCastConditionForNullable(true, ty.get(), firstArg.get());
         } else {
-            condition = this->_emitIfIsConditionForNullable(false, lastArgTy.get(), firstArg.get());
+            condition = this->_emitIfCastConditionForNullable(false, lastArgTy.get(), firstArg.get());
         }
     } else {
         std::cerr << "!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!!!\n\n";
@@ -2277,7 +2277,7 @@ llvm::Value * LILIREmitter::_emitIfIs(LILFlowControl * value)
     return nullptr;
 }
 
-llvm::Value * LILIREmitter::_emitIfIsConditionForMT(bool negated, LILType * ty, LILMultipleType * multiTy, LILNode * val)
+llvm::Value * LILIREmitter::_emitIfCastConditionForMT(bool negated, LILType * ty, LILMultipleType * multiTy, LILNode * val)
 {
     size_t theIndex = multiTy->indexOfType(ty);
     auto typeIndex = llvm::ConstantInt::get(
@@ -2303,7 +2303,7 @@ llvm::Value * LILIREmitter::_emitIfIsConditionForMT(bool negated, LILType * ty, 
     }
 }
 
-llvm::Value * LILIREmitter::_emitIfIsConditionForNullable(bool negated, LILType * ty, LILNode * val)
+llvm::Value * LILIREmitter::_emitIfCastConditionForNullable(bool negated, LILType * ty, LILNode * val)
 {
     llvm::Value * ret = nullptr;
     if (ty->getName() == "bool")
@@ -2359,7 +2359,7 @@ llvm::Value * LILIREmitter::_emitIfIsConditionForNullable(bool negated, LILType 
     }
     else
     {
-        std::cerr << "UNKNOWN TYPE FOR IF IS FAIL!!!!!!!!!!!!!!!!\n\n";
+        std::cerr << "UNKNOWN TYPE FOR IF CAST FAIL!!!!!!!!!!!!!!!\n\n";
         return nullptr;
     }
     return ret;

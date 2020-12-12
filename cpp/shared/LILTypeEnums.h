@@ -193,7 +193,7 @@ namespace LIL
     {
         FlowControlTypeNone = 0,
         FlowControlTypeIf,
-        FlowControlTypeIfIs,
+        FlowControlTypeIfCast,
         FlowControlTypeElse,
         FlowControlTypeSwitch,
         FlowControlTypeCase,
@@ -428,6 +428,7 @@ namespace LIL
         ParserEventFunctionModifier,
         ParserEventFunctionShorthand,
         ParserEventFunctionVariadic,
+        ParserEventFlowControlIfCast,
         ParserEventFlowControlElse,
         ParserEventAssignment,
         ParserEventNeeds,

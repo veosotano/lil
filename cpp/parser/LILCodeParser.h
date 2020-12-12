@@ -65,7 +65,7 @@ namespace LIL
         bool isFlowControlCall() const;
         bool isFunctionDecl() const;
         bool isFlowControl() const;
-        bool isIfIs() const;
+        bool isIfCast() const;
         bool isFlag() const;
         bool isPunctuation(std::shared_ptr<LILToken> token) const;
 

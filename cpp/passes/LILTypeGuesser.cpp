@@ -76,16 +76,16 @@ void LILTypeGuesser::preprocessTypes(std::shared_ptr<LILNode> node)
         this->preprocessTypes(childNode);
     }
     
-    if (node->isA(FlowControlTypeIfIs)) {
+    if (node->isA(FlowControlTypeIfCast)) {
         auto fc = std::static_pointer_cast<LILFlowControl>(node);
         auto args = fc->getArguments();
         if (args.size() != 2) {
-            std::cerr << "IF IS BLOCK DID NOT HAVE 2 ARGUMENTS FAIL!!!!!\n";
+            std::cerr << "IF CAST BLOCK DID NOT HAVE 2 ARGUMENTS FAIL!!!!!\n";
             return;
         }
         auto lastArg = args.back();
         if (!lastArg->isA(NodeTypeType)) {
-            std::cerr << "IF IS BLOCK HAD NO TYPE ARG FAIL!!!!!\n";
+            std::cerr << "IF CAST BLOCK HAD NO TYPE ARG FAIL!!!!!\n";
             return;
         }
         auto ty = std::static_pointer_cast<LILType>(lastArg);

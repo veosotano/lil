@@ -396,10 +396,10 @@ void LILStructureLowerer::_process(std::shared_ptr<LILFunctionDecl> value)
                                     newArgs.push_back(argClone);
                                 }
                                 
-                                //resolve "if is" blocks
+                                //resolve "if cast" blocks
                                 std::vector<std::shared_ptr<LILNode>> newBody;
                                 for (auto node : value->getBody()) {
-                                    auto newChildNodes = this->reduceIfIsBlocks(node, argClone->getName(), argChild->getName());
+                                    auto newChildNodes = this->reduceIfCastBlocks(node, argClone->getName(), argChild->getName());
                                     for (auto child : newChildNodes) {
                                         newBody.push_back(child);
                                     }
@@ -430,14 +430,14 @@ void LILStructureLowerer::_process(std::shared_ptr<LILFunctionDecl> value)
     
     this->processChildren(value->getBody());
 }
-std::vector<std::shared_ptr<LILNode>> LILStructureLowerer::reduceIfIsBlocks(std::shared_ptr<LILNode> node, LILString argName, LILString tyName)
+std::vector<std::shared_ptr<LILNode>> LILStructureLowerer::reduceIfCastBlocks(std::shared_ptr<LILNode> node, LILString argName, LILString tyName)
 {
     switch (node->getNodeType()) {
         case NodeTypeFlowControl:
         {
             bool doReduce = false;
             auto fc = std::static_pointer_cast<LILFlowControl>(node);
-            if (fc->getFlowControlType() == FlowControlTypeIfIs) {
+            if (fc->getFlowControlType() == FlowControlTypeIfCast) {
                 auto fcArgName = fc->getArguments().front();
                 if (fcArgName->isA(NodeTypeVarName)) {
                     doReduce = std::static_pointer_cast<LILVarName>(fcArgName)->getName() == argName;
@@ -454,7 +454,7 @@ std::vector<std::shared_ptr<LILNode>> LILStructureLowerer::reduceIfIsBlocks(std:
                     std::vector<std::shared_ptr<LILNode>> returnNodes;
                     for (auto thenNode : fc->getThen()) {
                         std::vector<std::shared_ptr<LILNode>> childNodes;
-                        childNodes = this->reduceIfIsBlocks(thenNode, argName, tyName);
+                        childNodes = this->reduceIfCastBlocks(thenNode, argName, tyName);
                         for (auto childNode : childNodes) {
                             returnNodes.push_back(childNode);
                         }
@@ -464,7 +464,7 @@ std::vector<std::shared_ptr<LILNode>> LILStructureLowerer::reduceIfIsBlocks(std:
                     std::vector<std::shared_ptr<LILNode>> returnNodes;
                     for (auto elseNode : fc->getElse()) {
                         std::vector<std::shared_ptr<LILNode>> childNodes;
-                        childNodes = this->reduceIfIsBlocks(elseNode, argName, tyName);
+                        childNodes = this->reduceIfCastBlocks(elseNode, argName, tyName);
                         for (auto childNode : childNodes) {
                             returnNodes.push_back(childNode);
                         }

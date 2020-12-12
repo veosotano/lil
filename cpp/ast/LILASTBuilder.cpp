@@ -1078,7 +1078,9 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
         case BuilderStateFlowControl:
         {
             std::shared_ptr<LILFlowControl> fc = std::static_pointer_cast<LILFlowControl>(this->currentContainer.back());
-            if (eventType == ParserEventFunctionBody) {
+            if (eventType == ParserEventFlowControlIfCast) {
+                fc->setFlowControlType(FlowControlTypeIfCast);
+            } else if (eventType == ParserEventFunctionBody) {
                 fc->setReceivesFunctionBody(true);
             } else if (eventType == ParserEventFlowControlElse) {
                 fc->setReceivesElse(true);

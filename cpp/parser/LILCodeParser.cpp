@@ -1067,7 +1067,7 @@ bool LILCodeParser::isFlowControl() const
     return false;
 }
 
-bool LILCodeParser::isIfIs() const
+bool LILCodeParser::isIfCast() const
 {
     if (!d->currentToken || d->currentToken->getString() != "if"){
         return false;
@@ -1114,8 +1114,8 @@ bool LILCodeParser::isIfIs() const
     }
 
     bool ret = true;
-    if (peekToken && peekToken->isA(TokenTypeIdentifier)){
-        ret = peekToken->getString() == "is";
+    if (peekToken && peekToken->isA(TokenTypeFatArrow)){
+        ret = true;
     } else {
         ret = false;
     }
@@ -4813,7 +4813,7 @@ bool LILCodeParser::readIfFlowControl()
 {
     LIL_START_NODE(NodeTypeFlowControl)
 
-    if (this->isIfIs()) {
+    if (this->isIfCast()) {
         LIL_EXPECT(TokenTypeIdentifier, "identifier")
         if (d->currentToken->getString() != "if"){
             LIL_CANCEL_NODE
@@ -4831,11 +4831,8 @@ bool LILCodeParser::readIfFlowControl()
         }
         LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
 
-        LIL_EXPECT(TokenTypeIdentifier, "identifier")
-        if (d->currentToken->getString() != "is"){
-            LIL_CANCEL_NODE
-        }
-        d->receiver->receiveNodeData(ParserEventFunction, d->currentToken->getString());
+        LIL_EXPECT(TokenTypeFatArrow, "fat arrow")
+        d->receiver->receiveNodeData(ParserEventFlowControlIfCast, d->currentToken->getString());
         this->readNextToken();
         LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
 

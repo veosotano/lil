@@ -122,9 +122,9 @@ namespace LIL
         llvm::Value * _emitFunctionCallMT(LILFunctionCall * value, LILString name, std::vector<std::shared_ptr<LILType>> types, LILFunctionType * fnTy, llvm::Value * instance);
         llvm::Value * _emit(LILFlowControl * value);
         llvm::Value * _emitIf(LILFlowControl * value);
-        llvm::Value * _emitIfIs(LILFlowControl * value);
-        llvm::Value * _emitIfIsConditionForNullable(bool negated, LILType * ty, LILNode * val);
-        llvm::Value * _emitIfIsConditionForMT(bool negated, LILType * ty, LILMultipleType * multiTy, LILNode * val);
+        llvm::Value * _emitIfCast(LILFlowControl * value);
+        llvm::Value * _emitIfCastConditionForNullable(bool negated, LILType * ty, LILNode * val);
+        llvm::Value * _emitIfCastConditionForMT(bool negated, LILType * ty, LILMultipleType * multiTy, LILNode * val);
         llvm::Value * _emitFor(LILFlowControl * value);
         llvm::Value * _emitLoop(LILFlowControl * value);
         llvm::Value * _emit(LILFlowControlCall * value);
