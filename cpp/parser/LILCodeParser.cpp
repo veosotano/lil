@@ -4535,6 +4535,10 @@ bool LILCodeParser::readStandardFunctionCall(bool readIdentifier)
             } else {
                 LIL_CANCEL_NODE
             }
+
+            if (this->atEndOfSource()) {
+                LIL_END_NODE_SKIP(false)
+            }
             
             LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
             
