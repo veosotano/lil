@@ -268,7 +268,8 @@ void LILTypeGuesser::propagateStrongTypes(std::shared_ptr<LILNode> node)
         auto ty = node->getType();
         if (ty && !ty->isA(TypeTypeFunction)) {
             auto vd = std::static_pointer_cast<LILVarDecl>(node);
-            for (auto initVal : vd->getInitVals()) {
+            auto initVal = vd->getInitVal();
+            if (initVal) {
                 this->_propagateStrongType(initVal, ty);
             }
         }
@@ -355,7 +356,7 @@ void LILTypeGuesser::searchForTypesFromAssignments(std::shared_ptr<LILNode> node
     if (node->isA(NodeTypeVarDecl))
     {
         auto vd = std::static_pointer_cast<LILVarDecl>(node);
-        if (vd->getInitVals().size() == 0) {
+        if (!vd->getInitVal()) {
             auto ty = vd->getType();
             if (!ty) {
                 auto parent = node->getParentNode();
@@ -1629,7 +1630,10 @@ std::shared_ptr<LILType> LILTypeGuesser::findReturnTypeForFunctionCall(std::shar
         case FunctionCallTypeNone:
         {
             auto localNode = this->findNodeForName(fc->getName(), fc->getParentNode().get());
-            if (localNode && localNode->isA(NodeTypeVarDecl)) {
+            if (
+                localNode
+                && (localNode->isA(NodeTypeVarDecl) || localNode->isA(NodeTypeFunctionDecl))
+            ) {
                 auto ty = localNode->getType();
                 if (!ty || !ty->isA(TypeTypeFunction)) {
                     break;

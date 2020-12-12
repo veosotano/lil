@@ -37,7 +37,6 @@ namespace LIL
 
         void setInitVal(std::shared_ptr<LILNode> value);
         std::shared_ptr<LILNode> getInitVal() const;
-        const std::vector<std::shared_ptr<LILNode>> & getInitVals() const;
         
         bool getIsExtern() const;
         void setIsExtern(bool value);

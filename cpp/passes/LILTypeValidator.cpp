@@ -185,7 +185,9 @@ void LILTypeValidator::_validate(std::shared_ptr<LILFunctionCall> fc)
         }
         
         auto ty = localNode->getType();
-        if (!localNode->isA(NodeTypeVarDecl) || !ty || !ty->isA(TypeTypeFunction)) {
+        if (
+            ! (localNode->isA(NodeTypeVarDecl) || localNode->isA(NodeTypeFunctionDecl))
+            || !ty || !ty->isA(TypeTypeFunction)) {
             LILErrorMessage ei;
             ei.message =  fc->getName()+" is not a function.";
             LILNode::SourceLocation sl = fc->getSourceLocation();

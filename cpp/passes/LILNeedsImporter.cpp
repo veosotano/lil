@@ -282,6 +282,34 @@ void LILNeedsImporter::_getNodesForImport(std::vector<std::shared_ptr<LILNode>> 
                 break;
             }
 
+            case NodeTypeFunctionDecl:
+            {
+                auto fd = std::static_pointer_cast<LILFunctionDecl>(node);
+                auto newFd = std::make_shared<LILFunctionDecl>();
+                newFd->setFunctionDeclType(FunctionDeclTypeFn);
+                newFd->setName(fd->getName());
+                newFd->setIsExtern(true);
+                newFd->setIsExported(true);
+                newFd->setHasOwnType(true);
+                newFd->setType(fd->getType()->clone());
+                
+                if (fd->getHasMultipleImpls()) {
+                    newFd->setHasMultipleImpls(true);
+                    for (auto impl : fd->getImpls()) {
+                        auto newImpl = std::make_shared<LILFunctionDecl>();
+                        newImpl->setFunctionDeclType(FunctionDeclTypeFn);
+                        newImpl->setName(impl->getName());
+                        newImpl->setIsExtern(true);
+                        newImpl->setHasOwnType(true);
+                        newImpl->setType(impl->getType()->clone());
+                        newFd->addImpl(newImpl);
+                    }
+                }
+
+                newNodes->push_back(newFd);
+                break;
+            }
+
             default:
                 break;
         }
@@ -337,6 +365,13 @@ void LILNeedsImporter::_importNewNodes(std::vector<std::shared_ptr<LILNode> > &n
                 auto cd = std::static_pointer_cast<LILClassDecl>(newNode);
                 rootNode->addNode(cd);
                 rootNode->addClass(cd);
+                break;
+            }
+            case NodeTypeFunctionDecl:
+            {
+                auto fd = std::static_pointer_cast<LILFunctionDecl>(newNode);
+                rootNode->addNode(newNode);
+                rootNode->setLocalVariable(fd->getName(), fd);
                 break;
             }
                 

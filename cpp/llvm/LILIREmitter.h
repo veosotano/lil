@@ -118,6 +118,7 @@ namespace LIL
         llvm::Function * _emitFnBody(llvm::Function * fun, LILFunctionDecl * value);
         llvm::Value * _emitEvaluables(const std::vector<std::shared_ptr<LILNode>> & nodes);
         llvm::Value * _emit(LILFunctionCall * value);
+        llvm::Value * _emitFCMultipleValues(std::vector<std::shared_ptr<LILFunctionDecl>> funcDecls, LILFunctionCall * value);
         llvm::Value * _emitFunctionCall(LILFunctionCall * value, LILString name, LILFunctionType * fnTy, llvm::Value * instance);
         llvm::Value * _emitFunctionCallMT(LILFunctionCall * value, LILString name, std::vector<std::shared_ptr<LILType>> types, LILFunctionType * fnTy, llvm::Value * instance);
         llvm::Value * _emit(LILFlowControl * value);
@@ -154,7 +155,7 @@ namespace LIL
     private:
         LILIREmitterPrivate *const d;
         llvm::Type * llvmTypeFromLILType(LILType * type);
-        std::shared_ptr<LILFunctionDecl> chooseFnByType(std::shared_ptr<LILVarDecl> vd, std::vector<std::shared_ptr<LILType>> types);
+        std::shared_ptr<LILFunctionDecl> chooseFnByType(std::vector<std::shared_ptr<LILFunctionDecl>> funcDecls, std::vector<std::shared_ptr<LILType>> types);
         llvm::AllocaInst * createEntryBlockAlloca(llvm::Function * fun, const std::string & name, llvm::Type * llvmType);
         bool _needsTemporaryVariable(LILNode * node);
         bool _debug;

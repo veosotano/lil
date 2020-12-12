@@ -29,12 +29,9 @@ LILRootNode::LILRootNode()
     this->_mainFunction = std::make_shared<LILFunctionDecl>();
     this->_mainFunction->setFunctionDeclType(FunctionDeclTypeFn);
     this->_mainFunction->setName("main");
-    
-    this->_mainFunctionVarDecl = std::make_shared<LILVarDecl>();
-    this->_mainFunctionVarDecl->setName("main");
+    this->_mainFunction->setHasOwnType(true);
     auto ty = LILFunctionType::make("i64");
-    this->_mainFunctionVarDecl->setType(ty);
-    this->_mainFunctionVarDecl->setInitVal(this->_mainFunction);
+    this->_mainFunction->setType(ty);
 }
 
 LILRootNode::LILRootNode(const LILRootNode & other)
@@ -42,7 +39,6 @@ LILRootNode::LILRootNode(const LILRootNode & other)
 {
     this->_localVars = other._localVars;
     this->_mainFunction = other._mainFunction;
-    this->_mainFunctionVarDecl = other._mainFunctionVarDecl;
     this->_classes = other._classes;
     this->_dependencies = other._dependencies;
     this->_aliases = other._aliases;
@@ -68,11 +64,6 @@ bool LILRootNode::isRootNode() const
 std::shared_ptr<LILFunctionDecl> LILRootNode::getMainFn() const
 {
     return this->_mainFunction;
-}
-
-std::shared_ptr<LILVarDecl> LILRootNode::getMainFnVarDecl() const
-{
-    return this->_mainFunctionVarDecl;
 }
 
 const std::vector<std::shared_ptr<LILNode>> & LILRootNode::getNodes() const

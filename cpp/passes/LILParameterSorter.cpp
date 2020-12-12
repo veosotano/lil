@@ -281,7 +281,10 @@ void LILParameterSorter::_process(LILNullLiteral * value)
 
 void LILParameterSorter::_process(LILVarDecl * value)
 {
-    this->processChildren(value->getInitVals());
+    auto initVal = value->getInitVal();
+    if (initVal) {
+        this->process(initVal.get());
+    }
 }
 
 void LILParameterSorter::_process(LILClassDecl * value)

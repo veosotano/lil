@@ -277,7 +277,11 @@ void LILNameLowerer::_process(LILNullLiteral * value)
 
 void LILNameLowerer::_process(LILVarDecl * value)
 {
-    auto initVals = value->getInitVals();
+    auto initVal = value->getInitVal();
+    auto ty = value->getType();
+    if (!ty || !ty->isA(TypeTypeFunction)) {
+        return;
+    }
 
     auto parent = value->getParentNode();
     if (!parent) {
@@ -288,47 +292,38 @@ void LILNameLowerer::_process(LILVarDecl * value)
         parentCd = std::static_pointer_cast<LILClassDecl>(parent);
     }
 
-    if (initVals.size() > 1 || parentCd ) {
-        for (auto it = initVals.begin(); it!=initVals.end(); ++it)
-        {
-            auto node = *it;
-            switch (node->getNodeType()) {
-                case NodeTypeFunctionDecl:
-                {
-                    auto fd = std::static_pointer_cast<LILFunctionDecl>(node);
-                    auto ty = fd->getType();
-                    if (ty->getTypeType() != TypeTypeFunction) {
-                        return;
-                    }
-                    std::string parentClass = "";
-                    if (parentCd) {
-                        parentClass = parentCd->getName().data();
-                    }
-                    auto newName = this->decorate("", parentClass, fd->getName(), ty);
-                    fd->setName(newName);
-
-                    if (parentCd) {
-                        auto fnTy = std::static_pointer_cast<LILFunctionType>(ty);
-                        auto ptrTy = std::make_shared<LILPointerType>();
-                        ptrTy->setName("ptr");
-                        ptrTy->setArgument(parentCd->getType()->clone());
-                        auto argVd = std::make_shared<LILVarDecl>();
-                        argVd->setName("@self");
-                        argVd->setType(ptrTy);
-                        fnTy->prependArgument(argVd);
-                    }
-                    break;
+    if (initVal) {
+        if (initVal->isA(NodeTypeFunctionDecl)) {
+            if (parentCd) {
+                auto fd = std::static_pointer_cast<LILFunctionDecl>(initVal);
+                auto ty = fd->getType();
+                if (ty->getTypeType() != TypeTypeFunction) {
+                    return;
                 }
-
-                default:
-                    this->process((*it).get());
-                    break;
+                std::string parentClass = "";
+                if (parentCd) {
+                    parentClass = parentCd->getName().data();
+                }
+                auto newName = this->decorate("", parentClass, fd->getName(), ty);
+                fd->setName(newName);
+                
+                auto fnTy = std::static_pointer_cast<LILFunctionType>(ty);
+                auto ptrTy = std::make_shared<LILPointerType>();
+                ptrTy->setName("ptr");
+                ptrTy->setArgument(parentCd->getType()->clone());
+                auto argVd = std::make_shared<LILVarDecl>();
+                argVd->setName("@self");
+                argVd->setType(ptrTy);
+                fnTy->prependArgument(argVd);
             }
+        } else {
+            this->process(initVal.get());
         }
     }
-    auto vdTy = value->getType();
-    if (vdTy && vdTy->isA(TypeTypeFunction) && initVals.size() == 0 && parentCd) {
-        auto fnTy = std::static_pointer_cast<LILFunctionType>(vdTy);
+    
+    //insert the @self pointer into the function type
+    if (parentCd && !initVal) {
+        auto fnTy = std::static_pointer_cast<LILFunctionType>(ty);
         auto ptrTy = std::make_shared<LILPointerType>();
         ptrTy->setName("ptr");
         ptrTy->setArgument(parentCd->getType()->clone());

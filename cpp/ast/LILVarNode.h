@@ -35,7 +35,8 @@ namespace LIL {
         virtual bool hasLocalVariable(LILString name);
         virtual void setLocalVariable(LILString name, std::shared_ptr<LILNode> value);
         virtual void unsetLocalVariable(LILString name);
-        
+        void clearLocalVars();
+
     private:
         std::map<LILString, std::shared_ptr<LILNode>> _localVars;
     };

@@ -21,10 +21,11 @@ LILFunctionDecl::LILFunctionDecl()
 : LILVarNode(NodeTypeFunctionDecl)
 , _functionDeclType(FunctionDeclTypeFn)
 , _name("")
-, needsNameMangling(false)
 , _hasReturn(false)
 , _isConstructor(false)
 , _hasOwnType(false)
+, _isExtern(false)
+, _hasMultipleImpls(false)
 {
     this->_receivesFunctionBody = false;
     this->_functionDeclType = FunctionDeclTypeNone;
@@ -37,12 +38,14 @@ LILFunctionDecl::LILFunctionDecl(const LILFunctionDecl &other)
     this->_receivesFunctionBody = other._receivesFunctionBody;
     this->_functionDeclType = other._functionDeclType;
     this->_name = other._name;
-    this->needsNameMangling = other.needsNameMangling;
     this->_hasReturn = other._hasReturn;
     this->_isConstructor = other._isConstructor;
     this->_finally = other._finally;
     this->_hasOwnType = other._hasOwnType;
     this->_fnType = other._fnType;
+    this->_isExtern = other._isExtern;
+    this->_hasMultipleImpls = other._hasMultipleImpls;
+    this->_impls = other._impls;
 }
 
 bool LILFunctionDecl::isTypedNode() const
@@ -103,6 +106,8 @@ std::shared_ptr<LILClonable> LILFunctionDecl::cloneImpl() const
     std::shared_ptr<LILFunctionDecl> clone(new LILFunctionDecl(*this));
     clone->clearChildNodes();
 
+    clone->clearLocalVars();
+
     clone->_body.clear();
     for (auto it = this->_body.begin(); it != this->_body.end(); ++it)
     {
@@ -113,6 +118,11 @@ std::shared_ptr<LILClonable> LILFunctionDecl::cloneImpl() const
     }
     if (this->_fnType) {
         clone->_fnType = this->_fnType->clone();
+    }
+    clone->_impls.clear();
+    for (auto it = this->_impls.begin(); it != this->_impls.end(); ++it)
+    {
+        clone->addImpl((*it)->clone());
     }
     return clone;
 }
@@ -161,6 +171,11 @@ void LILFunctionDecl::addEvaluable(std::shared_ptr<LILNode> evl)
     if (evl->isA(FlowControlCallTypeReturn)) {
         this->_hasReturn = true;
     }
+    
+    if (evl->isA(NodeTypeVarDecl)) {
+        auto vd = std::static_pointer_cast<LILVarDecl>(evl);
+        this->setLocalVariable(vd->getName(), vd);
+    }
 }
 
 void LILFunctionDecl::prependEvaluable(std::shared_ptr<LILNode> evl)
@@ -178,6 +193,10 @@ void LILFunctionDecl::prependEvaluable(std::shared_ptr<LILNode> evl)
     if (evl->isA(FlowControlCallTypeReturn)) {
         this->_hasReturn = true;
     }
+    if (evl->isA(NodeTypeVarDecl)) {
+        auto vd = std::static_pointer_cast<LILVarDecl>(evl);
+        this->setLocalVariable(vd->getName(), vd);
+    }
 }
 
 const std::vector<std::shared_ptr<LILNode>> & LILFunctionDecl::getBody() const
@@ -190,11 +209,23 @@ void LILFunctionDecl::setBody(std::vector<std::shared_ptr<LILNode>> newBody)
     for (auto node : newBody) {
         node->setParentNode(nullptr);
     }
-    this->_body.clear();
-    this->_body = newBody;
-    for (auto node : this->_body) {
-        this->addNode(node);
+    this->clearBody();
+    for (const auto & node : newBody) {
+        this->addEvaluable(node);
     }
+}
+
+void LILFunctionDecl::clearBody()
+{
+    for (auto it = this->_body.rbegin(); it != this->_body.rend(); ++it){
+        auto evl = *it;
+        if (evl->isA(NodeTypeVarDecl)) {
+            auto vd = std::static_pointer_cast<LILVarDecl>(evl);
+            this->unsetLocalVariable(vd->getName());
+        }
+        this->removeNode(evl);
+    }
+    this->_body.clear();
 }
 
 void LILFunctionDecl::setReceivesFunctionBody(bool newValue)
@@ -282,4 +313,52 @@ void LILFunctionDecl::setHasOwnType(bool value)
 bool LILFunctionDecl::getHasOwnType() const
 {
     return this->_hasOwnType;
+}
+
+bool LILFunctionDecl::getIsExtern() const
+{
+    return this->_isExtern;
+}
+
+void LILFunctionDecl::setIsExtern(bool value)
+{
+    this->_isExtern = value;
+}
+
+bool LILFunctionDecl::getHasMultipleImpls() const
+{
+    return this->_hasMultipleImpls;
+}
+
+void LILFunctionDecl::setHasMultipleImpls(bool value)
+{
+    this->_hasMultipleImpls = value;
+}
+
+const std::vector<std::shared_ptr<LILFunctionDecl>> & LILFunctionDecl::getImpls() const
+{
+    return this->_impls;
+}
+
+void LILFunctionDecl::addImpl(std::shared_ptr<LILFunctionDecl> fd)
+{
+    this->addNode(fd);
+    this->_impls.push_back(fd);
+}
+
+void LILFunctionDecl::setImpls(const std::vector<std::shared_ptr<LILFunctionDecl>> & impls)
+{
+    this->clearImpls();
+    for (const auto & impl : impls) {
+        this->addImpl(impl);
+    }
+}
+
+void LILFunctionDecl::clearImpls()
+{
+    for (auto it = this->_impls.rbegin(); it != this->_impls.rend(); ++it){
+        auto impl = *it;
+        this->removeNode(impl);
+    }
+    this->_impls.clear();
 }

@@ -43,12 +43,50 @@ void LILStructureLowerer::performVisit(std::shared_ptr<LILRootNode> rootNode)
 
     std::vector<std::shared_ptr<LILNode>> resultNodes;
     for (auto node : nodes) {
-        resultNodes.push_back(node);
         std::vector<std::shared_ptr<LILNode>> buf;
         this->_nodeBuffer.push_back(buf);
         this->process(node);
-        for (auto newNode : this->_nodeBuffer.back()) {
-            resultNodes.push_back(newNode);
+        if (this->_nodeBuffer.back().size() == 0) {
+            resultNodes.push_back(node);
+        } else {
+            //out with the old
+            switch (node->getNodeType()) {
+                case NodeTypeVarDecl:
+                {
+                    auto vd = std::static_pointer_cast<LILVarDecl>(node);
+                    rootNode->unsetLocalVariable(vd->getName());
+                    break;
+                }
+                case NodeTypeFunctionDecl:
+                {
+                    auto fd = std::static_pointer_cast<LILFunctionDecl>(node);
+                    rootNode->unsetLocalVariable(fd->getName());
+                    break;
+                }
+                default:
+                    break;
+            }
+            rootNode->removeNode(node);
+            //in with the new
+            for (auto newNode : this->_nodeBuffer.back()) {
+                resultNodes.push_back(newNode);
+                switch (newNode->getNodeType()) {
+                    case NodeTypeVarDecl:
+                    {
+                        auto vd = std::static_pointer_cast<LILVarDecl>(newNode);
+                        rootNode->setLocalVariable(vd->getName(), vd);
+                        break;
+                    }
+                    case NodeTypeFunctionDecl:
+                    {
+                        auto fd = std::static_pointer_cast<LILFunctionDecl>(newNode);
+                        rootNode->setLocalVariable(fd->getName(), fd);
+                        break;
+                    }
+                    default:
+                        break;
+                }
+            }
         }
         this->_nodeBuffer.pop_back();
     }
@@ -373,15 +411,31 @@ void LILStructureLowerer::_process(std::shared_ptr<LILFunctionDecl> value)
 
                     if ((tyArg->getTypeType() == TypeTypeMultiple) && !tyArg->getIsWeakType()) {
                         
+                        auto newFd = std::make_shared<LILFunctionDecl>();
+                        newFd->setFunctionDeclType(FunctionDeclTypeFn);
+                        newFd->setIsExtern(value->getIsExtern());
+                        newFd->setIsExported(value->getIsExported());
+
+                        auto newFnType = fnTy->clone();
+                        newFd->setHasOwnType(true);
+                        newFd->setType(newFnType);
+                        
+                        newFd->setHasMultipleImpls(true);
+                        newFd->setName(value->getName());
+
+                        this->_nodeBuffer.back().push_back(newFd);
+                        
+                        
                         for (auto argChild : std::static_pointer_cast<LILMultipleType>(tyArg)->getTypes()) {
-                            auto newFd = std::make_shared<LILFunctionDecl>();
-                            newFd->setFunctionDeclType(FunctionDeclTypeFn);
-                            newFd->needsNameMangling = true;
-                            auto newFnType = std::make_shared<LILFunctionType>();
-                            newFnType->setReturnType(fnTy->getReturnType());
-                            newFd->setHasOwnType(true);
-                            newFd->setType(newFnType);
-                            newFd->setName(value->getName());
+                            auto newChildFd = std::make_shared<LILFunctionDecl>();
+                            newChildFd->setFunctionDeclType(FunctionDeclTypeFn);
+                            newChildFd->setIsExtern(value->getIsExtern());
+                            newChildFd->setIsExported(value->getIsExported());
+
+                            auto newChildFnType = std::make_shared<LILFunctionType>();
+                            newChildFnType->setReturnType(fnTy->getReturnType());
+                            newChildFd->setHasOwnType(true);
+                            newChildFd->setType(newChildFnType);
                             
                             std::vector<std::shared_ptr<LILNode>> newArgs;
                             for (auto funArg : fnTy->getArguments()){
@@ -404,19 +458,21 @@ void LILStructureLowerer::_process(std::shared_ptr<LILFunctionDecl> value)
                                         newBody.push_back(child);
                                     }
                                 }
-                                newFd->setBody(newBody);
+                                newChildFd->setBody(newBody);
                             }
                             
                             for (auto newArg : newArgs) {
-                                newFnType->addArgument(newArg);
+                                newChildFnType->addArgument(newArg);
                                 if (newArg->isA(NodeTypeVarDecl)) {
                                     auto newArgVd = std::static_pointer_cast<LILVarDecl>(newArg);
-                                    newFd->setLocalVariable(newArgVd->getName(), newArgVd);
+                                    newChildFd->setLocalVariable(newArgVd->getName(), newArgVd);
                                 }
                                 
                             }
+
+                            newChildFd->setName(this->decorate("", "", value->getName(), newChildFnType));
                             
-                            this->_nodeBuffer.back().push_back(newFd);
+                            newFd->addImpl(newChildFd);
                         } //end for
                     } //end if tyArg is multiple or not weak
                 } //end for

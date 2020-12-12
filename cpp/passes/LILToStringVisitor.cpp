@@ -424,8 +424,9 @@ LILToStrInfo LILToStringVisitor::_stringify(LILVarDecl * value)
     } else {
         ret.value = "Var declaration: " + vdType + value->getName() + externStr;
     }
-    for (auto node : value->getInitVals()) {
-        ret.children.push_back(this->stringify(node.get()));
+    auto initVal = value->getInitVal();
+    if (initVal) {
+        ret.children.push_back(this->stringify(initVal.get()));
     }
     return ret;
 }
@@ -663,15 +664,27 @@ LILToStrInfo LILToStringVisitor::_stringify(LILFunctionDecl * value)
         }
     }
     
-    LILToStrInfo bodyInfo;
-    bodyInfo.isExported = false;
-    bodyInfo.value = "Body:";
-    for (auto it = value->getBody().begin(); it!=value->getBody().end(); ++it)
-    {
-        bodyInfo.children.push_back(this->stringify((*it).get()));
-    };
-    if (bodyInfo.children.size() > 0) {
+    auto body = value->getBody();
+    if (body.size() > 0) {
+        LILToStrInfo bodyInfo;
+        bodyInfo.isExported = false;
+        bodyInfo.value = "Body:";
+        for (auto it = body.begin(); it!=body.end(); ++it)
+        {
+            bodyInfo.children.push_back(this->stringify((*it).get()));
+        };
         ret.children.push_back(bodyInfo);
+    }
+    auto impls = value->getImpls();
+    if (impls.size() > 0) {
+        LILToStrInfo implsInfo;
+        implsInfo.isExported = false;
+        implsInfo.value = "Implementations:";
+        for (auto it = impls.begin(); it!=impls.end(); ++it)
+        {
+            implsInfo.children.push_back(this->stringify((*it).get()));
+        };
+        ret.children.push_back(implsInfo);
     }
     auto finally = value->getFinally();
     if (finally) {

@@ -84,7 +84,10 @@ void LILConversionInserter::process(std::shared_ptr<LILFunctionCall> fc)
         }
 
         auto ty = localNode->getType();
-        if (!localNode->isA(NodeTypeVarDecl) || !ty || !ty->isA(TypeTypeFunction)) {
+        if (
+            !(localNode->isA(NodeTypeVarDecl) || localNode->isA(NodeTypeFunctionDecl))
+            || !ty || !ty->isA(TypeTypeFunction)
+        ) {
             std::cerr << "!!!!!!! UNKNOWN TARGET NODE FAIL !!!!!!!\n";
             return;
         }

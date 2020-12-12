@@ -104,3 +104,8 @@ void LILVarNode::unsetLocalVariable(LILString name)
 {
     this->_localVars.erase(name);
 }
+
+void LILVarNode::clearLocalVars()
+{
+    this->_localVars.clear();
+}

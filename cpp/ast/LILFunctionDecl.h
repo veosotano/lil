@@ -25,8 +25,6 @@ namespace LIL
     class LILFunctionDecl : public LILVarNode
     {
     public:
-        bool needsNameMangling;
-
         LILFunctionDecl();
         LILFunctionDecl(const LILFunctionDecl &other);
         bool isTypedNode() const;
@@ -43,6 +41,7 @@ namespace LIL
         const std::vector<std::shared_ptr<LILNode>> & getBody() const;
         void setBody(std::vector<std::shared_ptr<LILNode>> newBody);
         
+        void clearBody();
         void setReceivesFunctionBody(bool newValue);
         bool getReceivesFunctionBody() const;
         
@@ -65,11 +64,23 @@ namespace LIL
         void setHasOwnType(bool value);
         bool getHasOwnType() const;
 
+        bool getIsExtern() const;
+        void setIsExtern(bool value);
+
+        bool getHasMultipleImpls() const;
+        void setHasMultipleImpls(bool value);
+        
+        const std::vector<std::shared_ptr<LILFunctionDecl>> & getImpls() const;
+        void addImpl(std::shared_ptr<LILFunctionDecl> fd);
+        void setImpls(const std::vector<std::shared_ptr<LILFunctionDecl>> & impls);
+        void clearImpls();
+        
     protected:
         virtual std::shared_ptr<LILClonable> cloneImpl() const;
         
     private:
         std::vector<std::shared_ptr<LILNode>> _body;
+        std::vector<std::shared_ptr<LILFunctionDecl>> _impls;
         std::shared_ptr<LILNode> _finally;
         std::shared_ptr<LILFunctionType> _fnType;
         bool _receivesFunctionBody;
@@ -78,6 +89,8 @@ namespace LIL
         bool _hasReturn;
         bool _isConstructor;
         bool _hasOwnType;
+        bool _isExtern;
+        bool _hasMultipleImpls;
     };
 }
 

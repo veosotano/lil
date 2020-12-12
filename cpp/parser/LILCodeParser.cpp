@@ -1299,25 +1299,31 @@ bool LILCodeParser::readClassDecl()
             break;
         }
         LIL_EXPECT(TokenTypeIdentifier, "identifier");
+        bool childValid = false;
         if (
             d->currentToken->getString() == "var"
             || d->currentToken->getString() == "ivar"
             || d->currentToken->getString() == "vvar"
             ){
-            bool vdValid = this->readVarDecl();
-            if (vdValid) {
-                d->receiver->receiveNodeCommit();
-            } else {
-                LIL_CANCEL_NODE
-            }
-            LIL_CHECK_FOR_END
-            if (d->currentToken->isA(TokenTypeSemicolon)) {
-                done = false;
-                d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
-                this->readNextToken();
-                LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-            }
+            childValid = this->readVarDecl();
         }
+        else if (d->currentToken->getString() == "fn")
+        {
+            childValid = this->readFunctionDecl();
+        }
+        if (childValid) {
+            d->receiver->receiveNodeCommit();
+        } else {
+            LIL_CANCEL_NODE
+        }
+        LIL_CHECK_FOR_END
+        if (d->currentToken->isA(TokenTypeSemicolon)) {
+            done = false;
+            d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+            this->readNextToken();
+            LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+        }
+        
     }
 
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
@@ -1434,7 +1440,7 @@ bool LILCodeParser::readTypeSimple()
     {
         LILString tokenStr = d->currentToken->getString();
         if (tokenStr == "fn") {
-            return this->readFunctionType();
+            return this->readFunctionType(true);
         } else if (tokenStr == "ptr"){
             return this->readPointerType();
         } else if (tokenStr == "array") {
@@ -1468,18 +1474,19 @@ bool LILCodeParser::readTypeSimple()
     return false;
 }
 
-bool LILCodeParser::readFunctionType()
+bool LILCodeParser::readFunctionType(bool readFnKw)
 {
     LIL_START_NODE(NodeTypeFunctionType)
 
-    LIL_EXPECT(TokenTypeIdentifier, "identifier")
-    if (d->currentToken->getString() != "fn"){
-        LIL_CANCEL_NODE
+    if (readFnKw) {
+        LIL_EXPECT(TokenTypeIdentifier, "identifier")
+        if (d->currentToken->getString() != "fn"){
+            LIL_CANCEL_NODE
+        }
+        d->receiver->receiveNodeData(ParserEventType, d->currentToken->getString());
+        this->readNextToken();
+        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
     }
-
-    d->receiver->receiveNodeData(ParserEventType, d->currentToken->getString());
-    this->readNextToken();
-    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
 
     //open parenthesis
     bool needsParenthesisClose  = false;
@@ -3759,21 +3766,76 @@ bool LILCodeParser::readFunctionDecl()
 
 bool LILCodeParser::readFnFunction()
 {
-    //we read the type first, so that the container gets the function type
-    bool fnTyValid = this->readFunctionType();
-    if (fnTyValid) {
-        d->receiver->receiveNodeCommit();
+    auto peekToken = d->lexer->peekNextToken();
+    while (peekToken && peekToken->isA(TokenTypeWhitespace))
+    {
+        peekToken = d->lexer->peekNextToken();
+        if (!peekToken) {
+            d->lexer->resetPeek();
+            return false;
+        }
+        
+        if (peekToken->isA(TokenTypeBlockComment) || peekToken->isA(TokenTypeLineComment)) {
+            peekToken = d->lexer->peekNextToken();
+            if (!peekToken) {
+                d->lexer->resetPeek();
+                return false;
+            }
+        }
     }
-    if(this->atEndOfSource()) {
-        return fnTyValid;
+    d->lexer->resetPeek();
+    bool readsFnTypeFirst = true;
+    if (peekToken && peekToken->isA(TokenTypeIdentifier)) {
+        readsFnTypeFirst = false;
     }
-    this->skip(TokenTypeWhitespace);
-    if(this->atEndOfSource()) {
-        return fnTyValid;
+    if (readsFnTypeFirst) {
+        //we read the type first, so that the container gets the function type
+        bool fnTyValid = this->readFunctionType(true);
+        if (fnTyValid) {
+            d->receiver->receiveNodeCommit();
+        }
+        if(this->atEndOfSource()) {
+            return fnTyValid;
+        }
+        this->skip(TokenTypeWhitespace);
+        if(this->atEndOfSource()) {
+            return fnTyValid;
+        }
     }
-
+    
     LIL_START_NODE(NodeTypeFunctionDecl)
     d->receiver->receiveNodeData(ParserEventFunctionTypeFn, "");
+
+    if (!readsFnTypeFirst) {
+        d->receiver->receiveNodeData(ParserEventType, d->currentToken->getString());
+        this->readNextToken();
+        if (this->atEndOfSource()) {
+            return false;
+        }
+        this->skip(TokenTypeWhitespace);
+        if (this->atEndOfSource()) {
+            return false;
+        }
+
+        LIL_EXPECT(TokenTypeIdentifier, "identifier")
+         d->receiver->receiveNodeData(ParserEventFunctionName, d->currentToken->getString());
+        this->readNextToken();
+        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+
+        bool fnTyValid = this->readFunctionType(false);
+        if (fnTyValid) {
+            d->receiver->receiveNodeCommit();
+        } else {
+            LIL_CANCEL_NODE
+        }
+        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+
+        if (d->currentToken->isA(TokenTypeIdentifier) && d->currentToken->getString() == "extern") {
+            d->receiver->receiveNodeData(ParserEventExtern, d->currentToken->getString());
+            this->readNextToken();
+            LIL_END_NODE_SKIP(false);
+        }
+    }
 
     LIL_EXPECT(TokenTypeBlockOpen, "block open")
     d->receiver->receiveNodeData(ParserEventFunctionBody, "");
@@ -3949,258 +4011,253 @@ bool LILCodeParser::readEvaluables()
                     evalsDone = false;
                 }
             }
+            else if (this->isFunctionDecl())
+            {
+                bool fdValid = this->readFunctionDecl();
+                if (fdValid) {
+                    d->receiver->receiveNodeCommit();
+                } else {
+                    d->receiver->receiveError(LILString::format("Error while reading function on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
+                }
+                if (this->atEndOfSource())
+                    return ret;
+                this->skip(TokenTypeWhitespace);
+                if (this->atEndOfSource())
+                    return ret;
+                if (d->currentToken->isA(TokenTypeSemicolon))
+                {
+                    evalsDone = false;
+                    //skip the semicolon
+                    d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+                    this->readNextToken();
+                    if (this->atEndOfSource())
+                        return false;
+                    
+                    this->skip(TokenTypeWhitespace);
+                    if (this->atEndOfSource())
+                        return ret;
+                }
+                else if (!d->currentToken->isA(TokenTypeBlockClose))
+                {
+                    d->receiver->receiveError(LILString::format("Unexpected token while reading evaluables on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
+                    this->skipInvalidToken();
+                    evalsDone = false;
+                }
+            }
+            else if (this->isFlowControl())
+            {
+                bool fcValid = this->readFlowControl();
+                if (fcValid) {
+                    d->receiver->receiveNodeCommit();
+                } else {
+                    d->receiver->receiveError(LILString::format("Error while reading flow control on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
+                }
+                if (this->atEndOfSource())
+                    return ret;
+                this->skip(TokenTypeWhitespace);
+                if (this->atEndOfSource())
+                    return ret;
+                evalsDone = false;
+                continue;
+            }
+            else if (this->isFlowControlCall())
+            {
+                bool fccValid = this->readFlowControlCall();
+                if (fccValid) {
+                    d->receiver->receiveNodeCommit();
+                } else {
+                    d->receiver->receiveError(LILString::format("Error while reading flow control call on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
+                }
+                if (this->atEndOfSource())
+                    return ret;
+                this->skip(TokenTypeWhitespace);
+                if (this->atEndOfSource())
+                    return ret;
+                if (d->currentToken->isA(TokenTypeSemicolon))
+                {
+                    evalsDone = false;
+                    //skip the semicolon
+                    d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+                    this->readNextToken();
+                    if (this->atEndOfSource())
+                        return false;
+                    
+                    this->skip(TokenTypeWhitespace);
+                    if (this->atEndOfSource())
+                        return ret;
+                }
+                else if (!d->currentToken->isA(TokenTypeBlockClose))
+                {
+                    d->receiver->receiveError(LILString::format("Unexpected token while reading evaluables on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
+                    this->skipInvalidToken();
+                    evalsDone = false;
+                }
+            }
+            else if (this->isFunctionCall(false))
+            {
+                bool fcValid = this->readFunctionCall();
+                if (fcValid) {
+                    d->receiver->receiveNodeCommit();
+                } else {
+                    d->receiver->receiveError(LILString::format("Error while reading function on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
+                }
+                if (this->atEndOfSource())
+                    return ret;
+                this->skip(TokenTypeWhitespace);
+                if (this->atEndOfSource())
+                    return ret;
+                if (d->currentToken->isA(TokenTypeSemicolon))
+                {
+                    evalsDone = false;
+                    //skip the semicolon
+                    d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+                    this->readNextToken();
+                    if (this->atEndOfSource())
+                        return false;
+
+                    this->skip(TokenTypeWhitespace);
+                    if (this->atEndOfSource())
+                        return ret;
+                }
+                else if (!d->currentToken->isA(TokenTypeBlockClose))
+                {
+                    d->receiver->receiveError(LILString::format("Unexpected token while reading evaluables on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
+                    this->skipInvalidToken();
+                    evalsDone = false;
+                }
+            }
+            else if (this->isValuePath())
+            {
+                bool vnValid = this->readVarName();
+                if (!vnValid) {
+                    return false;
+                }
+                bool ppValid = this->readValuePath(true);
+                if (ppValid) {
+                    d->receiver->receiveNodeCommit();
+                }
+                if (this->isAssignment())
+                {
+                    bool asgmValid = this->readAssignment(true, true, true);
+                    if (asgmValid) {
+                        d->receiver->receiveNodeCommit();
+                    } else {
+                        d->receiver->receiveError(LILString::format("Error while reading function on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
+                    }
+                }
+                else if (this->isExpression())
+                {
+                    bool outIsSV = false;
+                    NodeType outType;
+                    bool expValid = this->readExpression(outIsSV, outType);
+                    if (expValid) {
+                        d->receiver->receiveNodeCommit();
+                    }
+                    else
+                    {
+                        d->receiver->receiveError(LILString::format("Error while reading expression on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
+                    }
+                }
+                if (this->atEndOfSource())
+                    return ret;
+                this->skip(TokenTypeWhitespace);
+                if (this->atEndOfSource())
+                    return ret;
+                if (d->currentToken->isA(TokenTypeSemicolon))
+                {
+                    evalsDone = false;
+                    //skip the semicolon
+                    d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+                    this->readNextToken();
+                    if (this->atEndOfSource())
+                        return false;
+
+                    this->skip(TokenTypeWhitespace);
+                    if (this->atEndOfSource())
+                        return ret;
+                }
+                else if (!d->currentToken->isA(TokenTypeBlockClose))
+                {
+                    d->receiver->receiveError(LILString::format("Unexpected token while reading evaluables on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
+                    this->skipInvalidToken();
+                    evalsDone = false;
+                }
+            }
+            else if (this->isAssignment())
+            {
+                bool asgmtValid = this->readAssignment(true, true);
+                if (asgmtValid) {
+                    d->receiver->receiveNodeCommit();
+                } else {
+                    d->receiver->receiveError(LILString::format("Error while reading assignment on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
+                }
+                if (this->atEndOfSource())
+                    return ret;
+                this->skip(TokenTypeWhitespace);
+                if (this->atEndOfSource())
+                    return ret;
+                if (d->currentToken->isA(TokenTypeSemicolon))
+                {
+                    evalsDone = false;
+                    //skip the semicolon
+                    d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+                    this->readNextToken();
+                    if (this->atEndOfSource())
+                        return false;
+
+                    this->skip(TokenTypeWhitespace);
+                    if (this->atEndOfSource())
+                        return ret;
+                }
+                else if (!d->currentToken->isA(TokenTypeBlockClose))
+                {
+                    d->receiver->receiveError(LILString::format("Unexpected token while reading evaluables on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
+                    this->skipInvalidToken();
+                    evalsDone = false;
+                }
+            }
             else
             {
-                //check if it is a function declaration
-                if (this->isFunctionDecl())
-                {
-                    bool fdValid = this->readFunctionDecl();
-                    if (fdValid) {
-                        d->receiver->receiveNodeCommit();
-                    } else {
-                        d->receiver->receiveError(LILString::format("Error while reading function on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
-                    }
-                    if (this->atEndOfSource())
-                        return ret;
-                    this->skip(TokenTypeWhitespace);
-                    if (this->atEndOfSource())
-                        return ret;
-                    if (d->currentToken->isA(TokenTypeSemicolon))
-                    {
-                        evalsDone = false;
-                        //skip the semicolon
-                        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
-                        this->readNextToken();
-                        if (this->atEndOfSource())
-                            return false;
-
-                        this->skip(TokenTypeWhitespace);
-                        if (this->atEndOfSource())
-                            return ret;
-                    }
-                    else if (!d->currentToken->isA(TokenTypeBlockClose))
-                    {
-                        d->receiver->receiveError(LILString::format("Unexpected token while reading evaluables on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
-                        this->skipInvalidToken();
-                        evalsDone = false;
-                    }
+                NodeType outType;
+                bool outIsSingleValue = false;
+                bool expValid = this->readExpression(outIsSingleValue, outType);
+                if (!expValid) {
+                    return false;
                 }
-                if (this->isFlowControl())
-                {
-                    bool fcValid = this->readFlowControl();
-                    if (fcValid) {
-                        d->receiver->receiveNodeCommit();
-                    } else {
-                        d->receiver->receiveError(LILString::format("Error while reading flow control on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
+                if (outIsSingleValue) {
+                    if (outType == NodeTypeVarName && this->isValuePath()) {
+                        bool ppValid = this->readValuePath(true);
+                        if (ppValid) {
+                            d->receiver->receiveNodeCommit();
+                        }
                     }
-                    if (this->atEndOfSource())
-                        return ret;
-                    this->skip(TokenTypeWhitespace);
-                    if (this->atEndOfSource())
-                        return ret;
+                } else {
+                    d->receiver->receiveNodeCommit();
+                }
+
+                if (this->atEndOfSource())
+                    return ret;
+                this->skip(TokenTypeWhitespace);
+                if (this->atEndOfSource())
+                    return ret;
+                if (d->currentToken->isA(TokenTypeSemicolon))
+                {
                     evalsDone = false;
-                    continue;
-                }
-                if (this->isFlowControlCall())
-                {
-                    bool fccValid = this->readFlowControlCall();
-                    if (fccValid) {
-                        d->receiver->receiveNodeCommit();
-                    } else {
-                        d->receiver->receiveError(LILString::format("Error while reading flow control call on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
-                    }
+                    //skip the semicolon
+                    d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+                    this->readNextToken();
                     if (this->atEndOfSource())
-                        return ret;
-                    this->skip(TokenTypeWhitespace);
-                    if (this->atEndOfSource())
-                        return ret;
-                    if (d->currentToken->isA(TokenTypeSemicolon))
-                    {
-                        evalsDone = false;
-                        //skip the semicolon
-                        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
-                        this->readNextToken();
-                        if (this->atEndOfSource())
-                            return false;
-                        
-                        this->skip(TokenTypeWhitespace);
-                        if (this->atEndOfSource())
-                            return ret;
-                    }
-                    else if (!d->currentToken->isA(TokenTypeBlockClose))
-                    {
-                        d->receiver->receiveError(LILString::format("Unexpected token while reading evaluables on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
-                        this->skipInvalidToken();
-                        evalsDone = false;
-                    }
-                }
-                else if (this->isFunctionCall(false))
-                {
-                    bool fcValid = this->readFunctionCall();
-                    if (fcValid) {
-                        d->receiver->receiveNodeCommit();
-                    } else {
-                        d->receiver->receiveError(LILString::format("Error while reading function on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
-                    }
-                    if (this->atEndOfSource())
-                        return ret;
-                    this->skip(TokenTypeWhitespace);
-                    if (this->atEndOfSource())
-                        return ret;
-                    if (d->currentToken->isA(TokenTypeSemicolon))
-                    {
-                        evalsDone = false;
-                        //skip the semicolon
-                        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
-                        this->readNextToken();
-                        if (this->atEndOfSource())
-                            return false;
-
-                        this->skip(TokenTypeWhitespace);
-                        if (this->atEndOfSource())
-                            return ret;
-                    }
-                    else if (!d->currentToken->isA(TokenTypeBlockClose))
-                    {
-                        d->receiver->receiveError(LILString::format("Unexpected token while reading evaluables on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
-                        this->skipInvalidToken();
-                        evalsDone = false;
-                    }
-                }
-
-                else if (this->isValuePath())
-                {
-                    bool vnValid = this->readVarName();
-                    if (!vnValid) {
                         return false;
-                    }
-                    bool ppValid = this->readValuePath(true);
-                    if (ppValid) {
-                        d->receiver->receiveNodeCommit();
-                    }
-                    if (this->isAssignment())
-                    {
-                        bool asgmValid = this->readAssignment(true, true, true);
-                        if (asgmValid) {
-                            d->receiver->receiveNodeCommit();
-                        } else {
-                            d->receiver->receiveError(LILString::format("Error while reading function on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
-                        }
-                    }
-                    else if (this->isExpression())
-                    {
-                        bool outIsSV = false;
-                        NodeType outType;
-                        bool expValid = this->readExpression(outIsSV, outType);
-                        if (expValid) {
-                            d->receiver->receiveNodeCommit();
-                        }
-                        else
-                        {
-                            d->receiver->receiveError(LILString::format("Error while reading expression on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
-                        }
-                    }
-                    if (this->atEndOfSource())
-                        return ret;
+
                     this->skip(TokenTypeWhitespace);
                     if (this->atEndOfSource())
                         return ret;
-                    if (d->currentToken->isA(TokenTypeSemicolon))
-                    {
-                        evalsDone = false;
-                        //skip the semicolon
-                        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
-                        this->readNextToken();
-                        if (this->atEndOfSource())
-                            return false;
-
-                        this->skip(TokenTypeWhitespace);
-                        if (this->atEndOfSource())
-                            return ret;
-                    }
-                    else if (!d->currentToken->isA(TokenTypeBlockClose))
-                    {
-                        d->receiver->receiveError(LILString::format("Unexpected token while reading evaluables on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
-                        this->skipInvalidToken();
-                        evalsDone = false;
-                    }
                 }
-                else if (this->isAssignment())
+                else if (!d->currentToken->isA(TokenTypeBlockClose))
                 {
-                    bool asgmtValid = this->readAssignment(true, true);
-                    if (asgmtValid) {
-                        d->receiver->receiveNodeCommit();
-                    } else {
-                        d->receiver->receiveError(LILString::format("Error while reading assignment on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
-                    }
-                    if (this->atEndOfSource())
-                        return ret;
-                    this->skip(TokenTypeWhitespace);
-                    if (this->atEndOfSource())
-                        return ret;
-                    if (d->currentToken->isA(TokenTypeSemicolon))
-                    {
-                        evalsDone = false;
-                        //skip the semicolon
-                        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
-                        this->readNextToken();
-                        if (this->atEndOfSource())
-                            return false;
-
-                        this->skip(TokenTypeWhitespace);
-                        if (this->atEndOfSource())
-                            return ret;
-                    }
-                    else if (!d->currentToken->isA(TokenTypeBlockClose))
-                    {
-                        d->receiver->receiveError(LILString::format("Unexpected token while reading evaluables on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
-                        this->skipInvalidToken();
-                        evalsDone = false;
-                    }
-                }
-                else if (d->currentToken->isA(TokenTypeIdentifier))
-                {
-                    NodeType outType;
-                    bool outIsSingleValue = false;
-                    bool expValid = this->readExpression(outIsSingleValue, outType);
-                    if (!expValid) {
-                        return false;
-                    }
-                    if (outIsSingleValue) {
-                        if (outType == NodeTypeVarName && this->isValuePath()) {
-                            bool ppValid = this->readValuePath(true);
-                            if (ppValid) {
-                                d->receiver->receiveNodeCommit();
-                            }
-                        }
-                    } else {
-                        d->receiver->receiveNodeCommit();
-                    }
-
-                    if (this->atEndOfSource())
-                        return ret;
-                    this->skip(TokenTypeWhitespace);
-                    if (this->atEndOfSource())
-                        return ret;
-                    if (d->currentToken->isA(TokenTypeSemicolon))
-                    {
-                        evalsDone = false;
-                        //skip the semicolon
-                        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
-                        this->readNextToken();
-                        if (this->atEndOfSource())
-                            return false;
-
-                        this->skip(TokenTypeWhitespace);
-                        if (this->atEndOfSource())
-                            return ret;
-                    }
-                    else if (!d->currentToken->isA(TokenTypeBlockClose))
-                    {
-                        d->receiver->receiveError(LILString::format("Unexpected token while reading evaluables on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
-                        this->skipInvalidToken();
-                        evalsDone = false;
-                    }
+                    d->receiver->receiveError(LILString::format("Unexpected token while reading evaluables on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
+                    this->skipInvalidToken();
+                    evalsDone = false;
                 }
             }
         }

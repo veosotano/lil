@@ -423,6 +423,7 @@ namespace LIL
         ParserEventExtern,
         ParserEventObjectDefinition,
         ParserEventFunction,
+        ParserEventFunctionName,
         ParserEventFunctionTypeFn,
         ParserEventFunctionBody,
         ParserEventFunctionModifier,

@@ -73,7 +73,7 @@ namespace LIL
         bool readClassDecl();
         bool readType();
         bool readTypeSimple();
-        bool readFunctionType();
+        bool readFunctionType(bool readFnKw);
         bool readPointerType();
         bool readStaticArrayType();
         bool readVarDecl();

@@ -107,11 +107,6 @@ std::shared_ptr<LILNode> LILVarDecl::getInitVal() const
     }
 }
 
-const std::vector<std::shared_ptr<LILNode>> & LILVarDecl::getInitVals() const
-{
-    return this->getChildNodes();
-}
-
 void LILVarDecl::setIsExtern(bool value)
 {
     this->_isExtern = value;
