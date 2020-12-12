@@ -32,19 +32,18 @@ namespace LIL
 
         LILString stringRep();
 
-        void setName(LILString newName);
         const LILString getName() const;
+        void setName(LILString newName);
 
-        void setInitVal(std::shared_ptr<LILNode> value);
         std::shared_ptr<LILNode> getInitVal() const;
-        
+        void setInitVal(std::shared_ptr<LILNode> value);
+
         bool getIsExtern() const;
         void setIsExtern(bool value);
-        void setIsIVar(bool value);
         bool getIsIVar() const;
-        void setIsVVar(bool value);
+        void setIsIVar(bool value);
         bool getIsVVar() const;
-        
+        void setIsVVar(bool value);
 
     private:
         virtual std::shared_ptr<LILClonable> cloneImpl() const;

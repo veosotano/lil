@@ -37,12 +37,12 @@ namespace LIL
         virtual ~LILType();
         bool equalTo(std::shared_ptr<LILNode> otherNode) override;
         virtual void receiveNodeData(const LILString & data) override;
-        
+
         virtual LILString stringRep() override;
-        
-        void setName(LILString newName);
+
         const LILString getName() const;
-        
+        void setName(LILString newName);
+
         virtual bool getIsWeakType() const;
         
         TypeType getTypeType() const override;

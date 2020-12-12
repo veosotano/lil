@@ -53,6 +53,22 @@ bool LILFunctionDecl::isTypedNode() const
     return true;
 }
 
+std::shared_ptr<LILType> LILFunctionDecl::getType() const
+{
+    if (this->_hasOwnType) {
+        return this->_fnType;
+    } else {
+        auto parent = this->getParentNode();
+        if (parent && parent->isA(NodeTypeVarDecl)) {
+            auto vd = std::static_pointer_cast<LILVarDecl>(parent);
+            if (vd) {
+                return vd->getType();
+            }
+        }
+    }
+    return nullptr;
+}
+
 void LILFunctionDecl::setType(std::shared_ptr<LILType> value)
 {
     if (this->_hasOwnType) {
@@ -68,22 +84,6 @@ void LILFunctionDecl::setType(std::shared_ptr<LILType> value)
             }
         }
     }
-}
-
-std::shared_ptr<LILType> LILFunctionDecl::getType() const
-{
-    if (this->_hasOwnType) {
-        return this->_fnType;
-    } else {
-        auto parent = this->getParentNode();
-        if (parent && parent->isA(NodeTypeVarDecl)) {
-            auto vd = std::static_pointer_cast<LILVarDecl>(parent);
-            if (vd) {
-                return vd->getType();
-            }
-        }
-    }
-    return nullptr;
 }
 
 std::shared_ptr<LILFunctionType> LILFunctionDecl::getFnType() const
@@ -228,14 +228,14 @@ void LILFunctionDecl::clearBody()
     this->_body.clear();
 }
 
-void LILFunctionDecl::setReceivesFunctionBody(bool newValue)
-{
-    this->_receivesFunctionBody = newValue;
-}
-
 bool LILFunctionDecl::getReceivesFunctionBody() const
 {
     return this->_receivesFunctionBody;
+}
+
+void LILFunctionDecl::setReceivesFunctionBody(bool newValue)
+{
+    this->_receivesFunctionBody = newValue;
 }
 
 FunctionDeclType LILFunctionDecl::getFunctionDeclType() const
@@ -246,6 +246,15 @@ FunctionDeclType LILFunctionDecl::getFunctionDeclType() const
 void LILFunctionDecl::setFunctionDeclType(FunctionDeclType newType)
 {
     this->_functionDeclType = newType;
+}
+
+std::shared_ptr<LILType> LILFunctionDecl::getReturnType() const
+{
+    auto ty = this->getType();
+    if (ty && ty->isA(TypeTypeFunction)) {
+        return std::static_pointer_cast<LILFunctionType>(ty)->getReturnType();
+    }
+    return nullptr;
 }
 
 void LILFunctionDecl::setReturnType(std::shared_ptr<LILType> type)
@@ -260,23 +269,14 @@ void LILFunctionDecl::setReturnType(std::shared_ptr<LILType> type)
     }
 }
 
-std::shared_ptr<LILType> LILFunctionDecl::getReturnType() const
+LILString LILFunctionDecl::getName() const
 {
-    auto ty = this->getType();
-    if (ty && ty->isA(TypeTypeFunction)) {
-        return std::static_pointer_cast<LILFunctionType>(ty)->getReturnType();
-    }
-    return nullptr;
+    return this->_name;
 }
 
 void LILFunctionDecl::setName(LILString value)
 {
     this->_name = value;
-}
-
-LILString LILFunctionDecl::getName() const
-{
-    return this->_name;
 }
 
 bool LILFunctionDecl::hasReturn() const
@@ -305,14 +305,14 @@ void LILFunctionDecl::setFinally(std::shared_ptr<LILNode> value)
     this->_finally = value;
 }
 
-void LILFunctionDecl::setHasOwnType(bool value)
-{
-    this->_hasOwnType = value;
-}
-
 bool LILFunctionDecl::getHasOwnType() const
 {
     return this->_hasOwnType;
+}
+
+void LILFunctionDecl::setHasOwnType(bool value)
+{
+    this->_hasOwnType = value;
 }
 
 bool LILFunctionDecl::getIsExtern() const

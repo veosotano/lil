@@ -255,14 +255,14 @@ LILString LILType::stringRep()
     }
 }
 
-void LILType::setName(LILString newName)
-{
-    this->_name = newName;
-}
-
 const LILString LILType::getName() const
 {
     return this->_name;
+}
+
+void LILType::setName(LILString newName)
+{
+    this->_name = newName;
 }
 
 bool LILType::getIsWeakType() const

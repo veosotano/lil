@@ -28,8 +28,8 @@ namespace LIL
         LILFunctionDecl();
         LILFunctionDecl(const LILFunctionDecl &other);
         bool isTypedNode() const;
-        void setType(std::shared_ptr<LILType> value);
         std::shared_ptr<LILType> getType() const;
+        void setType(std::shared_ptr<LILType> value);
         std::shared_ptr<LILFunctionType> getFnType() const;
         std::shared_ptr<LILFunctionDecl> clone() const;
         virtual ~LILFunctionDecl();
@@ -40,17 +40,17 @@ namespace LIL
         void prependEvaluable(std::shared_ptr<LILNode> evl);
         const std::vector<std::shared_ptr<LILNode>> & getBody() const;
         void setBody(std::vector<std::shared_ptr<LILNode>> newBody);
-        
         void clearBody();
-        void setReceivesFunctionBody(bool newValue);
+
         bool getReceivesFunctionBody() const;
-        
+        void setReceivesFunctionBody(bool newValue);
+
         FunctionDeclType getFunctionDeclType() const;
         void setFunctionDeclType(FunctionDeclType newType);
-        
-        void setReturnType(std::shared_ptr<LILType> type);
+
         std::shared_ptr<LILType> getReturnType() const;
-        
+        void setReturnType(std::shared_ptr<LILType> type);
+
         LILString getName() const;
         void setName(LILString value);
         
@@ -61,8 +61,8 @@ namespace LIL
         std::shared_ptr<LILNode> getFinally() const;
         void setFinally(std::shared_ptr<LILNode> value);
 
-        void setHasOwnType(bool value);
         bool getHasOwnType() const;
+        void setHasOwnType(bool value);
 
         bool getIsExtern() const;
         void setIsExtern(bool value);

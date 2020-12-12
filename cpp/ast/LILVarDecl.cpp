@@ -83,19 +83,14 @@ LILString LILVarDecl::stringRep()
     return kw + " " + this->getName();
 }
 
-void LILVarDecl::setName(LILString newName)
-{
-    this->_name = newName;
-}
-
 const LILString LILVarDecl::getName() const
 {
     return this->_name;
 }
 
-void LILVarDecl::setInitVal(std::shared_ptr<LILNode> value)
+void LILVarDecl::setName(LILString newName)
 {
-    this->addNode(value);
+    this->_name = newName;
 }
 
 std::shared_ptr<LILNode> LILVarDecl::getInitVal() const
@@ -107,9 +102,9 @@ std::shared_ptr<LILNode> LILVarDecl::getInitVal() const
     }
 }
 
-void LILVarDecl::setIsExtern(bool value)
+void LILVarDecl::setInitVal(std::shared_ptr<LILNode> value)
 {
-    this->_isExtern = value;
+    this->addNode(value);
 }
 
 bool LILVarDecl::getIsExtern() const
@@ -117,9 +112,9 @@ bool LILVarDecl::getIsExtern() const
     return this->_isExtern;
 }
 
-void LILVarDecl::setIsIVar(bool value)
+void LILVarDecl::setIsExtern(bool value)
 {
-    this->_isIVar = value;
+    this->_isExtern = value;
 }
 
 bool LILVarDecl::getIsIVar() const
@@ -127,9 +122,9 @@ bool LILVarDecl::getIsIVar() const
     return this->_isIVar;
 }
 
-void LILVarDecl::setIsVVar(bool value)
+void LILVarDecl::setIsIVar(bool value)
 {
-    this->_isVVar = value;
+    this->_isIVar = value;
 }
 
 bool LILVarDecl::getIsVVar() const
@@ -137,3 +132,7 @@ bool LILVarDecl::getIsVVar() const
     return this->_isVVar;
 }
 
+void LILVarDecl::setIsVVar(bool value)
+{
+    this->_isVVar = value;
+}
