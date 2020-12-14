@@ -391,7 +391,7 @@ void LILTypeGuesser::searchForTypesFromInitVal(std::shared_ptr<LILNode> node)
             auto ty = vd->getType();
             if (!ty) {
                 auto ivTy = this->getNodeType(initVal);
-                if (ivTy) {
+                if (ivTy && !ivTy->getIsWeakType()) {
                     vd->setType(ivTy);
                 }
             }
@@ -1754,7 +1754,7 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForVarName(std::shared_ptr<LILV
         }
         parent = parent->getParentNode();
     }
-    if (ret->isA(TypeTypeMultiple)) {
+    if (ret && ret->isA(TypeTypeMultiple)) {
         parent = name->getParentNode();
         while (parent) {
             if (parent->isA(FlowControlTypeIfCast)) {
