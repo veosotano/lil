@@ -1787,7 +1787,7 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(std::shared_ptr<LI
         }
     } else if (nodes.size() > 1){
         size_t startIndex = 1;
-        auto ifCastType = this->findIfCastType(vp, startIndex);
+        auto ifCastType = this->findIfCastType(vp.get(), startIndex);
         if (ifCastType) {
             currentTy = ifCastType;
 
@@ -1883,44 +1883,6 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(std::shared_ptr<LI
     }
     
     return nullptr;
-}
-
-std::shared_ptr<LILType> LILTypeGuesser::findIfCastType(std::shared_ptr<LILValuePath> vp, size_t & outStartIndex) const
-{
-    std::shared_ptr<LILType> ret;
-    auto parent = vp->getParentNode();
-    while (parent) {
-        if (parent->isA(FlowControlTypeIfCast)) {
-            auto fc = std::static_pointer_cast<LILFlowControl>(parent);
-            auto args = fc->getArguments();
-            if (args.size() != 2) {
-                break;
-            }
-            auto firstArg = args.front();
-            if (firstArg->isA(NodeTypeValuePath)) {
-                auto ifCastVp = std::static_pointer_cast<LILValuePath>(firstArg);
-                auto ifCastVpNodes = ifCastVp->getNodes();
-                auto vpNodes = vp->getNodes();
-                bool valid = true;
-                if (ifCastVpNodes.size() > vpNodes.size()) {
-                    valid = false;
-                } else {
-                    for (size_t i = 0, j = ifCastVpNodes.size(); i<j; ++i) {
-                        if (!vpNodes.at(i)->equalTo(ifCastVpNodes.at(i))) {
-                            valid = false;
-                        }
-                    }
-                }
-                if (valid) {
-                    auto ifCastTy = args.back();
-                    ret = std::static_pointer_cast<LILType>(ifCastTy);
-                    outStartIndex = ifCastVpNodes.size();
-                }
-            }
-        }
-        parent = parent->getParentNode();
-    }
-    return ret;
 }
 
 std::shared_ptr<LILType> LILTypeGuesser::findTypeFromAssignments(std::vector<std::shared_ptr<LILNode>> nodes, const std::shared_ptr<LILVarDecl> & vd) const

@@ -113,62 +113,67 @@ void LILTypeValidator::_validate(std::shared_ptr<LILFunctionCall> fc)
         auto vd = std::static_pointer_cast<LILVarDecl>(remoteNode);
         auto fieldTy = vd->getType();
         if (fieldTy->isA(TypeTypeMultiple)) {
-            std::cerr << "UNIMPLEMENTED FAIL !!!!!!!\n";
+            size_t outVpSize = 0;
+            auto ifCastTy = this->findIfCastType(vp.get(), outVpSize);
+            if (ifCastTy) {
+                fieldTy = ifCastTy;
+            } else {
+                std::cerr << "!!!!!!! UNIMPLEMENTED FAIL !!!!!!!\n";
+                return;
+            }
+        }
+        bool isMethod = false;
+        std::shared_ptr<LILType> ty;
+        if (fieldTy->isA(TypeTypeObject)) {
+            auto classDecl = this->findClassWithName(fieldTy->getName());
+            if (!classDecl) {
+                std::cerr << "!!!!!!! CLASS NOT FOUND FAIL !!!!!!!\n";
+                return;
+            }
+            auto method = classDecl->getMethodNamed(fc->getName());
+            ty = method->getType();
+            isMethod = true;
+        }
+        
+        if (!ty || !ty->isA(TypeTypeFunction)) {
+            LILErrorMessage ei;
+            ei.message =  "The path "+vp->stringRep()+" does not point to a function";
+            LILNode::SourceLocation sl = fc->getSourceLocation();
+            ei.file = sl.file;
+            ei.line = sl.line;
+            ei.column = sl.column;
+            this->errors.push_back(ei);
             return;
-        } else {
-            bool isMethod = false;
-            std::shared_ptr<LILType> ty;
-            if (fieldTy->isA(TypeTypeObject)) {
-                auto classDecl = this->findClassWithName(fieldTy->getName());
-                if (!classDecl) {
-                    std::cerr << "!!!!!!! CLASS NOT FOUND FAIL !!!!!!!\n";
-                    return;
-                }
-                auto method = classDecl->getMethodNamed(fc->getName());
-                ty = method->getType();
-                isMethod = true;
-            }
-            
-            if (!ty || !ty->isA(TypeTypeFunction)) {
-                LILErrorMessage ei;
-                ei.message =  "The path "+vp->stringRep()+" does not point to a function";
-                LILNode::SourceLocation sl = fc->getSourceLocation();
-                ei.file = sl.file;
-                ei.line = sl.line;
-                ei.column = sl.column;
-                this->errors.push_back(ei);
-                return;
-            }
-            auto fnTy = std::static_pointer_cast<LILFunctionType>(ty);
-            auto fnTyArgs = fnTy->getArguments();
-            auto args = fc->getArguments();
-            size_t argNum = args.size();
-            if (isMethod) {
-                argNum += 1;
-            }
-            if (fnTyArgs.size() != argNum) {
-                LILErrorMessage ei;
-                if (args.size() == 0) {
-                    if (fnTyArgs.size() > 1) {
-                        ei.message =  "Missing argument in call: "+vp->stringRep()+" needs "+LILString::number((LILUnitI64)fnTyArgs.size()) + " arguments";
-                    } else {
-                        ei.message =  "Missing argument in call: "+vp->stringRep()+" needs one argument";
-                    }
+        }
+        auto fnTy = std::static_pointer_cast<LILFunctionType>(ty);
+        auto fnTyArgs = fnTy->getArguments();
+        auto args = fc->getArguments();
+        size_t argNum = args.size();
+        if (isMethod) {
+            argNum += 1;
+        }
+        if (fnTyArgs.size() != argNum) {
+            LILErrorMessage ei;
+            if (args.size() == 0) {
+                if (fnTyArgs.size() > 1) {
+                    ei.message =  "Missing argument in call: "+vp->stringRep()+" needs "+LILString::number((LILUnitI64)fnTyArgs.size()) + " arguments";
                 } else {
-                    ei.message =  "Mismatch of number of arguments: "+vp->stringRep()+" needs "+LILString::number((LILUnitI64)fnTyArgs.size()) + " arguments and was given " + LILString::number((LILUnitI64)args.size());
+                    ei.message =  "Missing argument in call: "+vp->stringRep()+" needs one argument";
                 }
-                LILNode::SourceLocation sl = fc->getSourceLocation();
-                ei.file = sl.file;
-                ei.line = sl.line;
-                ei.column = sl.column;
-                this->errors.push_back(ei);
-                return;
+            } else {
+                ei.message =  "Mismatch of number of arguments: "+vp->stringRep()+" needs "+LILString::number((LILUnitI64)fnTyArgs.size()) + " arguments and was given " + LILString::number((LILUnitI64)args.size());
             }
-            for (size_t i=0,j=args.size(); i<j; ++i) {
-                auto declArg = fnTyArgs[i];
-                auto callArg = args[i];
-                //FIXME
-            }
+            LILNode::SourceLocation sl = fc->getSourceLocation();
+            ei.file = sl.file;
+            ei.line = sl.line;
+            ei.column = sl.column;
+            this->errors.push_back(ei);
+            return;
+        }
+        for (size_t i=0,j=args.size(); i<j; ++i) {
+            auto declArg = fnTyArgs[i];
+            auto callArg = args[i];
+            //FIXME
         }
     }
     else if ( fc->isA(FunctionCallTypeNone))

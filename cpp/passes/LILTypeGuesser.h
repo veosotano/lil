@@ -122,7 +122,6 @@ namespace LIL
         std::shared_ptr<LILType> findReturnTypeForFunctionCall(std::shared_ptr<LILFunctionCall> fc) const;
         std::shared_ptr<LILType> findTypeForVarName(std::shared_ptr<LILVarName> name) const;
         std::shared_ptr<LILType> findTypeForValuePath(std::shared_ptr<LILValuePath> vp) const;
-        std::shared_ptr<LILType> findIfCastType(std::shared_ptr<LILValuePath> vp, size_t & outStartIndex) const;
         std::shared_ptr<LILType> findTypeFromAssignments(std::vector<std::shared_ptr<LILNode>> nodes, const std::shared_ptr<LILVarDecl> & vd) const;
          std::shared_ptr<LILType> findTypeFromFunctionCalls(std::vector<std::shared_ptr<LILNode>> nodes, const std::shared_ptr<LILVarDecl> & vd) const;
         std::shared_ptr<LILType> findTypeFromExpressions(std::vector<std::shared_ptr<LILNode>> nodes, const std::shared_ptr<LILVarDecl> & vd) const;

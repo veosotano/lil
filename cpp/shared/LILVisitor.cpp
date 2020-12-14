@@ -15,6 +15,7 @@
 #include "LILVisitor.h"
 #include "LILClassDecl.h"
 #include "LILErrorMessage.h"
+#include "LILFlowControl.h"
 #include "LILFunctionCall.h"
 #include "LILVarName.h"
 #include "LILVarNode.h"
@@ -187,6 +188,13 @@ std::shared_ptr<LILNode> LILVisitor::findNodeForValuePath(LILValuePath * vp) con
             auto localNode = this->findNodeForVarName(static_cast<LILVarName *>(firstNode.get()));
             if (localNode) {
                 auto subjTy = localNode->getType();
+                if (subjTy->isA(TypeTypeMultiple)) {
+                    size_t outStartIndex = 0;
+                    auto ifCastTy = this->findIfCastType(vp, outStartIndex);
+                    if (ifCastTy) {
+                        subjTy = ifCastTy;
+                    }
+                }
                 if (subjTy && subjTy->isA(TypeTypeObject)) {
                     auto objTy = std::static_pointer_cast<LILObjectType>(subjTy);
                     classDecl = this->findClassWithName(objTy->getName().data());
@@ -342,4 +350,52 @@ std::shared_ptr<LILClassDecl> LILVisitor::findAncestorClass(std::shared_ptr<LILN
     } else {
         return nullptr;
     }
+}
+
+std::shared_ptr<LILType> LILVisitor::findIfCastType(LILValuePath * vp, size_t & outStartIndex) const
+{
+    std::shared_ptr<LILType> ret;
+    auto parent = vp->getParentNode();
+    while (parent) {
+        if (parent->isA(FlowControlTypeIfCast)) {
+            auto fc = std::static_pointer_cast<LILFlowControl>(parent);
+            auto args = fc->getArguments();
+            if (args.size() != 2) {
+                break;
+            }
+            auto firstArg = args.front();
+            if (firstArg->isA(NodeTypeValuePath)) {
+                auto ifCastVp = std::static_pointer_cast<LILValuePath>(firstArg);
+                auto ifCastVpNodes = ifCastVp->getNodes();
+                auto vpNodes = vp->getNodes();
+                bool valid = true;
+                if (ifCastVpNodes.size() > vpNodes.size()) {
+                    valid = false;
+                } else {
+                    for (size_t i = 0, j = ifCastVpNodes.size(); i<j; ++i) {
+                        if (!vpNodes.at(i)->equalTo(ifCastVpNodes.at(i))) {
+                            valid = false;
+                        }
+                    }
+                }
+                if (valid) {
+                    auto ifCastTy = args.back();
+                    ret = std::static_pointer_cast<LILType>(ifCastTy);
+                    outStartIndex = ifCastVpNodes.size();
+                }
+            }
+            else
+            {
+                auto nodes = vp->getNodes();
+                if (firstArg->isA(NodeTypeVarName) && nodes.size() == 1) {
+                    if (firstArg->equalTo(nodes.front())) {
+                        auto ifCastTy = args.back();
+                        return std::static_pointer_cast<LILType>(ifCastTy);
+                    }
+                }
+            }
+        }
+        parent = parent->getParentNode();
+    }
+    return ret;
 }
