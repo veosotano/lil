@@ -64,6 +64,7 @@ void LILNeedsImporter::performVisit(std::shared_ptr<LILRootNode> rootNode)
             auto instr = std::static_pointer_cast<LILInstruction>(node);
             auto arg = instr->getArgument();
             if (!arg->isA(NodeTypeStringLiteral)) {
+                remainingNodes.push_back(node);
                 continue;
             }
             LILString argStr = std::static_pointer_cast<LILStringLiteral>(arg)->getValue().stripQuotes();
