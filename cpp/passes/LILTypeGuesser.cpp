@@ -14,11 +14,11 @@
 
 #include "LILTypeGuesser.h"
 #include "LILAliasDecl.h"
-#include "LILVarNode.h"
 #include "LILNodeToString.h"
 #include "LILObjectType.h"
 #include "LILStaticArrayType.h"
 #include "LILTypeDecl.h"
+#include "LILVarNode.h"
 
 using namespace LIL;
 

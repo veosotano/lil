@@ -40,7 +40,6 @@
 #include "LILPercentageLiteral.h"
 #include "LILPointerType.h"
 #include "LILPropertyName.h"
-#include "LILValuePath.h"
 #include "LILRootNode.h"
 #include "LILRule.h"
 #include "LILSelector.h"
@@ -54,6 +53,7 @@
 #include "LILTypeDecl.h"
 #include "LILUnaryExpression.h"
 #include "LILValueList.h"
+#include "LILValuePath.h"
 #include "LILVarDecl.h"
 #include "LILVarName.h"
 
