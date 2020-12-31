@@ -365,6 +365,8 @@ void LILTypeValidator::_validate(std::shared_ptr<LILObjectDefinition> od)
             }
             auto pn = std::static_pointer_cast<LILPropertyName>(firstNode);
             pnName = pn->getName();
+        } else if (asSubject->isA(NodeTypeVarName)){
+            pnName = std::static_pointer_cast<LILVarName>(asSubject)->getName();
         } else if (asSubject->isA(NodeTypePropertyName)){
             pnName = std::static_pointer_cast<LILPropertyName>(asSubject)->getName();
         }

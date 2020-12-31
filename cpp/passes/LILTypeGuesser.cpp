@@ -1158,7 +1158,9 @@ std::shared_ptr<LILType> LILTypeGuesser::recursiveFindTypeFromAncestors(std::sha
                             std::cerr << "FIRST NODE WAS NOT PROPERTY NAME FAIL!!!!\n\n";
                             return nullptr;
                         }
-                        
+                    } else if (subject->isA(NodeTypeVarName)) {
+                        subjectName = std::static_pointer_cast<LILVarName>(subject)->getName();
+
                     } else if (subject->isA(NodeTypePropertyName)){
                         subjectName = std::static_pointer_cast<LILPropertyName>(subject)->getName();
 
