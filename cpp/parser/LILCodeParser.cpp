@@ -1258,7 +1258,7 @@ bool LILCodeParser::readClassDecl()
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
 
     LIL_EXPECT(TokenTypeObjectSign, "object sign");
-    d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+    d->receiver->receiveNodeData(ParserEventObjectSign, d->currentToken->getString());
     this->readNextToken();
     LIL_CHECK_FOR_END
 
@@ -1818,9 +1818,13 @@ bool LILCodeParser::readTypeDecl()
     this->readNextToken();
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
     
-    //read the variable name
-    LIL_EXPECT(TokenTypeIdentifier, "identifier")
-    
+    //read the type name
+    if (d->currentToken->isA(TokenTypeObjectSign)) {
+        d->receiver->receiveNodeData(ParserEventObjectSign, d->currentToken->getString());
+        this->readNextToken();
+        LIL_CHECK_FOR_END
+    }
+    LIL_EXPECT(TokenTypeIdentifier, "identifier");
     LILString name = d->currentToken->getString();
     
     d->receiver->receiveNodeData(ParserEventType, d->currentToken->getString());
@@ -2697,7 +2701,7 @@ bool LILCodeParser::readObjectDefinition()
     LIL_START_NODE(NodeTypeObjectDefinition)
     LIL_EXPECT(TokenTypeObjectSign, "object sign")
 
-    d->receiver->receiveNodeData(ParserEventObjectDefinition, d->currentToken->getString());
+    d->receiver->receiveNodeData(ParserEventObjectSign, d->currentToken->getString());
     this->readNextToken();
     LIL_CHECK_FOR_END
 
@@ -3743,7 +3747,7 @@ bool LILCodeParser::readNewInstr()
 
     if (d->currentToken->isA(TokenTypeObjectSign))
     {
-        d->receiver->receiveNodeData(ParserEventObjectDefinition, d->currentToken->getString());
+        d->receiver->receiveNodeData(ParserEventObjectSign, d->currentToken->getString());
         this->readNextToken();
         LIL_CHECK_FOR_END
 
