@@ -1177,20 +1177,14 @@ std::shared_ptr<LILType> LILTypeGuesser::recursiveFindTypeFromAncestors(std::sha
                         std::cerr << "COULD NOT FIND CLASS FAIL!!!!\n\n";
                         return nullptr;
                     }
-                    for (auto field : classValue->getFields()) {
-                        if (field->isA(NodeTypeVarDecl)) {
-                            auto vd = std::static_pointer_cast<LILVarDecl>(field);
-                            if (vd->getName() == subjectName) {
-                                auto vdTy = vd->getType();
-                                if (vdTy) {
-                                    return vdTy;
-                                }
-                            }
-                            
-                        } else {
-                            std::cerr << "FIELD WAS NOT VAR DECL FAIL!!!!";
-                            return nullptr;
-                        }
+                    auto field = classValue->getFieldNamed(subjectName);
+                    if (!field) {
+                        std::cerr << "FIELD NOT FOUND IN CLASS FAIL!!!!!!\n\n";
+                        return nullptr;
+                    }
+                    auto fldTy = field->getType();
+                    if (fldTy) {
+                        return fldTy;
                     }
                 } else {
                     auto subject = asgmt->getSubject();
