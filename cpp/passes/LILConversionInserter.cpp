@@ -18,6 +18,7 @@
 #include "LILFlowControl.h"
 #include "LILFunctionCall.h"
 #include "LILFunctionType.h"
+#include "LILNodeToString.h"
 #include "LILMultipleType.h"
 #include "LILPointerType.h"
 #include "LILRootNode.h"
@@ -131,9 +132,17 @@ void LILConversionInserter::process(std::shared_ptr<LILFunctionCall> fc)
                 newArgumentTypes.push_back(argTy);
                 continue;
             } else {
-                LILString conversionName = fcArgTy->stringRep();
+                LILString conversionName = fcArgTy->getStrongTypeName();
+                if (conversionName.length() == 0) {
+                    conversionName = LILNodeToString::stringify(fcArgTy.get());
+                }
                 conversionName += "_to_";
-                conversionName += argTy->stringRep();
+                auto targetTyName = argTy->getStrongTypeName();
+                if (targetTyName.length() > 0) {
+                    conversionName += targetTyName;
+                } else {
+                    conversionName += LILNodeToString::stringify(argTy.get());
+                }
                 if (conversions.count(conversionName)) {
                     auto conv = conversions[conversionName];
                     changed = true;
