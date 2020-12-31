@@ -29,6 +29,7 @@ namespace LIL
         virtual LILString stringRep();
         
         const std::vector<std::shared_ptr<LILNode>> & getNodes() const;
+        void setNodes(const std::vector<std::shared_ptr<LILNode>> & newNodes);
         void addChild(std::shared_ptr<LILNode> child);
         
         void setPreventEmitCallToIVar(bool newValue);

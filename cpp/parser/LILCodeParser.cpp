@@ -1688,6 +1688,82 @@ bool LILCodeParser::readVarDecl()
     LIL_END_NODE
 }
 
+bool LILCodeParser::readConstDecl()
+{
+    //skip the const decl keyword
+    if ( d->currentToken->getString() != "const" ) {
+        return false;
+    }
+    
+    LIL_START_NODE(NodeTypeConstDecl)
+    d->receiver->receiveNodeData(ParserEventConstDecl, d->currentToken->getString());
+    
+    this->readNextToken();
+    LIL_CHECK_FOR_END
+    
+    if (d->currentToken->isA(TokenTypeDot)) {
+        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+        this->readNextToken();
+        LIL_CHECK_FOR_END
+        
+        bool tyValid = this->readType();
+        if (tyValid) {
+            d->receiver->receiveNodeCommit();
+        }
+    }
+    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+    
+    //read the variable name
+    LIL_EXPECT(TokenTypeIdentifier, "identifier")
+    
+    LILString name = d->currentToken->getString();
+    
+    d->receiver->receiveNodeData(ParserEventConstName, d->currentToken->getString());
+    
+    std::shared_ptr<LILToken> theIdentifier = d->currentToken;
+    
+    this->readNextToken();
+    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+    
+    if (d->currentToken->isA(TokenTypeIdentifier) && d->currentToken->getString() == "extern") {
+        d->receiver->receiveNodeData(ParserEventExtern, d->currentToken->getString());
+        this->readNextToken();
+        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+    }
+    if (
+        d->currentToken->isA(TokenTypeSemicolon)
+        || d->currentToken->isA(TokenTypeParenthesisClose)
+        || d->currentToken->isA(TokenTypeBlockClose)
+        || d->currentToken->isA(TokenTypeFatArrow)
+        ) {
+        LIL_END_NODE_SKIP(false)
+    }
+    else
+    {
+        LIL_EXPECT(TokenTypeColon, "colon")
+    }
+    d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+    this->readNextToken();
+    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+    
+    bool outIsSingleValue;
+    NodeType svExpTy = NodeTypeInvalid;
+    bool svIsValid = this->readExpression(outIsSingleValue, svExpTy);
+    if (svIsValid){
+        if (d->currentToken->isA(TokenTypeComma)) {
+            bool vlValid = this->readValueList();
+            if (!vlValid) {
+                LIL_CANCEL_NODE
+            }
+        }
+        d->receiver->receiveNodeCommit();
+    } else {
+        LIL_CANCEL_NODE
+    }
+    
+    LIL_END_NODE
+}
+
 bool LILCodeParser::readAliasDecl()
 {
     //skip the var decl keyword
@@ -2173,6 +2249,10 @@ bool LILCodeParser::readSingleValue(NodeType &nodeType)
         if (tokenStr == "var")
         {
             return this->readVarDecl();
+        }
+        if (tokenStr == "const")
+        {
+            return this->readConstDecl();
         }
         if (tokenStr == "alias") {
             return this->readAliasDecl();
@@ -3224,27 +3304,20 @@ bool LILCodeParser::readInstruction()
 
     //set preference
     d->lexer->setHexPreferred(true);
-    if (d->currentToken->isA(TokenTypeInstructionSign))
-    {
-        //skip the instruction sign
-        d->receiver->receiveNodeData(ParserEventInstruction, d->currentToken->getString());
-        this->readNextToken();
-        if (atEndOfSource())
-            return false;
-    }
-
+    auto peekToken = d->lexer->peekNextToken();
+    d->lexer->resetPeek();
     //restore
     d->lexer->setHexPreferred(false);
 
     //we are looking at
     //if it starts with a number, we are looking at a color instruction
-    if (d->currentToken->isA(TokenTypeHexNumber))
+    if (peekToken->isA(TokenTypeHexNumber))
     {
         return this->readColor();
     }
-    else if (d->currentToken->isA(TokenTypeIdentifier))
+    else if (peekToken->isA(TokenTypeIdentifier))
     {
-        currentval = d->currentToken->getString();
+        currentval = peekToken->getString();
 
         if (currentval == "needs")
         {
@@ -3261,6 +3334,18 @@ bool LILCodeParser::readInstruction()
                 this->skip(TokenTypeWhitespace);
                 return true;
             }
+        }
+        else if (currentval == "if")
+        {
+            return this->readIfInstr();
+        }
+        else if (currentval == "snippet")
+        {
+            return this->readSnippetInstr();
+        }
+        else if (currentval == "paste")
+        {
+            return this->readPasteInstr();
         }
         else if (currentval == "new")
         {
@@ -3345,6 +3430,13 @@ bool LILCodeParser::readInstruction()
 bool LILCodeParser::readColor()
 {
     LIL_START_NODE(NodeTypeInstruction)
+
+    //skip the instruction sign
+    d->receiver->receiveNodeData(ParserEventInstruction, d->currentToken->getString());
+    this->readNextToken();
+    if (atEndOfSource())
+        return false;
+
     LILString currentval = d->currentToken->getString();
     switch (currentval.length())
     {
@@ -3387,13 +3479,17 @@ bool LILCodeParser::readColor()
 bool LILCodeParser::readNeedsInstr()
 {
     LIL_START_NODE(NodeTypeInstruction)
+
+    //skip the instruction sign
+    d->receiver->receiveNodeData(ParserEventInstruction, d->currentToken->getString());
+    this->readNextToken();
+    if (atEndOfSource())
+        return false;
+
     d->receiver->receiveNodeData(ParserEventInstruction, d->currentToken->getString());
     this->readNextToken();
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
 
-    if (!d->currentToken->isA(TokenTypeDoubleQuoteString) && !d->currentToken->isA(TokenTypeSingleQuoteString)) {
-        LIL_CANCEL_NODE
-    }
     NodeType nodeType = NodeTypeInvalid;
     bool valid = this->readSingleValue(nodeType);
     if (valid) {
@@ -3409,6 +3505,13 @@ bool LILCodeParser::readNeedsInstr()
 bool LILCodeParser::readExportInstr()
 {
     LIL_START_NODE(NodeTypeInstruction)
+
+    //skip the instruction sign
+    d->receiver->receiveNodeData(ParserEventInstruction, d->currentToken->getString());
+    this->readNextToken();
+    if (atEndOfSource())
+        return false;
+
     d->receiver->receiveNodeData(ParserEventInstruction, d->currentToken->getString());
     this->readNextToken();
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
@@ -3435,9 +3538,204 @@ bool LILCodeParser::readExportInstr()
     LIL_END_NODE_SKIP(false)
 }
 
+bool LILCodeParser::readIfInstr()
+{
+    LIL_START_NODE(NodeTypeIfInstruction)
+
+    //skip the instruction sign
+    d->receiver->receiveNodeData(ParserEventInstruction, d->currentToken->getString());
+    this->readNextToken();
+    if (atEndOfSource())
+        return false;
+
+    LIL_EXPECT(TokenTypeIdentifier, "identifier")
+    if (d->currentToken->getString() != "if"){
+        LIL_CANCEL_NODE
+    }
+    d->receiver->receiveNodeData(ParserEventIfInstruction, d->currentToken->getString());
+    this->readNextToken();
+    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+    
+    //open parenthesis
+    bool needsParenthesisClose  = false;
+    if (d->currentToken->isA(TokenTypeParenthesisOpen)){
+        needsParenthesisClose = true;
+        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+        this->readNextToken();
+        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+    }
+    
+    bool outIsSV = false;
+    NodeType svExpTy = NodeTypeInvalid;
+    bool conditionValid = this->readExpression(outIsSV, svExpTy);
+    if (conditionValid)
+    {
+        d->receiver->receiveNodeCommit();
+    }
+    else
+    {
+        return false;
+    }
+    
+    //close parenthesis
+    if (needsParenthesisClose){
+        LIL_EXPECT(TokenTypeParenthesisClose, "closing parenthesis")
+        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+        this->readNextToken();
+        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+    }
+    
+    //block open
+    d->receiver->receiveNodeData(ParserEventFunctionBody, "");
+    if (d->currentToken->isA(TokenTypeBlockOpen)){
+        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+        this->readNextToken();
+        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+        
+        //read the inner part of the block
+        d->receiver->receiveNodeData(ParserEventFunctionBody, "");
+
+        while (!this->atEndOfSource() && !d->currentToken->isA(TokenTypeBlockClose)) {
+            this->parseNext();
+        }
+
+        if (!this->atEndOfSource())
+        {
+            //block close
+            LIL_EXPECT(TokenTypeBlockClose, "block close")
+            d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+            this->readNextToken();
+            LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+        }
+    }
+    else
+    {
+        bool outIsSingleValue = false;
+        NodeType outType;
+        bool expValid = this->readExpression(outIsSingleValue, outType);
+        if (expValid)
+            d->receiver->receiveNodeCommit();
+    }
+    
+    if (d->currentToken->isA(TokenTypeIdentifier)) {
+        if (d->currentToken->getString() == "else") {
+            d->receiver->receiveNodeData(ParserEventIfInstructionElse, d->currentToken->getString());
+            this->readNextToken();
+            LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+            
+            bool needsBlockClose  = false;
+            if (d->currentToken->isA(TokenTypeBlockOpen)){
+                needsBlockClose = true;
+                d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+                this->readNextToken();
+                LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+            }
+
+            while (!this->atEndOfSource() && !d->currentToken->isA(TokenTypeBlockClose)) {
+                this->parseNext();
+            }
+
+            if (needsBlockClose){
+                LIL_EXPECT(TokenTypeBlockClose, "block close")
+                d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+                this->readNextToken();
+                LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+            }
+        }
+    }
+    
+    LIL_END_NODE_SKIP(false)
+}
+
+bool LILCodeParser::readSnippetInstr()
+{
+    LIL_START_NODE(NodeTypeSnippetInstruction)
+
+    //skip the instruction sign
+    d->receiver->receiveNodeData(ParserEventInstruction, d->currentToken->getString());
+    this->readNextToken();
+    if (atEndOfSource())
+        return false;
+
+    LIL_EXPECT(TokenTypeIdentifier, "identifier")
+    if (d->currentToken->getString() != "snippet"){
+        LIL_CANCEL_NODE
+    }
+    d->receiver->receiveNodeData(ParserEventInstruction, d->currentToken->getString());
+    this->readNextToken();
+    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+    
+    LIL_EXPECT(TokenTypeIdentifier, "identifier")
+    d->receiver->receiveNodeData(ParserEventConstName, d->currentToken->getString());
+    this->readNextToken();
+    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+
+    //block open
+    d->receiver->receiveNodeData(ParserEventFunctionBody, "");
+    if (d->currentToken->isA(TokenTypeBlockOpen)){
+        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+        this->readNextToken();
+        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+        
+        //read the inner part of the block
+        d->receiver->receiveNodeData(ParserEventFunctionBody, "");
+        
+        while (!this->atEndOfSource() && !d->currentToken->isA(TokenTypeBlockClose)) {
+            this->parseNext();
+        }
+        
+        if (!this->atEndOfSource())
+        {
+            //block close
+            LIL_EXPECT(TokenTypeBlockClose, "block close")
+            d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+            this->readNextToken();
+            LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+        }
+    }
+    else
+    {
+        this->parseNext();
+    }
+    
+    LIL_END_NODE_SKIP(false)
+}
+
+bool LILCodeParser::readPasteInstr()
+{
+    LIL_START_NODE(NodeTypeInstruction)
+
+    //skip the instruction sign
+    d->receiver->receiveNodeData(ParserEventInstruction, d->currentToken->getString());
+    this->readNextToken();
+    if (atEndOfSource())
+        return false;
+    
+    LIL_EXPECT(TokenTypeIdentifier, "identifier")
+    if (d->currentToken->getString() != "paste"){
+        LIL_CANCEL_NODE
+    }
+    d->receiver->receiveNodeData(ParserEventInstruction, d->currentToken->getString());
+    this->readNextToken();
+    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+    
+    LIL_EXPECT(TokenTypeIdentifier, "identifier")
+    d->receiver->receiveNodeData(ParserEventConstName, d->currentToken->getString());
+    this->readNextToken();
+
+    LIL_END_NODE_SKIP(false)
+}
+
 bool LILCodeParser::readNewInstr()
 {
     LIL_START_NODE(NodeTypeInstruction)
+
+    //skip the instruction sign
+    d->receiver->receiveNodeData(ParserEventInstruction, d->currentToken->getString());
+    this->readNextToken();
+    if (atEndOfSource())
+        return false;
+
     d->receiver->receiveNodeData(ParserEventInstruction, d->currentToken->getString());
 
     this->readNextToken();
@@ -3451,7 +3749,7 @@ bool LILCodeParser::readNewInstr()
 
         LIL_EXPECT(TokenTypeIdentifier, "identifier")
 
-        d->receiver->receiveNodeData(ParserEventVarName, d->currentToken->getString());
+        d->receiver->receiveNodeData(ParserEventType, d->currentToken->getString());
         this->readNextToken();
         LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
     }
@@ -4335,6 +4633,31 @@ bool LILCodeParser::readEvaluables()
             if (d->currentToken->isA(TokenTypeSemicolon))
             {
                 evalsDone = false;
+                //skip the semicolon
+                d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+                this->readNextToken();
+                if (this->atEndOfSource())
+                    return false;
+                
+                this->skip(TokenTypeWhitespace);
+                if (this->atEndOfSource())
+                    return ret;
+            }
+        } else if (d->currentToken->isA(TokenTypeInstructionSign)){
+            bool instrValid = this->readInstruction();
+            if (instrValid) {
+                d->receiver->receiveNodeCommit();
+            } else {
+               d->receiver->receiveError("Error while reading instruction", d->file, d->line, d->column);
+            }
+            if (this->atEndOfSource())
+                return ret;
+            evalsDone = false;
+            this->skip(TokenTypeWhitespace);
+            if (this->atEndOfSource())
+                return ret;
+            if (d->currentToken->isA(TokenTypeSemicolon))
+            {
                 //skip the semicolon
                 d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
                 this->readNextToken();

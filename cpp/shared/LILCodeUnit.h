@@ -56,7 +56,7 @@ namespace LIL
         void setDebugAST(bool value);
         void setNoLilStd(bool value);
         void setDebugLilStd(bool value);
-        void setDebugNeedsImporter(bool value);
+        void setDebugPreprocessor(bool value);
         void setDebugASTValidator(bool value);
         void setDebugTypeGuesser(bool value);
         void setDebugStructureLowerer(bool value);

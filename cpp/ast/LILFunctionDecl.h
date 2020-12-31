@@ -39,7 +39,7 @@ namespace LIL
         void addEvaluable(std::shared_ptr<LILNode> evl);
         void prependEvaluable(std::shared_ptr<LILNode> evl);
         const std::vector<std::shared_ptr<LILNode>> & getBody() const;
-        void setBody(std::vector<std::shared_ptr<LILNode>> newBody);
+        void setBody(const std::vector<std::shared_ptr<LILNode>> & newBody);
         void clearBody();
 
         bool getReceivesFunctionBody() const;

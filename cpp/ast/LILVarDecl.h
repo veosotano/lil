@@ -37,6 +37,7 @@ namespace LIL
 
         std::shared_ptr<LILNode> getInitVal() const;
         void setInitVal(std::shared_ptr<LILNode> value);
+        void setInitVals(const std::vector<std::shared_ptr<LILNode>> & values);
 
         bool getIsExtern() const;
         void setIsExtern(bool value);
@@ -44,6 +45,8 @@ namespace LIL
         void setIsIVar(bool value);
         bool getIsVVar() const;
         void setIsVVar(bool value);
+        bool getIsConst() const;
+        void setIsConst(bool value);
 
     private:
         virtual std::shared_ptr<LILClonable> cloneImpl() const;
@@ -52,6 +55,7 @@ namespace LIL
         bool _isExtern;
         bool _isIVar;
         bool _isVVar;
+        bool _isConst;
     };
 }
 

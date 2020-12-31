@@ -70,6 +70,14 @@ const std::vector<std::shared_ptr<LILNode>> & LILValuePath::getNodes() const
     return this->getChildNodes();
 }
 
+void LILValuePath::setNodes(const std::vector<std::shared_ptr<LILNode>> & newNodes)
+{
+    this->clearChildNodes();
+    for (const auto & node : newNodes) {
+        this->addChild(node);
+    }
+}
+
 void LILValuePath::addChild(std::shared_ptr<LILNode> child)
 {
     this->addNode(child);

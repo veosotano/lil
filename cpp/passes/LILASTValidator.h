@@ -97,6 +97,7 @@ namespace LIL
         void _validate(LILFilter * value);
         void _validate(LILFlag * value);
         void _validate(LILFunctionDecl * value);
+        void _validateFunctionDeclChild(LILFunctionDecl * value, LILNode *node);
         void _validate(LILFunctionCall * value);
         void _validate(LILFlowControl * value);
         void _validate(LILFlowControlCall * value);

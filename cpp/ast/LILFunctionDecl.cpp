@@ -204,11 +204,8 @@ const std::vector<std::shared_ptr<LILNode>> & LILFunctionDecl::getBody() const
     return this->_body;
 }
 
-void LILFunctionDecl::setBody(std::vector<std::shared_ptr<LILNode>> newBody)
+void LILFunctionDecl::setBody(const std::vector<std::shared_ptr<LILNode>> & newBody)
 {
-    for (auto node : newBody) {
-        node->setParentNode(nullptr);
-    }
     this->clearBody();
     for (const auto & node : newBody) {
         this->addEvaluable(node);

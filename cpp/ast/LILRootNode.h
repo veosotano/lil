@@ -25,6 +25,8 @@ namespace LIL {
     class LILFunctionDecl;
     class LILInstruction;
     class LILTypeDecl;
+    class LILSnippetInstruction;
+    class LILVarDecl;
 
     class LILRootNode : public LILVarNode
     {
@@ -42,9 +44,7 @@ namespace LIL {
 
         void addClass(std::shared_ptr<LILClassDecl> value);
         const std::vector<std::shared_ptr<LILClassDecl>> & getClasses() const;
-        
-        void addDependency(std::shared_ptr<LILInstruction> value);
-        const std::vector<std::shared_ptr<LILInstruction>> & getDependencies() const;
+        void removeClass(std::shared_ptr<LILClassDecl> value);
 
         void addAlias(std::shared_ptr<LILAliasDecl> value);
         const std::vector<std::shared_ptr<LILAliasDecl>> & getAliases() const;
@@ -56,14 +56,23 @@ namespace LIL {
         const std::map<LILString, std::shared_ptr<LILConversionDecl>> & getConversions() const;
         std::shared_ptr<LILConversionDecl> getConversionNamed(LILString name);
 
+        const std::vector<std::shared_ptr<LILVarDecl>> & getConstants() const;
+        void addConstant(std::shared_ptr<LILVarDecl> vd);
+        
+        const std::map<LILString, std::shared_ptr<LILSnippetInstruction>> & getSnippets() const;
+        std::shared_ptr<LILSnippetInstruction> getSnippetNamed(LILString key);
+        void addSnippet(std::shared_ptr<LILSnippetInstruction> snippet);
+        void addEvaluable(std::shared_ptr<LILNode> node);
     private:
         std::map<LILString, std::shared_ptr<LILNode>> _localVars;
         std::shared_ptr<LILFunctionDecl> _mainFunction;
         std::vector<std::shared_ptr<LILClassDecl>> _classes;
-        std::vector<std::shared_ptr<LILInstruction>> _dependencies;
         std::vector<std::shared_ptr<LILAliasDecl>> _aliases;
         std::vector<std::shared_ptr<LILTypeDecl>> _types;
         std::map<LILString, std::shared_ptr<LILConversionDecl>> _conversions;
+        std::vector<std::shared_ptr<LILVarDecl>> _constants;
+        std::map<LILString, std::shared_ptr<LILSnippetInstruction>> _snippets;
+        std::vector<std::shared_ptr<LILNode>> _initializers;
     };
 }
 

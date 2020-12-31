@@ -29,6 +29,7 @@
 #include "LILFlowControl.h"
 #include "LILFlowControlCall.h"
 #include "LILForeignLang.h"
+#include "LILIfInstruction.h"
 #include "LILIndexAccessor.h"
 #include "LILInstruction.h"
 #include "LILMultipleType.h"
@@ -45,6 +46,7 @@
 #include "LILSelector.h"
 #include "LILSelectorChain.h"
 #include "LILSimpleSelector.h"
+#include "LILSnippetInstruction.h"
 #include "LILStaticArrayType.h"
 #include "LILStringFunction.h"
 #include "LILStringLiteral.h"
@@ -191,6 +193,14 @@ void LILASTBuilder::receiveNodeStart(NodeType nodeType)
         {
             this->state.push_back(BuilderStateVarDecl);
             this->currentContainer.push_back(std::make_shared<LILVarDecl>());
+            break;
+        }
+        case NodeTypeConstDecl:
+        {
+            this->state.push_back(BuilderStateConstDecl);
+            auto vd = std::make_shared<LILVarDecl>();
+            vd->setIsConst(true);
+            this->currentContainer.push_back(vd);
             break;
         }
         case NodeTypeAliasDecl:
@@ -350,6 +360,18 @@ void LILASTBuilder::receiveNodeStart(NodeType nodeType)
             this->currentContainer.push_back(std::make_shared<LILInstruction>());
             break;
         }
+        case NodeTypeIfInstruction:
+        {
+            this->state.push_back(BuilderStateIfInstruction);
+            this->currentContainer.push_back(std::make_shared<LILIfInstruction>());
+            break;
+        }
+        case NodeTypeSnippetInstruction:
+        {
+            this->state.push_back(BuilderStateSnippetInstruction);
+            this->currentContainer.push_back(std::make_shared<LILSnippetInstruction>());
+            break;
+        }
         case NodeTypeForeignLang:
         {
             this->state.push_back(BuilderStateForeignLang);
@@ -492,6 +514,7 @@ void LILASTBuilder::receiveNodeCommit()
             break;
         }
         case BuilderStateVarDecl:
+        case BuilderStateConstDecl:
         {
             if (this->currentNode)
             {
@@ -752,6 +775,7 @@ void LILASTBuilder::receiveNodeCommit()
             auto instr = std::static_pointer_cast<LILInstruction>(this->currentContainer.back());
             switch (instr->getInstructionType()) {
                 case InstructionTypeNeeds:
+                case InstructionTypePaste:
                     instr->setArgument(this->currentNode);
                     break;
 
@@ -762,12 +786,35 @@ void LILASTBuilder::receiveNodeCommit()
                     break;
                 }
                 default:
+                    std::cerr << "UNIMPLEMENTED FAIL !!!! \n\n";
                     break;
             }
             
             break;
         }
 
+        case BuilderStateIfInstruction:
+        {
+            auto instr = std::static_pointer_cast<LILIfInstruction>(this->currentContainer.back());
+            if (instr->getReceivesThen()) {
+                instr->addThen(this->currentNode);
+            } else if (instr->getReceivesElse()) {
+                instr->addElse(this->currentNode);
+            } else {
+                instr->setArgument(this->currentNode);
+            }
+            break;
+        }
+        case BuilderStateSnippetInstruction:
+        {
+            auto snInstr = std::static_pointer_cast<LILSnippetInstruction>(this->currentContainer.back());
+            if (snInstr->getReceivesBody()) {
+                snInstr->add(this->currentNode);
+            } else {
+                snInstr->setArgument(this->currentNode);
+            }
+            break;
+        }
         case BuilderStateValueList:
         {
             auto vl = std::static_pointer_cast<LILValueList>(this->currentContainer.back());
@@ -1212,11 +1259,12 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
                 case ParserEventInstruction:
                 {
                     std::shared_ptr<LILInstruction> instr = std::static_pointer_cast<LILInstruction>(this->currentContainer.back());
-                    instr->setName(data);
                     if (data == "needs") {
                         instr->setInstructionType(InstructionTypeNeeds);
                     } else if (data == "export") {
                         instr->setInstructionType(InstructionTypeExport);
+                    } else if (data == "paste") {
+                        instr->setInstructionType(InstructionTypePaste);
                     } else if (data == "new") {
                         instr->setInstructionType(InstructionTypeNew);
                     } else if (data == "move") {
@@ -1228,8 +1276,35 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
                     }
                     break;
                 }
+                case ParserEventConstName:
+                {
+                    std::shared_ptr<LILInstruction> instr = std::static_pointer_cast<LILInstruction>(this->currentContainer.back());
+                    instr->setName(data);
+                }
                 default:
                     break;
+            }
+            break;
+        }
+        case BuilderStateIfInstruction:
+        {
+            auto instr = std::static_pointer_cast<LILIfInstruction>(this->currentContainer.back());
+            if (eventType == ParserEventFunctionBody) {
+                instr->setReceivesThen(true);
+            } else if (eventType == ParserEventIfInstructionElse) {
+                instr->setReceivesThen(false);
+                instr->setReceivesElse(true);
+            }
+            break;
+        }
+            
+        case BuilderStateSnippetInstruction:
+        {
+            auto snInstr = std::static_pointer_cast<LILSnippetInstruction>(this->currentContainer.back());
+            if (eventType == ParserEventFunctionBody) {
+                snInstr->setReceivesBody(true);
+            } else if (eventType == ParserEventConstName) {
+                snInstr->setName(data);
             }
             break;
         }

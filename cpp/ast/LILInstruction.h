@@ -24,7 +24,7 @@ namespace LIL
     class LILInstruction : public LILNode
     {
     public:
-        LILInstruction();
+        LILInstruction(NodeType nodeTy = NodeTypeInstruction);
         LILInstruction(const LILInstruction &other);
         std::shared_ptr<LILInstruction> clone() const;
         virtual ~LILInstruction();

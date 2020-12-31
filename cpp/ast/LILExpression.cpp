@@ -211,13 +211,11 @@ void LILExpression::setExpressionType(ExpressionType newType)
 
 void LILExpression::setLeft(std::shared_ptr<LILNode> newLeft)
 {
-    this->_leftNode = newLeft;
-    if (this->_childNodes.size() == 0) {
-        this->addNode(newLeft);
-    } else {
-        newLeft->setParentNode(this->shared_from_this());
-        this->_childNodes[0].swap(newLeft);
+    if (this->_leftNode) {
+        this->removeNode(this->_leftNode);
     }
+    this->addNode(newLeft);
+    this->_leftNode = newLeft;
 }
 
 std::shared_ptr<LILNode> LILExpression::getLeft()
@@ -227,11 +225,11 @@ std::shared_ptr<LILNode> LILExpression::getLeft()
 
 void LILExpression::setRight(std::shared_ptr<LILNode> newRight)
 {
-    this->_rightNode = newRight;
-    if (this->_childNodes.size() > 1) {
-        this->_childNodes.pop_back();
+    if (this->_rightNode) {
+        this->removeNode(this->_rightNode);
     }
     this->addNode(newRight);
+    this->_rightNode = newRight;
 }
 
 std::shared_ptr<LILNode> LILExpression::getRight()

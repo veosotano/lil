@@ -13,6 +13,7 @@
  ********************************************************************/
 
 #include "LILASTValidator.h"
+#include "LILIfInstruction.h"
 #include "LILRootNode.h"
 
 using namespace LIL;
@@ -555,7 +556,7 @@ void LILASTValidator::_validate(LILConversionDecl * value)
         ei.column = sl.column;
         this->errors.push_back(ei);
     }
-    auto body = value->getEvaluables();
+    auto body = value->getBody();
     if (body.size() == 0) {
         LILErrorMessage ei;
         ei.message =  "Conversion declaration was empty";
@@ -677,49 +678,81 @@ void LILASTValidator::_validate(LILFunctionDecl * value)
         {
             auto evals = value->getBody();
             for (size_t i=0, j=evals.size(); i<j; ++i) {
-                NodeType evalType = evals[i]->getNodeType();
-                switch (evalType) {
-                    case NodeTypeValuePath:
-                    case NodeTypeFunctionCall:
-                    case NodeTypeVarDecl:
-                    case NodeTypeAssignment:
-                    case NodeTypeUnaryExpression:
-                    case NodeTypeFlowControlCall:
-                    case NodeTypeFlowControl:
-                    case NodeTypeForeignLang:
-                    {
-                        break;
-                    }
-                    case NodeTypeFunctionDecl:
-                    {
-                        std::shared_ptr<LILFunctionDecl> fd = std::static_pointer_cast<LILFunctionDecl>(evals[i]);
-                        switch (fd->getFunctionDeclType()) {
-                            case FunctionDeclTypeInsert:
-                            case FunctionDeclTypeOverride:
-                            {
-                                break;
-                            }
-
-                            default:
-                                this->illegalNodeType(evals[i].get(), value);
-                                break;
-                        }
-
-                        break;
-                    }
-
-                    default:
-                    {
-                        this->illegalNodeType(evals[i].get(), value);
-                        return;
-                    }
-                }
+                const auto & eval = evals[i];
+                this->_validateFunctionDeclChild(value, eval.get());
             }
             break;
         }
 
         default:
             break;
+    }
+}
+
+void LILASTValidator::_validateFunctionDeclChild(LILFunctionDecl * value, LILNode *node)
+{
+    NodeType nodeType = node->getNodeType();
+    switch (nodeType) {
+        case NodeTypeValuePath:
+        case NodeTypeFunctionCall:
+        case NodeTypeVarDecl:
+        case NodeTypeAssignment:
+        case NodeTypeUnaryExpression:
+        case NodeTypeFlowControlCall:
+        case NodeTypeFlowControl:
+        case NodeTypeForeignLang:
+        {
+            break;
+        }
+        case NodeTypeFunctionDecl:
+        {
+            auto fd = static_cast<LILFunctionDecl *>(node);
+            switch (fd->getFunctionDeclType()) {
+                case FunctionDeclTypeInsert:
+                case FunctionDeclTypeOverride:
+                {
+                    break;
+                }
+                    
+                default:
+                    this->illegalNodeType(node, value);
+                    break;
+            }
+            
+            break;
+        }
+            
+        case NodeTypeInstruction:
+        {
+            auto instr = static_cast<LILInstruction *>(node);
+            switch (instr->getInstructionType()) {
+                case InstructionTypeIf:
+                {
+                    auto ifInstr = static_cast<LILIfInstruction *>(instr);
+                    for (auto thenNode : ifInstr->getThen()) {
+                        this->_validateFunctionDeclChild(value, thenNode.get());
+                    }
+                    for (auto elseNode : ifInstr->getElse()) {
+                        this->_validateFunctionDeclChild(value, elseNode.get());
+                    }
+                    break;
+                }
+                case InstructionTypePaste:
+                {
+                    break;
+                }
+                default:
+                    this->illegalNodeType(node, value);
+                    return;
+            }
+            break;
+        }
+            
+        default:
+        {
+            this->illegalNodeType(node, value);
+            return;
+        }
     }
 }
 

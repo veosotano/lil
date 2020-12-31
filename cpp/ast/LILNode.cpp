@@ -168,6 +168,7 @@ bool LILNode::isContainerNode(NodeType nodeType)
         case NodeTypeObjectType:
         case NodeTypeStaticArrayType:
         case NodeTypeVarDecl:
+        case NodeTypeConstDecl:
         case NodeTypeAliasDecl:
         case NodeTypeTypeDecl:
         case NodeTypeConversionDecl:
@@ -183,6 +184,8 @@ bool LILNode::isContainerNode(NodeType nodeType)
         case NodeTypeSimpleSelector:
         case NodeTypeSelectorChain:
         case NodeTypeInstruction:
+        case NodeTypeIfInstruction:
+        case NodeTypeSnippetInstruction:
         case NodeTypeValueList:
         case NodeTypeIndexAccessor:
             return true;
@@ -374,7 +377,7 @@ const std::vector<std::shared_ptr<LILNode> > & LILNode::getChildNodes() const
     return this->_childNodes;
 }
 
-void LILNode::setChildNodes(std::vector<std::shared_ptr<LILNode>> nodes)
+void LILNode::setChildNodes(const std::vector<std::shared_ptr<LILNode>> && nodes)
 {
     this->_childNodes = std::move(nodes);
     for (auto node : this->_childNodes) {

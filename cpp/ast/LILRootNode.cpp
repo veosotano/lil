@@ -18,6 +18,7 @@
 #include "LILConversionDecl.h"
 #include "LILFunctionDecl.h"
 #include "LILInstruction.h"
+#include "LILSnippetInstruction.h"
 #include "LILTypeDecl.h"
 #include "LILVarDecl.h"
 
@@ -36,14 +37,15 @@ LILRootNode::LILRootNode()
 
 LILRootNode::LILRootNode(const LILRootNode & other)
 : LILVarNode(other)
+, _localVars(other._localVars)
+, _classes(other._classes)
+, _aliases(other._aliases)
+, _types(other._types)
+, _conversions(other._conversions)
+, _constants(other._constants)
+, _snippets(other._snippets)
 {
-    this->_localVars = other._localVars;
-    this->_mainFunction = other._mainFunction;
-    this->_classes = other._classes;
-    this->_dependencies = other._dependencies;
-    this->_aliases = other._aliases;
-    this->_types = other._types;
-    this->_conversions = other._conversions;
+
 }
 
 LILRootNode::~LILRootNode()
@@ -91,14 +93,12 @@ const std::vector<std::shared_ptr<LILClassDecl>> & LILRootNode::getClasses() con
     return this->_classes;
 }
 
-void LILRootNode::addDependency(std::shared_ptr<LILInstruction> value)
+void LILRootNode::removeClass(std::shared_ptr<LILClassDecl> value)
 {
-    this->_dependencies.push_back(value);
-}
-
-const std::vector<std::shared_ptr<LILInstruction>> & LILRootNode::getDependencies() const
-{
-    return this->_dependencies;
+    auto it = std::find(this->_classes.begin(), this->_classes.end(), value);
+    if (it != this->_classes.end()) {
+        this->_classes.erase(it);
+    }
 }
 
 void LILRootNode::addAlias(std::shared_ptr<LILAliasDecl> value)
@@ -156,4 +156,39 @@ std::shared_ptr<LILConversionDecl> LILRootNode::getConversionNamed(LILString nam
         return this->_conversions[name];
     }
     return nullptr;
+
 }
+
+const std::vector<std::shared_ptr<LILVarDecl>> & LILRootNode::getConstants() const
+{
+    return this->_constants;
+}
+
+void LILRootNode::addConstant(std::shared_ptr<LILVarDecl> value)
+{
+    this->_constants.push_back(value);
+}
+
+const std::map<LILString, std::shared_ptr<LILSnippetInstruction>> & LILRootNode::getSnippets() const
+{
+    return this->_snippets;
+}
+
+std::shared_ptr<LILSnippetInstruction> LILRootNode::getSnippetNamed(LILString key)
+{
+    if (this->_snippets.count(key)) {
+        return this->_snippets.at(key);
+    }
+    return nullptr;
+}
+
+void LILRootNode::addSnippet(std::shared_ptr<LILSnippetInstruction> snippet)
+{
+    this->_snippets[snippet->getName()] = snippet;
+}
+
+void LILRootNode::addEvaluable(std::shared_ptr<LILNode> node)
+{
+    this->_initializers.push_back(node);
+}
+

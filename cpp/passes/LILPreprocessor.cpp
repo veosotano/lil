@@ -8,63 +8,87 @@
  *
  *      LICENSE: see LICENSE file
  *
- *      This file imports code from other files when using #needs
+ *      This file handles the preprocessing of the AST
  *
  ********************************************************************/
 
 #include <glob.h>
 
-#include "LILNeedsImporter.h"
+#include "LILPreprocessor.h"
 #include "LILAliasDecl.h"
+#include "LILBoolLiteral.h"
 #include "LILClassDecl.h"
 #include "LILCodeUnit.h"
+#include "LILErrorMessage.h"
 #include "LILFunctionDecl.h"
 #include "LILInstruction.h"
+#include "LILNodeToString.h"
 #include "LILObjectType.h"
 #include "LILRootNode.h"
 #include "LILStringLiteral.h"
 #include "LILTypeDecl.h"
 #include "LILVarDecl.h"
+#include "LILVarName.h"
 
 using namespace LIL;
 
-LILNeedsImporter::LILNeedsImporter()
+LILPreprocessor::LILPreprocessor()
+: _debugAST(false)
+, _needsAnotherPass(false)
 {
 }
 
-LILNeedsImporter::~LILNeedsImporter()
+LILPreprocessor::~LILPreprocessor()
 {
 }
 
-void LILNeedsImporter::initializeVisit()
+void LILPreprocessor::initializeVisit()
 {
     if (this->getVerbose()) {
         std::cerr << "\n\n";
         std::cerr << "============================\n";
-        std::cerr << "===== #NEEDS IMPORTING =====\n";
+        std::cerr << "=====  #PREPROCESSING  =====\n";
         std::cerr << "============================\n\n";
     }
 }
 
-void LILNeedsImporter::visit(LILNode *node)
+void LILPreprocessor::visit(LILNode *node)
 {
     
 }
 
-void LILNeedsImporter::performVisit(std::shared_ptr<LILRootNode> rootNode)
+void LILPreprocessor::performVisit(std::shared_ptr<LILRootNode> rootNode)
 {
     this->setRootNode(rootNode);
-    
+    this->_needsAnotherPass = true;
+    while (this->_needsAnotherPass) {
+        this->_needsAnotherPass = false;
+        this->processImportingInstr(rootNode);
+        this->processIfInstr(rootNode);
+        this->processPasteInstr(rootNode);
+    }
+    this->removeSnippets(rootNode);
+}
+
+void LILPreprocessor::processImportingInstr(const std::shared_ptr<LILRootNode> & rootNode)
+{
     std::vector<std::shared_ptr<LILNode>> nodes = rootNode->getNodes();
-    rootNode->clearNodes();
-    std::vector<std::shared_ptr<LILNode>> newNodes;
-    std::vector<std::shared_ptr<LILNode>> remainingNodes;
-    for (auto node : nodes) {
-        if (node->isA(InstructionTypeNeeds)) {
+    auto it = nodes.begin();
+    while (it != nodes.end()) {
+        auto node = *it;
+        if (node->isA(InstructionTypeNeeds) || node->isA(InstructionTypeImport)) {
+            std::vector<std::shared_ptr<LILNode>> newNodes;
+            bool isNeeds = node->isA(InstructionTypeNeeds);
+            if (this->getDebug()) {
+                std::cerr << "##  importing " + LILNode::nodeTypeToString(node->getNodeType()).data() + " " + LILNodeToString::stringify(node.get()).data() + " ##\n";
+            }
             auto instr = std::static_pointer_cast<LILInstruction>(node);
             auto arg = instr->getArgument();
             if (!arg->isA(NodeTypeStringLiteral)) {
-                remainingNodes.push_back(node);
+                if (this->getDebug()) {
+                    std::cerr << "Argument was not a string literal, skipping.\n";
+                }
+                newNodes.push_back(node);
                 continue;
             }
             LILString argStr = std::static_pointer_cast<LILStringLiteral>(arg)->getValue().stripQuotes();
@@ -96,6 +120,9 @@ void LILNeedsImporter::performVisit(std::shared_ptr<LILRootNode> rootNode)
                 for (auto classVal : rootNode->getClasses()) {
                     newRoot->addClass(classVal);
                 }
+                for (auto constVal : rootNode->getConstants()) {
+                    newRoot->add(constVal);
+                }
                 codeUnit->setFile(path);
                 LILString dir = this->_getDir(path);
                 codeUnit->setDir(dir);
@@ -111,48 +138,487 @@ void LILNeedsImporter::performVisit(std::shared_ptr<LILRootNode> rootNode)
                 codeUnit->setDebugAST(this->getDebugAST());
                 codeUnit->setVerbose(this->getVerbose() && instr->getVerbose());
                 codeUnit->run();
-                this->_getNodesForImport(&newNodes, newRoot);
+                if (isNeeds) {
+                    this->_getNodesForImportNeedsInstr(&newNodes, newRoot);
+                } else {
+                    const auto & newRootChildren = newRoot->getNodes();
+                    newNodes.insert(newNodes.end(), newRootChildren.begin(), newRootChildren.end());
+                }
                 
                 if (this->getVerbose() && instr->getVerbose()) {
                     std::cerr << "\nEnd of file " << path.data() << "\n\n========================================\n\n";
                 }
-                
-                this->_importNewNodes(newNodes, rootNode, !(this->getVerbose() && instr->getVerbose()));
-                newNodes.clear();
+                this->_needsAnotherPass = true;
+                rootNode->clearNodes();
+                for (auto beforeIt = nodes.begin(); beforeIt != it; beforeIt += 1) {
+                    rootNode->addNode(*beforeIt);
+                }
+                for (auto newNode : newNodes) {
+                    if ( ! (this->getVerbose() && instr->getVerbose()) ) {
+                        newNode->hidden = true;
+                    }
+                    rootNode->add(newNode);
+                }
+                for (auto afterIt = it+1; afterIt != nodes.end(); afterIt += 1) {
+                    rootNode->addNode(*afterIt);
+                }
             }
-        } else {
-            remainingNodes.push_back(node);
         }
+        it += 1;
     }
-    rootNode->appendNodes(remainingNodes);
 }
 
-void LILNeedsImporter::setDir(LILString dir)
+void LILPreprocessor::processIfInstr(const std::shared_ptr<LILRootNode> & rootNode)
+{
+    std::vector<std::shared_ptr<LILNode>> nodes = rootNode->getNodes();
+    
+    std::vector<std::shared_ptr<LILNode>> resultNodes;
+    bool hasChanges = false;
+    for (auto node : nodes) {
+        std::vector<std::shared_ptr<LILNode>> buf;
+        this->_nodeBuffer.push_back(buf);
+        bool remove = this->processIfInstr(node);
+        if (!remove && this->_nodeBuffer.back().size() == 0) {
+            resultNodes.push_back(node);
+        } else {
+            //out with the old
+            switch (node->getNodeType()) {
+                case NodeTypeVarDecl:
+                {
+                    auto vd = std::static_pointer_cast<LILVarDecl>(node);
+                    rootNode->unsetLocalVariable(vd->getName());
+                    break;
+                }
+                case NodeTypeFunctionDecl:
+                {
+                    auto fd = std::static_pointer_cast<LILFunctionDecl>(node);
+                    rootNode->unsetLocalVariable(fd->getName());
+                    break;
+                }
+                default:
+                    break;
+            }
+            rootNode->removeNode(node);
+            //in with the new
+            for (auto newNode : this->_nodeBuffer.back()) {
+                resultNodes.push_back(newNode);
+                switch (newNode->getNodeType()) {
+                    case NodeTypeVarDecl:
+                    {
+                        auto vd = std::static_pointer_cast<LILVarDecl>(newNode);
+                        rootNode->setLocalVariable(vd->getName(), vd);
+                        break;
+                    }
+                    case NodeTypeFunctionDecl:
+                    {
+                        auto fd = std::static_pointer_cast<LILFunctionDecl>(newNode);
+                        rootNode->setLocalVariable(fd->getName(), fd);
+                        break;
+                    }
+                    default:
+                        break;
+                }
+            }
+            hasChanges = true;
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    if (hasChanges) {
+        this->_needsAnotherPass = true;
+        rootNode->setChildNodes(std::move(resultNodes));
+    }
+}
+
+bool LILPreprocessor::processIfInstr(std::shared_ptr<LILNode> node)
+{
+    if (this->getDebug()) {
+        std::cerr << "##  processing #if instructions in " + LILNode::nodeTypeToString(node->getNodeType()).data() + " " + LILNodeToString::stringify(node.get()).data() + " ##\n";
+    }
+    switch (node->getNodeType()) {
+        case NodeTypeRoot:
+        case NodeTypeNull:
+        case NodeTypeBoolLiteral:
+        case NodeTypeNumberLiteral:
+        case NodeTypePercentage:
+        case NodeTypeStringLiteral:
+        case NodeTypeCStringLiteral:
+        case NodeTypePropertyName:
+        case NodeTypeVarName:
+        case NodeTypeAliasDecl:
+        case NodeTypeTypeDecl:
+        case NodeTypeType:
+        case NodeTypeMultipleType:
+        case NodeTypeFunctionType:
+        case NodeTypeObjectType:
+        case NodeTypePointerType:
+        case NodeTypeStaticArrayType:
+        case NodeTypeFlag:
+        case NodeTypeFilter:
+        case NodeTypeSelector:
+        case NodeTypeCombinator:
+        case NodeTypeForeignLang:
+        case NodeTypeComment:
+        case NodeTypeInvalid:
+            //do nothing
+            break;
+            
+        case NodeTypeNegation:
+        case NodeTypeArray:
+            std::cerr << "UNIMPLEMENTED FAIL !!!!!\n\n";
+            return false;
+            
+        case NodeTypeExpression:
+        {
+            auto value = std::static_pointer_cast<LILExpression>(node);
+            return this->_processIfInstr(value);
+        }
+        case NodeTypeUnaryExpression:
+        {
+            auto value = std::static_pointer_cast<LILUnaryExpression>(node);
+            return this->_processIfInstr(value);
+        }
+        case NodeTypeStringFunction:
+        {
+            auto value = std::static_pointer_cast<LILStringFunction>(node);
+            return this->_processIfInstr(value);
+        }
+        case NodeTypeVarDecl:
+        case NodeTypeConstDecl:
+        {
+            auto value = std::static_pointer_cast<LILVarDecl>(node);
+            return this->_processIfInstr(value);
+        }
+        case NodeTypeConversionDecl:
+        {
+            auto value = std::static_pointer_cast<LILConversionDecl>(node);
+            return this->_processIfInstr(value);
+        }
+        case NodeTypeClassDecl:
+        {
+            auto value = std::static_pointer_cast<LILClassDecl>(node);
+            return this->_processIfInstr(value);
+        }
+        case NodeTypeObjectDefinition:
+        {
+            auto value = std::static_pointer_cast<LILObjectDefinition>(node);
+            return this->_processIfInstr(value);
+        }
+        case NodeTypeAssignment:
+        {
+            auto value = std::static_pointer_cast<LILAssignment>(node);
+            return this->_processIfInstr(value);
+        }
+        case NodeTypeRule:
+        {
+            auto value = std::static_pointer_cast<LILRule>(node);
+            return this->_processIfInstr(value);
+        }
+        case NodeTypeSelectorChain:
+        {
+            auto value = std::static_pointer_cast<LILSelectorChain>(node);
+            return this->_processIfInstr(value);
+        }
+        case NodeTypeFunctionDecl:
+        {
+            auto value = std::static_pointer_cast<LILFunctionDecl>(node);
+            return this->_processIfInstr(value);
+        }
+        case NodeTypeFunctionCall:
+        {
+            auto value = std::static_pointer_cast<LILFunctionCall>(node);
+            return this->_processIfInstr(value);
+        }
+        case NodeTypeFlowControl:
+        {
+            auto value = std::static_pointer_cast<LILFlowControl>(node);
+            return this->_processIfInstr(value);
+        }
+        case NodeTypeFlowControlCall:
+        {
+            auto value = std::static_pointer_cast<LILFlowControlCall>(node);
+            return this->_processIfInstr(value);
+        }
+        case NodeTypeInstruction:
+        {
+            auto value = std::static_pointer_cast<LILInstruction>(node);
+            return this->_processIfInstr(value);
+        }
+        case NodeTypeIfInstruction:
+        {
+            auto value = std::static_pointer_cast<LILIfInstruction>(node);
+            return this->_processIfInstrIfInstr(value);
+        }
+        case NodeTypeSnippetInstruction:
+        {
+            auto value = std::static_pointer_cast<LILSnippetInstruction>(node);
+            return this->_processIfInstrSnippetInstr(value);
+        }
+        case NodeTypeValueList:
+        {
+            auto value = std::static_pointer_cast<LILValueList>(node);
+            return this->_processIfInstr(value);
+        }
+        case NodeTypeIndexAccessor:
+        {
+            auto value = std::static_pointer_cast<LILIndexAccessor>(node);
+            return this->_processIfInstr(value);
+        }
+        case NodeTypeValuePath:
+        {
+            auto value = std::static_pointer_cast<LILValuePath>(node);
+            return this->_processIfInstr(value);
+        }
+        case NodeTypeSimpleSelector:
+        {
+            auto value = std::static_pointer_cast<LILSimpleSelector>(node);
+            return this->_processIfInstr(value);
+        }
+    }
+    return false;
+}
+
+void LILPreprocessor::processPasteInstr(const std::shared_ptr<LILRootNode> & rootNode)
+{
+    std::vector<std::shared_ptr<LILNode>> nodes = rootNode->getNodes();
+    
+    std::vector<std::shared_ptr<LILNode>> resultNodes;
+    bool hasChanges = false;
+    for (auto node : nodes) {
+        std::vector<std::shared_ptr<LILNode>> buf;
+        this->_nodeBuffer.push_back(buf);
+        bool remove = this->processPasteInstr(node);
+        if (!remove && this->_nodeBuffer.back().size() == 0) {
+            resultNodes.push_back(node);
+        } else {
+            rootNode->removeNode(node);
+            //in with the new
+            for (auto newNode : this->_nodeBuffer.back()) {
+                resultNodes.push_back(newNode);
+                rootNode->add(newNode, false);
+            }
+            hasChanges = true;
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    if (hasChanges) {
+        this->_needsAnotherPass = true;
+        rootNode->setChildNodes(std::move(resultNodes));
+    }
+}
+
+bool LILPreprocessor::processPasteInstr(std::shared_ptr<LILNode> node)
+{
+    if (this->getDebug()) {
+        std::cerr << "##  processing #paste instructions in " + LILNode::nodeTypeToString(node->getNodeType()).data() + " " + LILNodeToString::stringify(node.get()).data() + " ##\n";
+    }
+    switch (node->getNodeType()) {
+        case NodeTypeRoot:
+        case NodeTypeNull:
+        case NodeTypeBoolLiteral:
+        case NodeTypeNumberLiteral:
+        case NodeTypePercentage:
+        case NodeTypeStringLiteral:
+        case NodeTypeCStringLiteral:
+        case NodeTypePropertyName:
+        case NodeTypeVarName:
+        case NodeTypeAliasDecl:
+        case NodeTypeTypeDecl:
+        case NodeTypeType:
+        case NodeTypeMultipleType:
+        case NodeTypeFunctionType:
+        case NodeTypeObjectType:
+        case NodeTypePointerType:
+        case NodeTypeStaticArrayType:
+        case NodeTypeFlag:
+        case NodeTypeFilter:
+        case NodeTypeSelector:
+        case NodeTypeCombinator:
+        case NodeTypeForeignLang:
+        case NodeTypeComment:
+        case NodeTypeInvalid:
+            //do nothing
+            break;
+            
+        case NodeTypeNegation:
+        case NodeTypeArray:
+            std::cerr << "UNIMPLEMENTED FAIL !!!!!\n\n";
+            return false;
+            
+        case NodeTypeExpression:
+        {
+            auto value = std::static_pointer_cast<LILExpression>(node);
+            return this->_processPasteInstr(value);
+        }
+        case NodeTypeUnaryExpression:
+        {
+            auto value = std::static_pointer_cast<LILUnaryExpression>(node);
+            return this->_processPasteInstr(value);
+        }
+        case NodeTypeStringFunction:
+        {
+            auto value = std::static_pointer_cast<LILStringFunction>(node);
+            return this->_processPasteInstr(value);
+        }
+        case NodeTypeVarDecl:
+        case NodeTypeConstDecl:
+        {
+            auto value = std::static_pointer_cast<LILVarDecl>(node);
+            return this->_processPasteInstr(value);
+        }
+        case NodeTypeConversionDecl:
+        {
+            auto value = std::static_pointer_cast<LILConversionDecl>(node);
+            return this->_processPasteInstr(value);
+        }
+        case NodeTypeClassDecl:
+        {
+            auto value = std::static_pointer_cast<LILClassDecl>(node);
+            return this->_processPasteInstr(value);
+        }
+        case NodeTypeObjectDefinition:
+        {
+            auto value = std::static_pointer_cast<LILObjectDefinition>(node);
+            return this->_processPasteInstr(value);
+        }
+        case NodeTypeAssignment:
+        {
+            auto value = std::static_pointer_cast<LILAssignment>(node);
+            return this->_processPasteInstr(value);
+        }
+        case NodeTypeRule:
+        {
+            auto value = std::static_pointer_cast<LILRule>(node);
+            return this->_processPasteInstr(value);
+        }
+        case NodeTypeSelectorChain:
+        {
+            auto value = std::static_pointer_cast<LILSelectorChain>(node);
+            return this->_processPasteInstr(value);
+        }
+        case NodeTypeFunctionDecl:
+        {
+            auto value = std::static_pointer_cast<LILFunctionDecl>(node);
+            return this->_processPasteInstr(value);
+        }
+        case NodeTypeFunctionCall:
+        {
+            auto value = std::static_pointer_cast<LILFunctionCall>(node);
+            return this->_processPasteInstr(value);
+        }
+        case NodeTypeFlowControl:
+        {
+            auto value = std::static_pointer_cast<LILFlowControl>(node);
+            return this->_processPasteInstr(value);
+        }
+        case NodeTypeFlowControlCall:
+        {
+            auto value = std::static_pointer_cast<LILFlowControlCall>(node);
+            return this->_processPasteInstr(value);
+        }
+        case NodeTypeInstruction:
+        {
+            auto value = std::static_pointer_cast<LILInstruction>(node);
+            return this->_processPasteInstr(value);
+        }
+        case NodeTypeIfInstruction:
+        {
+            auto value = std::static_pointer_cast<LILIfInstruction>(node);
+            return this->_processPasteInstrIfInstr(value);
+        }
+        case NodeTypeSnippetInstruction:
+        {
+            auto value = std::static_pointer_cast<LILSnippetInstruction>(node);
+            return this->_processPasteInstrSnippetInstr(value);
+        }
+        case NodeTypeValueList:
+        {
+            auto value = std::static_pointer_cast<LILValueList>(node);
+            return this->_processPasteInstr(value);
+        }
+        case NodeTypeIndexAccessor:
+        {
+            auto value = std::static_pointer_cast<LILIndexAccessor>(node);
+            return this->_processPasteInstr(value);
+        }
+        case NodeTypeValuePath:
+        {
+            auto value = std::static_pointer_cast<LILValuePath>(node);
+            return this->_processPasteInstr(value);
+        }
+        case NodeTypeSimpleSelector:
+        {
+            auto value = std::static_pointer_cast<LILSimpleSelector>(node);
+            return this->_processPasteInstr(value);
+        }
+    }
+    return false;
+}
+
+void LILPreprocessor::removeSnippets(std::shared_ptr<LILRootNode> rootNode)
+{
+    std::vector<std::shared_ptr<LILNode>> nodes = rootNode->getNodes();
+    
+    for (auto node : nodes) {
+        this->_removeSnippets(node);
+    }
+    
+    std::vector<std::shared_ptr<LILNode>> resultNodes;
+    bool hasChanges = false;
+    for (auto node : nodes) {
+        if (node->isA(NodeTypeSnippetInstruction)) {
+            hasChanges = true;
+        } else {
+            resultNodes.push_back(node);
+        }
+    }
+    if (hasChanges) {
+        rootNode->setChildNodes(std::move(resultNodes));
+    }
+}
+
+void LILPreprocessor::_removeSnippets(std::shared_ptr<LILNode> node)
+{
+    std::vector<std::shared_ptr<LILNode>> resultNodes;
+    bool hasChanges = false;
+    for (auto child : node->getChildNodes()) {
+        if (child->isA(NodeTypeSnippetInstruction)) {
+            hasChanges = true;
+        } else {
+            resultNodes.push_back(child);
+        }
+    }
+    if (hasChanges) {
+        node->setChildNodes(std::move(resultNodes));
+    }
+}
+
+
+void LILPreprocessor::setDir(LILString dir)
 {
     this->_dir = dir;
 }
 
-LILString LILNeedsImporter::getDir() const
+LILString LILPreprocessor::getDir() const
 {
     return this->_dir;
 }
 
-bool LILNeedsImporter::getDebugAST() const
+bool LILPreprocessor::getDebugAST() const
 {
     return this->_debugAST;
 }
 
-void LILNeedsImporter::setDebugAST(bool value)
+void LILPreprocessor::setDebugAST(bool value)
 {
     this->_debugAST = value;
 }
 
-void LILNeedsImporter::addAlreadyImportedFile(const LILString & path)
+void LILPreprocessor::addAlreadyImportedFile(const LILString & path)
 {
     this->_alreadyImportedFiles.push_back(path);
 }
 
-bool LILNeedsImporter::isAlreadyImported(const LILString & path)
+bool LILPreprocessor::isAlreadyImported(const LILString & path)
 {
     for (auto str : this->_alreadyImportedFiles) {
         if (str == path) {
@@ -163,7 +629,7 @@ bool LILNeedsImporter::isAlreadyImported(const LILString & path)
 }
 
 
-std::vector<LILString> LILNeedsImporter::_resolveFilePaths(LILString argStr) const
+std::vector<LILString> LILPreprocessor::_resolveFilePaths(LILString argStr) const
 {
     std::vector<LILString> ret;
     std::string dir = this->getDir().data() + "/";
@@ -180,7 +646,7 @@ std::vector<LILString> LILNeedsImporter::_resolveFilePaths(LILString argStr) con
 }
 
 //FIXME: needs windows counterpart
-std::vector<std::string> LILNeedsImporter::_glob(const std::string& pattern) const
+std::vector<std::string> LILPreprocessor::_glob(const std::string& pattern) const
 {
     std::vector<std::string> filenames;
     
@@ -209,7 +675,7 @@ std::vector<std::string> LILNeedsImporter::_glob(const std::string& pattern) con
     return filenames;
 }
 
-void LILNeedsImporter::_getNodesForImport(std::vector<std::shared_ptr<LILNode>> * newNodes, std::shared_ptr<LILRootNode> rootNode) const
+void LILPreprocessor::_getNodesForImportNeedsInstr(std::vector<std::shared_ptr<LILNode>> * newNodes, std::shared_ptr<LILRootNode> rootNode) const
 {
     for (auto node : rootNode->getNodes()) {
         if (!node->getIsExported()) {
@@ -320,90 +786,7 @@ void LILNeedsImporter::_getNodesForImport(std::vector<std::shared_ptr<LILNode>> 
     }
 }
 
-void LILNeedsImporter::_importNewNodes(std::vector<std::shared_ptr<LILNode> > &newNodes, std::shared_ptr<LILRootNode> rootNode, bool hidden) const
-{
-    for (auto newNode : newNodes) {
-        if (hidden) {
-            newNode->hidden = true;
-        }
-        switch (newNode->getNodeType()) {
-            case NodeTypeVarDecl:
-            {
-                auto vd = std::static_pointer_cast<LILVarDecl>(newNode);
-                
-                //set local variable
-                rootNode->setLocalVariable(vd->getName(), vd);
-                
-                if (vd->getIsExtern()) {
-                    rootNode->addNode(vd);
-                } else {
-                    auto initVal = vd->getInitVal();
-                    if (initVal) {
-                        if (initVal->isA(NodeTypeFunctionDecl)) {
-                            rootNode->addNode(vd);
-                        } else {
-                            rootNode->getMainFn()->addEvaluable(vd);
-                        }
-                    } else {
-                        rootNode->getMainFn()->addEvaluable(vd);
-                    }
-                }
-                break;
-            }
-            case NodeTypeAliasDecl:
-            {
-                auto ad = std::static_pointer_cast<LILAliasDecl>(newNode);
-                rootNode->addNode(ad);
-                rootNode->addAlias(ad);
-                break;
-            }
-            case NodeTypeTypeDecl:
-            {
-                auto td = std::static_pointer_cast<LILTypeDecl>(newNode);
-                rootNode->addNode(td);
-                rootNode->addType(td);
-                break;
-            }
-            case NodeTypeClassDecl:
-            {
-                auto cd = std::static_pointer_cast<LILClassDecl>(newNode);
-                rootNode->addNode(cd);
-                rootNode->addClass(cd);
-                break;
-            }
-            case NodeTypeFunctionDecl:
-            {
-                auto fd = std::static_pointer_cast<LILFunctionDecl>(newNode);
-                rootNode->addNode(newNode);
-                rootNode->setLocalVariable(fd->getName(), fd);
-                break;
-            }
-                
-            case NodeTypeInstruction:
-            {
-                auto instr = std::static_pointer_cast<LILInstruction>(newNode);
-                switch (instr->getInstructionType()) {
-                    case InstructionTypeNeeds:
-                    {
-                        rootNode->addNode(instr);
-                        rootNode->addDependency(instr);
-                        break;
-                    }
-                        
-                    default:
-                        break;
-                }
-                break;
-            }
-                
-            default:
-                rootNode->getMainFn()->addEvaluable(newNode);
-                break;
-        }
-    }
-}
-
-LILString LILNeedsImporter::_getDir(LILString path) const
+LILString LILPreprocessor::_getDir(LILString path) const
 {
     std::string dir = path.data();
     size_t i = 0;
@@ -422,4 +805,1144 @@ LILString LILNeedsImporter::_getDir(LILString path) const
     } else {
         return "";
     }
+}
+
+bool LILPreprocessor::_processIfInstr(std::shared_ptr<LILExpression> value)
+{
+    auto left = value->getLeft();
+    if (!left) {
+        std::cerr << "EXPRESSION HAD NO LEFT FAIL !!!!!\n\n";
+        return false;
+    }
+    this->_nodeBuffer.emplace_back();
+    bool removeLeft = this->processIfInstr(left);
+    if (removeLeft) {
+        LILErrorMessage ei;
+        ei.message =  "Evaluation of #if leaves expression without left side value. Use an else block and provide an alternate value.";
+        LILNode::SourceLocation sl = left->getSourceLocation();
+        ei.file = sl.file;
+        ei.line = sl.line;
+        ei.column = sl.column;
+        this->errors.push_back(ei);
+    } else if (this->_nodeBuffer.back().size() > 1) {
+        LILErrorMessage ei;
+        ei.message =  "Evaluation of #if for left side value of expression returns multiple values";
+        LILNode::SourceLocation sl = left->getSourceLocation();
+        ei.file = sl.file;
+        ei.line = sl.line;
+        ei.column = sl.column;
+        this->errors.push_back(ei);
+    } else if (this->_nodeBuffer.back().size() == 1) {
+        value->setLeft(this->_nodeBuffer.back().back());
+        this->_needsAnotherPass = true;
+    }
+    this->_nodeBuffer.pop_back();
+    
+    auto right = value->getRight();
+    if (!right) {
+        std::cerr << "EXPRESSION HAD NO RIGHT FAIL !!!!!\n\n";
+        return false;
+    }
+    this->_nodeBuffer.emplace_back();
+    bool removeRight = this->processIfInstr(right);
+    if (removeRight) {
+        LILErrorMessage ei;
+        ei.message =  "Evaluation of #if leaves expression without right side value. Use an else block and provide an alternate value.";
+        LILNode::SourceLocation sl = right->getSourceLocation();
+        ei.file = sl.file;
+        ei.line = sl.line;
+        ei.column = sl.column;
+        this->errors.push_back(ei);
+    } else if (this->_nodeBuffer.back().size() > 1) {
+        LILErrorMessage ei;
+        ei.message =  "Evaluation of #if for right side value of expression returns multiple values";
+        LILNode::SourceLocation sl = right->getSourceLocation();
+        ei.file = sl.file;
+        ei.line = sl.line;
+        ei.column = sl.column;
+        this->errors.push_back(ei);
+    } else if (this->_nodeBuffer.back().size() == 1) {
+        value->setRight(this->_nodeBuffer.back().back());
+        this->_needsAnotherPass = true;
+    }
+    this->_nodeBuffer.pop_back();
+    
+    return false;
+}
+
+bool LILPreprocessor::_processIfInstr(std::shared_ptr<LILUnaryExpression> value)
+{
+    auto val = value->getValue();
+    if (val && val->isA(InstructionTypeIf)) {
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processIfInstr(val);
+        if (remove) {
+            LILErrorMessage ei;
+            ei.message =  "Evaluation of #if leaves unary expression without value. Use an else block and provide an alternate value.";
+            LILNode::SourceLocation sl = val->getSourceLocation();
+            ei.file = sl.file;
+            ei.line = sl.line;
+            ei.column = sl.column;
+            this->errors.push_back(ei);
+        } else if (this->_nodeBuffer.back().size() == 1) {
+            value->setValue(this->_nodeBuffer.back().back());
+            this->_needsAnotherPass = true;
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    return false;
+}
+
+bool LILPreprocessor::_processIfInstr(std::shared_ptr<LILStringFunction> value)
+{
+    bool hasChanges = false;
+    std::vector<std::shared_ptr<LILNode>> resultNodes;
+    for (auto node : value->getNodes()) {
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processIfInstr(node);
+        if (!remove && this->_nodeBuffer.back().size() == 0) {
+            resultNodes.push_back(node);
+        } else {
+            hasChanges = true;
+            for (auto newNode : this->_nodeBuffer.back()) {
+                resultNodes.push_back(newNode);
+            }
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    if (hasChanges) {
+        value->setNodes(std::move(resultNodes));
+        this->_needsAnotherPass = true;
+    }
+    return false;
+}
+
+bool LILPreprocessor::_processIfInstr(std::shared_ptr<LILVarDecl> value)
+{
+    auto initVal = value->getInitVal();
+    if (initVal) {
+        std::vector<std::shared_ptr<LILNode>> buf;
+        this->_nodeBuffer.push_back(buf);
+        this->processIfInstr(initVal);
+        if (this->_nodeBuffer.back().size() > 0) {
+            value->setInitVals(this->_nodeBuffer.back());
+            this->_needsAnotherPass = true;
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    return false;
+}
+
+bool LILPreprocessor::_processIfInstr(std::shared_ptr<LILClassDecl> value)
+{
+    if (value->getIsExtern()) {
+        return false;
+    }
+    
+    std::vector<std::shared_ptr<LILNode>> newNodes;
+    
+    std::vector<std::shared_ptr<LILNode>> nodes = value->getMethods();
+    
+    std::vector<std::shared_ptr<LILNode>> resultNodes;
+    for (auto node : nodes) {
+        resultNodes.push_back(node);
+        std::vector<std::shared_ptr<LILNode>> buf;
+        this->_nodeBuffer.push_back(buf);
+        this->processIfInstr(node);
+        for (auto newNode : this->_nodeBuffer.back()) {
+            resultNodes.push_back(newNode);
+            newNodes.push_back(newNode);
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    if (newNodes.size() > 0) {
+        this->_needsAnotherPass = true;
+        for (auto newNode : newNodes) {
+            value->addMethod(newNode);
+        }
+    }
+    return false;
+}
+
+bool LILPreprocessor::_processIfInstr(std::shared_ptr<LILObjectDefinition> value)
+{
+    bool hasChanges = false;
+    std::vector<std::shared_ptr<LILNode>> resultNodes;
+    for (auto node : value->getNodes()) {
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processIfInstr(node);
+        if (!remove && this->_nodeBuffer.back().size() == 0) {
+            resultNodes.push_back(node);
+        } else {
+            hasChanges = true;
+            for (auto newNode : this->_nodeBuffer.back()) {
+                resultNodes.push_back(newNode);
+            }
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    if (hasChanges) {
+        this->_needsAnotherPass = true;
+        value->setNodes(std::move(resultNodes));
+    }
+    return false;
+}
+
+bool LILPreprocessor::_processIfInstr(std::shared_ptr<LILAssignment> value)
+{
+    auto val = value->getValue();
+    if (val && val->isA(InstructionTypeIf)) {
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processIfInstr(val);
+        if (remove) {
+            value->clearValue();
+        } else if (this->_nodeBuffer.back().size() == 1) {
+            value->setValue(this->_nodeBuffer.back().back());
+            this->_needsAnotherPass = true;
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    return false;
+}
+
+bool LILPreprocessor::_processIfInstr(std::shared_ptr<LILValuePath> value)
+{
+    bool hasChanges = false;
+    std::vector<std::shared_ptr<LILNode>> resultNodes;
+    for (auto node : value->getNodes()) {
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processIfInstr(node);
+        if (!remove && this->_nodeBuffer.back().size() == 0) {
+            resultNodes.push_back(node);
+        } else {
+            hasChanges = true;
+            for (auto newNode : this->_nodeBuffer.back()) {
+                resultNodes.push_back(newNode);
+            }
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    if (hasChanges) {
+        this->_needsAnotherPass = true;
+        value->setNodes(resultNodes);
+    }
+    return false;
+}
+
+bool LILPreprocessor::_processIfInstr(std::shared_ptr<LILRule> value)
+{
+    std::cerr << "UNIMPLEMENTED FAIL!!!!!!!!\n\n";
+    return false;
+}
+
+bool LILPreprocessor::_processIfInstr(std::shared_ptr<LILSelectorChain> value)
+{
+    std::cerr << "UNIMPLEMENTED FAIL!!!!!!!!\n\n";
+    return false;
+}
+
+bool LILPreprocessor::_processIfInstr(std::shared_ptr<LILSimpleSelector> value)
+{
+    std::cerr << "UNIMPLEMENTED FAIL!!!!!!!!\n\n";
+    return false;
+}
+
+bool LILPreprocessor::_processIfInstr(std::shared_ptr<LILFunctionDecl> value)
+{
+    bool hasChangesBody = false;
+    std::vector<std::shared_ptr<LILNode>> resultNodes;
+    for (auto node : value->getBody()) {
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processIfInstr(node);
+        if (!remove && this->_nodeBuffer.back().size() == 0) {
+            resultNodes.push_back(node);
+        } else {
+            hasChangesBody = true;
+            for (auto newNode : this->_nodeBuffer.back()) {
+                resultNodes.push_back(newNode);
+            }
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    if (hasChangesBody) {
+        this->_needsAnotherPass = true;
+        value->setBody(resultNodes);
+    }
+    return false;
+}
+
+bool LILPreprocessor::_processIfInstr(std::shared_ptr<LILFunctionCall> value)
+{
+    bool hasChangesArgs = false;
+    std::vector<std::shared_ptr<LILNode>> resultNodesArgs;
+    for (auto node : value->getArguments()) {
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processIfInstr(node);
+        if (!remove && this->_nodeBuffer.back().size() == 0) {
+            resultNodesArgs.push_back(node);
+        } else {
+            hasChangesArgs = true;
+            for (auto newNode : this->_nodeBuffer.back()) {
+                resultNodesArgs.push_back(newNode);
+            }
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    if (hasChangesArgs) {
+        this->_needsAnotherPass = true;
+        value->setArguments(std::move(resultNodesArgs));
+    }
+    return false;
+}
+
+bool LILPreprocessor::_processIfInstr(std::shared_ptr<LILFlowControl> value)
+{
+    bool hasChangesArgs = false;
+    std::vector<std::shared_ptr<LILNode>> resultNodesArgs;
+    for (auto node : value->getArguments()) {
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processIfInstr(node);
+        if (!remove && this->_nodeBuffer.back().size() == 0) {
+            resultNodesArgs.push_back(node);
+        } else {
+            hasChangesArgs = true;
+            for (auto newNode : this->_nodeBuffer.back()) {
+                resultNodesArgs.push_back(newNode);
+            }
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    if (hasChangesArgs) {
+        this->_needsAnotherPass = true;
+        value->setArguments(std::move(resultNodesArgs));
+    }
+    
+    bool hasChangesThen = false;
+    std::vector<std::shared_ptr<LILNode>> resultNodesThen;
+    for (auto node : value->getThen()) {
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processIfInstr(node);
+        if (!remove && this->_nodeBuffer.back().size() == 0) {
+            resultNodesThen.push_back(node);
+        } else {
+            hasChangesThen = true;
+            for (auto newNode : this->_nodeBuffer.back()) {
+                resultNodesThen.push_back(newNode);
+            }
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    if (hasChangesThen) {
+        this->_needsAnotherPass = true;
+        value->setThen(std::move(resultNodesThen));
+    }
+    
+    bool hasChangesElse = false;
+    
+    std::vector<std::shared_ptr<LILNode>> resultNodesElse;
+    for (auto node : value->getElse()) {
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processIfInstr(node);
+        if (!remove && this->_nodeBuffer.back().size() == 0) {
+            resultNodesElse.push_back(node);
+        } else {
+            hasChangesElse = true;
+            for (auto newNode : this->_nodeBuffer.back()) {
+                resultNodesElse.push_back(newNode);
+            }
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    if (hasChangesElse) {
+        this->_needsAnotherPass = true;
+        value->setElse(std::move(resultNodesElse));
+    }
+    return false;
+}
+
+bool LILPreprocessor::_processIfInstr(std::shared_ptr<LILFlowControlCall> value)
+{
+    auto arg = value->getArgument();
+    if (arg) {
+        this->processIfInstr(arg);
+    }
+    return false;
+}
+
+bool LILPreprocessor::_processIfInstr(std::shared_ptr<LILInstruction> value)
+{
+    auto arg = value->getArgument();
+    if (arg) {
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processIfInstr(arg);
+        if (remove) {
+            LILErrorMessage ei;
+            ei.message =  "Evaluation of #if leaves instruction without argument. Use an else block and provide an alternate value.";
+            LILNode::SourceLocation sl = arg->getSourceLocation();
+            ei.file = sl.file;
+            ei.line = sl.line;
+            ei.column = sl.column;
+            this->errors.push_back(ei);
+        } else if (this->_nodeBuffer.back().size() == 1) {
+            this->_needsAnotherPass = true;
+            value->setArgument(this->_nodeBuffer.back().back());
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    return false;
+}
+
+bool LILPreprocessor::_processIfInstrIfInstr(std::shared_ptr<LILIfInstruction> value)
+{
+    bool ret = false;
+    auto arg = value->getArgument();
+    if (arg) {
+        auto remoteNode = this->_resolveRemoteNode(arg);
+        if (remoteNode && remoteNode->isA(NodeTypeVarDecl)) {
+            auto vd = std::static_pointer_cast<LILVarDecl>(remoteNode);
+            if (!vd->getIsConst()) {
+                LILErrorMessage ei;
+                ei.message =  "Argument of #if instruction was not const.";
+                LILNode::SourceLocation sl = value->getSourceLocation();
+                ei.file = sl.file;
+                ei.line = sl.line;
+                ei.column = sl.column;
+                this->errors.push_back(ei);
+                return true;
+            }
+            auto val = vd->getInitVal();
+            if (!val) {
+                LILErrorMessage ei;
+                ei.message =  "Constant declaration has no value";
+                LILNode::SourceLocation sl = vd->getSourceLocation();
+                ei.file = sl.file;
+                ei.line = sl.line;
+                ei.column = sl.column;
+                this->errors.push_back(ei);
+                return true;
+            }
+            auto & nbb = this->_nodeBuffer.back();
+            if (this->_evaluate(val)) {
+                auto then = value->getThen();
+                if (then.size() > 0) {
+                    for (auto child : then) {
+                        nbb.push_back(child);
+                    }
+                } else {
+                    ret = true;
+                }
+                
+            } else {
+                auto els = value->getElse();
+                if (els.size() > 0) {
+                    for (auto child : value->getElse()) {
+                        nbb.push_back(child);
+                    }
+                } else {
+                    ret = true;
+                }
+            }
+        }
+    }
+    return ret;
+}
+
+bool LILPreprocessor::_processIfInstrSnippetInstr(std::shared_ptr<LILSnippetInstruction> value)
+{
+    auto arg = value->getArgument();
+    if (arg) {
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processIfInstr(arg);
+        if (remove) {
+            LILErrorMessage ei;
+            ei.message =  "Evaluation of #if leaves instruction without argument. Use an else block and provide an alternate value.";
+            LILNode::SourceLocation sl = arg->getSourceLocation();
+            ei.file = sl.file;
+            ei.line = sl.line;
+            ei.column = sl.column;
+            this->errors.push_back(ei);
+        } else if (this->_nodeBuffer.back().size() == 1) {
+            this->_needsAnotherPass = true;
+            value->setArgument(this->_nodeBuffer.back().back());
+        }
+        this->_nodeBuffer.pop_back();
+    }
+
+    bool hasChangesBody = false;
+    std::vector<std::shared_ptr<LILNode>> resultNodes;
+    for (auto node : value->getBody()) {
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processIfInstr(node);
+        if (!remove && this->_nodeBuffer.back().size() == 0) {
+            resultNodes.push_back(node);
+        } else {
+            hasChangesBody = true;
+            for (auto newNode : this->_nodeBuffer.back()) {
+                resultNodes.push_back(newNode);
+            }
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    if (hasChangesBody) {
+        this->_needsAnotherPass = true;
+        value->setBody(std::move(resultNodes));
+    }
+    
+    return false;
+}
+
+bool LILPreprocessor::_processIfInstr(std::shared_ptr<LILValueList> value)
+{
+    std::cerr << "UNIMPLEMENTED FAIL!!!!!!!!\n\n";
+    return false;
+}
+
+
+bool LILPreprocessor::_processIfInstr(std::shared_ptr<LILIndexAccessor> value)
+{
+    auto arg = value->getArgument();
+    if (arg) {
+        this->processIfInstr(arg);
+    }
+    return false;
+}
+
+bool LILPreprocessor::_processIfInstr(std::shared_ptr<LILConversionDecl> value)
+{
+    bool hasChangesBody = false;
+    std::vector<std::shared_ptr<LILNode>> resultNodes;
+    for (auto node : value->getBody()) {
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processIfInstr(node);
+        if (!remove && this->_nodeBuffer.back().size() == 0) {
+            resultNodes.push_back(node);
+        } else {
+            hasChangesBody = true;
+            for (auto newNode : this->_nodeBuffer.back()) {
+                resultNodes.push_back(newNode);
+            }
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    if (hasChangesBody) {
+        this->_needsAnotherPass = true;
+        value->setBody(std::move(resultNodes));
+    }
+    return false;
+}
+
+bool LILPreprocessor::_evaluate(std::shared_ptr<LILNode> node)
+{
+    switch (node->getNodeType()) {
+        case NodeTypeBoolLiteral:
+        {
+            auto value = std::static_pointer_cast<LILBoolLiteral>(node);
+            return value->getValue();
+        }
+        case NodeTypeExpression:
+        {
+            auto value = std::static_pointer_cast<LILExpression>(node);
+            auto left = this->_resolveRemoteNode(value->getLeft());
+            if (!left) {
+                std::cerr << "LEFT NODE OF EXPRESSION MISSING FAIL!!!!!!!!\n\n";
+                return false;
+            }
+            auto right = this->_resolveRemoteNode(value->getRight());
+            if (!right) {
+                std::cerr << "RIGHT NODE OF EXPRESSION MISSING FAIL!!!!!!!!\n\n";
+                return false;
+            }
+            auto leftTy = left->getType();
+            if (!leftTy) {
+                std::cerr << "TYPE OF LEFT NODE OF EXPRESSION MISSING FAIL!!!!!!!!\n\n";
+                return false;
+            }
+            auto rightTy = right->getType();
+            if (!rightTy) {
+                std::cerr << "TYPE OF RIGHT NODE OF EXPRESSION MISSING FAIL!!!!!!!!\n\n";
+                return false;
+            }
+            if (!leftTy->equalTo(rightTy)) {
+                std::cerr << "EXPRESSION TYPE MISMATCH FAIL!!!!!!!!\n\n";
+                return false;
+            }
+            switch (value->getExpressionType()) {
+                case ExpressionTypeEqualComparison:
+                {
+                    return left->equalTo(right);
+                }
+                default:
+                    std::cerr << "UNIMPLEMENTED FAIL!!!!!!!!\n\n";
+                    break;
+            }
+        }
+            
+        default:
+            std::cerr << "UNKNOWN NODE TYPE TO EVALUATE FAIL!!!!!!!!\n\n";
+            break;
+    }
+    return false;
+}
+
+std::shared_ptr<LILNode> LILPreprocessor::_resolveRemoteNode(std::shared_ptr<LILNode> node) const
+{
+    if (!node) {
+        return nullptr;
+    }
+    switch (node->getNodeType()) {
+        case NodeTypeVarName:
+        {
+            return this->_resolveRemoteNode(this->findNodeForVarName(static_cast<LILVarName *>(node.get())));
+        }
+        case NodeTypeValuePath:
+        {
+            return this->_resolveRemoteNode(this->findNodeForValuePath(static_cast<LILValuePath *>(node.get())));
+        }
+        default:
+            return node;
+    }
+}
+
+bool LILPreprocessor::_processPasteInstr(std::shared_ptr<LILExpression> value)
+{
+    auto left = value->getLeft();
+    if (!left) {
+        std::cerr << "EXPRESSION HAD NO LEFT FAIL !!!!!\n\n";
+        return false;
+    }
+    this->_nodeBuffer.emplace_back();
+    bool removeLeft = this->processPasteInstr(left);
+    if (removeLeft) {
+        LILErrorMessage ei;
+        ei.message =  "Evaluation of #paste leaves expression without left side value. Use an else block and provide an alternate value.";
+        LILNode::SourceLocation sl = left->getSourceLocation();
+        ei.file = sl.file;
+        ei.line = sl.line;
+        ei.column = sl.column;
+        this->errors.push_back(ei);
+    } else if (this->_nodeBuffer.back().size() > 1) {
+        LILErrorMessage ei;
+        ei.message =  "Evaluation of #paste for left side value of expression returns multiple values";
+        LILNode::SourceLocation sl = left->getSourceLocation();
+        ei.file = sl.file;
+        ei.line = sl.line;
+        ei.column = sl.column;
+        this->errors.push_back(ei);
+    } else if (this->_nodeBuffer.back().size() == 1) {
+        value->setLeft(this->_nodeBuffer.back().back());
+        this->_needsAnotherPass = true;
+    }
+    this->_nodeBuffer.pop_back();
+    
+    auto right = value->getRight();
+    if (!right) {
+        std::cerr << "EXPRESSION HAD NO RIGHT FAIL !!!!!\n\n";
+        return false;
+    }
+    this->_nodeBuffer.emplace_back();
+    bool removeRight = this->processPasteInstr(right);
+    if (removeRight) {
+        LILErrorMessage ei;
+        ei.message =  "Evaluation of #paste leaves expression without right side value. Use an else block and provide an alternate value.";
+        LILNode::SourceLocation sl = right->getSourceLocation();
+        ei.file = sl.file;
+        ei.line = sl.line;
+        ei.column = sl.column;
+        this->errors.push_back(ei);
+    } else if (this->_nodeBuffer.back().size() > 1) {
+        LILErrorMessage ei;
+        ei.message =  "Evaluation of #paste for right side value of expression returns multiple values";
+        LILNode::SourceLocation sl = right->getSourceLocation();
+        ei.file = sl.file;
+        ei.line = sl.line;
+        ei.column = sl.column;
+        this->errors.push_back(ei);
+    } else if (this->_nodeBuffer.back().size() == 1) {
+        value->setRight(this->_nodeBuffer.back().back());
+        this->_needsAnotherPass = true;
+    }
+    this->_nodeBuffer.pop_back();
+    
+    return false;
+}
+
+bool LILPreprocessor::_processPasteInstr(std::shared_ptr<LILUnaryExpression> value)
+{
+    auto val = value->getValue();
+    if (val && val->isA(InstructionTypeIf)) {
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processPasteInstr(val);
+        if (remove) {
+            LILErrorMessage ei;
+            ei.message =  "Evaluation of #paste leaves unary expression without value. Use an else block and provide an alternate value.";
+            LILNode::SourceLocation sl = val->getSourceLocation();
+            ei.file = sl.file;
+            ei.line = sl.line;
+            ei.column = sl.column;
+            this->errors.push_back(ei);
+        } else if (this->_nodeBuffer.back().size() == 1) {
+            value->setValue(this->_nodeBuffer.back().back());
+            this->_needsAnotherPass = true;
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    return false;
+}
+
+bool LILPreprocessor::_processPasteInstr(std::shared_ptr<LILStringFunction> value)
+{
+    bool hasChanges = false;
+    std::vector<std::shared_ptr<LILNode>> resultNodes;
+    for (auto node : value->getNodes()) {
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processPasteInstr(node);
+        if (!remove && this->_nodeBuffer.back().size() == 0) {
+            resultNodes.push_back(node);
+        } else {
+            hasChanges = true;
+            for (auto newNode : this->_nodeBuffer.back()) {
+                resultNodes.push_back(newNode);
+            }
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    if (hasChanges) {
+        value->setNodes(std::move(resultNodes));
+        this->_needsAnotherPass = true;
+    }
+    return false;
+}
+
+bool LILPreprocessor::_processPasteInstr(std::shared_ptr<LILVarDecl> value)
+{
+    auto initVal = value->getInitVal();
+    if (initVal) {
+        std::vector<std::shared_ptr<LILNode>> buf;
+        this->_nodeBuffer.push_back(buf);
+        this->processPasteInstr(initVal);
+        if (this->_nodeBuffer.back().size() > 0) {
+            value->setInitVals(this->_nodeBuffer.back());
+            this->_needsAnotherPass = true;
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    return false;
+}
+
+bool LILPreprocessor::_processPasteInstr(std::shared_ptr<LILClassDecl> value)
+{
+    if (value->getIsExtern()) {
+        return false;
+    }
+    
+    std::vector<std::shared_ptr<LILNode>> newNodes;
+    
+    std::vector<std::shared_ptr<LILNode>> nodes = value->getMethods();
+    
+    std::vector<std::shared_ptr<LILNode>> resultNodes;
+    for (auto node : nodes) {
+        resultNodes.push_back(node);
+        std::vector<std::shared_ptr<LILNode>> buf;
+        this->_nodeBuffer.push_back(buf);
+        this->processPasteInstr(node);
+        for (auto newNode : this->_nodeBuffer.back()) {
+            resultNodes.push_back(newNode);
+            newNodes.push_back(newNode);
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    if (newNodes.size() > 0) {
+        this->_needsAnotherPass = true;
+        for (auto newNode : newNodes) {
+            value->addMethod(newNode);
+        }
+    }
+    return false;
+}
+
+bool LILPreprocessor::_processPasteInstr(std::shared_ptr<LILObjectDefinition> value)
+{
+    bool hasChanges = false;
+    std::vector<std::shared_ptr<LILNode>> resultNodes;
+    for (auto node : value->getNodes()) {
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processPasteInstr(node);
+        if (!remove && this->_nodeBuffer.back().size() == 0) {
+            resultNodes.push_back(node);
+        } else {
+            hasChanges = true;
+            for (auto newNode : this->_nodeBuffer.back()) {
+                resultNodes.push_back(newNode);
+            }
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    if (hasChanges) {
+        this->_needsAnotherPass = true;
+        value->setNodes(std::move(resultNodes));
+    }
+    return false;
+}
+
+bool LILPreprocessor::_processPasteInstr(std::shared_ptr<LILAssignment> value)
+{
+    auto val = value->getValue();
+    if (val && val->isA(InstructionTypeIf)) {
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processPasteInstr(val);
+        if (remove) {
+            value->clearValue();
+        } else if (this->_nodeBuffer.back().size() == 1) {
+            value->setValue(this->_nodeBuffer.back().back());
+            this->_needsAnotherPass = true;
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    return false;
+}
+
+bool LILPreprocessor::_processPasteInstr(std::shared_ptr<LILValuePath> value)
+{
+    bool hasChanges = false;
+    std::vector<std::shared_ptr<LILNode>> resultNodes;
+    for (auto node : value->getNodes()) {
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processPasteInstr(node);
+        if (!remove && this->_nodeBuffer.back().size() == 0) {
+            resultNodes.push_back(node);
+        } else {
+            hasChanges = true;
+            for (auto newNode : this->_nodeBuffer.back()) {
+                resultNodes.push_back(newNode);
+            }
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    if (hasChanges) {
+        this->_needsAnotherPass = true;
+        value->setNodes(resultNodes);
+    }
+    return false;
+}
+
+bool LILPreprocessor::_processPasteInstr(std::shared_ptr<LILRule> value)
+{
+    std::cerr << "UNIMPLEMENTED FAIL!!!!!!!!\n\n";
+    return false;
+}
+
+bool LILPreprocessor::_processPasteInstr(std::shared_ptr<LILSelectorChain> value)
+{
+    std::cerr << "UNIMPLEMENTED FAIL!!!!!!!!\n\n";
+    return false;
+}
+
+bool LILPreprocessor::_processPasteInstr(std::shared_ptr<LILSimpleSelector> value)
+{
+    std::cerr << "UNIMPLEMENTED FAIL!!!!!!!!\n\n";
+    return false;
+}
+
+bool LILPreprocessor::_processPasteInstr(std::shared_ptr<LILFunctionDecl> value)
+{
+    bool hasChangesBody = false;
+    std::vector<std::shared_ptr<LILNode>> resultNodes;
+    for (auto node : value->getBody()) {
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processPasteInstr(node);
+        if (!remove && this->_nodeBuffer.back().size() == 0) {
+            resultNodes.push_back(node);
+        } else {
+            hasChangesBody = true;
+            for (auto newNode : this->_nodeBuffer.back()) {
+                resultNodes.push_back(newNode);
+            }
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    if (hasChangesBody) {
+        this->_needsAnotherPass = true;
+        value->setBody(resultNodes);
+    }
+    return false;
+}
+
+bool LILPreprocessor::_processPasteInstr(std::shared_ptr<LILFunctionCall> value)
+{
+    bool hasChangesArgs = false;
+    std::vector<std::shared_ptr<LILNode>> resultNodesArgs;
+    for (auto node : value->getArguments()) {
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processPasteInstr(node);
+        if (!remove && this->_nodeBuffer.back().size() == 0) {
+            resultNodesArgs.push_back(node);
+        } else {
+            hasChangesArgs = true;
+            for (auto newNode : this->_nodeBuffer.back()) {
+                resultNodesArgs.push_back(newNode);
+            }
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    if (hasChangesArgs) {
+        this->_needsAnotherPass = true;
+        value->setArguments(std::move(resultNodesArgs));
+    }
+    return false;
+}
+
+bool LILPreprocessor::_processPasteInstr(std::shared_ptr<LILFlowControl> value)
+{
+    bool hasChangesArgs = false;
+    std::vector<std::shared_ptr<LILNode>> resultNodesArgs;
+    for (auto node : value->getArguments()) {
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processPasteInstr(node);
+        if (!remove && this->_nodeBuffer.back().size() == 0) {
+            resultNodesArgs.push_back(node);
+        } else {
+            hasChangesArgs = true;
+            for (auto newNode : this->_nodeBuffer.back()) {
+                resultNodesArgs.push_back(newNode);
+            }
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    if (hasChangesArgs) {
+        this->_needsAnotherPass = true;
+        value->setArguments(std::move(resultNodesArgs));
+    }
+    
+    bool hasChangesThen = false;
+    std::vector<std::shared_ptr<LILNode>> resultNodesThen;
+    for (auto node : value->getThen()) {
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processPasteInstr(node);
+        if (!remove && this->_nodeBuffer.back().size() == 0) {
+            resultNodesThen.push_back(node);
+        } else {
+            hasChangesThen = true;
+            for (auto newNode : this->_nodeBuffer.back()) {
+                resultNodesThen.push_back(newNode);
+            }
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    if (hasChangesThen) {
+        this->_needsAnotherPass = true;
+        value->setThen(std::move(resultNodesThen));
+    }
+    
+    bool hasChangesElse = false;
+    
+    std::vector<std::shared_ptr<LILNode>> resultNodesElse;
+    for (auto node : value->getElse()) {
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processPasteInstr(node);
+        if (!remove && this->_nodeBuffer.back().size() == 0) {
+            resultNodesElse.push_back(node);
+        } else {
+            hasChangesElse = true;
+            for (auto newNode : this->_nodeBuffer.back()) {
+                resultNodesElse.push_back(newNode);
+            }
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    if (hasChangesElse) {
+        this->_needsAnotherPass = true;
+        value->setElse(std::move(resultNodesElse));
+    }
+    return false;
+}
+
+bool LILPreprocessor::_processPasteInstr(std::shared_ptr<LILFlowControlCall> value)
+{
+    auto arg = value->getArgument();
+    if (arg) {
+        this->processPasteInstr(arg);
+    }
+    return false;
+}
+
+bool LILPreprocessor::_processPasteInstr(std::shared_ptr<LILInstruction> value)
+{
+    if (value->isA(InstructionTypePaste)) {
+        auto snippet = this->getRootNode()->getSnippetNamed(value->getName());
+        if (snippet) {
+            auto & nbb = this->_nodeBuffer.back();
+            auto snipBody = snippet->getBody();
+            if (snipBody.size() > 0) {
+                nbb.insert(nbb.end(), snipBody.begin(), snipBody.end());
+            } else {
+                return true;
+            }
+        }
+    } else {
+        auto arg = value->getArgument();
+        if (arg) {
+            this->_nodeBuffer.emplace_back();
+            bool remove = this->processPasteInstr(arg);
+            if (remove) {
+                LILErrorMessage ei;
+                ei.message =  "Evaluation of #paste leaves instruction without argument. Use an else block and provide an alternate value.";
+                LILNode::SourceLocation sl = arg->getSourceLocation();
+                ei.file = sl.file;
+                ei.line = sl.line;
+                ei.column = sl.column;
+                this->errors.push_back(ei);
+            } else if (this->_nodeBuffer.back().size() == 1) {
+                this->_needsAnotherPass = true;
+                value->setArgument(this->_nodeBuffer.back().back());
+            }
+            this->_nodeBuffer.pop_back();
+        }
+        return false;
+    }
+    return false;
+}
+
+bool LILPreprocessor::_processPasteInstrIfInstr(std::shared_ptr<LILIfInstruction> value)
+{
+    auto arg = value->getArgument();
+    if (arg) {
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processPasteInstr(arg);
+        if (remove) {
+            LILErrorMessage ei;
+            ei.message =  "Evaluation of #paste leaves instruction without argument. Use an else block and provide an alternate value.";
+            LILNode::SourceLocation sl = arg->getSourceLocation();
+            ei.file = sl.file;
+            ei.line = sl.line;
+            ei.column = sl.column;
+            this->errors.push_back(ei);
+        } else if (this->_nodeBuffer.back().size() == 1) {
+            this->_needsAnotherPass = true;
+            value->setArgument(this->_nodeBuffer.back().back());
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    
+    bool hasChangesThen = false;
+    std::vector<std::shared_ptr<LILNode>> resultNodesThen;
+    for (auto node : value->getThen()) {
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processPasteInstr(node);
+        if (!remove && this->_nodeBuffer.back().size() == 0) {
+            resultNodesThen.push_back(node);
+        } else {
+            hasChangesThen = true;
+            for (auto newNode : this->_nodeBuffer.back()) {
+                resultNodesThen.push_back(newNode);
+            }
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    if (hasChangesThen) {
+        this->_needsAnotherPass = true;
+        value->setThen(std::move(resultNodesThen));
+    }
+    
+    bool hasChangesElse = false;
+    std::vector<std::shared_ptr<LILNode>> resultNodesElse;
+    for (auto node : value->getElse()) {
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processPasteInstr(node);
+        if (!remove && this->_nodeBuffer.back().size() == 0) {
+            resultNodesElse.push_back(node);
+        } else {
+            hasChangesElse = true;
+            for (auto newNode : this->_nodeBuffer.back()) {
+                resultNodesElse.push_back(newNode);
+            }
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    if (hasChangesElse) {
+        this->_needsAnotherPass = true;
+        value->setElse(std::move(resultNodesElse));
+    }
+    return false;
+}
+
+bool LILPreprocessor::_processPasteInstrSnippetInstr(std::shared_ptr<LILSnippetInstruction> value)
+{
+    auto arg = value->getArgument();
+    if (arg) {
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processPasteInstr(arg);
+        if (remove) {
+            LILErrorMessage ei;
+            ei.message =  "Evaluation of #paste leaves instruction without argument. Use an else block and provide an alternate value.";
+            LILNode::SourceLocation sl = arg->getSourceLocation();
+            ei.file = sl.file;
+            ei.line = sl.line;
+            ei.column = sl.column;
+            this->errors.push_back(ei);
+        } else if (this->_nodeBuffer.back().size() == 1) {
+            this->_needsAnotherPass = true;
+            value->setArgument(this->_nodeBuffer.back().back());
+        }
+        this->_nodeBuffer.pop_back();
+    }
+
+    bool hasChangesBody = false;
+    std::vector<std::shared_ptr<LILNode>> resultNodes;
+    for (auto node : value->getBody()) {
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processPasteInstr(node);
+        if (!remove && this->_nodeBuffer.back().size() == 0) {
+            resultNodes.push_back(node);
+        } else {
+            hasChangesBody = true;
+            for (auto newNode : this->_nodeBuffer.back()) {
+                resultNodes.push_back(newNode);
+            }
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    if (hasChangesBody) {
+        this->_needsAnotherPass = true;
+        value->setBody(std::move(resultNodes));
+    }
+    return false;
+}
+
+bool LILPreprocessor::_processPasteInstr(std::shared_ptr<LILValueList> value)
+{
+    std::cerr << "UNIMPLEMENTED FAIL!!!!!!!!\n\n";
+    return false;
+}
+
+bool LILPreprocessor::_processPasteInstr(std::shared_ptr<LILIndexAccessor> value)
+{
+    auto arg = value->getArgument();
+    if (arg) {
+        this->processPasteInstr(arg);
+    }
+    return false;
+}
+
+bool LILPreprocessor::_processPasteInstr(std::shared_ptr<LILConversionDecl> value)
+{
+    bool hasChangesBody = false;
+    std::vector<std::shared_ptr<LILNode>> resultNodes;
+    for (auto node : value->getBody()) {
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processPasteInstr(node);
+        if (!remove && this->_nodeBuffer.back().size() == 0) {
+            resultNodes.push_back(node);
+        } else {
+            hasChangesBody = true;
+            for (auto newNode : this->_nodeBuffer.back()) {
+                resultNodes.push_back(newNode);
+            }
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    if (hasChangesBody) {
+        this->_needsAnotherPass = true;
+        value->setBody(std::move(resultNodes));
+    }
+    return false;
 }

@@ -16,7 +16,7 @@
 #include "LILASTBuilder.h"
 #include "LILCodeParser.h"
 
-#include "LILNeedsImporter.h"
+#include "LILPreprocessor.h"
 #include "LILASTValidator.h"
 #include "LILConversionInserter.h"
 #include "LILConstantFolder.h"
@@ -46,7 +46,7 @@ namespace LIL
         , isMain(false)
         , verbose(false)
         , debugLilStd(false)
-        , debugNeedsImporter(false)
+        , debugPreprocessor(false)
         , debugAST(false)
         , debugASTValidator(false)
         , debugTypeGuesser(false)
@@ -74,7 +74,7 @@ namespace LIL
 
         bool verbose;
         bool debugLilStd;
-        bool debugNeedsImporter;
+        bool debugPreprocessor;
         bool debugAST;
         bool debugASTValidator;
         bool debugTypeGuesser;
@@ -205,15 +205,15 @@ void LILCodeUnit::runPasses()
         passes.push_back(stringVisitor);
     }
     
-    //handle #needs instructions
-    auto needsImporter = new LILNeedsImporter();
+    //handle #needs, #if and #snippet instructions
+    auto preprocessor = new LILPreprocessor();
     for (auto aif : d->alreadyImportedFiles) {
-        needsImporter->addAlreadyImportedFile(aif);
+        preprocessor->addAlreadyImportedFile(aif);
     }
-    needsImporter->setDebug(d->debugNeedsImporter);
-    needsImporter->setDir(d->dir);
-    needsImporter->setDebugAST(d->debugAST);
-    passes.push_back(needsImporter);
+    preprocessor->setDebug(d->debugPreprocessor);
+    preprocessor->setDir(d->dir);
+    preprocessor->setDebugAST(d->debugAST);
+    passes.push_back(preprocessor);
     if (verbose) {
         auto stringVisitor = new LILToStringVisitor();
         stringVisitor->setPrintHeadline(false);
@@ -361,9 +361,9 @@ void LILCodeUnit::setDebugLilStd(bool value)
     d->debugLilStd = value;
 }
 
-void LILCodeUnit::setDebugNeedsImporter(bool value)
+void LILCodeUnit::setDebugPreprocessor(bool value)
 {
-    d->debugNeedsImporter = value;
+    d->debugPreprocessor = value;
 }
 
 void LILCodeUnit::setDebugASTValidator(bool value)

@@ -72,7 +72,7 @@ namespace LIL {
         virtual void addNode(std::shared_ptr<LILNode> child);
         virtual void removeNode(std::shared_ptr<LILNode> child);
         virtual void prependNode(std::shared_ptr<LILNode> child);
-        void setChildNodes(std::vector<std::shared_ptr<LILNode>> nodes);
+        void setChildNodes(const std::vector<std::shared_ptr<LILNode>> && nodes);
         void clearChildNodes();
 
         virtual bool isA(ExpressionType otherType) const;

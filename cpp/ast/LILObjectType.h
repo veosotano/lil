@@ -22,7 +22,7 @@ namespace LIL
     class LILObjectType : public LILType
     {
     public:
-        static std::shared_ptr<LILObjectType> make(LILString returnTypeName);
+        static std::shared_ptr<LILObjectType> make(LILString name);
         LILObjectType();
         LILObjectType(const LILObjectType &other);
         std::shared_ptr<LILObjectType> clone() const;

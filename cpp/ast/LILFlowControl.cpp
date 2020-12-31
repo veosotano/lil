@@ -145,6 +145,17 @@ void LILFlowControl::clearArguments()
     this->_arguments.clear();
 }
 
+void LILFlowControl::setArguments(const std::vector<std::shared_ptr<LILNode>> && newArgs)
+{
+    for (auto node : this->_arguments) {
+        this->removeNode(node);
+    }
+    this->_arguments = std::move(newArgs);
+    for (auto node : this->_then) {
+        this->addNode(node);
+    }
+}
+
 void LILFlowControl::addThen(std::shared_ptr<LILNode> node)
 {
     this->addNode(node);
@@ -156,9 +167,12 @@ const std::vector<std::shared_ptr<LILNode>> & LILFlowControl::getThen() const
     return this->_then;
 }
 
-void LILFlowControl::setThen(std::vector<std::shared_ptr<LILNode>> newThen)
+void LILFlowControl::setThen(const std::vector<std::shared_ptr<LILNode>> && newThen)
 {
-    this->_then = newThen;
+    for (auto node : this->_then) {
+        this->removeNode(node);
+    }
+    this->_then = std::move(newThen);
     for (auto node : this->_then) {
         this->addNode(node);
     }
@@ -170,9 +184,12 @@ void LILFlowControl::addElse(std::shared_ptr<LILNode> node)
     this->_else.push_back(node);
 }
 
-void LILFlowControl::setElse(std::vector<std::shared_ptr<LILNode>> newElse)
+void LILFlowControl::setElse(const std::vector<std::shared_ptr<LILNode>> && newElse)
 {
-    this->_else = newElse;
+    for (auto node : this->_else) {
+        this->removeNode(node);
+    }
+    this->_else = std::move(newElse);
     for (auto node : this->_else) {
         this->addNode(node);
     }

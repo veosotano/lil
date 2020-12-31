@@ -16,13 +16,56 @@
 
 using namespace LIL;
 
-LILInstruction::LILInstruction()
-: LIL::LILNode(NodeTypeInstruction)
+LILString LILInstruction::instructionTypeToString(InstructionType instrType)
+{
+    switch (instrType) {
+        case InstructionTypeNew:
+            return "new";
+        case InstructionTypeMove:
+            return "move";
+        case InstructionTypeDelete:
+            return "delete";
+        case InstructionTypeGrayscale1:
+            return "grayscale1";
+        case InstructionTypeGrayscale2:
+            return "grayscale2";
+        case InstructionTypeRGB:
+            return "rgb";
+        case InstructionTypeRGBA:
+            return "rgba";
+        case InstructionTypeRGBAA:
+            return "rgbaa";
+        case InstructionTypeRRGGBB:
+            return "rrggbb";
+        case InstructionTypeRRGGBBA:
+            return "rrggbba";
+        case InstructionTypeRRGGBBAA:
+            return "rrggbbaa";
+        case InstructionTypeConfigure:
+            return "configure";
+        case InstructionTypeNeeds:
+            return "needs";
+        case InstructionTypeImport:
+            return "import";
+        case InstructionTypeExport:
+            return "export";
+        case InstructionTypeIf:
+            return "if";
+        case InstructionTypePaste:
+            return "paste";
+        case InstructionTypeSnippet:
+            return "snippet";
+        default:
+            return "ERROR: unknown instruction type";
+    }
+}
+
+LILInstruction::LILInstruction(NodeType nodeTy)
+: LILNode(nodeTy)
 , _instructionType(InstructionTypeNone)
 , _isColorInstruction(false)
 , _verbose(true)
 {
-    this->_instructionType = InstructionTypeNone;
 }
 
 LILInstruction::LILInstruction(const LILInstruction &other)
@@ -43,6 +86,7 @@ std::shared_ptr<LILInstruction> LILInstruction::clone() const
 std::shared_ptr<LILClonable> LILInstruction::cloneImpl() const
 {
     std::shared_ptr<LILInstruction> clone(new LILInstruction(*this));
+    clone->clearChildNodes();
     if (this->_argument) {
         clone->setArgument(this->_argument->clone());
     }
@@ -115,7 +159,6 @@ LILString LILInstruction::getName() const
     return this->_name;
 }
 
-
 void LILInstruction::setIsColorInstruction(bool value)
 {
     this->_isColorInstruction = value;
@@ -128,6 +171,10 @@ bool LILInstruction::getIsColorInstruction() const
 
 void LILInstruction::setArgument(std::shared_ptr<LILNode> value)
 {
+    if (this->_argument) {
+        this->removeNode(this->_argument);
+    }
+    this->addNode(value);
     this->_argument = value;
 }
 

@@ -680,6 +680,10 @@ llvm::Value * LILIREmitter::_emit(LILVarDecl * value)
             return nullptr;
         }
     } else {
+        if (value->getIsConst()) {
+            //FIXME: emit global
+            return nullptr;
+        }
         
         if (!ty->isA(TypeTypeFunction)) {
             //backup if needed
@@ -729,7 +733,7 @@ llvm::Value * LILIREmitter::_emit(LILConversionDecl * value)
 {
     auto vd = value->getVarDecl();
     auto encodedName = value->encodedName();
-    auto body = value->getEvaluables();
+    auto body = value->getBody();
     auto ty = value->getType();
     if (!vd || body.size() == 0 || !ty) {
         std::cout << "!!!! EMIT CONVERSION DECL FAIL !!!!!!\n\n";
@@ -750,6 +754,7 @@ llvm::Value * LILIREmitter::_emit(LILConversionDecl * value)
     fd->setName(fnName);
 
     fd->setBody(body);
+    this->getRootNode()->addNode(fd);
     
     this->_emitFn(fd.get());
     

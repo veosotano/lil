@@ -41,6 +41,7 @@ namespace LIL
         
         void add(std::shared_ptr<LILNode> node);
         const std::vector<std::shared_ptr<LILNode>> & getNodes() const;
+        void setNodes(const std::vector<std::shared_ptr<LILNode>> && nodes);
         
         std::shared_ptr<LILType> getType() const override;
 

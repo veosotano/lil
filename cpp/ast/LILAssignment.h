@@ -31,6 +31,7 @@ namespace LIL
         std::shared_ptr<LILNode> getSubject() const;
         void setValue(std::shared_ptr<LILNode> val);
         std::shared_ptr<LILNode> getValue() const;
+        void clearValue();
         const std::vector<std::shared_ptr<LILNode>> & getNodes() const;
         
     protected:

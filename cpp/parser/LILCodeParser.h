@@ -77,6 +77,7 @@ namespace LIL
         bool readPointerType();
         bool readStaticArrayType();
         bool readVarDecl();
+        bool readConstDecl();
         bool readAliasDecl();
         bool readTypeDecl();
         bool readConversionDecl();
@@ -108,6 +109,9 @@ namespace LIL
         bool readColor();
         bool readNeedsInstr();
         bool readExportInstr();
+        bool readIfInstr();
+        bool readSnippetInstr();
+        bool readPasteInstr();
         bool readNewInstr();
         bool readInstructionRule();
         bool readValuePath(bool allowFunctionCall);

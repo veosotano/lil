@@ -35,8 +35,9 @@ namespace LIL
         void receiveNodeData(const LIL::LILString &data) override;
         
         void addEvaluable(std::shared_ptr<LILNode> node);
-        const std::vector<std::shared_ptr<LILNode>> & getEvaluables();
-        LILString stringRep() override;
+        const std::vector<std::shared_ptr<LILNode>> & getBody() const;
+        void setBody(std::vector<std::shared_ptr<LILNode>> newBody);
+        void clearBody();
         LILString encodedName();
 
     protected:

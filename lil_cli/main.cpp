@@ -45,7 +45,7 @@ int main(int argc, const char * argv[]) {
     bool verbose = false;
     bool noLilStd = false;
     bool debugLilStd = false;
-    bool debugNeedsImporter = false;
+    bool debugPreprocessor = false;
     bool debugAST = false;
     bool debugFieldSorter = false;
     bool debugParameterSorter = false;
@@ -132,8 +132,8 @@ int main(int argc, const char * argv[]) {
             debugLilStd = true;
             ++i;
 
-        } else if (command == "--debug-needs-importer") {
-            debugNeedsImporter = true;
+        } else if (command == "--debug-preprocessor") {
+            debugPreprocessor = true;
             ++i;
             
         } else if (command == "--debug-ast") {
@@ -247,7 +247,7 @@ int main(int argc, const char * argv[]) {
     codeUnit->setVerbose(verbose);
     codeUnit->setNoLilStd(noLilStd);
     codeUnit->setDebugLilStd(debugLilStd);
-    codeUnit->setDebugNeedsImporter(debugNeedsImporter);
+    codeUnit->setDebugPreprocessor(debugPreprocessor);
     codeUnit->setDebugAST(debugAST);
     codeUnit->setDebugASTValidator(debugASTValidator);
     codeUnit->setDebugFieldSorter(debugFieldSorter);

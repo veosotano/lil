@@ -16,6 +16,13 @@
 
 using namespace LIL;
 
+std::shared_ptr<LILObjectType> LILObjectType::make(LILString name)
+{
+    auto ret = std::make_shared<LILObjectType>();
+    ret->setName(name);
+    return ret;
+}
+
 LILObjectType::LILObjectType()
 : LILType(TypeTypeObject)
 {

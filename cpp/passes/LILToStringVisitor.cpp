@@ -13,6 +13,8 @@
  ********************************************************************/
 
 #include "LILToStringVisitor.h"
+#include "LILIfInstruction.h"
+#include "LILSnippetInstruction.h"
 
 using namespace LIL;
 
@@ -260,6 +262,8 @@ LILToStrInfo LILToStringVisitor::stringify(LILNode * node)
             break;
         }
         case NodeTypeInstruction:
+        case NodeTypeIfInstruction:
+        case NodeTypeSnippetInstruction:
         {
             LILInstruction * value = static_cast<LILInstruction *>(node);
             info = this->_stringify(value);
@@ -481,7 +485,7 @@ LILToStrInfo LILToStringVisitor::_stringify(LILConversionDecl *value)
 
     LILToStrInfo bodyInfo;
     bodyInfo.value = "Body:";
-    auto body = value->getEvaluables();
+    auto body = value->getBody();
     for (auto it = body.begin(); it!=body.end(); ++it)
     {
         bodyInfo.children.push_back(this->stringify((*it).get()));
@@ -776,18 +780,78 @@ LILToStrInfo LILToStringVisitor::_stringify(LILFlowControlCall * value)
 LILToStrInfo LILToStringVisitor::_stringify(LILInstruction * value)
 {
     LILToStrInfo ret;
-    LILString tempStr;
     if (value->getIsColorInstruction()) {
-        ret.value = "Color: #"+value->stringRep();
+        ret.value = "Color: #"+LILNodeToString::stringify(value);
+        return ret;
     } else {
-        tempStr = "Instruction: #"+value->stringRep();
-        auto arg = value->getArgument();
-        if (arg) {
-            ret.children.push_back(this->stringify(arg.get()));
+        switch (value->getInstructionType()) {
+            case InstructionTypeIf:
+            {
+                auto ifInstr = static_cast<LILIfInstruction *>(value);
+                ret.value = "Instruction: #if";
+                LILToStrInfo argsInfo;
+                argsInfo.isExported = false;
+                argsInfo.value = "Argument:";
+                argsInfo.children.push_back(this->stringify(value->getArgument().get()));
+                if (argsInfo.children.size() > 0) {
+                    ret.children.push_back(argsInfo);
+                }
+                
+                LILToStrInfo thenInfo;
+                thenInfo.isExported = false;
+                thenInfo.value = "Then:";
+                for (auto it = ifInstr->getThen().begin(); it!=ifInstr->getThen().end(); ++it)
+                {
+                    thenInfo.children.push_back(this->stringify((*it).get()));
+                };
+                if (thenInfo.children.size() > 0) {
+                    ret.children.push_back(thenInfo);
+                }
+                
+                auto elseNodes = ifInstr->getElse();
+                if (elseNodes.size() > 0) {
+                    LILToStrInfo thenInfo;
+                    thenInfo.isExported = false;
+                    thenInfo.value = "Else:";
+                    for (auto it = ifInstr->getElse().begin(); it!=ifInstr->getElse().end(); ++it)
+                    {
+                        thenInfo.children.push_back(this->stringify((*it).get()));
+                    };
+                    if (thenInfo.children.size() > 0) {
+                        ret.children.push_back(thenInfo);
+                    }
+                }
+                
+                break;
+            }
+            case InstructionTypeSnippet:
+            {
+                auto snInstr = static_cast<LILSnippetInstruction *>(value);
+                ret.value = "#snippet: "+snInstr->getName();
+                for (auto it = snInstr->getBody().begin(); it!=snInstr->getBody().end(); ++it)
+                {
+                    ret.children.push_back(this->stringify((*it).get()));
+                };
+                break;
+            }
+            default:
+            {
+                LILString nameStr;
+                if (value->getName().length() > 0) {
+                    nameStr = " " + value->getName();
+                } else {
+                    nameStr = "";
+                }
+                ret.value = "Instruction: #" + LILNodeToString::stringify(value) + nameStr;
+                auto arg = value->getArgument();
+                if (arg) {
+                    ret.children.push_back(this->stringify(arg.get()));
+                }
+                return ret;
+                break;
+            }
         }
     }
-    ret.value = tempStr;
-    
     return ret;
 }
 

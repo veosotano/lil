@@ -89,6 +89,7 @@ namespace LIL
         //---
         NodeTypeVarName,
         NodeTypeVarDecl,
+        NodeTypeConstDecl,
         NodeTypeAliasDecl,
         NodeTypeTypeDecl,
         NodeTypeConversionDecl,
@@ -107,6 +108,8 @@ namespace LIL
         NodeTypeObjectDefinition,
         NodeTypeComment,
         NodeTypeInstruction,
+        NodeTypeIfInstruction,
+        NodeTypeSnippetInstruction,
         NodeTypeFunctionDecl,
         NodeTypeFunctionCall,
         NodeTypeFlowControl,
@@ -227,7 +230,11 @@ namespace LIL
         InstructionTypeRRGGBBAA,
         InstructionTypeConfigure,
         InstructionTypeNeeds,
+        InstructionTypeImport,
         InstructionTypeExport,
+        InstructionTypeIf,
+        InstructionTypeSnippet,
+        InstructionTypePaste,
     };
 
     enum SelectorType
@@ -414,10 +421,12 @@ namespace LIL
         ParserEventType,
         ParserEventReturnType,
         ParserEventVarDecl,
+        ParserEventConstDecl,
         ParserEventAliasDecl,
         ParserEventTypeDecl,
         ParserEventConversionDecl,
         ParserEventVarName,
+        ParserEventConstName,
         ParserEventExtern,
         ParserEventObjectDefinition,
         ParserEventFunction,
@@ -452,6 +461,8 @@ namespace LIL
         ParserEventColorRRGGBB,
         ParserEventColorRRGGBBA,
         ParserEventColorRRGGBBAA,
+        ParserEventIfInstruction,
+        ParserEventIfInstructionElse,
         ParserEventForeignLang,
         ParserEventInvalid,
     };

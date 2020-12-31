@@ -97,14 +97,28 @@ void LILConversionDecl::addEvaluable(std::shared_ptr<LILNode> node)
     this->_body.push_back(node);
 }
 
-const std::vector<std::shared_ptr<LILNode>> & LILConversionDecl::getEvaluables()
+const std::vector<std::shared_ptr<LILNode>> & LILConversionDecl::getBody() const
 {
     return this->_body;
 }
 
-LILString LILConversionDecl::stringRep()
+void LILConversionDecl::setBody(std::vector<std::shared_ptr<LILNode>> newBody)
 {
-    return this->_srcTyName + " => " + this->_destTyName;
+    for (auto node : newBody) {
+        node->setParentNode(nullptr);
+    }
+    this->clearBody();
+    for (const auto & node : newBody) {
+        this->addEvaluable(node);
+    }
+}
+
+void LILConversionDecl::clearBody()
+{
+    for (auto it = this->_body.rbegin(); it != this->_body.rend(); ++it){
+        this->removeNode(*it);
+    }
+    this->_body.clear();
 }
 
 LILString LILConversionDecl::encodedName()

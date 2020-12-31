@@ -34,12 +34,13 @@ namespace LIL
         void addArgument(std::shared_ptr<LILNode> arg);
         const std::vector<std::shared_ptr<LILNode>> & getArguments() const;
         void clearArguments();
+        void setArguments(const std::vector<std::shared_ptr<LILNode>> && newArgs);
         void addThen(std::shared_ptr<LILNode> node);
         const std::vector<std::shared_ptr<LILNode>> & getThen() const;
-        void setThen(std::vector<std::shared_ptr<LILNode>> newThen);
+        void setThen(const std::vector<std::shared_ptr<LILNode>> && newThen);
         void addElse(std::shared_ptr<LILNode> node);
         const std::vector<std::shared_ptr<LILNode>> & getElse() const;
-        void setElse(std::vector<std::shared_ptr<LILNode>> newElse);
+        void setElse(const std::vector<std::shared_ptr<LILNode>> && newElse);
         
         void setReceivesFunctionBody(bool newValue);
         bool getReceivesFunctionBody() const;

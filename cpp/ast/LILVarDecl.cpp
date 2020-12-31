@@ -24,17 +24,20 @@ LILVarDecl::LILVarDecl()
 , _isExtern(false)
 , _isIVar(false)
 , _isVVar(false)
+, _isConst(false)
 {
     
 }
 
 LILVarDecl::LILVarDecl(const LILVarDecl & orig)
 : LILTypedNode(orig)
+, _name(orig._name)
+, _isExtern(orig._isExtern)
+, _isIVar(orig._isIVar)
+, _isVVar(orig._isVVar)
+, _isConst(orig._isConst)
 {
-    this->_name = orig._name;
-    this->_isExtern = orig._isExtern;
-    this->_isIVar = orig._isIVar;
-    this->_isVVar = orig._isVVar;
+
 }
 
 std::shared_ptr<LILVarDecl> LILVarDecl::clone() const
@@ -104,7 +107,16 @@ std::shared_ptr<LILNode> LILVarDecl::getInitVal() const
 
 void LILVarDecl::setInitVal(std::shared_ptr<LILNode> value)
 {
+    this->clearChildNodes();
     this->addNode(value);
+}
+
+void LILVarDecl::setInitVals(const std::vector<std::shared_ptr<LILNode>> & values)
+{
+    this->clearChildNodes();
+    for (auto value : values) {
+        this->addNode(value);
+    }
 }
 
 bool LILVarDecl::getIsExtern() const
@@ -135,4 +147,14 @@ bool LILVarDecl::getIsVVar() const
 void LILVarDecl::setIsVVar(bool value)
 {
     this->_isVVar = value;
+}
+
+bool LILVarDecl::getIsConst() const
+{
+    return this->_isConst;
+}
+
+void LILVarDecl::setIsConst(bool value)
+{
+    this->_isConst = value;
 }

@@ -75,6 +75,11 @@ void LILAssignment::setValue(std::shared_ptr<LILNode> val)
     this->_value = val;
 }
 
+void LILAssignment::clearValue()
+{
+    this->_value.reset();
+}
+
 std::shared_ptr<LILNode> LILAssignment::getValue() const
 {
     return this->_value;

@@ -305,7 +305,7 @@ void LILStructureLowerer::_process(std::shared_ptr<LILVarDecl> value)
         this->_nodeBuffer.push_back(buf);
         this->process(initVal);
         if (this->_nodeBuffer.back().size() > 0) {
-            value->setChildNodes(this->_nodeBuffer.back());
+            value->setChildNodes(std::move(this->_nodeBuffer.back()));
         }
         this->_nodeBuffer.pop_back();
     }
