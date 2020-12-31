@@ -1591,6 +1591,7 @@ bool LILCodeParser::readVarDecl()
     }
     if (
         d->currentToken->isA(TokenTypeSemicolon)
+        || d->currentToken->isA(TokenTypeComma)
         || d->currentToken->isA(TokenTypeParenthesisClose)
         || d->currentToken->isA(TokenTypeBlockClose)
         || d->currentToken->isA(TokenTypeFatArrow)
