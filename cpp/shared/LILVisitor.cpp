@@ -171,7 +171,11 @@ std::shared_ptr<LILNode> LILVisitor::findNodeForName(LILString name, LILNode * p
                 return localVar;
             }
         }
+        bool isRoot = parent->isA(NodeTypeRoot);
         parent = parent->getParentNode().get();
+        if (!parent && !isRoot) {
+            std::cerr << "NODE WHICH IS NOT ROOT DID NOT HAVE A PARENT FAIL !!!!!!!!\n\n";
+        }
     }
     return nullptr;
 }
