@@ -1,0 +1,5 @@
+fn main(var.i32 argc, var.ptr(ptr(i8)) argv)
+{
+    #paste LIL_INITIALIZERS;
+    return 0;
+}

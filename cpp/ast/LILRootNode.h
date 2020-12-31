@@ -36,8 +36,8 @@ namespace LIL {
         virtual ~LILRootNode();
         virtual bool isRootNode() const;
         
-        std::shared_ptr<LILFunctionDecl> getMainFn() const;
         const std::vector<std::shared_ptr<LILNode>> & getNodes() const;
+        void add(std::shared_ptr<LILNode> node, bool addToNodeTree = true);
         void clearNodes();
         void appendNodes(const std::vector<std::shared_ptr<LILNode>> & nodes);
 
@@ -62,9 +62,12 @@ namespace LIL {
         std::shared_ptr<LILSnippetInstruction> getSnippetNamed(LILString key);
         void addSnippet(std::shared_ptr<LILSnippetInstruction> snippet);
         void addEvaluable(std::shared_ptr<LILNode> node);
+
+        bool hasInitializers() const;
+        const std::vector<std::shared_ptr<LILNode>> & getInitializers() const;
+
     private:
         std::map<LILString, std::shared_ptr<LILNode>> _localVars;
-        std::shared_ptr<LILFunctionDecl> _mainFunction;
         std::vector<std::shared_ptr<LILClassDecl>> _classes;
         std::vector<std::shared_ptr<LILAliasDecl>> _aliases;
         std::vector<std::shared_ptr<LILTypeDecl>> _types;

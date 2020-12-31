@@ -28,12 +28,7 @@ using namespace LIL;
 LILRootNode::LILRootNode()
 : LILVarNode(NodeTypeRoot)
 {
-    this->_mainFunction = std::make_shared<LILFunctionDecl>();
-    this->_mainFunction->setFunctionDeclType(FunctionDeclTypeFn);
-    this->_mainFunction->setName("main");
-    this->_mainFunction->setHasOwnType(true);
-    auto ty = LILFunctionType::make("i64");
-    this->_mainFunction->setType(ty);
+
 }
 
 LILRootNode::LILRootNode(const LILRootNode & other)
@@ -45,6 +40,7 @@ LILRootNode::LILRootNode(const LILRootNode & other)
 , _conversions(other._conversions)
 , _constants(other._constants)
 , _snippets(other._snippets)
+, _initializers(other._initializers)
 {
 
 }
@@ -59,14 +55,157 @@ bool LILRootNode::isRootNode() const
     return true;
 }
 
-std::shared_ptr<LILFunctionDecl> LILRootNode::getMainFn() const
-{
-    return this->_mainFunction;
-}
-
 const std::vector<std::shared_ptr<LILNode>> & LILRootNode::getNodes() const
 {
     return this->getChildNodes();
+}
+
+void LILRootNode::add(std::shared_ptr<LILNode> node, bool addToNodeTree)
+{
+    switch (node->getNodeType()) {
+        case NodeTypeVarDecl:
+        {
+            auto vd = std::static_pointer_cast<LILVarDecl>(node);
+            auto ty = vd->getType();
+            if (
+                vd->getIsExtern()
+                || vd->getIsExported()
+            ) {
+                if (addToNodeTree) {
+                    this->addNode(node);
+                }
+                //local variables on root are globals
+                this->setLocalVariable(vd->getName(), vd);
+                
+            }
+            else if (ty && ty->isA(TypeTypeFunction))
+            {
+                if (addToNodeTree) {
+                    this->addNode(node);
+                }
+                //local variables on root are globals
+                this->setLocalVariable(vd->getName(), node);
+            }
+            else  if (vd->getIsConst() && vd->getIsExported())
+            {
+                this->addConstant(vd);
+            }
+            else
+            {
+                this->addEvaluable(node);
+            }
+            break;
+        }
+        case NodeTypeFunctionDecl:
+        {
+            auto fd = std::static_pointer_cast<LILFunctionDecl>(node);
+            
+            auto fnTy = std::static_pointer_cast<LILFunctionType>(fd->getType());
+            for ( auto arg : fnTy->getArguments()) {
+                if (arg->isA(NodeTypeVarDecl)) {
+                    auto argVd = std::static_pointer_cast<LILVarDecl>(arg);
+                    fd->setLocalVariable(argVd->getName(), argVd);
+                }
+            }
+            if (addToNodeTree) {
+                this->addNode(fd);
+            }
+            this->setLocalVariable(fd->getName(), fd);
+            break;
+        }
+        case NodeTypeClassDecl:
+        {
+            if (addToNodeTree) {
+                this->addNode(node);
+            }
+            this->addClass(std::static_pointer_cast<LILClassDecl>(node));
+            break;
+        }
+        case NodeTypeAliasDecl:
+        {
+            if (addToNodeTree) {
+                this->addNode(node);
+            }
+            this->addAlias(std::static_pointer_cast<LILAliasDecl>(node));
+            break;
+        }
+        case NodeTypeTypeDecl:
+        {
+            if (addToNodeTree) {
+                this->addNode(node);
+            }
+            this->addType(std::static_pointer_cast<LILTypeDecl>(node));
+            break;
+        }
+        case NodeTypeConversionDecl:
+        {
+            if (addToNodeTree) {
+                this->addNode(node);
+            }
+            this->addConversion(std::static_pointer_cast<LILConversionDecl>(node));
+            break;
+        }
+        case NodeTypeInstruction:
+        {
+            auto instr = std::static_pointer_cast<LILInstruction>(node);
+            switch (instr->getInstructionType()) {
+                case InstructionTypeNone:
+                case InstructionTypeNew:
+                case InstructionTypeMove:
+                case InstructionTypeRGB:
+                case InstructionTypeRGBA:
+                case InstructionTypeRGBAA:
+                case InstructionTypeRRGGBB:
+                case InstructionTypeRRGGBBA:
+                case InstructionTypeRRGGBBAA:
+                case InstructionTypeGrayscale1:
+                case InstructionTypeGrayscale2:
+                case InstructionTypeDelete:
+                case InstructionTypeConfigure:
+                case InstructionTypeSnippet:
+                    //do nothing
+                    break;
+
+                case InstructionTypeIf:
+                case InstructionTypeNeeds:
+                case InstructionTypeImport:
+                case InstructionTypePaste:
+                {
+                    if (addToNodeTree) {
+                        this->addNode(instr);
+                    }
+                    break;
+                }
+                case InstructionTypeExport:
+                {
+                    for (auto instrNode : instr->getChildNodes()) {
+                        this->add(instrNode);
+                    }
+                    break;
+                }
+            }
+            break;
+        }
+        case NodeTypeSnippetInstruction:
+        {
+            auto snInstr = std::static_pointer_cast<LILSnippetInstruction>(node);
+            this->addSnippet(snInstr);
+            if (addToNodeTree) {
+                this->addNode(node);
+            }
+            break;
+        }
+        case NodeTypeForeignLang:
+        {
+            if (addToNodeTree) {
+                this->addNode(node);
+            }
+            break;
+        }
+        default:
+            this->addEvaluable(node);
+            break;
+    }
 }
 
 void LILRootNode::clearNodes()
@@ -186,5 +325,15 @@ void LILRootNode::addSnippet(std::shared_ptr<LILSnippetInstruction> snippet)
 void LILRootNode::addEvaluable(std::shared_ptr<LILNode> node)
 {
     this->_initializers.push_back(node);
+}
+
+bool LILRootNode::hasInitializers() const
+{
+    return this->_initializers.size() > 0;
+}
+
+const std::vector<std::shared_ptr<LILNode>> & LILRootNode::getInitializers() const
+{
+    return this->_initializers;
 }
 

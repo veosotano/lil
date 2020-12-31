@@ -176,15 +176,15 @@ void LILCodeUnit::run()
 
 void LILCodeUnit::buildAST()
 {
+    auto rootNode = this->getRootNode();
     if (d->needsStdLil) {
-        auto rootNode = this->getRootNode();
         auto needsInstr = std::make_shared<LILInstruction>();
         needsInstr->setInstructionType(InstructionTypeNeeds);
         needsInstr->setName("needs");
         auto strConst = std::make_shared<LILStringLiteral>();
         strConst->setValue("\"std/lil.lil\"");
         needsInstr->setArgument(strConst);
-        rootNode->addNode(needsInstr);
+        rootNode->add(needsInstr);
         if (!d->debugLilStd) {
             needsInstr->setVerbose(false);
             needsInstr->hidden = true;
@@ -192,6 +192,24 @@ void LILCodeUnit::buildAST()
     }
 
     d->parser->parseString(d->source);
+
+    if (d->isMain) {
+        if (rootNode->hasInitializers()) {
+            auto snippet = std::make_shared<LILSnippetInstruction>();
+            snippet->setName("LIL_INITIALIZERS");
+            for (auto initializer : rootNode->getInitializers()) {
+                snippet->add(initializer);
+            }
+            rootNode->add(snippet);
+        }
+        auto importInstr = std::make_shared<LILInstruction>();
+        importInstr->setInstructionType(InstructionTypeImport);
+        importInstr->setName("import");
+        auto pathToMain = std::make_shared<LILStringLiteral>();
+        pathToMain->setValue("\"std/main.lil\"");
+        importInstr->setArgument(pathToMain);
+        rootNode->add(importInstr);
+    }
 }
 
 void LILCodeUnit::runPasses()
