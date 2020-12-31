@@ -166,7 +166,7 @@ std::shared_ptr<LILNode> LILVisitor::findNodeForName(LILString name, LILNode * p
     while (parent) {
         if(parent->isVarNode()){
             LILVarNode * vn = static_cast<LILVarNode *>(parent);
-            std::shared_ptr<LILNode> localVar = vn->getVariable(name);
+            std::shared_ptr<LILNode> localVar = vn->getLocalVariable(name);
             if (localVar) {
                 return localVar;
             }

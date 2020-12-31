@@ -1747,7 +1747,7 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForVarName(std::shared_ptr<LILV
     while (parent) {
         if(parent->isVarNode()){
             std::shared_ptr<LILVarNode> vn = std::static_pointer_cast<LILVarNode>(parent);
-            std::shared_ptr<LILNode> localVar = vn->getVariable(nameStr);
+            std::shared_ptr<LILNode> localVar = vn->getLocalVariable(nameStr);
             if (localVar) {
                 ret = this->getNodeType(localVar);
                 break;

@@ -26,12 +26,7 @@ namespace LIL {
         LILVarNode(const LILVarNode & other);
         virtual ~LILVarNode();
         virtual bool isVarNode() const;
-        //searches itself and ancestors
-        std::shared_ptr<LILNode> getVar(LILString name);
-        //only searches itself
-        virtual std::shared_ptr<LILNode> getVariable(LILString name);
-        bool hasLocalVar(LILString name);
-        virtual bool hasLocalVariable(LILString name);
+        virtual std::shared_ptr<LILNode> getLocalVariable(LILString name);
         virtual void setLocalVariable(LILString name, std::shared_ptr<LILNode> value);
         virtual void unsetLocalVariable(LILString name);
         void clearLocalVars();
