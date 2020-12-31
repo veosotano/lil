@@ -28,21 +28,21 @@ namespace LIL
         virtual ~LILMultipleType();
         bool equalTo(std::shared_ptr<LILNode> otherNode);
         virtual void receiveNodeData(const LILString & data);
-        
+
         void addType(std::shared_ptr<LILType> ty);
         void setTypes(std::vector<std::shared_ptr<LILType>> tys);
         std::vector<std::shared_ptr<LILType>> getTypes() const;
-        
+
         bool getIsWeakType() const;
         void setIsWeakType(bool value);
 
         void sortTypes();
-        
+
         size_t indexOfType(LILType * ty) const;
-        
+
     protected:
         virtual std::shared_ptr<LILClonable> cloneImpl() const;
-        
+
     private:
         std::vector<std::shared_ptr<LILType>> _types;
         bool _isWeakType;

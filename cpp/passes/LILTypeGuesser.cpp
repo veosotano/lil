@@ -1061,7 +1061,7 @@ std::shared_ptr<LILType> LILTypeGuesser::recursiveFindTypeFromAncestors(std::sha
                     {
                         auto fnTy = this->findFnTypeForFunctionCall(fc);
                         if (!fnTy) {
-                            std::cerr << "FUNCTION TYPE NOT FOUND FAIL!!!!";
+                            std::cerr << "FUNCTION TYPE NOT FOUND FAIL!!!!\n\n";
                             return nullptr;
                         }
                         auto args = fnTy->getArguments();
@@ -1070,7 +1070,7 @@ std::shared_ptr<LILType> LILTypeGuesser::recursiveFindTypeFromAncestors(std::sha
                             
                             for (auto arg : args) {
                                 if (!arg->LILNode::isA(NodeTypeVarDecl)) {
-                                    std::cerr << "ARG IN FN DEFINITION IS NOT VAR DECL FAIL!!!!";
+                                    std::cerr << "ARG IN FN DEFINITION IS NOT VAR DECL FAIL!!!!\n\n";
                                     return nullptr;
                                 }
                                 auto argVd = std::static_pointer_cast<LILVarDecl>(arg);
@@ -1098,7 +1098,7 @@ std::shared_ptr<LILType> LILTypeGuesser::recursiveFindTypeFromAncestors(std::sha
                     {
                         auto args = fc->getArguments();
                         if (args.size() != 2) {
-                            std::cerr << "SET NEEDS 2 ARGUMENTS FAIL!!!!";
+                            std::cerr << "SET NEEDS 2 ARGUMENTS FAIL!!!!\n\n";
                             return nullptr;
                         }
                         auto firstArg = args[0];
@@ -1155,7 +1155,7 @@ std::shared_ptr<LILType> LILTypeGuesser::recursiveFindTypeFromAncestors(std::sha
                         if (firstNode->isA(NodeTypePropertyName)) {
                             subjectName = std::static_pointer_cast<LILPropertyName>(firstNode)->getName();
                         } else {
-                            std::cerr << "FIRST NODE WAS NOT PROPERTY NAME FAIL!!!!";
+                            std::cerr << "FIRST NODE WAS NOT PROPERTY NAME FAIL!!!!\n\n";
                             return nullptr;
                         }
                         
@@ -1163,7 +1163,7 @@ std::shared_ptr<LILType> LILTypeGuesser::recursiveFindTypeFromAncestors(std::sha
                         subjectName = std::static_pointer_cast<LILPropertyName>(subject)->getName();
 
                     } else {
-                        std::cerr << "UNKNOWN NODE IN SUBJECT OF ASSIGNMENT FAIL!!!!";
+                        std::cerr << "UNKNOWN NODE IN SUBJECT OF ASSIGNMENT FAIL!!!!\n\n";
                         return nullptr;
                     }
 
@@ -1172,7 +1172,7 @@ std::shared_ptr<LILType> LILTypeGuesser::recursiveFindTypeFromAncestors(std::sha
                     auto className = objTy->getName();
                     auto classValue = this->findClassWithName(className);
                     if (!classValue) {
-                        std::cerr << "COULD NOT FIND CLASS FAIL!!!!";
+                        std::cerr << "COULD NOT FIND CLASS FAIL!!!!\n\n";
                         return nullptr;
                     }
                     for (auto field : classValue->getFields()) {
@@ -1227,12 +1227,12 @@ std::shared_ptr<LILFunctionType> LILTypeGuesser::findFnTypeForFunctionCall(std::
         {
             auto localNode = this->findNodeForName(fc->getName(), fc->getParentNode().get());
             if (!localNode) {
-                std::cerr << "LOCAL VAR NOT FOUND FAIL!!!!";
+                std::cerr << "LOCAL VAR NOT FOUND FAIL!!!!\n\n";
                 return nullptr;
             }
             auto ty = localNode->getType();
             if (!ty->isA(TypeTypeFunction)) {
-                std::cerr << "LOCAL VAR WAS NOT FUNCTION FAIL!!!!";
+                std::cerr << "LOCAL VAR WAS NOT FUNCTION FAIL!!!!\n\n";
                 return nullptr;
             }
             return std::static_pointer_cast<LILFunctionType>(ty);
@@ -1242,23 +1242,23 @@ std::shared_ptr<LILFunctionType> LILTypeGuesser::findFnTypeForFunctionCall(std::
             auto vp = fc->getSubject();
             auto subjTy = this->findTypeForValuePath(vp);
             if (!subjTy->isA(TypeTypeObject)) {
-                std::cerr << "VAR PATH DOES NOT POINT TO OBJECT FAIL!!!!";
+                std::cerr << "VAR PATH DOES NOT POINT TO OBJECT FAIL!!!!\n\n";
                 return nullptr;
             }
             
             auto classValue = this->findClassWithName(subjTy->getName());
             if (!classValue) {
-                std::cerr << "CLASS NOT NOT FOUND FAIL!!!!";
+                std::cerr << "CLASS NOT NOT FOUND FAIL!!!!\n\n";
                 return nullptr;
             }
             auto method = classValue->getMethodNamed(fc->getName());
             if (!method) {
-                std::cerr << "METHOD NOT NOT FOUND FAIL!!!!";
+                std::cerr << "METHOD NOT NOT FOUND FAIL!!!!\n\n";
                 return nullptr;
             }
             auto methTy = method->getType();
             if (!methTy->isA(TypeTypeFunction)) {
-                std::cerr << "TYPE WAS NOT FUNCTION TYPE FAIL!!!!";
+                std::cerr << "TYPE WAS NOT FUNCTION TYPE FAIL!!!!\n\n";
                 return nullptr;
             }
             auto fnTy = std::static_pointer_cast<LILFunctionType>(methTy);

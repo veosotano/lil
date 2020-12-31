@@ -26,13 +26,13 @@ namespace LIL
         LILPercentageLiteral(const LILPercentageLiteral & other);
         std::shared_ptr<LILPercentageLiteral> clone() const;
         virtual ~LILPercentageLiteral();
-        virtual void receiveNodeData(const LIL::LILString &data);
-        bool equalTo(std::shared_ptr<LILNode> otherNode);
+        void receiveNodeData(const LIL::LILString &data) override;
+        bool equalTo(std::shared_ptr<LILNode> otherNode) override;
         void setValue(LILString newValue);
         LILString getValue() const;
 
     private:
-        virtual std::shared_ptr<LILClonable> cloneImpl() const;
+        std::shared_ptr<LILClonable> cloneImpl() const override;
         LILString _value;
     };
 }

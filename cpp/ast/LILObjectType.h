@@ -27,11 +27,11 @@ namespace LIL
         LILObjectType(const LILObjectType &other);
         std::shared_ptr<LILObjectType> clone() const;
         virtual ~LILObjectType();
-        bool equalTo(std::shared_ptr<LILNode> otherNode);
-        virtual void receiveNodeData(const LILString & data);
-        
+        bool equalTo(std::shared_ptr<LILNode> otherNode) override;
+        void receiveNodeData(const LILString & data) override;
+
     protected:
-        virtual std::shared_ptr<LILClonable> cloneImpl() const;
+        std::shared_ptr<LILClonable> cloneImpl() const override;
     };
 }
 

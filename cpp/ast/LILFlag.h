@@ -26,15 +26,15 @@ namespace LIL
         LILFlag(const LILFlag &other);
         std::shared_ptr<LILFlag> clone() const;
         virtual ~LILFlag();
-        
+
         virtual void receiveNodeData(const LILString & data);
 
         void setName(LILString newName);
         const LILString getName() const;
-        
+
     protected:
         virtual std::shared_ptr<LILClonable> cloneImpl() const;
-        
+
     private:
         LILString _name;
     };

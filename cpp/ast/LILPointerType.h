@@ -27,14 +27,14 @@ namespace LIL
         LILPointerType(const LILPointerType &other);
         std::shared_ptr<LILPointerType> clone() const;
         virtual ~LILPointerType();
-        bool equalTo(std::shared_ptr<LILNode> otherNode);
-        virtual void receiveNodeData(const LILString & data);
+        bool equalTo(std::shared_ptr<LILNode> otherNode) override;
+        void receiveNodeData(const LILString & data) override;
         
         void setArgument(std::shared_ptr<LILType> node);
         std::shared_ptr<LILType> getArgument() const;
 
     protected:
-        virtual std::shared_ptr<LILClonable> cloneImpl() const;
+        std::shared_ptr<LILClonable> cloneImpl() const override;
         
     private:
         std::shared_ptr<LILType> _argument;

@@ -20,7 +20,6 @@ using namespace LIL;
 LILObjectDefinition::LILObjectDefinition()
 : LILTypedNode(NodeTypeObjectDefinition)
 {
-    
 }
 
 LILObjectDefinition::LILObjectDefinition(const LILObjectDefinition &other)
@@ -52,7 +51,6 @@ std::shared_ptr<LILClonable> LILObjectDefinition::cloneImpl() const
 
 LILObjectDefinition::~LILObjectDefinition()
 {
-    
 }
 
 void LILObjectDefinition::receiveNodeData(const LIL::LILString &data)

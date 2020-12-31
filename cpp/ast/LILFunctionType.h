@@ -30,7 +30,7 @@ namespace LIL
         virtual ~LILFunctionType();
         bool equalTo(std::shared_ptr<LILNode> otherNode);
         virtual void receiveNodeData(const LILString & data);
-        
+
         void addArgument(std::shared_ptr<LILNode> node);
         void prependArgument(std::shared_ptr<LILNode> node);
         std::vector<std::shared_ptr<LILNode>> getArguments() const;
@@ -45,10 +45,10 @@ namespace LIL
 
         void addCaller(std::shared_ptr<LILNode> caller);
         std::vector<std::shared_ptr<LILNode>> getCallers() const;
-        
+
     protected:
         virtual std::shared_ptr<LILClonable> cloneImpl() const;
-        
+
     private:
         std::vector<std::shared_ptr<LILNode>> _arguments;
         std::vector<std::shared_ptr<LILNode>> _callers;

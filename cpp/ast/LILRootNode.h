@@ -34,7 +34,7 @@ namespace LIL {
         LILRootNode();
         LILRootNode(const LILRootNode & other);
         virtual ~LILRootNode();
-        virtual bool isRootNode() const;
+        bool isRootNode() const override;
         
         const std::vector<std::shared_ptr<LILNode>> & getNodes() const;
         void add(std::shared_ptr<LILNode> node, bool addToNodeTree = true);

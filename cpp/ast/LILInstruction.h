@@ -29,7 +29,8 @@ namespace LIL
         LILInstruction(const LILInstruction &other);
         std::shared_ptr<LILInstruction> clone() const;
         virtual ~LILInstruction();
-        virtual void receiveNodeData(const LILString &data) override;
+        void receiveNodeData(const LILString &data) override;
+
         void setInstructionType(InstructionType value);
         InstructionType getInstructionType() const override;
         bool isA(InstructionType otherType) const override;
@@ -45,7 +46,7 @@ namespace LIL
         bool getVerbose() const;
         
     protected:
-        virtual std::shared_ptr<LILClonable> cloneImpl() const  override;
+        std::shared_ptr<LILClonable> cloneImpl() const  override;
         
     private:
         LILString _name;

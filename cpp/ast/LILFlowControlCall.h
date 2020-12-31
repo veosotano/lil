@@ -35,15 +35,15 @@ namespace LIL
         FlowControlCallType getFlowControlCallType() const override;
         void setFlowControlCallType(FlowControlCallType newType);
         bool isA(FlowControlCallType otherType) const override;
-        
+
         void setArgument(std::shared_ptr<LILNode> arg);
         std::shared_ptr<LILNode> getArgument() const;
-        
+
         std::shared_ptr<LILType> getType() const override;
-        
+
     protected:
         std::shared_ptr<LILClonable> cloneImpl() const override;
-        
+
     private:
         FlowControlCallType _flowControlCallType;
     };
