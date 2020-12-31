@@ -571,144 +571,131 @@ bool LILCodeParser::isAssignment() const
     bool ret = false;
 
     std::shared_ptr<LILToken> peekToken;
-    if (d->currentToken->isA(TokenTypeInstructionSign))
-    {
-        bool currentPref = d->lexer->isHexPreferred();
-        d->lexer->setHexPreferred(true);
-
+    peekToken = d->currentToken;
+    if (peekToken->isA(TokenTypeIdentifier)) {
         peekToken = d->lexer->peekNextToken();
-        ret = peekToken->isA(TokenTypeHexNumber);
-        d->lexer->setHexPreferred(currentPref);
-
     }
-    else
-    {
-        peekToken = d->currentToken;
-        if (peekToken->isA(TokenTypeIdentifier)) {
+    bool done = false;
+    while (peekToken && !done) {
+        //we assume we are done
+        done = true;
+        //skip all whitespace and comments
+        while (peekToken && (peekToken->isA(TokenTypeWhitespace) || peekToken->isA(TokenTypeBlockComment) || peekToken->isA(TokenTypeLineComment)))
+        {
             peekToken = d->lexer->peekNextToken();
         }
-        bool done = false;
-        while (peekToken && !done) {
-            //we assume we are done
-            done = true;
+        //it might be a unary expression
+        if ( this->isUnaryExpressionSign( peekToken ) ) {
+            d->lexer->resetPeek();
+            return false;
+        }
+        //if the next token is a colon, it is either an assignment or a filter
+        else if (peekToken->isA(TokenTypeColon))
+        {
+            peekToken = d->lexer->peekNextToken();
+            if (!peekToken)
+            {
+                d->lexer->resetPeek();
+                return false;
+            }
+            
+            //if it was a filter, it would be an identifier
+            if (!peekToken->isA(TokenTypeIdentifier)) {
+                d->lexer->resetPeek();
+                return true;
+            }
+            
+            //it might be a filter in a selector chain
+            while (peekToken && !peekToken->isA(TokenTypeSemicolon) && !peekToken->isA(TokenTypeBlockClose) && !peekToken->isA(TokenTypeBlockOpen))
+            {
+                peekToken = d->lexer->peekNextToken();
+            }
+            //if we find an opening block, we're dealing with a selector
+            if (peekToken && peekToken->isA(TokenTypeBlockOpen))
+            {
+                ret = false;
+            }
+        }
+        //either property grouping or a rule
+        else if (peekToken->isA(TokenTypeComma))
+        {
+            peekToken = d->lexer->peekNextToken();
             //skip all whitespace and comments
             while (peekToken && (peekToken->isA(TokenTypeWhitespace) || peekToken->isA(TokenTypeBlockComment) || peekToken->isA(TokenTypeLineComment)))
             {
                 peekToken = d->lexer->peekNextToken();
             }
-            //it might be a unary expression
-            if ( this->isUnaryExpressionSign( peekToken ) ) {
-                d->lexer->resetPeek();
-                return false;
-            }
-            //if the next token is a colon, it is either an assignment or a filter
-            else if (peekToken->isA(TokenTypeColon))
+            if (peekToken->isA(TokenTypeIdentifier))
             {
-                peekToken = d->lexer->peekNextToken();
-                if (!peekToken)
-                {
-                    d->lexer->resetPeek();
-                    return false;
-                }
-
-                //if it was a filter, it would be an identifier
-                if (!peekToken->isA(TokenTypeIdentifier)) {
-                    d->lexer->resetPeek();
-                    return true;
-                }
-
-                //it might be a filter in a selector chain
-                while (peekToken && !peekToken->isA(TokenTypeSemicolon) && !peekToken->isA(TokenTypeBlockClose) && !peekToken->isA(TokenTypeBlockOpen))
-                {
-                    peekToken = d->lexer->peekNextToken();
-                }
-                //if we find an opening block, we're dealing with a selector
-                if (peekToken && peekToken->isA(TokenTypeBlockOpen))
-                {
-                    ret = false;
-                }
-            }
-            //either property grouping or a rule
-            else if (peekToken->isA(TokenTypeComma))
-            {
-                peekToken = d->lexer->peekNextToken();
-                //skip all whitespace and comments
-                while (peekToken && (peekToken->isA(TokenTypeWhitespace) || peekToken->isA(TokenTypeBlockComment) || peekToken->isA(TokenTypeLineComment)))
-                {
-                    peekToken = d->lexer->peekNextToken();
-                }
-                if (peekToken->isA(TokenTypeIdentifier))
-                {
-                    peekToken = d->lexer->peekNextToken();
-                    done = false;
-                    continue;
-                }
-            }
-            //this might be a value path
-            else if(peekToken->isA(TokenTypeDot))
-            {
-                peekToken = d->lexer->peekNextToken();
-                if(peekToken && peekToken->isA(TokenTypeIdentifier)){
-                    //we are still in the value path, continue
-                    peekToken = d->lexer->peekNextToken();
-                    done = false;
-                    continue;
-                }
-                else
-                {
-                    //this can't be a property definition -- either a syntax error or a selector chain
-                    ret = false;
-                }
-            } else if (peekToken->isA(TokenTypeSquareBracketOpen)) {
-                while (peekToken && !peekToken->isA(TokenTypeSquareBracketClose) && !peekToken->isA(TokenTypeBlockClose) && !peekToken->isA(TokenTypeBlockOpen))
-                {
-                    peekToken = d->lexer->peekNextToken();
-                }
                 peekToken = d->lexer->peekNextToken();
                 done = false;
+                continue;
+            }
+        }
+        //this might be a value path
+        else if(peekToken->isA(TokenTypeDot))
+        {
+            peekToken = d->lexer->peekNextToken();
+            if(peekToken && peekToken->isA(TokenTypeIdentifier)){
+                //we are still in the value path, continue
+                peekToken = d->lexer->peekNextToken();
+                done = false;
+                continue;
             }
             else
             {
-                if (d->currentToken->isA(TokenTypeObjectSign))
+                //this can't be a property definition -- either a syntax error or a selector chain
+                ret = false;
+            }
+        } else if (peekToken->isA(TokenTypeSquareBracketOpen)) {
+            while (peekToken && !peekToken->isA(TokenTypeSquareBracketClose) && !peekToken->isA(TokenTypeBlockClose) && !peekToken->isA(TokenTypeBlockOpen))
+            {
+                peekToken = d->lexer->peekNextToken();
+            }
+            peekToken = d->lexer->peekNextToken();
+            done = false;
+        }
+        else
+        {
+            if (d->currentToken->isA(TokenTypeObjectSign))
+            {
+                ret = false;
+            }
+            else
+            {
+                //no colon, it may be a rule -- we peek until we find the end of the statement
+                //or we can conclude it actually is a rule
+                bool done = false;
+                while (!done)
                 {
-                    ret = false;
-                }
-                else
-                {
-                    //no colon, it may be a rule -- we peek until we find the end of the statement
-                    //or we can conclude it actually is a rule
-                    bool done = false;
-                    while (!done)
+                    switch (peekToken->getType())
                     {
-                        switch (peekToken->getType())
+                        case TokenTypeObjectSign:
+                        case TokenTypeBlockOpen:
+                        case TokenTypeSemicolon:
                         {
-                            case TokenTypeObjectSign:
-                            case TokenTypeBlockOpen:
-                            case TokenTypeSemicolon:
-                            {
-                                ret = false;
-                                done = true;
-                                break;
-                            }
-                                
-                            default:
-                                break;
+                            ret = false;
+                            done = true;
+                            break;
                         }
-
-                        if (!done)
+                            
+                        default:
+                            break;
+                    }
+                    
+                    if (!done)
+                    {
+                        peekToken = d->lexer->peekNextToken();
+                        if (!peekToken)
                         {
-                            peekToken = d->lexer->peekNextToken();
-                            if (!peekToken)
-                            {
-                                //we probably reached end of source, abort
-                                done = true;
-                            }
+                            //we probably reached end of source, abort
+                            done = true;
                         }
                     }
                 }
             }
-        } //end while !done
-    }
+        }
+    } //end while !done
 
     d->lexer->resetPeek();
     return ret;
