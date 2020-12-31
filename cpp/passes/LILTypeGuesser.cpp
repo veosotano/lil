@@ -1601,7 +1601,16 @@ void LILTypeGuesser::recursiveFindReturnTypes(std::vector<std::shared_ptr<LILTyp
                         {
                             std::shared_ptr<LILType> type = this->getExpType(std::static_pointer_cast<LILExpression>(arg));
                             if (type) {
-                                returnTypes.push_back(type);
+                                this->addTypeToReturnTypes(returnTypes, type);
+                            }
+                            break;
+                        }
+                        case NodeTypeVarName:
+                        {
+                            std::shared_ptr<LILVarName> vn = std::static_pointer_cast<LILVarName>(arg);
+                            auto type = this->findTypeForVarName(vn);
+                            if (type) {
+                                this->addTypeToReturnTypes(returnTypes, type);
                             }
                             break;
                         }
@@ -1610,36 +1619,7 @@ void LILTypeGuesser::recursiveFindReturnTypes(std::vector<std::shared_ptr<LILTyp
                             std::shared_ptr<LILValuePath> vp = std::static_pointer_cast<LILValuePath>(arg);
                             auto vpTy = this->findTypeForValuePath(vp);
                             if (vpTy) {
-                                switch (vpTy->getTypeType()) {
-                                    case TypeTypeSingle:
-                                    {
-                                        returnTypes.push_back(vpTy);
-                                        break;
-                                    }
-                                    case TypeTypeFunction:
-                                    {
-                                        auto fnTy = std::static_pointer_cast<LILFunctionType>(vpTy);
-                                        auto retTy = fnTy->getReturnType();
-                                        if (retTy) {
-                                            returnTypes.push_back(retTy);
-                                        } else {
-                                            std::cerr << "!!!!!!!!!!GUESSER FAIL!!!!!!!!!!!!!!!!\n";
-                                        }
-                                        break;
-                                    }
-                                    case TypeTypeMultiple:
-                                    {
-                                        if (!vpTy->getIsWeakType()) {
-                                            for ( auto retSubTy : std::static_pointer_cast<LILMultipleType>(vpTy)->getTypes() ) {
-                                                returnTypes.push_back(retSubTy);
-                                            }
-                                        } else {
-                                            std::cerr << "!!!!!!!!!!GUESSER FAIL!!!!!!!!!!!!!!!!\n";
-                                        }
-                                    }
-                                    default:
-                                        break;
-                                }
+                                this->addTypeToReturnTypes(returnTypes, vpTy);
                             }
                             break;
                         }
@@ -1647,7 +1627,7 @@ void LILTypeGuesser::recursiveFindReturnTypes(std::vector<std::shared_ptr<LILTyp
                         {
                             std::shared_ptr<LILType> type = this->findReturnTypeForFunctionCall(std::static_pointer_cast<LILFunctionCall>(arg));
                             if (type) {
-                                returnTypes.push_back(type);
+                                this->addTypeToReturnTypes(returnTypes, type);
                             }
                             break;
                         }
@@ -1675,6 +1655,43 @@ void LILTypeGuesser::recursiveFindReturnTypes(std::vector<std::shared_ptr<LILTyp
             }
         }
         default:
+            break;
+    }
+}
+
+void LILTypeGuesser::addTypeToReturnTypes(std::vector<std::shared_ptr<LILType>> & returnTypes, std::shared_ptr<LILType> ty) const
+{
+    switch (ty->getTypeType()) {
+        case TypeTypeSingle:
+        case TypeTypeObject:
+        case TypeTypePointer:
+        case TypeTypeStaticArray:
+        {
+            returnTypes.push_back(ty);
+            break;
+        }
+        case TypeTypeFunction:
+        {
+            auto fnTy = std::static_pointer_cast<LILFunctionType>(ty);
+            auto retTy = fnTy->getReturnType();
+            if (retTy) {
+                returnTypes.push_back(retTy);
+            } else {
+                std::cerr << "!!!!!!!!!!GUESSER FAIL!!!!!!!!!!!!!!!!\n";
+            }
+            break;
+        }
+        case TypeTypeMultiple:
+        {
+            if (!ty->getIsWeakType()) {
+                for ( auto retSubTy : std::static_pointer_cast<LILMultipleType>(ty)->getTypes() ) {
+                    returnTypes.push_back(retSubTy);
+                }
+            } else {
+                std::cerr << "!!!!!!!!!!GUESSER FAIL!!!!!!!!!!!!!!!!\n";
+            }
+        }
+        case TypeTypeNone:
             break;
     }
 }
