@@ -30,14 +30,12 @@ namespace LIL
         virtual ~LILObjectDefinition();
         void receiveNodeData(const LIL::LILString &data) override;
 
-        void addProperty(std::shared_ptr<LILNode> propDef);
         const std::vector<std::shared_ptr<LILNode>> & getNodes() const;
-        
+        void setNodes(const std::vector<std::shared_ptr<LILNode>> && nodes);
+
     protected:
         virtual std::shared_ptr<LILClonable> cloneImpl() const override;
-        
-    private:
-        std::vector<std::shared_ptr<LILNode>> _propDefs;
+
     };
 }
 

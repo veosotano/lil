@@ -25,7 +25,6 @@ LILObjectDefinition::LILObjectDefinition()
 LILObjectDefinition::LILObjectDefinition(const LILObjectDefinition &other)
 : LILTypedNode(other)
 {
-    this->_propDefs = other._propDefs;
 }
 
 std::shared_ptr<LILObjectDefinition> LILObjectDefinition::clone() const
@@ -38,9 +37,9 @@ std::shared_ptr<LILClonable> LILObjectDefinition::cloneImpl() const
     std::shared_ptr<LILObjectDefinition> clone(new LILObjectDefinition(*this));
     clone->clearChildNodes();
 
-    for (auto it = this->_propDefs.begin(); it!=this->_propDefs.end(); ++it)
+    for (auto it = this->getChildNodes().begin(); it!=this->getChildNodes().end(); ++it)
     {
-        clone->addProperty((*it)->clone());
+        clone->addNode((*it)->clone());
     }
     //clone LILTypedNode
     if (this->_type) {
@@ -63,13 +62,12 @@ void LILObjectDefinition::receiveNodeData(const LIL::LILString &data)
     this->setType(newType);
 }
 
-void LILObjectDefinition::addProperty(std::shared_ptr<LILNode> propDef)
-{
-    this->addNode(propDef);
-    this->_propDefs.push_back(propDef);
-}
-
 const std::vector<std::shared_ptr<LILNode>> & LILObjectDefinition::getNodes() const
 {
     return this->getChildNodes();
+}
+
+void LILObjectDefinition::setNodes(const std::vector<std::shared_ptr<LILNode>> && nodes)
+{
+    this->setChildNodes(std::move(nodes));
 }
