@@ -49,11 +49,6 @@ void LILNullLiteral::receiveNodeData(const LIL::LILString &data)
     
 }
 
-LILString LILNullLiteral::stringRep()
-{
-    return "null";
-}
-
 bool LILNullLiteral::equalTo(std::shared_ptr<LILNode> otherNode)
 {
     if ( ! LILNode::equalTo(otherNode)) return false;

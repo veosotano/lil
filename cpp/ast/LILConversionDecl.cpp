@@ -13,6 +13,7 @@
  ********************************************************************/
 
 #include "LILConversionDecl.h"
+#include "LILNodeToString.h"
 #include "LILType.h"
 #include "LILVarDecl.h"
 
@@ -67,7 +68,7 @@ void LILConversionDecl::setType(std::shared_ptr<LILType> value)
 {
     LILTypedNode::setType(value);
     if (this->_destTyName.length() == 0) {
-        this->_destTyName = value->stringRep();
+        this->_destTyName = LILNodeToString::stringify(value.get());
     }
 }
 
@@ -81,7 +82,7 @@ void LILConversionDecl::setVarDecl(std::shared_ptr<LILVarDecl> value)
     this->_varDecl = value;
     auto ty = value->getType();
     if (ty) {
-        this->_srcTyName = ty->stringRep();
+        this->_srcTyName = LILNodeToString::stringify(ty.get());
     }
     this->addNode(value);
 }

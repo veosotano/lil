@@ -23,6 +23,7 @@ namespace LIL
     class LILConversionDecl : public LILTypedNode
     {
     public:
+        friend class LILNodeToString;
         LILConversionDecl();
         LILConversionDecl(const LILConversionDecl &other);
         std::shared_ptr<LILConversionDecl> clone() const;

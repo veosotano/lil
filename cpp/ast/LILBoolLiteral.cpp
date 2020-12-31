@@ -78,11 +78,6 @@ bool LILBoolLiteral::getValue()
     return this->_value;
 }
 
-LILString LILBoolLiteral::stringRep()
-{
-    return this->_value ? "true" : "false";
-}
-
 bool LILBoolLiteral::equalTo(std::shared_ptr<LILNode> otherNode)
 {
     if ( ! LILTypedNode::equalTo(otherNode)) return false;

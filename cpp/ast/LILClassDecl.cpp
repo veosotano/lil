@@ -70,11 +70,6 @@ LILClassDecl::~LILClassDecl()
     
 }
 
-LILString LILClassDecl::stringRep()
-{
-    return this->getType()->getName();
-}
-
 std::shared_ptr<LILNode> LILClassDecl::getInheritType() const
 {
     return this->_inheritType;

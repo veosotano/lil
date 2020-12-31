@@ -59,8 +59,7 @@ namespace LIL {
         void setSourceLocation(LILNode::SourceLocation loc);
         LILNode::SourceLocation getSourceLocation() const;
         std::shared_ptr<LILNode> clone() const;
-        virtual LILString stringRep();
-        std::string stdStringRep();
+
         virtual bool equalTo(std::shared_ptr<LILNode> otherNode);
 
         virtual bool isA(NodeType otherType) const;

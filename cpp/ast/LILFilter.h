@@ -28,9 +28,7 @@ namespace LIL
         virtual ~LILFilter();
         
         virtual void receiveNodeData(const LILString & data);
-        
-        LILString stringRep();
-        
+
         void setName(LILString newName);
         const LILString getName() const;
         

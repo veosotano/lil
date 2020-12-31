@@ -27,7 +27,6 @@ namespace LIL
         LILExpression(const LILExpression & other);
         std::shared_ptr<LILExpression> clone() const;
         virtual ~LILExpression();
-        LILString stringRep() override;
 
         bool isA(ExpressionType otherType) const override;
         ExpressionType getExpressionType() const override;

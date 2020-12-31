@@ -132,21 +132,6 @@ LILFunctionDecl::~LILFunctionDecl()
     
 }
 
-LILString LILFunctionDecl::stringRep()
-{
-    switch (this->getFunctionDeclType())
-    {
-        case FunctionDeclTypeNone: return "";
-        case FunctionDeclTypeFn:
-        {
-            return "fn " + this->getName();
-        }
-        case FunctionDeclTypeInsert: return "insert";
-        case FunctionDeclTypeOverride: return "override";
-        case FunctionDeclTypeMacro: return "macro";
-    }
-}
-
 void LILFunctionDecl::receiveNodeData(const LILString &data)
 {
     if (data == "override")

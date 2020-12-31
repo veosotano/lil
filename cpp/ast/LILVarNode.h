@@ -25,7 +25,6 @@ namespace LIL {
         LILVarNode(NodeType type);
         LILVarNode(const LILVarNode & other);
         virtual ~LILVarNode();
-        virtual LILString stringRep();
         virtual bool isVarNode() const;
         //searches itself and ancestors
         std::shared_ptr<LILNode> getVar(LILString name);

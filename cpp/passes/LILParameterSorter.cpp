@@ -12,6 +12,7 @@
  *
  ********************************************************************/
 
+#include "LILNodeToString.h"
 #include "LILParameterSorter.h"
 #include "LILVarNode.h"
 
@@ -43,7 +44,7 @@ void LILParameterSorter::visit(LILNode *node)
 void LILParameterSorter::process(LILNode * node)
 {
     if (this->getDebug()) {
-        std::cerr << "## sorting parameters " + LILNode::nodeTypeToString(node->getNodeType()).data() + " " + node->stringRep().data() + " ##\n";
+        std::cerr << "## sorting parameters " + LILNode::nodeTypeToString(node->getNodeType()).data() + " " + LILNodeToString::stringify(node).data() + " ##\n";
     }
     switch (node->getNodeType()) {
         case NodeTypeBoolLiteral:

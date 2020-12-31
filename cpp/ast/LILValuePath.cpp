@@ -51,20 +51,6 @@ LILValuePath::~LILValuePath()
 
 }
 
-LILString LILValuePath::stringRep()
-{
-    LILString ret;
-    auto nodes = this->getNodes();
-    for (auto it = nodes.begin(); it != nodes.end(); ++it) {
-        auto node = *it;
-        ret += node->stringRep();
-        if (it+1 != nodes.end()) {
-            ret += ".";
-        }
-    }
-    return ret;
-}
-
 const std::vector<std::shared_ptr<LILNode>> & LILValuePath::getNodes() const
 {
     return this->getChildNodes();

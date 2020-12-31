@@ -72,22 +72,6 @@ void LILPointerType::receiveNodeData(const LIL::LILString &data)
     this->setName(data);
 }
 
-LILString LILPointerType::stringRep()
-{
-    LILString name = this->getName();
-    
-    name += "(";
-    auto arg = this->getArgument();
-    if (arg) {
-        name += arg->stringRep();
-    }
-    name += ")";
-    if (this->getIsNullable()) {
-        name += "?";
-    }
-    return name;
-}
-
 void LILPointerType::setArgument(std::shared_ptr<LILType> node)
 {
     this->_argument = node;

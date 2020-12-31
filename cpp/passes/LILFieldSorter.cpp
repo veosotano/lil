@@ -15,6 +15,7 @@
 
 #include "LILFieldSorter.h"
 #include "LILVarNode.h"
+#include "LILNodeToString.h"
 
 using namespace LIL;
 
@@ -44,7 +45,7 @@ void LILFieldSorter::visit(LILNode *node)
 void LILFieldSorter::process(LILNode * node)
 {
     if (this->getDebug()) {
-        std::cerr << "## sorting fields " + LILNode::nodeTypeToString(node->getNodeType()).data() + " " + node->stringRep().data() + " ##\n";
+        std::cerr << "## sorting fields " + LILNode::nodeTypeToString(node->getNodeType()).data() + " " + LILNodeToString::stringify(node).data() + " ##\n";
     }
     switch (node->getNodeType()) {
         case NodeTypeBoolLiteral:

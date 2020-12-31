@@ -96,42 +96,6 @@ LILUnaryExpression::~LILUnaryExpression()
     
 }
 
-LILString LILUnaryExpression::stringRep()
-{
-    LILString tempstr("");
-    switch (this->_uexpType)
-    {
-        case UnaryExpressionTypeSum:
-        {
-            tempstr += " +: ";
-            break;
-        }
-        case UnaryExpressionTypeSubtraction:
-        {
-            tempstr += " -: ";
-            break;
-        }
-        case UnaryExpressionTypeMultiplication:
-        {
-            tempstr += " *: ";
-            break;
-        }
-        case UnaryExpressionTypeDivision:
-        {
-            tempstr += " /: ";
-            break;
-        }
-
-        default:
-            break;
-    }
-    if (this->getValue())
-    {
-        tempstr += this->getValue()->stringRep();
-    }
-    return tempstr;
-}
-
 bool LILUnaryExpression::isA(UnaryExpressionType otherType) const
 {
     return otherType == this->_uexpType;

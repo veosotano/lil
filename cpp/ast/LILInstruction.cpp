@@ -98,37 +98,6 @@ LILInstruction::~LILInstruction()
     
 }
 
-LILString LILInstruction::stringRep()
-{
-    switch (this->getInstructionType()) {
-        case InstructionTypeGrayscale1:
-        case InstructionTypeGrayscale2:
-        case InstructionTypeRGB:
-        case InstructionTypeRGBA:
-        case InstructionTypeRGBAA:
-        case InstructionTypeRRGGBB:
-        case InstructionTypeRRGGBBA:
-        case InstructionTypeRRGGBBAA:
-        {
-            return this->getName();
-        }
-
-        case InstructionTypeNew:
-        case InstructionTypeMove:
-        case InstructionTypeDelete:
-        case InstructionTypeNeeds:
-        case InstructionTypeExport:
-        case InstructionTypeConfigure:
-        {
-            return this->getName();
-        }
-            
-        default:
-            break;
-    }
-    return "Unknown instruction";
-}
-
 void LILInstruction::receiveNodeData(const LILString &data)
 {
     

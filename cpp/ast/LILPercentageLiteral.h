@@ -30,7 +30,6 @@ namespace LIL
         bool equalTo(std::shared_ptr<LILNode> otherNode);
         void setValue(LILString newValue);
         LILString getValue() const;
-        LILString stringRep();
 
     private:
         virtual std::shared_ptr<LILClonable> cloneImpl() const;

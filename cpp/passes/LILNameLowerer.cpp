@@ -14,6 +14,7 @@
  ********************************************************************/
 
 #include "LILNameLowerer.h"
+#include "LILNodeToString.h"
 #include "LILObjectType.h"
 #include "LILPointerType.h"
 #include "LILVarNode.h"
@@ -46,7 +47,7 @@ void LILNameLowerer::visit(LILNode *node)
 void LILNameLowerer::process(LILNode * node)
 {
     if (this->getDebug()) {
-        std::cerr << "## lowering name " + LILNode::nodeTypeToString(node->getNodeType()).data() + " " + node->stringRep().data() + " ##\n";
+        std::cerr << "## lowering name " + LILNode::nodeTypeToString(node->getNodeType()).data() + " " + LILNodeToString::stringify(node).data() + " ##\n";
     }
     switch (node->getNodeType()) {
         case NodeTypeBoolLiteral:

@@ -13,6 +13,7 @@
  ********************************************************************/
 
 #include "LILStructureLowerer.h"
+#include "LILNodeToString.h"
 #include "LILVarNode.h"
 
 using namespace LIL;
@@ -101,8 +102,7 @@ void LILStructureLowerer::visit(LILNode *node)
 void LILStructureLowerer::process(std::shared_ptr<LILNode> node)
 {
     if (this->getDebug()) {
-        std::cerr << "## validating " + LILNode::nodeTypeToString(node->getNodeType()).data() + " " + node->stringRep().data() + " ##\n";
-        std::cerr << "## lowering structure " + LILNode::nodeTypeToString(node->getNodeType()).data() + " " + node->stringRep().data() + " ##\n";
+        std::cerr << "## lowering structure " + LILNode::nodeTypeToString(node->getNodeType()).data() + " " + LILNodeToString::stringify(node.get()).data() + " ##\n";
     }
     switch (node->getNodeType()) {
         case NodeTypeBoolLiteral:

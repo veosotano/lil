@@ -13,6 +13,7 @@
  ********************************************************************/
 
 #include "LILToStringVisitor.h"
+#include "LILNodeToString.h"
 #include "LILIfInstruction.h"
 #include "LILSnippetInstruction.h"
 
@@ -312,7 +313,7 @@ LILToStrInfo LILToStringVisitor::_stringify(LILNumberLiteral * value)
     LILToStrInfo ret;
     LILNode * type = value->getType().get();
     if (type) {
-        ret.value = "Number literal (" + type->stringRep() + "): " + value->getValue();
+        ret.value = "Number literal (" + LILNodeToString::stringify(type) + "): " + value->getValue();
     } else {
         ret.value = "Number literal: " + value->getValue();
     }
@@ -324,9 +325,9 @@ LILToStrInfo LILToStringVisitor::_stringify(LILPercentageLiteral * value)
     LILToStrInfo ret;
     LILNode * type = value->getType().get();
     if (type) {
-        ret.value = "Percentage literal (" + type->stringRep() + "): " + value->stringRep();
+        ret.value = "Percentage literal (" + LILNodeToString::stringify(type) + "): " + LILNodeToString::stringify(value);
     } else {
-        ret.value = "Percentage literal: " + value->stringRep();
+        ret.value = "Percentage literal: " + LILNodeToString::stringify(value);
     }
     return ret;
 }
@@ -337,7 +338,7 @@ LILToStrInfo LILToStringVisitor::_stringify(LILExpression * value)
     LILNode * type = value->getType().get();
     LILString typestr;
     if (type) {
-        typestr = " (" + type->stringRep() + ")";
+        typestr = " (" + LILNodeToString::stringify(type) + ")";
     }
     LILString expstr = LILString("Expression"+ typestr +": ") + LILExpression::expressionTypeToString(value->getExpressionType());
     ret.value = expstr;
@@ -351,7 +352,7 @@ LILToStrInfo LILToStringVisitor::_stringify(LILUnaryExpression * value)
     LILNode * type = value->getType().get();
     LILString typestr;
     if (type) {
-        typestr = " (" + type->stringRep() + ")";
+        typestr = " (" + LILNodeToString::stringify(type) + ")";
     }
     LILString expstr = LILString("Unary expression"+ typestr +": ") + LILUnaryExpression::expressionTypeToString(value->getUnaryExpressionType());
     ret.value = expstr;
@@ -406,27 +407,34 @@ LILToStrInfo LILToStringVisitor::_stringify(LILNullLiteral * value)
 LILToStrInfo LILToStringVisitor::_stringify(LILType * value)
 {
     LILToStrInfo ret;
-    ret.value = "Type: " + value->stringRep();
+    ret.value = "Type: " + LILNodeToString::stringify(value);
     return ret;
 }
 
 LILToStrInfo LILToStringVisitor::_stringify(LILVarDecl * value)
 {
     LILToStrInfo ret;
-    
+    ret.isExported = value->getIsExported();
+
     LILNode * type = value->getType().get();
     LILString externStr = value->getIsExtern() ? " extern" : "";
 
     LILString vdType = "";
+    LILString firstWord;
     if (value->getIsIVar()) {
         vdType = "(ivar) ";
     } else if (value->getIsVVar()) {
         vdType = "(vvar) ";
     }
-    if (type) {
-        ret.value = "Var declaration " + vdType + "(" + type->stringRep() + "): " + value->getName() + externStr;
+    if (value->getIsConst()) {
+        firstWord = "Const";
     } else {
-        ret.value = "Var declaration: " + vdType + value->getName() + externStr;
+        firstWord = "Var";
+    }
+    if (type) {
+        ret.value = firstWord + " declaration " + vdType + "(" + LILNodeToString::stringify(type) + "): " + value->getName() + externStr;
+    } else {
+        ret.value = firstWord + " declaration: " + vdType + value->getName() + externStr;
     }
     auto initVal = value->getInitVal();
     if (initVal) {
@@ -446,7 +454,7 @@ LILToStrInfo LILToStringVisitor::_stringify(LILAliasDecl *value)
         return ret;
     }
     
-    ret.value = "Alias declaration: "+name+" => "+target->stringRep();
+    ret.value = "Alias declaration: "+name+" => "+ LILNodeToString::stringify(target.get());
     
     return ret;
 }
@@ -462,7 +470,7 @@ LILToStrInfo LILToStringVisitor::_stringify(LILTypeDecl *value)
         return ret;
     }
     
-    ret.value = "Type declaration: "+name+" => "+target->stringRep();
+    ret.value = "Type declaration: "+name+" => "+LILNodeToString::stringify(target.get());
     
     return ret;
 }
@@ -475,7 +483,7 @@ LILToStrInfo LILToStringVisitor::_stringify(LILConversionDecl *value)
     if (!varDecl) {
         return ret;
     }
-    ret.value = "Conversion declaration " + value->stringRep();
+    ret.value = "Conversion declaration " + LILNodeToString::stringify(value);
 
     LILToStrInfo argumentsInfo;
     argumentsInfo.isExported = false;
@@ -510,7 +518,7 @@ LILToStrInfo LILToStringVisitor::_stringify(LILClassDecl * value)
     if (inheritTypeNode) {
         LILToStrInfo inheritInfo;
         inheritInfo.isExported = false;
-        inheritInfo.value = "Inherited type: "+inheritTypeNode->stringRep();
+        inheritInfo.value = "Inherited type: "+LILNodeToString::stringify(inheritTypeNode.get());
         ret.children.push_back(inheritInfo);
     }
     std::vector<std::shared_ptr<LILNode>> fields = value->getFields();
@@ -537,7 +545,7 @@ LILToStrInfo LILToStringVisitor::_stringify(LILObjectDefinition * value)
     LILToStrInfo ret;
     auto ty = value->getType();
     if (ty) {
-        ret.value = "Object definition (" + ty->stringRep() + "): ";
+        ret.value = "Object definition (" + LILNodeToString::stringify(ty.get()) + "): ";
     } else {
         ret.value = "Object definition: ";
     }
@@ -550,7 +558,7 @@ LILToStrInfo LILToStringVisitor::_stringify(LILAssignment * value)
     LILToStrInfo ret;
     auto ty = value->getType();
     if (ty) {
-        ret.value = "Assignment (" + ty->stringRep() + "): ";
+        ret.value = "Assignment (" + LILNodeToString::stringify(ty.get()) + "): ";
     } else {
         ret.value = "Assignment: ";
     }
@@ -597,7 +605,7 @@ LILToStrInfo LILToStringVisitor::_stringify(LILRule * value)
 LILToStrInfo LILToStringVisitor::_stringify(LILSimpleSelector * value)
 {
     LILToStrInfo ret;
-    ret.value = "Simple selector: "+value->stringRep();
+    ret.value = "Simple selector: "+LILNodeToString::stringify(value);
     return ret;
 }
 
@@ -619,28 +627,28 @@ LILToStrInfo LILToStringVisitor::_stringify(LILSelector * value)
 LILToStrInfo LILToStringVisitor::_stringify(LILCombinator * value)
 {
     LILToStrInfo ret;
-    ret.value = "Combinator: "+value->stringRep();
+    ret.value = "Combinator: "+LILNodeToString::stringify(value);
     return ret;
 }
 
 LILToStrInfo LILToStringVisitor::_stringify(LILFilter * value)
 {
     LILToStrInfo ret;
-    ret.value = "Filter: "+value->stringRep();
+    ret.value = "Filter: "+LILNodeToString::stringify(value);
     return ret;
 }
 
 LILToStrInfo LILToStringVisitor::_stringify(LILFlag * value)
 {
     LILToStrInfo ret;
-    ret.value = "Flag: "+value->stringRep();
+    ret.value = "Flag: "+LILNodeToString::stringify(value);
     return ret;
 }
 
 LILToStrInfo LILToStringVisitor::_stringify(LILVarName * value)
 {
     LILToStrInfo ret;
-    ret.value = "Var name: "+value->stringRep();
+    ret.value = "Var name: "+LILNodeToString::stringify(value);
     return ret;
 }
 
@@ -709,7 +717,7 @@ LILToStrInfo LILToStringVisitor::_stringify(LILFunctionCall * value)
     auto fcTypes = value->getArgumentTypes();
     for (size_t i=0, j=fcTypes.size(); i<j; ++i) {
         auto type = fcTypes[i];
-        typeStr += type->stringRep();
+        typeStr += LILNodeToString::stringify(type.get());
         if (i<j-1) {
             typeStr += ",";
         }
@@ -717,7 +725,7 @@ LILToStrInfo LILToStringVisitor::_stringify(LILFunctionCall * value)
     if (typeStr.length() > 0) {
         typeStr = " (" + typeStr + ")";
     }
-    ret.value = "Function call:"+ typeStr +" "+value->stringRep();
+    ret.value = "Function call:"+ typeStr +" "+LILNodeToString::stringify(value);
     this->stringifyChildren(value->getArguments(), ret);
     return ret;
 }
@@ -725,7 +733,7 @@ LILToStrInfo LILToStringVisitor::_stringify(LILFunctionCall * value)
 LILToStrInfo LILToStringVisitor::_stringify(LILFlowControl * value)
 {
     LILToStrInfo ret;
-    ret.value = "Flow control: "+value->stringRep();
+    ret.value = "Flow control: "+LILNodeToString::stringify(value);
     LILToStrInfo argsInfo;
     argsInfo.isExported = false;
     argsInfo.value = "Arguments:";
@@ -770,7 +778,7 @@ LILToStrInfo LILToStringVisitor::_stringify(LILFlowControl * value)
 LILToStrInfo LILToStringVisitor::_stringify(LILFlowControlCall * value)
 {
     LILToStrInfo ret;
-    ret.value = "Flow control call: "+value->stringRep();
+    ret.value = "Flow control call: "+LILNodeToString::stringify(value);
     if (value->isA(FlowControlCallTypeReturn)) {
         ret.children.push_back(this->stringify(value->getArgument().get()));
     }

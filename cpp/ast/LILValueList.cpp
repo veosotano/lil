@@ -53,19 +53,6 @@ void LILValueList::receiveNodeData(const LIL::LILString &data)
 
 }
 
-LILString LILValueList::stringRep()
-{
-    LILString tempstr;
-    auto children = this->getChildNodes();
-    for (size_t i = 0, j = children.size(); i<j; i+=1) {
-        tempstr += children[i]->stringRep();
-        if (i<j-1) {
-            tempstr += ", ";
-        }
-    }
-    return tempstr;
-}
-
 void LILValueList::addValue(std::shared_ptr<LILNode> arg)
 {
     this->addNode(arg);

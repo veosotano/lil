@@ -27,7 +27,7 @@ namespace LIL
         std::shared_ptr<LILNullLiteral> clone() const;
         virtual ~LILNullLiteral();
         void receiveNodeData(const LIL::LILString &data) override;
-        LILString stringRep() override;
+
         bool equalTo(std::shared_ptr<LILNode> otherNode) override;
         std::shared_ptr<LILType> getType() const override;
         

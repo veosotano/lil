@@ -24,11 +24,11 @@ namespace LIL
     class LILInstruction : public LILNode
     {
     public:
+        static LILString instructionTypeToString(InstructionType instrType);
         LILInstruction(NodeType nodeTy = NodeTypeInstruction);
         LILInstruction(const LILInstruction &other);
         std::shared_ptr<LILInstruction> clone() const;
         virtual ~LILInstruction();
-        virtual LILString stringRep() override;
         virtual void receiveNodeData(const LILString &data) override;
         void setInstructionType(InstructionType value);
         InstructionType getInstructionType() const override;

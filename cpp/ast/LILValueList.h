@@ -28,8 +28,6 @@ namespace LIL
         virtual ~LILValueList();
         
         void receiveNodeData(const LILString & data) override;
-        
-        LILString stringRep() override;
 
         void addValue(std::shared_ptr<LILNode> val);
         void setValues(std::vector<std::shared_ptr<LILNode>> vals);

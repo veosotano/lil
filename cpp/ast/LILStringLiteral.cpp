@@ -62,11 +62,6 @@ LILString LILStringLiteral::getValue()
     return this->_value;
 }
 
-LILString LILStringLiteral::stringRep()
-{
-    return this->_value;
-}
-
 bool LILStringLiteral::equalTo(std::shared_ptr<LILNode> otherNode)
 {
     if ( ! LILNode::equalTo(otherNode)) return false;

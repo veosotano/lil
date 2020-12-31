@@ -68,24 +68,6 @@ void LILVarDecl::receiveNodeData(const LIL::LILString &data)
     this->setName(data);
 }
 
-LILString LILVarDecl::stringRep()
-{
-    LILString kw;
-    if (this->getIsIVar()) {
-        kw = "ivar";
-    } else if (this->getIsVVar()){
-        kw = "vvar";
-    } else {
-        kw = "var";
-    }
-
-    if (this->getInitVal())
-    {
-        return kw + this->getName() + " = " + this->getInitVal()->stringRep();
-    }
-    return kw + " " + this->getName();
-}
-
 const LILString LILVarDecl::getName() const
 {
     return this->_name;

@@ -34,7 +34,6 @@ namespace LIL {
         LILRootNode();
         LILRootNode(const LILRootNode & other);
         virtual ~LILRootNode();
-        virtual LILString stringRep();
         virtual bool isRootNode() const;
         
         std::shared_ptr<LILFunctionDecl> getMainFn() const;

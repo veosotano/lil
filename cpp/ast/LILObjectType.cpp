@@ -63,8 +63,3 @@ void LILObjectType::receiveNodeData(const LIL::LILString &data)
 {
     this->setName(data);
 }
-
-LILString LILObjectType::stringRep()
-{
-    return "@" + this->getName();
-}

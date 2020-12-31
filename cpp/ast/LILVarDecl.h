@@ -30,8 +30,6 @@ namespace LIL
 
         void receiveNodeData(const LIL::LILString &data);
 
-        LILString stringRep();
-
         const LILString getName() const;
         void setName(LILString newName);
 

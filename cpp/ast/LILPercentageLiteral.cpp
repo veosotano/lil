@@ -48,11 +48,6 @@ LILPercentageLiteral::~LILPercentageLiteral()
     
 }
 
-LILString LILPercentageLiteral::stringRep()
-{
-    return this->_value + "%";
-}
-
 void LILPercentageLiteral::receiveNodeData(const LIL::LILString &data)
 {
     this->setValue(data);

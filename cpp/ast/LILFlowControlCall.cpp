@@ -67,34 +67,6 @@ void LILFlowControlCall::receiveNodeData(const LILString &data)
     }
 }
 
-
-LILString LILFlowControlCall::stringRep()
-{
-    switch (this->getFlowControlCallType())
-    {
-        case FlowControlCallTypeReturn:
-        {
-            return "return";
-        }
-        case FlowControlCallTypeRepeat:
-        {
-            return "repeat";
-        }
-        case FlowControlCallTypeContinue:
-        {
-            return "continue";
-        }
-        case FlowControlCallTypeBreak:
-        {
-            return "break";
-        }
-   
-        default:
-            break;
-    }
-    return "";
-}
-
 FlowControlCallType LILFlowControlCall::getFlowControlCallType() const
 {
     return this->_flowControlCallType;

@@ -87,11 +87,6 @@ void LILSelector::receiveNodeData(const LIL::LILString &data)
     }
 }
 
-LILString LILSelector::stringRep()
-{
-    return this->_name;
-}
-
 bool LILSelector::equalTo(std::shared_ptr<LILNode> otherNode)
 {
     if ( ! LILNode::equalTo(otherNode)) return false;

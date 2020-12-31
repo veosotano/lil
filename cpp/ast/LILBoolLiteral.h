@@ -31,7 +31,6 @@ namespace LIL
         void setOriginalStringRep(LILString string);
         LILString originalStringRep();
         bool getValue();
-        LILString stringRep();
         bool equalTo(std::shared_ptr<LILNode> otherNode);
         
     protected:

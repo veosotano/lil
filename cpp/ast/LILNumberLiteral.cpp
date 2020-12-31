@@ -48,12 +48,6 @@ LILNumberLiteral::~LILNumberLiteral()
 
 }
 
-
-LILString LILNumberLiteral::stringRep()
-{
-    return this->_value;
-}
-
 void LILNumberLiteral::receiveNodeData(const LIL::LILString &data)
 {
     this->setValue(data);

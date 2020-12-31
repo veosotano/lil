@@ -68,42 +68,6 @@ void LILCombinator::receiveNodeData(const LIL::LILString &data)
     }
 }
 
-LILString LILCombinator::stringRep()
-{
-    switch (this->getCombinatorType())
-    {
-        case CombinatorTypeDescendants:
-        {
-            return "descendants (..)";
-            break;
-        }
-        case CombinatorTypeSiblings:
-        {
-            return "siblings (=)";
-            break;
-        }
-        case CombinatorTypeNextSiblings:
-        {
-            return "next siblings (+)";
-            break;
-        }
-        case CombinatorTypePreviousSiblings:
-        {
-            return "previous siblings (-)";
-            break;
-        }
-        case CombinatorTypeChildren:
-        {
-            return "children";
-            break;
-        }
-
-        default:
-            break;
-    }
-    return "unkown combinator";
-}
-
 bool LILCombinator::equalTo(std::shared_ptr<LILNode> otherNode)
 {
     if ( ! LILNode::equalTo(otherNode)) return false;

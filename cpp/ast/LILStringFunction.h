@@ -36,7 +36,6 @@ namespace LIL
         void setEndChunk(LILString newValue);
         LILString getEndChunk() const;
 
-        LILString stringRep() override;
         bool equalTo(std::shared_ptr<LILNode> otherNode) override;
         
         void add(std::shared_ptr<LILNode> node);

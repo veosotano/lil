@@ -49,11 +49,6 @@ void LILFlag::receiveNodeData(const LIL::LILString &data)
     this->setName(data);
 }
 
-LILString LILFlag::stringRep()
-{
-    return this->_name;
-}
-
 void LILFlag::setName(LILString newName)
 {
     this->_name = newName;

@@ -66,22 +66,6 @@ void LILMultipleType::receiveNodeData(const LIL::LILString &data)
     this->setName(data);
 }
 
-LILString LILMultipleType::stringRep()
-{
-    LILString tempstr;
-    for (size_t i=0, j=this->_types.size(); i<j; ++i) {
-        tempstr += this->_types[i]->stringRep();
-        if (i<j-1) {
-            tempstr += "|";
-        }
-    }
-    if (this->getIsWeakType()) {
-        return "<"+tempstr+">";
-    } else {
-        return tempstr;
-    }
-}
-
 void LILMultipleType::addType(std::shared_ptr<LILType> ty)
 {
     this->_types.push_back(ty);

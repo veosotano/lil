@@ -94,42 +94,6 @@ void LILFunctionType::receiveNodeData(const LIL::LILString &data)
     this->setName(data);
 }
 
-LILString LILFunctionType::stringRep()
-{
-    LILString name = this->getName();
-    
-    name += "(";
-    auto args = this->getArguments();
-    for (size_t i=0, j=args.size(); i<j; ++i) {
-        std::shared_ptr<LILNode> arg = args[i];
-        if (arg) {
-            std::shared_ptr<LILType> ty;
-            if (arg->isA(NodeTypeType)) {
-                ty = std::static_pointer_cast<LILType>(arg);
-            } else if (arg->isA(NodeTypeVarDecl)){
-                ty = std::static_pointer_cast<LILVarDecl>(arg)->getType();
-            }
-            if (ty) {
-                name += ty->stringRep();
-                if ((i+1)<j) {
-                    name += ",";
-                }
-            }
-        }
-    }
-    if (this->getIsVariadic()) {
-        name += "...";
-    }
-    name += ")";
-    std::shared_ptr<LILFunctionType> retTy = std::static_pointer_cast<LILFunctionType>(this->getReturnType());
-    if (retTy) {
-        name += "=>";
-        name += retTy->stringRep();
-    }
-
-    return name;
-}
-
 void LILFunctionType::addArgument(std::shared_ptr<LILNode> node)
 {
     this->addNode(node);

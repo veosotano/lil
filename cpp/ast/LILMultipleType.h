@@ -29,8 +29,6 @@ namespace LIL
         bool equalTo(std::shared_ptr<LILNode> otherNode);
         virtual void receiveNodeData(const LILString & data);
         
-        LILString stringRep();
-        
         void addType(std::shared_ptr<LILType> ty);
         void setTypes(std::vector<std::shared_ptr<LILType>> tys);
         std::vector<std::shared_ptr<LILType>> getTypes() const;

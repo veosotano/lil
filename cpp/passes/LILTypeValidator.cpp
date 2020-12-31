@@ -20,6 +20,7 @@
 #include "LILFunctionCall.h"
 #include "LILFunctionType.h"
 #include "LILMultipleType.h"
+#include "LILNodeToString.h"
 #include "LILObjectType.h"
 #include "LILPropertyName.h"
 #include "LILTypeDecl.h"
@@ -65,7 +66,7 @@ void LILTypeValidator::validate(std::shared_ptr<LILNode> node)
         this->validateChildren(node->getChildNodes());
     }
     if (this->getDebug()) {
-        std::cerr << "## validating " + LILNode::nodeTypeToString(node->getNodeType()).data() + " " + node->stringRep().data() + " ##\n";
+        std::cerr << "## validating " + LILNode::nodeTypeToString(node->getNodeType()).data() + " " + LILNodeToString::stringify(node.get()).data() + " ##\n";
     }
     switch (node->getNodeType()) {
         case NodeTypeFunctionCall:
@@ -101,7 +102,7 @@ void LILTypeValidator::_validate(std::shared_ptr<LILFunctionCall> fc)
         auto remoteNode = this->findNodeForValuePath(vp.get());
         if (!remoteNode || !remoteNode->isA(NodeTypeVarDecl)) {
             LILErrorMessage ei;
-            ei.message =  "Function "+vp->stringRep()+"() not found";
+            ei.message =  "Function "+LILNodeToString::stringify(vp.get())+"() not found";
             LILNode::SourceLocation sl = fc->getSourceLocation();
             ei.file = sl.file;
             ei.line = sl.line;
@@ -137,7 +138,7 @@ void LILTypeValidator::_validate(std::shared_ptr<LILFunctionCall> fc)
         
         if (!ty || !ty->isA(TypeTypeFunction)) {
             LILErrorMessage ei;
-            ei.message =  "The path "+vp->stringRep()+" does not point to a function";
+            ei.message =  "The path "+LILNodeToString::stringify(vp.get())+" does not point to a function";
             LILNode::SourceLocation sl = fc->getSourceLocation();
             ei.file = sl.file;
             ei.line = sl.line;
@@ -156,12 +157,12 @@ void LILTypeValidator::_validate(std::shared_ptr<LILFunctionCall> fc)
             LILErrorMessage ei;
             if (args.size() == 0) {
                 if (fnTyArgs.size() > 1) {
-                    ei.message =  "Missing argument in call: "+vp->stringRep()+" needs "+LILString::number((LILUnitI64)fnTyArgs.size()) + " arguments";
+                    ei.message =  "Missing argument in call: "+LILNodeToString::stringify(vp.get())+" needs "+LILString::number((LILUnitI64)fnTyArgs.size()) + " arguments";
                 } else {
-                    ei.message =  "Missing argument in call: "+vp->stringRep()+" needs one argument";
+                    ei.message =  "Missing argument in call: "+LILNodeToString::stringify(vp.get())+" needs one argument";
                 }
             } else {
-                ei.message =  "Mismatch of number of arguments: "+vp->stringRep()+" needs "+LILString::number((LILUnitI64)fnTyArgs.size()) + " arguments and was given " + LILString::number((LILUnitI64)args.size());
+                ei.message =  "Mismatch of number of arguments: "+LILNodeToString::stringify(vp.get())+" needs "+LILString::number((LILUnitI64)fnTyArgs.size()) + " arguments and was given " + LILString::number((LILUnitI64)args.size());
             }
             LILNode::SourceLocation sl = fc->getSourceLocation();
             ei.file = sl.file;
@@ -249,9 +250,9 @@ void LILTypeValidator::_validate(std::shared_ptr<LILFunctionCall> fc)
                             found = true;
                             break;
                         } else {
-                            LILString conversionName = fcArgTy->stringRep();
+                            LILString conversionName = LILNodeToString::stringify(fcArgTy.get());
                             conversionName += "_to_";
-                            conversionName += mtArgTy->stringRep();
+                            conversionName += LILNodeToString::stringify(mtArgTy.get());
                             if (conversions.count(conversionName)) {
                                 i += 1;
                                 found = true;
@@ -273,9 +274,9 @@ void LILTypeValidator::_validate(std::shared_ptr<LILFunctionCall> fc)
                             found = true;
                             break;
                         } else {
-                            LILString conversionName = mtArgTy->stringRep();
+                            LILString conversionName = LILNodeToString::stringify(mtArgTy.get());
                             conversionName += "_to_";
-                            conversionName += argTy->stringRep();
+                            conversionName += LILNodeToString::stringify(argTy.get());
                             if (conversions.count(conversionName)) {
                                 i += 1;
                                 found = true;
@@ -293,9 +294,17 @@ void LILTypeValidator::_validate(std::shared_ptr<LILFunctionCall> fc)
                         i += 1;
                         continue;
                     } else {
-                        LILString conversionName = fcArgTy->stringRep();
+                        LILString conversionName = fcArgTy->getStrongTypeName();
+                        if (conversionName.length() == 0) {
+                            conversionName = LILNodeToString::stringify(fcArgTy.get());
+                        }
                         conversionName += "_to_";
-                        conversionName += argTy->stringRep();
+                        auto targetTyName = argTy->getStrongTypeName();
+                        if (targetTyName.length() > 0) {
+                            conversionName += targetTyName;
+                        } else {
+                            conversionName += LILNodeToString::stringify(argTy.get());
+                        }
                         if (conversions.count(conversionName)) {
                             i += 1;
                             continue;
@@ -304,7 +313,7 @@ void LILTypeValidator::_validate(std::shared_ptr<LILFunctionCall> fc)
                 }
 
                 LILErrorMessage ei;
-                ei.message =  "Type mismatch while calling " + fc->getName() + ": argument " + argName + " needs type "+argTy->stringRep()+" but was given "+fcArgTy->stringRep();
+                ei.message =  "Type mismatch while calling " + fc->getName() + ": argument " + argName + " needs type "+LILNodeToString::stringify(argTy.get())+" but was given "+LILNodeToString::stringify(fcArgTy.get());
                 LILNode::SourceLocation sl = fcArgs[i]->getSourceLocation();
                 ei.file = sl.file;
                 ei.line = sl.line;
@@ -373,7 +382,7 @@ void LILTypeValidator::_validate(std::shared_ptr<LILObjectDefinition> od)
                 auto asTy = as->getType();
                 if (!vdTy->equalTo(asTy)) {
                     LILErrorMessage ei;
-                    ei.message =  "The field "+pnName+" needs to be of type "+vdTy->stringRep()+", "+asTy->stringRep()+" was given instead";
+                    ei.message =  "The field "+pnName+" needs to be of type "+LILNodeToString::stringify(vdTy.get())+", "+LILNodeToString::stringify(asTy.get())+" was given instead";
                     LILNode::SourceLocation sl = as->getSourceLocation();
                     ei.file = sl.file;
                     ei.line = sl.line;
@@ -425,7 +434,7 @@ void LILTypeValidator::_validate(std::shared_ptr<LILVarDecl> vd)
         }
         if (!found) {
             LILErrorMessage ei;
-            ei.message =  "Type mismatch: cannot assign type "+ivTy->stringRep()+" to var."+ty->stringRep() + " " + vd->getName();
+            ei.message =  "Type mismatch: cannot assign type "+LILNodeToString::stringify(ivTy.get())+" to var."+LILNodeToString::stringify(ty.get()) + " " + vd->getName();
             LILNode::SourceLocation sl = initVal->getSourceLocation();
             ei.file = sl.file;
             ei.line = sl.line;

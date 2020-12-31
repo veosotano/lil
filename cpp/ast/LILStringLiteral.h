@@ -29,7 +29,6 @@ namespace LIL
         void receiveNodeData(const LIL::LILString &data) override;
         void setValue(LILString newValue);
         LILString getValue();
-        LILString stringRep() override;
         bool equalTo(std::shared_ptr<LILNode> otherNode) override;
         void setIsCString(bool value);
         bool getIsCString() const;

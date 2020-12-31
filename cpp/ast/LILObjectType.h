@@ -30,8 +30,6 @@ namespace LIL
         bool equalTo(std::shared_ptr<LILNode> otherNode);
         virtual void receiveNodeData(const LILString & data);
         
-        LILString stringRep();
-        
     protected:
         virtual std::shared_ptr<LILClonable> cloneImpl() const;
     };

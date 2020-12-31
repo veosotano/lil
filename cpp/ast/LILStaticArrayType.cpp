@@ -69,25 +69,6 @@ void LILStaticArrayType::receiveNodeData(const LIL::LILString &data)
     this->setName(data);
 }
 
-LILString LILStaticArrayType::stringRep()
-{
-    auto ty = this->getType();
-    LILString name;
-    if (ty) {
-        name = ty->stringRep();
-    }
-    name += "[";
-    auto arg = this->getArgument();
-    if (arg) {
-        name += arg->stringRep();
-    }
-    name += "]";
-    if (this->getIsNullable()) {
-        name += "?";
-    }
-    return name;
-}
-
 void LILStaticArrayType::setArgument(std::shared_ptr<LILNode> node)
 {
     this->_argument = node;

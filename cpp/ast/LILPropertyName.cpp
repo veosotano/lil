@@ -49,11 +49,6 @@ void LILPropertyName::receiveNodeData(const LIL::LILString &data)
     this->setName(data);
 }
 
-LILString LILPropertyName::stringRep()
-{
-    return this->_name;
-}
-
 bool LILPropertyName::equalTo(std::shared_ptr<LILNode> otherNode)
 {
     if ( ! LILNode::equalTo(otherNode)) return false;

@@ -29,8 +29,6 @@ namespace LIL
 
         virtual void receiveNodeData(const LILString & data);
 
-        LILString stringRep();
-
         void setLanguage(LILString value);
         const LILString & getLanguage() const;
 

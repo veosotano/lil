@@ -18,6 +18,7 @@
 #include "LILConversionDecl.h"
 #include "LILFunctionDecl.h"
 #include "LILInstruction.h"
+#include "LILNodeToString.h"
 #include "LILSnippetInstruction.h"
 #include "LILTypeDecl.h"
 #include "LILVarDecl.h"
@@ -51,11 +52,6 @@ LILRootNode::LILRootNode(const LILRootNode & other)
 LILRootNode::~LILRootNode()
 {
     
-}
-
-LILString LILRootNode::stringRep()
-{
-    return "root node";
 }
 
 bool LILRootNode::isRootNode() const
@@ -133,14 +129,14 @@ void LILRootNode::addConversion(std::shared_ptr<LILConversionDecl> value)
         std::cerr << "!!!!!! VAR DECL OF CONVERSION DECL HAD NO TYPE FAIL !!!!!!\n\n";
         return;
     }
-    auto fromTyName = fromTy->stringRep();
+    auto fromTyName = LILNodeToString::stringify(fromTy.get());
 
     auto toTy = value->getType();
     if (!toTy) {
         std::cerr << "!!!!!! CONVERSION DECL HAD NO TARGET TYPE FAIL !!!!!!\n\n";
         return;
     }
-    auto toTyName = toTy->stringRep();
+    auto toTyName = LILNodeToString::stringify(toTy.get());
     
     this->_conversions[fromTyName+"_to_"+toTyName] = value;
 }

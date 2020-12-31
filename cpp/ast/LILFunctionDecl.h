@@ -33,7 +33,6 @@ namespace LIL
         std::shared_ptr<LILFunctionType> getFnType() const;
         std::shared_ptr<LILFunctionDecl> clone() const;
         virtual ~LILFunctionDecl();
-        virtual LILString stringRep();
         virtual void receiveNodeData(const LILString &data);
 
         void addEvaluable(std::shared_ptr<LILNode> evl);

@@ -15,6 +15,7 @@
 #include "LILTypeGuesser.h"
 #include "LILAliasDecl.h"
 #include "LILVarNode.h"
+#include "LILNodeToString.h"
 #include "LILObjectType.h"
 #include "LILStaticArrayType.h"
 #include "LILTypeDecl.h"
@@ -313,7 +314,7 @@ void LILTypeGuesser::connectCallsWithDecls(std::shared_ptr<LILNode> node)
 void LILTypeGuesser::propagateStrongTypes(std::shared_ptr<LILNode> node)
 {
     if (this->getDebug()) {
-        std::cerr << "## propagate strong types of " + LILNode::nodeTypeToString(node->getNodeType()).data() + " " + node->stringRep().data() + " ##\n";
+        std::cerr << "## propagate strong types of " + LILNode::nodeTypeToString(node->getNodeType()).data() + " " + LILNodeToString::stringify(node.get()).data() + " ##\n";
     }
 
     if (node->isA(NodeTypeVarDecl)) {
@@ -479,7 +480,7 @@ void LILTypeGuesser::process(LILNode * node)
         }
     }
     if (this->getDebug()) {
-        std::cerr << "## guessing types " + LILNode::nodeTypeToString(node->getNodeType()).data() + " " + node->stringRep().data() + " ##\n";
+        std::cerr << "## guessing types " + LILNode::nodeTypeToString(node->getNodeType()).data() + " " + LILNodeToString::stringify(node).data() + " ##\n";
     }
     switch (node->getNodeType()) {
         case NodeTypeBoolLiteral:

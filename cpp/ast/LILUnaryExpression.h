@@ -28,7 +28,6 @@ namespace LIL
         LILUnaryExpression(const LILUnaryExpression & other);
         std::shared_ptr<LILUnaryExpression> clone() const;
         virtual ~LILUnaryExpression();
-        LILString stringRep() override;
 
         bool isA(UnaryExpressionType otherType) const;
         UnaryExpressionType getUnaryExpressionType() const;

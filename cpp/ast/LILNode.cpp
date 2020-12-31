@@ -280,17 +280,6 @@ void LILNode::cloneChildNodes(std::shared_ptr<LILNode> clone) const
     }
 }
 
-LILString LILNode::stringRep()
-{
-    return "Generic node - you forgot to override stringRep in your subclass or somehow using LILNode directly";
-}
-
-std::string LILNode::stdStringRep()
-{
-    LILString tempstr = this->stringRep();
-    return tempstr.data();
-}
-
 bool LILNode::equalTo(std::shared_ptr<LILNode> otherNode)
 {
     //check wether pointers are the same

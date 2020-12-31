@@ -26,7 +26,6 @@ namespace LIL
         LILNumberLiteral(const LILNumberLiteral & other);
         std::shared_ptr<LILNumberLiteral> clone() const;
         virtual ~LILNumberLiteral();
-        virtual LILString stringRep();
         void receiveNodeData(const LIL::LILString &data);
         bool equalTo(std::shared_ptr<LILNode> otherNode);
         

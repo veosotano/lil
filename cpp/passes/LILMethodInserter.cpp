@@ -18,6 +18,7 @@
 #include "LILFlowControlCall.h"
 #include "LILFunctionDecl.h"
 #include "LILFunctionType.h"
+#include "LILNodeToString.h"
 #include "LILPropertyName.h"
 #include "LILSelector.h"
 #include "LILValuePath.h"
@@ -56,7 +57,7 @@ void LILMethodInserter::process(LILNode * node)
     }
     
     if (this->getDebug()) {
-        std::cerr << "## inserting methods " + LILNode::nodeTypeToString(node->getNodeType()).data() + " " + node->stringRep().data() + " ##\n";
+        std::cerr << "## inserting methods " + LILNode::nodeTypeToString(node->getNodeType()).data() + " " + LILNodeToString::stringify(node).data() + " ##\n";
     }
     auto value = static_cast<LILClassDecl *>(node);
     

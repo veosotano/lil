@@ -33,11 +33,6 @@ LILVarNode::~LILVarNode()
     
 }
 
-LILString LILVarNode::stringRep()
-{
-    return "var node";
-}
-
 bool LILVarNode::isVarNode() const
 {
     return true;

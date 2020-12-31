@@ -248,16 +248,6 @@ void LILType::receiveNodeData(const LIL::LILString &data)
     }
 }
 
-LILString LILType::stringRep()
-{
-    auto name = this->getName();
-    if (this->getIsNullable()) {
-        return name + "?";
-    } else {
-        return name;
-    }
-}
-
 const LILString LILType::getName() const
 {
     return this->_name;

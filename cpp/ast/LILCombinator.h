@@ -29,7 +29,6 @@ namespace LIL
         
         virtual void receiveNodeData(const LILString & data);
 
-        LILString stringRep();
         bool equalTo(std::shared_ptr<LILNode> otherNode);
         
         virtual CombinatorType getCombinatorType() const;

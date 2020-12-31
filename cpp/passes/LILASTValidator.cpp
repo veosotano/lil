@@ -14,6 +14,7 @@
 
 #include "LILASTValidator.h"
 #include "LILIfInstruction.h"
+#include "LILNodeToString.h"
 #include "LILRootNode.h"
 
 using namespace LIL;
@@ -63,7 +64,7 @@ void LILASTValidator::illegalNodeType(LILNode* illegalNode, LILNode* container)
 void LILASTValidator::validate(LILNode * node)
 {
     if (this->getDebug()) {
-        std::cerr << "## validating " + LILNode::nodeTypeToString(node->getNodeType()).data() + " " + node->stringRep().data() + " ##\n";
+        std::cerr << "## validating " + LILNode::nodeTypeToString(node->getNodeType()).data() + " " + LILNodeToString::stringify(node).data() + " ##\n";
     }
     switch (node->getNodeType()) {
         case NodeTypeBoolLiteral:

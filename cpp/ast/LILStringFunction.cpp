@@ -75,11 +75,6 @@ LILString LILStringFunction::getEndChunk() const
     return this->_endChunk;
 }
 
-LILString LILStringFunction::stringRep()
-{
-    return this->_startChunk + "...";
-}
-
 bool LILStringFunction::equalTo(std::shared_ptr<LILNode> otherNode)
 {
     if ( ! LILNode::equalTo(otherNode)) return false;

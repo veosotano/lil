@@ -36,7 +36,6 @@ namespace LIL
         FunctionCallType getFunctionCallType() const override;
         void setFunctionCallType(FunctionCallType newType);
         bool isA(FunctionCallType otherType) const override;
-        LILString stringRep() override;
         
         void addArgument(std::shared_ptr<LILNode> arg);
         void setArguments(std::vector<std::shared_ptr<LILNode>> args);

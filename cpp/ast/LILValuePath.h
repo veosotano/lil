@@ -26,7 +26,6 @@ namespace LIL
         LILValuePath(const LILValuePath &other);
         std::shared_ptr<LILValuePath> clone() const;
         virtual ~LILValuePath();
-        virtual LILString stringRep();
         
         const std::vector<std::shared_ptr<LILNode>> & getNodes() const;
         void setNodes(const std::vector<std::shared_ptr<LILNode>> & newNodes);

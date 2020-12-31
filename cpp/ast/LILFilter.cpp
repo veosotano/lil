@@ -49,11 +49,6 @@ void LILFilter::receiveNodeData(const LIL::LILString &data)
     this->setName(data);
 }
 
-LILString LILFilter::stringRep()
-{
-    return this->_name;
-}
-
 void LILFilter::setName(LILString newName)
 {
     this->_name = newName;

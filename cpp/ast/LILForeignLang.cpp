@@ -50,11 +50,6 @@ void LILForeignLang::receiveNodeData(const LIL::LILString &data)
     this->setContent(data);
 }
 
-LILString LILForeignLang::stringRep()
-{
-    return this->_content;
-}
-
 void LILForeignLang::setLanguage(LILString value)
 {
     this->_language = value;

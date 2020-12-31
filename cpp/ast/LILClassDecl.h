@@ -28,7 +28,6 @@ namespace LIL
         LILClassDecl(const LILClassDecl &other);
         std::shared_ptr<LILClassDecl> clone() const;
         virtual ~LILClassDecl();
-        LILString stringRep();
         
         std::shared_ptr<LILNode> getInheritType() const;
         void setInheritType(std::shared_ptr<LILNode> newType);

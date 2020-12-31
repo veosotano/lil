@@ -105,58 +105,6 @@ void LILFunctionCall::receiveNodeData(const LILString &data)
     this->_name = data;
 }
 
-
-LILString LILFunctionCall::stringRep()
-{
-    switch (this->getFunctionCallType())
-    {
-        case FunctionCallTypeRef:
-        {
-            return "ref";
-        }
-        case FunctionCallTypeSel:
-        {
-            return "sel";
-        }
-        case FunctionCallTypeFlag:
-        {
-            return "flag";
-        }
-        case FunctionCallTypeUnflag:
-        {
-            return "unflag";
-        }
-        case FunctionCallTypeAddFlag:
-        {
-            return "addFlag";
-        }
-        case FunctionCallTypeTakeFlag:
-        {
-            return "takeFlag";
-        }
-        case FunctionCallTypeReplaceFlag:
-        {
-            return "replaceFlag";
-        }
-        case FunctionCallTypePointerTo:
-        {
-            return "pointerTo";
-        }
-        case FunctionCallTypeValueOf:
-        {
-            return "valueOf";
-        }
-        case FunctionCallTypeSet:
-        {
-            return "set";
-        }
-
-        default:
-            break;
-    }
-    return this->_name;
-}
-
 FunctionCallType LILFunctionCall::getFunctionCallType() const
 {
     return this->_functionCallType;

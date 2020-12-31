@@ -22,6 +22,7 @@
 #include "LILPointerType.h"
 #include "LILRootNode.h"
 #include "LILStaticArrayType.h"
+#include "LILNodeToString.h"
 
 #include "LLVMIRParser.h"
 
@@ -132,7 +133,7 @@ void LILIREmitter::visit(LILNode *node)
 llvm::Value * LILIREmitter::emit(LILNode * node)
 {
     if (this->_debug) {
-        std::cerr << "## emitting " + LILNode::nodeTypeToString(node->getNodeType()).data() + " " + node->stringRep().data() + " ##\n";
+        std::cerr << "## emitting " + LILNode::nodeTypeToString(node->getNodeType()).data() + " " + LILNodeToString::stringify(node).data() + " ##\n";
     }
 
     switch (node->getNodeType()) {

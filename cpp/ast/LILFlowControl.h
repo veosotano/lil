@@ -28,7 +28,6 @@ namespace LIL
         LILFlowControl(const LILFlowControl &other);
         std::shared_ptr<LILFlowControl> clone() const;
         virtual ~LILFlowControl();
-        LILString stringRep() override;
         void receiveNodeData(const LILString &data) override;
 
         void addArgument(std::shared_ptr<LILNode> arg);
