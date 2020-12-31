@@ -85,6 +85,7 @@ namespace LIL
         , receiver()
         , notifiesReceiver(true)
         , isReadingStringArgument(false)
+        , readVarNameOverPropertyName(true)
         {
         }
         LILAbstractParserReceiver * receiver;
@@ -102,6 +103,7 @@ namespace LIL
         LILString lastObjectType;
         bool notifiesReceiver;
         bool isReadingStringArgument;
+        bool readVarNameOverPropertyName;
     };
 }
 
@@ -2289,7 +2291,7 @@ bool LILCodeParser::readSingleValue(NodeType &nodeType)
         }
     }
     if (this->isAssignment()) {
-        return this->readAssignment(true, true);
+        return this->readAssignment(true, d->readVarNameOverPropertyName);
     }
     return this->readBasicValue(nodeType);
  }
@@ -2759,116 +2761,12 @@ bool LILCodeParser::readObjectDefinition()
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
 
     //read the inner part of the block
+    d->readVarNameOverPropertyName = false;
     while (d->currentToken && !d->currentToken->isA(TokenTypeBlockClose))
     {
-        if (this->isCombinator(d->currentToken))
-        {
-            bool ruleValid = this->readRule();
-            if (ruleValid) {
-                d->receiver->receiveNodeCommit();
-            }
-        }
-        else
-        {
-            switch (d->currentToken->getType())
-            {
-                case TokenTypeAmpersand:
-                {
-                    d->lastObjectType = objtype;
-                    this->readObjectDefinition();
-                    d->receiver->receiveNodeCommit();
-                    break;
-                }
-
-                case TokenTypeIdentifier:
-                case TokenTypeColon:
-                case TokenTypeObjectSign:
-                case TokenTypeNegator:
-                {
-                    if (d->currentToken->getString() == "var")
-                    {
-                        bool vdValid = this->readVarDecl();
-                        if (vdValid) {
-                            d->receiver->receiveNodeCommit();
-                        }
-                        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-                        if (d->currentToken->isA(TokenTypeSemicolon)) {
-                            d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
-                            this->readNextToken();
-                            LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-                        }
-                        continue;
-                    }
-                    if (this->isAssignment())
-                    {
-                        bool pdValid = this->readAssignment(true, false);
-                        if (pdValid) {
-                            d->receiver->receiveNodeCommit();
-                        }
-                        else
-                        {
-                            d->receiver->receiveError("Ignoring malformed property definition", d->file, d->line, d->column);
-                            //allow the object definition to be alive with malformed properties
-                            LIL_CHECK_FOR_END
-
-                            d->receiver->receiveNodeData(ParserEventInvalid, d->currentToken->getString());
-                            this->readNextToken();
-                            LIL_CHECK_FOR_END
-                            continue;
-                        }
-                    }
-                    else
-                    {
-                        bool ruleValid = this->readRule();
-                        if (ruleValid) {
-                            d->receiver->receiveNodeCommit();
-                        }
-                    }
-                    break;
-                }
-
-                case TokenTypeInstructionSign:
-                {
-                    if (this->isAssignment())
-                    {
-                        bool asgmtValid = this->readAssignment(true, false);
-                        if (asgmtValid) {
-                            d->receiver->receiveNodeCommit();
-                        }
-                    }
-                    else
-                    {
-                        bool ruleValid = this->readInstructionRule();
-                        if (ruleValid) {
-                            d->receiver->receiveNodeCommit();
-                        }
-                    }
-                    break;
-                }
-
-                default:
-                {
-                    //Unexpected token
-                    d->receiver->receiveError("Ignoring unexpected token while reading object definition", d->file, d->line, d->column);
-                    d->receiver->receiveNodeData(ParserEventInvalid, d->currentToken->getString());
-                    this->readNextToken();
-                    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-                    break;
-                }
-            }
-            if (!this->atEndOfSource() && d->currentToken->isA(TokenTypeSemicolon))
-            {
-                d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
-                this->readNextToken();
-                LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-            }
-            if (this->atEndOfSource())
-            {
-                d->receiver->receiveError("Auto closing block of object definition because of unexpected end of file", d->file, d->line, d->column);
-                return false;
-            }
-        }
+        this->parseNext();
     }
+    d->readVarNameOverPropertyName = true;
     LIL_CHECK_FOR_END
 
     //we're out of the block, we expect a closing brace
