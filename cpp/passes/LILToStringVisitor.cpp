@@ -507,13 +507,19 @@ LILToStrInfo LILToStringVisitor::_stringify(LILClassDecl * value)
 {
     LILToStrInfo ret;
     LILString externStr = value->getIsExtern() ? "extern " : "";
-    ret.value = "Class declaration: " + externStr;
+    auto ty = value->getType();
+    LILString templateStr = "";
+    if (ty && ty->getParamTypes().size() > 0) {
+        templateStr = " template";
+    }
+    ret.value = "Class"+ templateStr + " declaration: " + externStr;
+    
     LILToStrInfo typeInfo;
     typeInfo.isExported = false;
-    std::shared_ptr<LILNode> typeNode = value->getType();
-    if (typeNode) {
-        ret.children.push_back(this->stringify(typeNode.get()));
+    if (ty) {
+        ret.children.push_back(this->stringify(ty.get()));
     }
+
     std::shared_ptr<LILNode> inheritTypeNode = value->getInheritType();
     if (inheritTypeNode) {
         LILToStrInfo inheritInfo;

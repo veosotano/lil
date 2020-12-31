@@ -48,6 +48,11 @@ void LILVisitor::performVisit(std::shared_ptr<LILRootNode> rootNode)
     }
 }
 
+void LILVisitor::visit(LILNode * node)
+{
+    //do nothing
+}
+
 bool LILVisitor::hasErrors() const
 {
     size_t errorSize = this->errors.size();

@@ -683,6 +683,20 @@ void LILASTBuilder::receiveNodeCommit()
                     }
                     break;
                 }
+                case NodeTypeTypeDecl:
+                {
+                    auto td = std::static_pointer_cast<LILTypeDecl>(this->currentNode);
+                    auto name = td->getName();
+                    std::shared_ptr<LILType> ty;
+                    if (td->getIsObjName()) {
+                        ty = LILObjectType::make(name);
+                    } else {
+                        ty = LILType::make(name);
+                    }
+                    auto cdTy = cd->getType();
+                    cdTy->addParamType(ty);
+                    break;
+                }
                 default:
                     break;
             }
@@ -695,20 +709,14 @@ void LILASTBuilder::receiveNodeCommit()
             {
                 case NodeTypeType:
                 {
-                    od->setType(std::static_pointer_cast<LILType>(this->currentNode));
-                    break;
-                }
-                case NodeTypeAssignment:
-                {
-                    od->addProperty(this->currentNode);
-                    break;
-                }
-                case NodeTypeVarDecl:
-                {
-                    od->addProperty(this->currentNode);
+                    auto ty = od->getType();
+                    if (ty) {
+                        ty->addParamType(this->currentNode);
+                    }
                     break;
                 }
                 default:
+                    od->addNode(this->currentNode);
                     break;
             }
             break;

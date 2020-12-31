@@ -31,12 +31,16 @@ namespace LIL
         void setName(LILString value);
         
         void receiveNodeData(const LIL::LILString &data) override;
+
+        bool getIsObjName() const;
+        void setIsObjName(bool value);
         
     protected:
         std::shared_ptr<LILClonable> cloneImpl() const override;
         
     private:
         LILString _name;
+        bool _isObjName;
     };
 }
 

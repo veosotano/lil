@@ -19,14 +19,16 @@ using namespace LIL;
 
 LILTypeDecl::LILTypeDecl()
 : LILTypedNode(NodeTypeTypeDecl)
+, _isObjName(false)
 {
     
 }
 
 LILTypeDecl::LILTypeDecl(const LILTypeDecl &other)
 : LILTypedNode(other)
+, _name(other._name)
+, _isObjName(other._isObjName)
 {
-    this->_name = other._name;
 }
 
 std::shared_ptr<LILTypeDecl> LILTypeDecl::clone() const
@@ -64,5 +66,19 @@ void LILTypeDecl::setName(LILString value)
 
 void LILTypeDecl::receiveNodeData(const LIL::LILString &data)
 {
-    this->setName(data);
+    if (data == "@") {
+        this->setIsObjName(true);
+    } else {
+        this->setName(data);
+    }
+}
+
+bool LILTypeDecl::getIsObjName() const
+{
+    return this->_isObjName;
+}
+
+void LILTypeDecl::setIsObjName(bool value)
+{
+    this->_isObjName = value;
 }

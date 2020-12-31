@@ -53,12 +53,17 @@ namespace LIL
         bool getIsNullable() const;
         void setIsNullable(bool newValue);
 
+        const std::vector<std::shared_ptr<LILNode>> & getParamTypes() const;
+        void addParamType(std::shared_ptr<LILNode> value);
+        void setParamTypes(const std::vector<std::shared_ptr<LILNode>> && values);
+
     protected:
         virtual std::shared_ptr<LILClonable> cloneImpl() const override;
 
     private:
         LILString _name;
         LILString _strongTypeName;
+        std::vector<std::shared_ptr<LILNode>> _paramTypes;
         TypeType _typeType;
         bool _isNullable;
     };

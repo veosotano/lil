@@ -96,7 +96,6 @@ namespace LIL
         size_t line;
         size_t column;
         size_t index;
-        LILString lastObjectType;
         bool notifiesReceiver;
         bool isReadingStringArgument;
         bool readVarNameOverPropertyName;
@@ -1200,6 +1199,28 @@ bool LILCodeParser::readClassDecl()
         }
         LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
     }
+    
+    if (d->currentToken->isA(TokenTypeParenthesisOpen)) {
+        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+        this->readNextToken();
+        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+
+        LIL_EXPECT(TokenTypeIdentifier, "identifier");
+        if (d->currentToken->getString() != "type"){
+            d->receiver->receiveError("Found " + d->currentToken->getString() + " while expecting type declaration", d->file, d->line, d->column);
+            LIL_CANCEL_NODE
+        }
+        bool tdValid = this->readTypeDecl();
+        if (tdValid) {
+            d->receiver->receiveNodeCommit();
+        }
+        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+
+        LIL_EXPECT(TokenTypeParenthesisClose, "parenthesis close");
+        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+        this->readNextToken();
+        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+    }
 
     LIL_EXPECT(TokenTypeBlockOpen, "block open");
     d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
@@ -1747,6 +1768,13 @@ bool LILCodeParser::readTypeDecl()
     
     this->readNextToken();
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+    
+    if (
+        d->currentToken->isA(TokenTypeParenthesisClose)
+        || d->currentToken->isA(TokenTypeSemicolon)
+    ) {
+        LIL_END_NODE_SKIP(false)
+    }
     
     LIL_EXPECT(TokenTypeFatArrow, "fat arrow");
     d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
@@ -2610,8 +2638,6 @@ bool LILCodeParser::readObjectPath()
 //this assumes currentToken is an object sign
 bool LILCodeParser::readObjectDefinition()
 {
-    LILString objtype;
-
     LIL_START_NODE(NodeTypeObjectDefinition)
     LIL_EXPECT(TokenTypeObjectSign, "object sign")
 
@@ -2619,53 +2645,29 @@ bool LILCodeParser::readObjectDefinition()
     this->readNextToken();
     LIL_CHECK_FOR_END
 
-    if (d->currentToken->isA(TokenTypeWhitespace) || d->currentToken->isA(TokenTypeBlockOpen)) {
-        //no type means object
-        objtype = "object";
-
-    } else {
+    if (!d->currentToken->isA(TokenTypeWhitespace) && !d->currentToken->isA(TokenTypeBlockOpen)) {
         LIL_EXPECT(TokenTypeIdentifier, "identifier");
 
-        objtype = d->currentToken->getString();
         d->receiver->receiveNodeData(ParserEventType, d->currentToken->getString());
         this->readNextToken();
         LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-
     }
-    d->lastObjectType = objtype;
 
-    if (d->currentToken->isA(TokenTypeWhitespace)) {
+    if (d->currentToken->isA(TokenTypeParenthesisOpen)) {
+        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+        this->readNextToken();
+
+        bool tyValid = this->readType();
+        if (tyValid) {
+            d->receiver->receiveNodeCommit();
+        }
+        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+
+        LIL_EXPECT(TokenTypeParenthesisClose, "parenthesis close")
+        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+        this->readNextToken();
         LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
     }
-
-    //get the name of the object
-    switch (d->currentToken->getType()) {
-        case TokenTypeIdentifier:
-        {
-            d->receiver->receiveNodeData(ParserEventVarName, d->currentToken->getString());
-            LIL_CHECK_FOR_END
-            break;
-        }
-        case TokenTypeBlockOpen:
-            //it is the opening curly brace, therefore an anonymous object:
-            //do nothing
-            break;
-        case TokenTypeSemicolon:
-        case TokenTypeBlockClose:
-        case TokenTypeParenthesisClose:
-        {
-            //the property definition ends here
-            LIL_END_NODE
-        }
-
-        default:
-        {
-            d->receiver->receiveError("Found " + d->currentToken->getString() + " while expecting an identifier or a block open", d->file, d->line, d->column);
-            LIL_CANCEL_NODE
-        }
-    }
-
-    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
 
     //skip the {
     d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
@@ -2687,7 +2689,6 @@ bool LILCodeParser::readObjectDefinition()
     d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
     this->readNextToken();
 
-    d->lastObjectType = objtype;
     LIL_END_NODE
 }
 

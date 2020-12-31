@@ -414,6 +414,7 @@ namespace LIL
         ParserEventPropertyName,
         ParserEventClassDecl,
         ParserEventInherits,
+        ParserEventParamType,
         ParserEventType,
         ParserEventReturnType,
         ParserEventVarDecl,

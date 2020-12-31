@@ -18,6 +18,7 @@
 
 #include "LILPreprocessor.h"
 #include "LILASTValidator.h"
+#include "LILClassTemplateLowerer.h"
 #include "LILConversionInserter.h"
 #include "LILConstantFolder.h"
 #include "LILFieldSorter.h"
@@ -49,6 +50,7 @@ namespace LIL
         , debugPreprocessor(false)
         , debugAST(false)
         , debugASTValidator(false)
+        , debugClassTemplateLowerer(false)
         , debugTypeGuesser(false)
         , debugStructureLowerer(false)
         , debugConstantFolder(false)
@@ -77,6 +79,7 @@ namespace LIL
         bool debugPreprocessor;
         bool debugAST;
         bool debugASTValidator;
+        bool debugClassTemplateLowerer;
         bool debugTypeGuesser;
         bool debugStructureLowerer;
         bool debugConstantFolder;
@@ -247,6 +250,16 @@ void LILCodeUnit::runPasses()
     auto methodInserter = new LILMethodInserter();
     methodInserter->setDebug(d->debugMethodInserter);
     passes.push_back(methodInserter);
+    if (verbose) {
+        auto stringVisitor = new LILToStringVisitor();
+        stringVisitor->setPrintHeadline(false);
+        passes.push_back(stringVisitor);
+    }
+    
+    //class template lowerer
+    auto classTemplateLowerer = new LILClassTemplateLowerer();
+    classTemplateLowerer->setDebug(d->debugClassTemplateLowerer);
+    passes.push_back(classTemplateLowerer);
     if (verbose) {
         auto stringVisitor = new LILToStringVisitor();
         stringVisitor->setPrintHeadline(false);

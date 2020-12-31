@@ -32,7 +32,7 @@ namespace LIL
         virtual ~LILVisitor();
         virtual void initializeVisit() = 0;
         virtual void performVisit(std::shared_ptr<LILRootNode> rootNode);
-        virtual void visit(LILNode * node) = 0;
+        virtual void visit(LILNode * node);
         bool hasErrors() const;
         void printErrors(const LILString & code) const;
         std::vector<std::string> splitString(std::string code, std::string delimiter) const;

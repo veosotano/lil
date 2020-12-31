@@ -206,6 +206,7 @@ LILType::LILType(const LILType &other)
 , _strongTypeName(other._strongTypeName)
 , _typeType(other._typeType)
 , _isNullable(other._isNullable)
+, _paramTypes(other._paramTypes)
 {
 
 }
@@ -218,6 +219,10 @@ std::shared_ptr<LILType> LILType::clone() const
 std::shared_ptr<LILClonable> LILType::cloneImpl() const
 {
     std::shared_ptr<LILType> clone(new LILType(*this));
+    clone->_paramTypes.clear();
+    for (auto paramType : this->_paramTypes) {
+        clone->addParamType(paramType->clone());
+    }
     return clone;
 }
 
@@ -296,4 +301,19 @@ bool LILType::getIsNullable() const
 void LILType::setIsNullable(bool newValue)
 {
     this->_isNullable = newValue;
+}
+
+const std::vector<std::shared_ptr<LILNode>> & LILType::getParamTypes() const
+{
+    return this->_paramTypes;
+}
+
+void LILType::addParamType(std::shared_ptr<LILNode> value)
+{
+    this->_paramTypes.push_back(value);
+}
+
+void LILType::setParamTypes(const std::vector<std::shared_ptr<LILNode>> && values)
+{
+    this->_paramTypes = std::move(values);
 }
