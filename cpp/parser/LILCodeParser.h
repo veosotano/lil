@@ -30,7 +30,6 @@ namespace LIL
     public:
         LILCodeParser(LILAbstractParserReceiver * receiver);
         virtual ~LILCodeParser();
-        void reset();
         void parseString(const LILString & theString);
         void readNextToken();
         void updateCurrentToken(std::shared_ptr<LILToken> theToken);
@@ -69,7 +68,6 @@ namespace LIL
         bool isFlag() const;
         bool isPunctuation(std::shared_ptr<LILToken> token) const;
 
-        bool readIdentifierStatement();
         bool readClassDecl();
         bool readType();
         bool readTypeSimple();

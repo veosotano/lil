@@ -63,16 +63,6 @@ void LILBoolLiteral::setValue(bool newValue)
     this->_value = newValue;
 }
 
-void LILBoolLiteral::setOriginalStringRep(LILString string)
-{
-    this->_originalRep = string;
-}
-
-LILString LILBoolLiteral::originalStringRep()
-{
-    return this->_originalRep;
-}
-
 bool LILBoolLiteral::getValue()
 {
     return this->_value;

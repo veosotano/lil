@@ -77,20 +77,16 @@ namespace LIL
         friend class LILCodeParser;
 
         LILCodeParserPrivate()
-        : hasLoadedFile()
-        , file()
+        : file()
         , lexer()
         , line(1)
         , column(1)
         , receiver()
-        , notifiesReceiver(true)
         , isReadingStringArgument(false)
         , readVarNameOverPropertyName(true)
         {
         }
         LILAbstractParserReceiver * receiver;
-
-        bool hasLoadedFile;
 
         std::shared_ptr<LILLexer> lexer;
         LILString file;
@@ -118,14 +114,6 @@ LILCodeParser::LILCodeParser(LILAbstractParserReceiver * receiver)
 LILCodeParser::~LILCodeParser()
 {
     delete d;
-}
-
-void LILCodeParser::reset()
-{
-    d->lexer->reset();
-    d->hasLoadedFile = false;
-    d->file = "";
-    d->receiver->reset();
 }
 
 void LILCodeParser::parseString(const LILString & theString)
@@ -1174,69 +1162,6 @@ bool LILCodeParser::isPunctuation(std::shared_ptr<LILToken> token) const
             return false;
     }
     return false;
-}
-
-bool LILCodeParser::readIdentifierStatement()
-{
-    bool statementDone = false;
-    bool isValid = false;
-    while (!statementDone)
-    {
-        statementDone = true;
-        if (d->currentToken->getString() == "class")
-        {
-            return this->readClassDecl();
-        }
-        if (
-            d->currentToken->getString() == "var"
-            || d->currentToken->getString() == "ivar"
-            || d->currentToken->getString() == "vvar"
-        ){
-            return this->readVarDecl();
-        }
-        if (this->isAssignment()){
-            isValid = this->readAssignment(true, true);
-        }
-        else if (this->isFunctionCall(false)){
-            isValid = this->readStandardFunctionCall(true);
-        }
-        else if (this->isValuePath())
-        {
-            bool vnValid = this->readVarName();
-            if (!vnValid) {
-                return false;
-            }
-            isValid = this->readValuePath(true);
-            if (this->isExpression())
-            {
-                bool outIsSV = false;
-                NodeType outType;
-                isValid = this->readExpression(outIsSV, outType);
-                if (atEndOfSource())
-                    return false;
-                if (isValid)
-                {
-                    statementDone = false;
-                }
-            }
-        }
-        else
-        {
-            if (this->isRule())
-            {
-                isValid = this->readRule();
-            }
-            else
-            {
-                bool outIsSingleValue;
-                NodeType outType;
-                isValid = this->readExpression(outIsSingleValue, outType);
-                if (!isValid)
-                    return false;
-            }
-        }
-    }
-    return isValid;
 }
 
 bool LILCodeParser::readClassDecl()

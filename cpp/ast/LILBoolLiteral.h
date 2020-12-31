@@ -28,8 +28,6 @@ namespace LIL
         virtual ~LILBoolLiteral();
         void receiveNodeData(const LIL::LILString &data);
         void setValue(bool newValue);
-        void setOriginalStringRep(LILString string);
-        LILString originalStringRep();
         bool getValue();
         bool equalTo(std::shared_ptr<LILNode> otherNode);
         

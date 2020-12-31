@@ -74,8 +74,6 @@ LILString LILNode::nodeTypeToString(NodeType nodeType)
             return "propertyName";
         case NodeTypeSelector:
             return "selector";
-        case NodeTypeRootSelector:
-            return "@root";
         case NodeTypeCombinator:
             return "combinator";
         case NodeTypeFilter:
@@ -100,14 +98,10 @@ LILString LILNode::nodeTypeToString(NodeType nodeType)
             return "function declaration";
         case NodeTypeFunctionCall:
             return "function call";
-        case NodeTypeArgument:
-            return "argument";
         case NodeTypeArray:
             return "array";
         case NodeTypeIndexAccessor:
             return "index accessor";
-        case NodeTypeWhitespaceNode:
-            return "whitespace";
         case NodeTypeFlowControl:
             return "flow control";
         case NodeTypeFlowControlCall:
@@ -125,7 +119,6 @@ LILString LILNode::nodeTypeToString(NodeType nodeType)
 LILNode::LILNode(NodeType type)
 : nodeType(type)
 , _specificity(1)
-, document(nullptr)
 , hidden(false)
 , _isExported(false)
 {
@@ -135,7 +128,6 @@ LILNode::LILNode(NodeType type)
 LILNode::LILNode(const LILNode &orig)
 : nodeType(orig.nodeType)
 , _specificity(orig._specificity)
-, document(orig.document)
 , _sourceLocation(orig._sourceLocation)
 , _childNodes(orig._childNodes)
 , _parentNode(orig._parentNode)
@@ -487,24 +479,6 @@ bool LILNode::isA(TypeType otherType) const
 TypeType LILNode::getTypeType() const
 {
     return TypeTypeNone;
-}
-
-LILDocument * LILNode::getDocument() const
-{
-    if (document != nullptr) {
-        return document;
-    }
-    std::shared_ptr<LILNode> parent = this->getParentNode();
-    if (parent)
-    {
-        return parent->getDocument();
-    }
-    return nullptr;
-}
-
-void LILNode::setDocument(LILDocument * newDoc)
-{
-    this->document = newDoc;
 }
 
 LILString LILNode::getHostProperty() const

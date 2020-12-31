@@ -22,7 +22,6 @@
 
 namespace LIL {
 
-    class LILDocument;
     class LILType;
     class LILVarNode;
     class LILVisitor;
@@ -97,8 +96,6 @@ namespace LIL {
         virtual bool isA(TypeType otherType) const;
         virtual TypeType getTypeType() const;
 
-        LILDocument * getDocument() const;
-        void setDocument(LILDocument * newDoc);
         LILString getHostProperty() const;
         void setHostProperty(LILString newValue);
         
@@ -113,7 +110,6 @@ namespace LIL {
         std::vector<std::shared_ptr<LILNode> > _childNodes;
 
     private:
-        LILDocument * document;
         NodeType nodeType;
         std::weak_ptr<LILNode> _parentNode;
         LILString _hostProperty;

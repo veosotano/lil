@@ -101,7 +101,6 @@ namespace LIL
         std::vector<std::vector<std::shared_ptr<LILNode>>> _nodeBuffer;
 
         std::vector<std::shared_ptr<LILNode>> reduceIfCastBlocks(std::shared_ptr<LILNode> node, LILString argName, LILString tyName);
-        void replaceNodeWithContents(std::shared_ptr<LILNode> node, std::vector<std::shared_ptr<LILNode>> contents);
     };
 }
 
