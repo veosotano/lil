@@ -18,16 +18,15 @@
 using namespace LIL;
 
 LILTypeDecl::LILTypeDecl()
-: LILTypedNode(NodeTypeTypeDecl)
-, _isObjName(false)
+: LILNode(NodeTypeTypeDecl)
 {
     
 }
 
 LILTypeDecl::LILTypeDecl(const LILTypeDecl &other)
-: LILTypedNode(other)
-, _name(other._name)
-, _isObjName(other._isObjName)
+: LILNode(other)
+, _srcTy(other._srcTy)
+, _dstTy(other._dstTy)
 {
 }
 
@@ -40,12 +39,13 @@ std::shared_ptr<LILClonable> LILTypeDecl::cloneImpl() const
 {
     std::shared_ptr<LILTypeDecl> clone(new LILTypeDecl(*this));
     clone->clearChildNodes();
-    
-    //clone LILTypedNode
-    if (this->_type) {
-        clone->setType(this->_type->clone());
+
+    if (this->_srcTy) {
+        clone->setSrcType(this->_srcTy->clone());
     }
-    
+    if (this->_dstTy) {
+        clone->setDstType(this->_dstTy->clone());
+    }
     return clone;
 }
 
@@ -54,31 +54,29 @@ LILTypeDecl::~LILTypeDecl()
     
 }
 
-LILString LILTypeDecl::getName() const
-{
-    return this->_name;
-}
-
-void LILTypeDecl::setName(LILString value)
-{
-    this->_name = value;
-}
-
 void LILTypeDecl::receiveNodeData(const LIL::LILString &data)
 {
-    if (data == "@") {
-        this->setIsObjName(true);
-    } else {
-        this->setName(data);
-    }
+    //do nothing
 }
 
-bool LILTypeDecl::getIsObjName() const
+const std::shared_ptr<LILType> & LILTypeDecl::getSrcType() const
 {
-    return this->_isObjName;
+    return this->_srcTy;
 }
 
-void LILTypeDecl::setIsObjName(bool value)
+void LILTypeDecl::setSrcType(std::shared_ptr<LILType> value)
 {
-    this->_isObjName = value;
+    this->addNode(value);
+    this->_srcTy = value;
+}
+
+const std::shared_ptr<LILType> & LILTypeDecl::getDstType() const
+{
+    return this->_dstTy;
+}
+
+void LILTypeDecl::setDstType(std::shared_ptr<LILType> value)
+{
+    this->addNode(value);
+    this->_dstTy = value;
 }

@@ -18,15 +18,16 @@
 using namespace LIL;
 
 LILAliasDecl::LILAliasDecl()
-: LILTypedNode(NodeTypeAliasDecl)
+: LILNode(NodeTypeAliasDecl)
 {
     
 }
 
 LILAliasDecl::LILAliasDecl(const LILAliasDecl &other)
-: LILTypedNode(other)
+: LILNode(other)
+, _srcTy(other._srcTy)
+, _dstTy(other._dstTy)
 {
-    this->_name = other._name;
 }
 
 std::shared_ptr<LILAliasDecl> LILAliasDecl::clone() const
@@ -39,9 +40,11 @@ std::shared_ptr<LILClonable> LILAliasDecl::cloneImpl() const
     std::shared_ptr<LILAliasDecl> clone(new LILAliasDecl(*this));
     clone->clearChildNodes();
     
-    //clone LILTypedNode
-    if (this->_type) {
-        clone->setType(this->_type->clone());
+    if (this->_srcTy) {
+        clone->setSrcType(this->_srcTy->clone());
+    }
+    if (this->_dstTy) {
+        clone->setDstType(this->_dstTy->clone());
     }
 
     return clone;
@@ -52,17 +55,29 @@ LILAliasDecl::~LILAliasDecl()
     
 }
 
-LILString LILAliasDecl::getName() const
-{
-    return this->_name;
-}
-
-void LILAliasDecl::setName(LILString value)
-{
-    this->_name = value;
-}
-
 void LILAliasDecl::receiveNodeData(const LIL::LILString &data)
 {
-    this->setName(data);
+    //do nothing
+}
+
+const std::shared_ptr<LILType> & LILAliasDecl::getSrcType() const
+{
+    return this->_srcTy;
+}
+
+void LILAliasDecl::setSrcType(std::shared_ptr<LILType> value)
+{
+    this->addNode(value);
+    this->_srcTy = value;
+}
+
+const std::shared_ptr<LILType> & LILAliasDecl::getDstType() const
+{
+    return this->_dstTy;
+}
+
+void LILAliasDecl::setDstType(std::shared_ptr<LILType> value)
+{
+    this->addNode(value);
+    this->_dstTy = value;
 }

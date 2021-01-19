@@ -537,7 +537,11 @@ void LILASTBuilder::receiveNodeCommit()
                 auto ad = std::static_pointer_cast<LILAliasDecl>(this->currentContainer.back());
                 if (this->currentNode->isA(NodeTypeType)) {
                     auto ty = std::static_pointer_cast<LILType>(this->currentNode);
-                    ad->setType(ty);
+                    if (!ad->getSrcType()) {
+                        ad->setSrcType(ty);
+                    } else {
+                        ad->setDstType(ty);
+                    }
                 } else {
                     std::cerr << "Error: Unknown node type for alias declaration.\n";
                     break;
@@ -551,7 +555,11 @@ void LILASTBuilder::receiveNodeCommit()
                 auto td = std::static_pointer_cast<LILTypeDecl>(this->currentContainer.back());
                 if (this->currentNode->isA(NodeTypeType)) {
                     auto ty = std::static_pointer_cast<LILType>(this->currentNode);
-                    td->setType(ty);
+                    if (!td->getSrcType()) {
+                        td->setSrcType(ty);
+                    } else {
+                        td->setDstType(ty);
+                    }
                 } else {
                     std::cerr << "Error: Unknown node type for type declaration.\n";
                     break;
@@ -901,10 +909,9 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
                             }
                         }
                     } else {
-                        auto parentTyName = parentTy->getName();
                         if (
-                            LILType::isBuiltInType(parentTyName)
-                            && LILType::isNumberType(parentTyName)
+                            LILType::isBuiltInType(parentTy.get())
+                            && LILType::isNumberType(parentTy.get())
                             ) {
                             type = parentTy;
                         }

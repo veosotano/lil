@@ -329,10 +329,11 @@ void LILTypeValidator::_validate(std::shared_ptr<LILFunctionCall> fc)
 bool LILTypeValidator::_isDefinitionOf(std::shared_ptr<LILType> nativeTy, std::shared_ptr<LILType> customTy)
 {
     auto rootNode = this->getRootNode();
-    auto types = rootNode->getTypes();
-    for (auto type : types) {
-        if (type->getName() == customTy->getName()) {
-            return type->getType()->equalTo(nativeTy);
+    auto typeDecls = rootNode->getTypes();
+    for (auto typeDecl : typeDecls) {
+        auto srcTy = typeDecl->getSrcType();
+        if (srcTy->equalTo(customTy)) {
+            return typeDecl->getDstType()->equalTo(nativeTy);
         }
     }
     return false;

@@ -392,12 +392,14 @@ LILString LILNodeToString::stringify(LILNode * node)
         case NodeTypeAliasDecl:
         {
             auto value = static_cast<LILAliasDecl *>(node);
-            return value->getName();
+            auto ty = value->getSrcType();
+            return ty->getName();
         }
         case NodeTypeTypeDecl:
         {
             auto value = static_cast<LILTypeDecl *>(node);
-            return value->getName();
+            auto ty = value->getSrcType();
+            return ty->getName();
         }
         case NodeTypeConversionDecl:
         {

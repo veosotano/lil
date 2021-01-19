@@ -423,9 +423,9 @@ void LILASTValidator::_validate(LILType * value)
         case TypeTypeSingle:
         {
             auto name = value->getName();
-            if (!LILType::isBuiltInType(name) && !this->_isCustomType(name)) {
+            if (!LILType::isBuiltInType(value.get()) && !this->_isCustomType(value)) {
                 LILErrorMessage ei;
-                ei.message =  "Invalid type name "+name;
+                ei.message =  "Invalid type name "+value->getName();
                 LILNode::SourceLocation sl = value->getSourceLocation();
                 ei.file = sl.file;
                 ei.line = sl.line;
@@ -461,18 +461,20 @@ void LILASTValidator::_validate(LILType * value)
     }
 }
 
-bool LILASTValidator::_isCustomType(LILString name) const
+bool LILASTValidator::_isCustomType(const std::shared_ptr<LILType> & ty) const
 {
     auto rootNode = this->getRootNode();
     auto aliases = rootNode->getAliases();
     for (auto alias : aliases) {
-        if (alias->getName() == name) {
+        auto aTy = alias->getSrcType();
+        if (aTy && aTy->equalTo(ty)) {
             return true;
         }
     }
-    auto types = rootNode->getTypes();
-    for (auto type : types) {
-        if (type->getName() == name) {
+    auto typeDecls = rootNode->getTypes();
+    for (auto typeDecl : typeDecls) {
+        auto tTy = typeDecl->getSrcType();
+        if (tTy && tTy->equalTo(ty)) {
             return true;
         }
     }
@@ -489,20 +491,18 @@ void LILASTValidator::_validate(LILVarDecl * value)
 
 void LILASTValidator::_validate(LILAliasDecl * value)
 {
-    if (value->getName() == "") {
+    if (!value->getSrcType()) {
         LILErrorMessage ei;
-        ei.message =  "Alias declaration needs a name";
+        ei.message =  "Alias declaration needs a source type";
         LILNode::SourceLocation sl = value->getSourceLocation();
         ei.file = sl.file;
         ei.line = sl.line;
         ei.column = sl.column;
         this->errors.push_back(ei);
     }
-    
-    auto target = value->getType();
-    if (!target) {
+    if (!value->getDstType()) {
         LILErrorMessage ei;
-        ei.message =  "Alias declaration needs a target type";
+        ei.message =  "Alias declaration needs a destination type";
         LILNode::SourceLocation sl = value->getSourceLocation();
         ei.file = sl.file;
         ei.line = sl.line;
@@ -513,9 +513,9 @@ void LILASTValidator::_validate(LILAliasDecl * value)
 
 void LILASTValidator::_validate(LILTypeDecl * value)
 {
-    if (value->getName() == "") {
+    if (!value->getSrcType()) {
         LILErrorMessage ei;
-        ei.message =  "Type declaration needs a name";
+        ei.message =  "Type declaration needs a source type";
         LILNode::SourceLocation sl = value->getSourceLocation();
         ei.file = sl.file;
         ei.line = sl.line;
@@ -523,15 +523,17 @@ void LILASTValidator::_validate(LILTypeDecl * value)
         this->errors.push_back(ei);
     }
     
-    auto target = value->getType();
-    if (!target) {
-        LILErrorMessage ei;
-        ei.message =  "Type declaration needs a target type";
-        LILNode::SourceLocation sl = value->getSourceLocation();
-        ei.file = sl.file;
-        ei.line = sl.line;
-        ei.column = sl.column;
-        this->errors.push_back(ei);
+    const auto & parent = value->getParentNode();
+    if (parent && parent->isRootNode()) {
+        if (!value->getDstType()) {
+            LILErrorMessage ei;
+            ei.message =  "Type declaration needs a destination type";
+            LILNode::SourceLocation sl = value->getSourceLocation();
+            ei.file = sl.file;
+            ei.line = sl.line;
+            ei.column = sl.column;
+            this->errors.push_back(ei);
+        }
     }
 }
 

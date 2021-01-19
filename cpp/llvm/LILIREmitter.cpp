@@ -379,9 +379,9 @@ llvm::Value * LILIREmitter::_emitCast(LILExpression * value)
         return leftV;
     }
     auto llvmType = this->llvmTypeFromLILType(rightTy.get());
-    if (leftTy->isA(TypeTypePointer) && LILType::isNumberType(rightTy->getName())) {
+    if (leftTy->isA(TypeTypePointer) && LILType::isNumberType(rightTy.get())) {
         return d->irBuilder.CreatePtrToInt(leftV, llvmType);
-    } else if (LILType::isNumberType(leftTy->getName()) && rightTy->isA(TypeTypePointer)) {
+    } else if (LILType::isNumberType(leftTy.get()) && rightTy->isA(TypeTypePointer)) {
         return d->irBuilder.CreateIntToPtr(leftV, llvmType);
     } else {
         return d->irBuilder.CreateBitCast(leftV, llvmType);

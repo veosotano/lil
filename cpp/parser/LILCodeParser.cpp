@@ -1714,30 +1714,26 @@ bool LILCodeParser::readAliasDecl()
     this->readNextToken();
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
 
-    //read the variable name
-    LIL_EXPECT(TokenTypeIdentifier, "identifier")
-
-    LILString name = d->currentToken->getString();
-
-    d->receiver->receiveNodeData(ParserEventType, d->currentToken->getString());
-
-    std::shared_ptr<LILToken> theIdentifier = d->currentToken;
-
-    this->readNextToken();
+    bool srcTypeValid = this->readType();
+    if (srcTypeValid) {
+        d->receiver->receiveNodeCommit();
+    }
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
 
-    LIL_EXPECT(TokenTypeFatArrow, "fat arrow");
+    if (!d->currentToken->isA(TokenTypeFatArrow)) {
+        LIL_END_NODE_SKIP(false)
+    }
     d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
 
     this->readNextToken();
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
 
-    bool typeValid = this->readType();
-    if (typeValid) {
+    bool dstTypeValid = this->readType();
+    if (dstTypeValid) {
         d->receiver->receiveNodeCommit();
     }
 
-    LIL_END_NODE_SKIP(false);
+    LIL_END_NODE_SKIP(false)
 }
 
 bool LILCodeParser::readTypeDecl()
@@ -1754,41 +1750,26 @@ bool LILCodeParser::readTypeDecl()
     this->readNextToken();
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
     
-    //read the type name
-    if (d->currentToken->isA(TokenTypeObjectSign)) {
-        d->receiver->receiveNodeData(ParserEventObjectSign, d->currentToken->getString());
-        this->readNextToken();
-        LIL_CHECK_FOR_END
+    bool srcTypeValid = this->readType();
+    if (srcTypeValid) {
+        d->receiver->receiveNodeCommit();
     }
-    LIL_EXPECT(TokenTypeIdentifier, "identifier");
-    LILString name = d->currentToken->getString();
-    
-    d->receiver->receiveNodeData(ParserEventType, d->currentToken->getString());
-    
-    std::shared_ptr<LILToken> theIdentifier = d->currentToken;
-    
-    this->readNextToken();
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-    
-    if (
-        d->currentToken->isA(TokenTypeParenthesisClose)
-        || d->currentToken->isA(TokenTypeSemicolon)
-    ) {
+
+    if (!d->currentToken->isA(TokenTypeFatArrow)) {
         LIL_END_NODE_SKIP(false)
     }
-    
-    LIL_EXPECT(TokenTypeFatArrow, "fat arrow");
     d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
-    
+
     this->readNextToken();
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
     
-    bool typeValid = this->readType();
-    if (typeValid) {
+    bool dstTypeValid = this->readType();
+    if (dstTypeValid) {
         d->receiver->receiveNodeCommit();
     }
     
-    LIL_END_NODE_SKIP(false);
+    LIL_END_NODE_SKIP(false)
 }
 
 bool LILCodeParser::readConversionDecl()

@@ -447,15 +447,14 @@ LILToStrInfo LILToStringVisitor::_stringify(LILAliasDecl *value)
 {
     LILToStrInfo ret;
 
-    auto name = value->getName();
-    auto target = value->getType();
+    auto srcTy = value->getSrcType();
+    auto dstTy = value->getDstType();
     
-    if (!target) {
-        return ret;
+    if (dstTy) {
+        ret.value = "Alias declaration: "+LILNodeToString::stringify(srcTy.get())+" => "+ LILNodeToString::stringify(dstTy.get());
+    } else {
+        ret.value = "Alias declaration: "+LILNodeToString::stringify(srcTy.get());
     }
-    
-    ret.value = "Alias declaration: "+name+" => "+ LILNodeToString::stringify(target.get());
-    
     return ret;
 }
 
@@ -463,15 +462,14 @@ LILToStrInfo LILToStringVisitor::_stringify(LILTypeDecl *value)
 {
     LILToStrInfo ret;
     
-    auto name = value->getName();
-    auto target = value->getType();
+    auto source = value->getSrcType();
+    auto target = value->getDstType();
     
-    if (!target) {
-        return ret;
+    if (target) {
+        ret.value = "Type declaration: "+LILNodeToString::stringify(source.get())+" => "+LILNodeToString::stringify(target.get());
+    } else {
+        ret.value = "Type declaration: "+LILNodeToString::stringify(source.get());
     }
-    
-    ret.value = "Type declaration: "+name+" => "+LILNodeToString::stringify(target.get());
-    
     return ret;
 }
 

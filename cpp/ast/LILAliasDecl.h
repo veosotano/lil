@@ -15,11 +15,11 @@
 #ifndef LILALIASDECL_H
 #define LILALIASDECL_H
 
-#include "LILTypedNode.h"
+#include "LILNode.h"
 
 namespace LIL
 {
-    class LILAliasDecl : public LILTypedNode
+    class LILAliasDecl : public LILNode
     {
     public:
         LILAliasDecl();
@@ -27,8 +27,10 @@ namespace LIL
         std::shared_ptr<LILAliasDecl> clone() const;
         virtual ~LILAliasDecl();
 
-        LILString getName() const;
-        void setName(LILString value);
+        const std::shared_ptr<LILType> & getSrcType() const;
+        void setSrcType(std::shared_ptr<LILType> value);
+        const std::shared_ptr<LILType> & getDstType() const;
+        void setDstType(std::shared_ptr<LILType> value);
 
         void receiveNodeData(const LIL::LILString &data) override;
 
@@ -36,7 +38,8 @@ namespace LIL
         std::shared_ptr<LILClonable> cloneImpl() const override;
 
     private:
-        LILString _name;
+        std::shared_ptr<LILType> _srcTy;
+        std::shared_ptr<LILType> _dstTy;
     };
 }
 

@@ -15,32 +15,31 @@
 #ifndef LILTYPEDECL_H
 #define LILTYPEDECL_H
 
-#include "LILTypedNode.h"
+#include "LILNode.h"
 
 namespace LIL
 {
-    class LILTypeDecl : public LILTypedNode
+    class LILTypeDecl : public LILNode
     {
     public:
         LILTypeDecl();
         LILTypeDecl(const LILTypeDecl &other);
         std::shared_ptr<LILTypeDecl> clone() const;
         virtual ~LILTypeDecl();
-        
-        LILString getName() const;
-        void setName(LILString value);
-        
+
         void receiveNodeData(const LIL::LILString &data) override;
 
-        bool getIsObjName() const;
-        void setIsObjName(bool value);
-        
+        const std::shared_ptr<LILType> & getSrcType() const;
+        void setSrcType(std::shared_ptr<LILType> value);
+        const std::shared_ptr<LILType> & getDstType() const;
+        void setDstType(std::shared_ptr<LILType> value);
+
     protected:
         std::shared_ptr<LILClonable> cloneImpl() const override;
         
     private:
-        LILString _name;
-        bool _isObjName;
+        std::shared_ptr<LILType> _srcTy;
+        std::shared_ptr<LILType> _dstTy;
     };
 }
 

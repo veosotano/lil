@@ -130,6 +130,13 @@ std::shared_ptr<LILType> LILType::merge(std::shared_ptr<LILType> typeA, std::sha
         return multiA;
     }
     
+    if (typeA->isA(TypeTypePointer) && LILType::isNumberType(typeB.get())) {
+        return typeA;
+    }
+    if (typeB->isA(TypeTypePointer) && LILType::isNumberType(typeA.get())) {
+        return typeB;
+    }
+    
     multiA = std::make_shared<LILMultipleType>();
     multiA->addType(typeA);
     multiA->addType(typeB);
@@ -144,8 +151,9 @@ std::shared_ptr<LILType> LILType::make(LILString name)
     return ret;
 }
 
-bool LILType::isBuiltInType(LILString name)
+bool LILType::isBuiltInType(LILType * ty)
 {
+    const auto & name = ty->getName();
     if (
         name == "i8"
         || name == "i16"
@@ -168,8 +176,9 @@ bool LILType::isBuiltInType(LILString name)
     return false;
 }
 
-bool LILType::isNumberType(LILString name)
+bool LILType::isNumberType(LILType * ty)
 {
+    const auto & name = ty->getName();
     if (
         name == "i8"
         || name == "i16"
