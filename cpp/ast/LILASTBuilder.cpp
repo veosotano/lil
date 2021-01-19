@@ -464,6 +464,14 @@ void LILASTBuilder::receiveNodeCommit()
             uexp->setValue(this->currentNode);
             break;
         }
+        case BuilderStateType:
+        {
+            if (this->currentNode && this->currentNode->isA(NodeTypeType)) {
+                std::shared_ptr<LILType> ty = std::static_pointer_cast<LILType>(this->currentContainer.back());
+                ty->addParamType(std::static_pointer_cast<LILType>(this->currentNode));
+            }
+            break;
+        }
         case BuilderStateMultipleType:
         {
             if (this->currentNode && this->currentNode->isA(NodeTypeType)) {
