@@ -50,6 +50,7 @@ int main(int argc, const char * argv[]) {
     bool debugFieldSorter = false;
     bool debugParameterSorter = false;
     bool debugASTValidator = false;
+    bool debugTypeResolver = false;
     bool debugTypeGuesser = false;
     bool debugStructureLowerer = false;
     bool debugConstantFolder = false;
@@ -138,6 +139,10 @@ int main(int argc, const char * argv[]) {
             
         } else if (command == "--debug-ast") {
             debugAST = true;
+            ++i;
+            
+        } else if (command == "--debug-type-resolver") {
+            debugTypeResolver = true;
             ++i;
             
         } else if (command == "--debug-field-sorter") {
@@ -250,6 +255,7 @@ int main(int argc, const char * argv[]) {
     codeUnit->setDebugPreprocessor(debugPreprocessor);
     codeUnit->setDebugAST(debugAST);
     codeUnit->setDebugASTValidator(debugASTValidator);
+    codeUnit->setDebugTypeResolver(debugTypeResolver);
     codeUnit->setDebugFieldSorter(debugFieldSorter);
     codeUnit->setDebugParameterSorter(debugParameterSorter);
     codeUnit->setDebugTypeGuesser(debugTypeGuesser);

@@ -30,6 +30,7 @@
 #include "LILStructureLowerer.h"
 #include "LILToStringVisitor.h"
 #include "LILTypeGuesser.h"
+#include "LILTypeResolver.h"
 
 using namespace LIL;
 
@@ -50,6 +51,7 @@ namespace LIL
         , debugPreprocessor(false)
         , debugAST(false)
         , debugASTValidator(false)
+        , debugTypeResolver(false)
         , debugClassTemplateLowerer(false)
         , debugTypeGuesser(false)
         , debugStructureLowerer(false)
@@ -79,6 +81,7 @@ namespace LIL
         bool debugPreprocessor;
         bool debugAST;
         bool debugASTValidator;
+        bool debugTypeResolver;
         bool debugClassTemplateLowerer;
         bool debugTypeGuesser;
         bool debugStructureLowerer;
@@ -255,7 +258,17 @@ void LILCodeUnit::runPasses()
         stringVisitor->setPrintHeadline(false);
         passes.push_back(stringVisitor);
     }
-    
+
+    //type resolving
+    auto typeResolver = new LILTypeResolver();
+    typeResolver->setDebug(d->debugTypeResolver);
+    passes.push_back(typeResolver);
+    if (verbose) {
+        auto stringVisitor = new LILToStringVisitor();
+        stringVisitor->setPrintHeadline(false);
+        passes.push_back(stringVisitor);
+    }
+
     //class template lowerer
     auto classTemplateLowerer = new LILClassTemplateLowerer();
     classTemplateLowerer->setDebug(d->debugClassTemplateLowerer);
@@ -400,6 +413,11 @@ void LILCodeUnit::setDebugPreprocessor(bool value)
 void LILCodeUnit::setDebugASTValidator(bool value)
 {
     d->debugASTValidator = value;
+}
+
+void LILCodeUnit::setDebugTypeResolver(bool value)
+{
+    d->debugTypeResolver = value;
 }
 
 void LILCodeUnit::setDebugTypeGuesser(bool value)
