@@ -1,32 +1,5 @@
 # LIL Is a Language – Specification
 
-## Variable declarations
-
-A variable declaration defines a a space in memory that can hold a value. You declare it with a name which you will use later to access its
-content. It can be initialized with a value or left empty and assigned later.
-
-To declare a variable you write the `var` keyword, followed by some whitespace, followed by the name of the variable. Then a colon `:` and a
-value or a semicolon to denote the end.
-
-	var foo: 1;
-	
-You can provide the type of the variable, so no guessing needs to take place, by writing a dot `.` after the `var` keyword.
-
-	var.i8 foo: 1;
-
-## Assignments
-
-In LIL the assignment is written with a colon `:`, not an equal sign. In the following example we declare a variable named `myString`, then check
-if `foo` is equal to 1 (a single `=` is a comparator) and  then assign a different string depending on the case. The compiler will use type
-inference to know that `myString` is a variable of the correct type.
-
-	var myString;
-	if foo = 1 {
-		myString: "Hello world";
-	} else {
-		myString: "Foo was not one";
-	}
-
 ## Basic Values
 
 ### Numbers:
@@ -146,7 +119,20 @@ There are some reserved words that can't be used as an identifier, such as:
 
 ## Comments
 
+Comments are used to add information to the source code which is intended to be read only by the humans reading
+the code. They start either with two forward slashes `//` or a forward slash and a star `/*`.
 
+In the case of the double slash, we call them single line comments, because it is interpreted that everything
+between the slashes and the end of the line is the content of the comment. For example:
+
+	//this is a comment and it ends here
+
+On the other hand, if the slash and star is used, the source code that follows will be interpreted as a comment
+until the oposite symbol is found, a star and a slash: `*/`. For example:
+
+	/* this is the comment and
+	it can span multiple
+	lines until the end */ 
 
 ## Expressions
 
@@ -174,6 +160,17 @@ which takes no parameters, and always prints hello to the standard output when c
 		print "hello";
 	}
 
+## Classes
+
+These are like templates to make identical, but separate, copies of various other values put together as a unit, which we call object instances.
+
+They are written using the `class` keyword, followed by whitespace, then the "object symbol" `@`, and then the name of the class. A semicolon
+afterwards is allowed but not required. For example:
+
+	class @myClass {
+		// more stuff here
+	}
+
 ## Value paths
 
 Value paths are used to access properties and methods of objects. They are written as a series of components of a larger unit:
@@ -190,21 +187,34 @@ For example:
 
 Here we are calling the `length`method of the `myString` object
 
-
-## Classes
-
-These are like templates to make identical, but separate, copies of various other values put together as a unit, which we call object instances.
-
-They are written using the `class` keyword, followed by whitespace, then the "object symbol" `@`, and then the name of the class. A semicolon
-afterwards is allowed but not required. For example:
-
-	class @myClass {
-		// more stuff here
-	}
-	
 ### Instantiating objects
 
+## Variable declarations
 
+A variable declaration defines a a space in memory that can hold a value. You declare it with a name which you will use later to access its
+content. It can be initialized with a value or left empty and assigned later.
+
+To declare a variable you write the `var` keyword, followed by some whitespace, followed by the name of the variable. Then a colon `:` and a
+value or a semicolon to denote the end.
+
+	var foo: 1;
+	
+You can provide the type of the variable, so no guessing needs to take place, by writing a dot `.` after the `var` keyword.
+
+	var.i8 foo: 1;
+
+## Assignments
+
+In LIL the assignment is written with a colon `:`, not an equal sign. In the following example we declare a variable named `myString`, then check
+if `foo` is equal to 1 (a single `=` is a comparator) and  then assign a different string depending on the case. The compiler will use type
+inference to know that `myString` is a variable of the correct type.
+
+	var myString;
+	if foo = 1 {
+		myString: "Hello world";
+	} else {
+		myString: "Foo was not one";
+	}
 
 ### Fields
 
