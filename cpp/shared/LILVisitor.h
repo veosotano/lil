@@ -48,6 +48,7 @@ namespace LIL
         std::shared_ptr<LILNode> findNodeForVarName(LILVarName * name) const;
         std::shared_ptr<LILNode> findNodeForName(LILString name, LILNode * parent) const;
         std::shared_ptr<LILNode> findNodeForValuePath(LILValuePath * vp) const;
+        std::shared_ptr<LILNode> recursiveFindNode(std::shared_ptr<LILNode> node) const;
 
         LILString decorate(LILString ns, LILString className, LILString name, std::shared_ptr<LILType> type) const;
         LILString typeToString(std::shared_ptr<LILType> type) const;

@@ -33,7 +33,6 @@ namespace LIL
         inline void processChildren(std::shared_ptr<LILNode> parent, const std::vector<std::shared_ptr<LILNode> > &nodes);
         void process(std::shared_ptr<LILNode> node);
         void addReplacementNode(std::shared_ptr<LILNode> node);
-        std::shared_ptr<LILNode> _resolveRemoteNode(std::shared_ptr<LILNode> node) const;
 
     private:
         std::vector<std::vector<std::shared_ptr<LILNode>>> _nodeBuffer;

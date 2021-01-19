@@ -103,7 +103,6 @@ namespace LIL
         bool _processIfInstr(std::shared_ptr<LILIndexAccessor> value);
         bool _processIfInstr(std::shared_ptr<LILConversionDecl> value);
         bool _evaluate(std::shared_ptr<LILNode> node);
-        std::shared_ptr<LILNode> _resolveRemoteNode(std::shared_ptr<LILNode> node) const;
 
         bool _processPasteInstr(std::shared_ptr<LILExpression> value);
         bool _processPasteInstr(std::shared_ptr<LILUnaryExpression> value);

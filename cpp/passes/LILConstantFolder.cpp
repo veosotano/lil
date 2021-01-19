@@ -94,7 +94,7 @@ void LILConstantFolder::process(std::shared_ptr<LILNode> node)
             std::vector<LILString> newChunks;
             for (size_t i=0, j=childNodes.size(); i<j; i+=1) {
                 auto childNode = childNodes[i];
-                std::shared_ptr<LILNode> remoteNode = this->_resolveRemoteNode(childNode);
+                std::shared_ptr<LILNode> remoteNode = this->recursiveFindNode(childNode);
                 if (!remoteNode->isA(NodeTypeVarDecl)) {
                     continue;
                 }
@@ -147,20 +147,4 @@ void LILConstantFolder::process(std::shared_ptr<LILNode> node)
 void LILConstantFolder::addReplacementNode(std::shared_ptr<LILNode> node)
 {
     this->_nodeBuffer.back().push_back(node);
-}
-
-std::shared_ptr<LILNode> LILConstantFolder::_resolveRemoteNode(std::shared_ptr<LILNode> node) const
-{
-    switch (node->getNodeType()) {
-        case NodeTypeVarName:
-        {
-            return this->_resolveRemoteNode(this->findNodeForVarName(static_cast<LILVarName *>(node.get())));
-        }
-        case NodeTypeValuePath:
-        {
-            return this->_resolveRemoteNode(this->findNodeForValuePath(static_cast<LILValuePath *>(node.get())));
-        }
-        default:
-            return node;
-    }
 }

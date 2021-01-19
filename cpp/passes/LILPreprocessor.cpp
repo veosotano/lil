@@ -1197,7 +1197,7 @@ bool LILPreprocessor::_processIfInstrIfInstr(std::shared_ptr<LILIfInstruction> v
     bool ret = false;
     auto arg = value->getArgument();
     if (arg) {
-        auto remoteNode = this->_resolveRemoteNode(arg);
+        auto remoteNode = this->recursiveFindNode(arg);
         if (remoteNode && remoteNode->isA(NodeTypeVarDecl)) {
             auto vd = std::static_pointer_cast<LILVarDecl>(remoteNode);
             if (!vd->getIsConst()) {
@@ -1342,12 +1342,12 @@ bool LILPreprocessor::_evaluate(std::shared_ptr<LILNode> node)
         case NodeTypeExpression:
         {
             auto value = std::static_pointer_cast<LILExpression>(node);
-            auto left = this->_resolveRemoteNode(value->getLeft());
+            auto left = this->recursiveFindNode(value->getLeft());
             if (!left) {
                 std::cerr << "LEFT NODE OF EXPRESSION MISSING FAIL!!!!!!!!\n\n";
                 return false;
             }
-            auto right = this->_resolveRemoteNode(value->getRight());
+            auto right = this->recursiveFindNode(value->getRight());
             if (!right) {
                 std::cerr << "RIGHT NODE OF EXPRESSION MISSING FAIL!!!!!!!!\n\n";
                 return false;
@@ -1382,25 +1382,6 @@ bool LILPreprocessor::_evaluate(std::shared_ptr<LILNode> node)
             break;
     }
     return false;
-}
-
-std::shared_ptr<LILNode> LILPreprocessor::_resolveRemoteNode(std::shared_ptr<LILNode> node) const
-{
-    if (!node) {
-        return nullptr;
-    }
-    switch (node->getNodeType()) {
-        case NodeTypeVarName:
-        {
-            return this->_resolveRemoteNode(this->findNodeForVarName(static_cast<LILVarName *>(node.get())));
-        }
-        case NodeTypeValuePath:
-        {
-            return this->_resolveRemoteNode(this->findNodeForValuePath(static_cast<LILValuePath *>(node.get())));
-        }
-        default:
-            return node;
-    }
 }
 
 bool LILPreprocessor::_processPasteInstr(std::shared_ptr<LILExpression> value)

@@ -187,14 +187,14 @@ std::shared_ptr<LILNode> LILVisitor::findNodeForValuePath(LILValuePath * vp) con
     if (nodes.size() == 1) {
         firstNode = nodes.front();
         if (firstNode->isA(NodeTypeVarName)) {
-            return this->findNodeForVarName(static_cast<LILVarName *>(firstNode.get()));
+            return this->recursiveFindNode(firstNode);
         }
     } else if (nodes.size() > 1){
         firstNode = nodes.front();
         std::shared_ptr<LILClassDecl> classDecl;
         
         if (firstNode->isA(NodeTypeVarName)) {
-            auto localNode = this->findNodeForVarName(static_cast<LILVarName *>(firstNode.get()));
+            auto localNode = this->recursiveFindNode(firstNode);
             if (localNode) {
                 auto subjTy = localNode->getType();
                 if (subjTy->isA(TypeTypeMultiple)) {
@@ -269,6 +269,25 @@ std::shared_ptr<LILNode> LILVisitor::findNodeForValuePath(LILValuePath * vp) con
         }
     }
     return nullptr;
+}
+
+std::shared_ptr<LILNode> LILVisitor::recursiveFindNode(std::shared_ptr<LILNode> node) const
+{
+    if (!node) {
+        return nullptr;
+    }
+    switch (node->getNodeType()) {
+        case NodeTypeVarName:
+        {
+            return this->recursiveFindNode(this->findNodeForVarName(static_cast<LILVarName *>(node.get())));
+        }
+        case NodeTypeValuePath:
+        {
+            return this->recursiveFindNode(this->findNodeForValuePath(static_cast<LILValuePath *>(node.get())));
+        }
+        default:
+            return node;
+    }
 }
 
 LILString LILVisitor::decorate(LILString ns, LILString className, LILString name, std::shared_ptr<LILType> type) const
