@@ -280,7 +280,7 @@ LILString LILNodeToString::stringify(LILNode * node)
                     }
                     name += "]";
                     if (sa->getIsNullable()) {
-                        name += "?";
+                        name += "|null";
                     }
                     return name;
                 }
@@ -289,14 +289,12 @@ LILString LILNodeToString::stringify(LILNode * node)
                     auto ptrTy = static_cast<LILPointerType *>(node);
                     LILString name = ptrTy->getName();
                     
-                    name += "(";
                     auto arg = ptrTy->getArgument();
                     if (arg) {
                         name += LILNodeToString::stringify(arg.get());
                     }
-                    name += ")";
-                    if (ptrTy->getIsNullable()) {
-                        name += "?";
+                    if (value->getIsNullable()) {
+                        name += "|null";
                     }
                     return name;
                 }
@@ -311,7 +309,6 @@ LILString LILNodeToString::stringify(LILNode * node)
                     }
                     auto paramTypes = value->getParamTypes();
                     if (paramTypes.size() > 0) {
-                        ret += "(";
                         for (size_t i = 0, j = paramTypes.size(); i<j; i+=1) {
                             auto paramTy = paramTypes.at(i);
                             ret += LILNodeToString::stringify(paramTy.get());
@@ -319,10 +316,9 @@ LILString LILNodeToString::stringify(LILNode * node)
                                 ret += ",";
                             }
                         }
-                        ret += ")";
                     }
                     if (value->getIsNullable()) {
-                        ret += "?";
+                        ret += "|null";
                     }
                     return ret;
                 }
@@ -331,7 +327,6 @@ LILString LILNodeToString::stringify(LILNode * node)
                     LILString ret = value->getName();
                     auto paramTypes = value->getParamTypes();
                     if (paramTypes.size() > 0) {
-                        ret += "(";
                         for (size_t i = 0, j = paramTypes.size(); i<j; i+=1) {
                             auto paramTy = paramTypes.at(i);
                             ret += LILNodeToString::stringify(paramTy.get());
@@ -339,10 +334,9 @@ LILString LILNodeToString::stringify(LILNode * node)
                                 ret += ",";
                             }
                         }
-                        ret += ")";
                     }
                     if (value->getIsNullable()) {
-                        ret += "?";
+                        ret += "|null";
                     }
                     return ret;
                 }
@@ -358,7 +352,11 @@ LILString LILNodeToString::stringify(LILNode * node)
                         }
                     }
                     if (mt->getIsWeakType()) {
-                        return "<"+tempstr+">";
+                        tempstr = "<"+tempstr+">";
+                    }
+                    
+                    if (mt->getIsNullable()) {
+                        return tempstr + "|null";
                     } else {
                         return tempstr;
                     }
