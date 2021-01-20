@@ -1541,6 +1541,13 @@ llvm::Value * LILIREmitter::_emit(LILFlag * value)
 
 llvm::Value * LILIREmitter::_emit(LILVarName * value)
 {
+    auto remoteNode = recursiveFindNode(value->shared_from_this());
+    if (remoteNode && remoteNode->isA(NodeTypeVarDecl)) {
+        auto vd = std::static_pointer_cast<LILVarDecl>(remoteNode);
+        if (vd->getIsConst()) {
+            return this->emit(vd->getInitVal().get());
+        }
+    }
     LILString name = value->getName();
     auto namestr = name.data();
     llvm::Value * val = d->namedValues[namestr];
