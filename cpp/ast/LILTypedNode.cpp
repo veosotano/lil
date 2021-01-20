@@ -49,6 +49,7 @@ bool LILTypedNode::equalTo(std::shared_ptr<LILNode> otherNode)
 void LILTypedNode::setType(std::shared_ptr<LILType> value)
 {
     this->_type = value;
+    this->_type->setParentNode(shared_from_this());
 }
 
 std::shared_ptr<LILType> LILTypedNode::getType() const

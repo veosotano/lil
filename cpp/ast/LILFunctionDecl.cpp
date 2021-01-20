@@ -74,6 +74,7 @@ void LILFunctionDecl::setType(std::shared_ptr<LILType> value)
     if (this->_hasOwnType) {
         if (value->isA(TypeTypeFunction)) {
             this->_fnType = std::static_pointer_cast<LILFunctionType>(value);
+            this->_fnType->setParentNode(this->shared_from_this());
         }
     } else {
         auto parent = this->getParentNode();

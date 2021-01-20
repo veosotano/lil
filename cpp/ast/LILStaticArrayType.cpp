@@ -72,6 +72,7 @@ void LILStaticArrayType::receiveNodeData(const LIL::LILString &data)
 void LILStaticArrayType::setArgument(std::shared_ptr<LILNode> node)
 {
     this->_argument = node;
+    this->_argument->setParentNode(this->shared_from_this());
 }
 
 std::shared_ptr<LILNode> LILStaticArrayType::getArgument() const
@@ -82,6 +83,7 @@ std::shared_ptr<LILNode> LILStaticArrayType::getArgument() const
 void LILStaticArrayType::setType(std::shared_ptr<LILType> type)
 {
     this->_type = type;
+    this->_type->setParentNode(this->shared_from_this());
 }
 
 std::shared_ptr<LILType> LILStaticArrayType::getType() const

@@ -69,11 +69,15 @@ void LILMultipleType::receiveNodeData(const LIL::LILString &data)
 void LILMultipleType::addType(std::shared_ptr<LILType> ty)
 {
     this->_types.push_back(ty);
+    ty->setParentNode(this->shared_from_this());
 }
 
 void LILMultipleType::setTypes(std::vector<std::shared_ptr<LILType>> tys)
 {
     this->_types = tys;
+    for (auto ty : this->_types) {
+        ty->setParentNode(this->shared_from_this());
+    }
 }
 
 std::vector<std::shared_ptr<LILType>> LILMultipleType::getTypes() const
