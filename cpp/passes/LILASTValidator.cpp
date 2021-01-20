@@ -37,14 +37,13 @@ void LILASTValidator::initializeVisit()
     }
 }
 
-void LILASTValidator::visit(LILNode *node)
-{
-    this->validate(node);
-}
-
 void LILASTValidator::performVisit(std::shared_ptr<LILRootNode> rootNode)
 {
-    LILVisitor::performVisit(rootNode);
+    this->setRootNode(rootNode);
+    std::vector<std::shared_ptr<LILNode>> nodes = rootNode->getNodes();
+    for (const auto & node : nodes) {
+        this->validate(node);
+    }
     if (this->getVerbose() && !this->hasErrors()) {
         std::cerr << "All OK\n\n";
     }
@@ -61,214 +60,214 @@ void LILASTValidator::illegalNodeType(LILNode* illegalNode, LILNode* container)
     this->errors.push_back(ei);
 }
 
-void LILASTValidator::validate(LILNode * node)
+void LILASTValidator::validate(const std::shared_ptr<LILNode> & node)
 {
     if (this->getDebug()) {
-        std::cerr << "## validating " + LILNode::nodeTypeToString(node->getNodeType()).data() + " " + LILNodeToString::stringify(node).data() + " ##\n";
+        std::cerr << "## validating " + LILNode::nodeTypeToString(node->getNodeType()).data() + " " + LILNodeToString::stringify(node.get()).data() + " ##\n";
     }
     switch (node->getNodeType()) {
         case NodeTypeBoolLiteral:
         {
-            LILBoolLiteral * value = static_cast<LILBoolLiteral *>(node);
+            std::shared_ptr<LILBoolLiteral> value = std::static_pointer_cast<LILBoolLiteral>(node);
             this->_validate(value);
             break;
         }
         case NodeTypeNumberLiteral:
         {
-            LILNumberLiteral * value = static_cast<LILNumberLiteral *>(node);
+            std::shared_ptr<LILNumberLiteral> value = std::static_pointer_cast<LILNumberLiteral>(node);
             this->_validate(value);
             break;
         }
         case NodeTypePercentage:
         {
-            LILPercentageLiteral * value = static_cast<LILPercentageLiteral *>(node);
+            std::shared_ptr<LILPercentageLiteral> value = std::static_pointer_cast<LILPercentageLiteral>(node);
             this->_validate(value);
             break;
             break;
         }
         case NodeTypeExpression:
         {
-            LILExpression * value = static_cast<LILExpression *>(node);
+            std::shared_ptr<LILExpression> value = std::static_pointer_cast<LILExpression>(node);
             this->_validate(value);
             break;
         }
         case NodeTypeUnaryExpression:
         {
-            LILUnaryExpression * value = static_cast<LILUnaryExpression *>(node);
+            std::shared_ptr<LILUnaryExpression> value = std::static_pointer_cast<LILUnaryExpression>(node);
             this->_validate(value);
             break;
         }
         case NodeTypeStringLiteral:
         {
-            LILStringLiteral * value = static_cast<LILStringLiteral *>(node);
+            std::shared_ptr<LILStringLiteral> value = std::static_pointer_cast<LILStringLiteral>(node);
             this->_validate(value);
             break;
         }
         case NodeTypeStringFunction:
         {
-            LILStringFunction * value = static_cast<LILStringFunction *>(node);
+            std::shared_ptr<LILStringFunction> value = std::static_pointer_cast<LILStringFunction>(node);
             this->_validate(value);
             break;
         }
         case NodeTypeNull:
         {
-            LILNullLiteral * value = static_cast<LILNullLiteral *>(node);
+            std::shared_ptr<LILNullLiteral> value = std::static_pointer_cast<LILNullLiteral>(node);
             this->_validate(value);
             break;
         }
         case NodeTypeType:
         {
-            LILType * value = static_cast<LILType *>(node);
+            std::shared_ptr<LILType> value = std::static_pointer_cast<LILType>(node);
             this->_validate(value);
             break;
         }
         case NodeTypeVarDecl:
         {
-            LILVarDecl * value = static_cast<LILVarDecl *>(node);
+            std::shared_ptr<LILVarDecl> value = std::static_pointer_cast<LILVarDecl>(node);
             this->_validate(value);
             break;
         }
         case NodeTypeAliasDecl:
         {
-            LILAliasDecl * value = static_cast<LILAliasDecl *>(node);
+            std::shared_ptr<LILAliasDecl> value = std::static_pointer_cast<LILAliasDecl>(node);
             this->_validate(value);
             break;
         }
         case NodeTypeTypeDecl:
         {
-            LILTypeDecl * value = static_cast<LILTypeDecl *>(node);
+            std::shared_ptr<LILTypeDecl> value = std::static_pointer_cast<LILTypeDecl>(node);
             this->_validate(value);
             break;
         }
         case NodeTypeConversionDecl:
         {
-            LILConversionDecl * value = static_cast<LILConversionDecl *>(node);
+            std::shared_ptr<LILConversionDecl> value = std::static_pointer_cast<LILConversionDecl>(node);
             this->_validate(value);
             break;
         }
         case NodeTypeClassDecl:
         {
-            LILClassDecl * value = static_cast<LILClassDecl *>(node);
+            std::shared_ptr<LILClassDecl> value = std::static_pointer_cast<LILClassDecl>(node);
             this->_validate(value);
             break;
         }
         case NodeTypeObjectDefinition:
         {
-            LILObjectDefinition * value = static_cast<LILObjectDefinition *>(node);
+            std::shared_ptr<LILObjectDefinition> value = std::static_pointer_cast<LILObjectDefinition>(node);
             this->_validate(value);
             break;
         }
         case NodeTypeAssignment:
         {
-            LILAssignment * value = static_cast<LILAssignment *>(node);
+            std::shared_ptr<LILAssignment> value = std::static_pointer_cast<LILAssignment>(node);
             this->_validate(value);
             break;
         }
         case NodeTypeValuePath:
         {
-            LILValuePath * value = static_cast<LILValuePath *>(node);
+            std::shared_ptr<LILValuePath> value = std::static_pointer_cast<LILValuePath>(node);
             this->_validate(value);
             break;
         }
         case NodeTypePropertyName:
         {
-            LILPropertyName * value = static_cast<LILPropertyName *>(node);
+            std::shared_ptr<LILPropertyName> value = std::static_pointer_cast<LILPropertyName>(node);
             this->_validate(value);
             break;
         }
         case NodeTypeVarName:
         {
-            LILVarName * value = static_cast<LILVarName *>(node);
+            std::shared_ptr<LILVarName> value = std::static_pointer_cast<LILVarName>(node);
             this->_validate(value);
             break;
         }
         case NodeTypeRule:
         {
-            LILRule * value = static_cast<LILRule *>(node);
+            std::shared_ptr<LILRule> value = std::static_pointer_cast<LILRule>(node);
             this->_validate(value);
             break;
         }
         case NodeTypeSimpleSelector:
         {
-            LILSimpleSelector * value = static_cast<LILSimpleSelector *>(node);
+            std::shared_ptr<LILSimpleSelector> value = std::static_pointer_cast<LILSimpleSelector>(node);
             this->_validate(value);
             break;
         }
         case NodeTypeSelectorChain:
         {
-            LILSelectorChain * value = static_cast<LILSelectorChain *>(node);
+            std::shared_ptr<LILSelectorChain> value = std::static_pointer_cast<LILSelectorChain>(node);
             this->_validate(value);
             break;
         }
         case NodeTypeSelector:
         {
-            LILSelector * value = static_cast<LILSelector *>(node);
+            std::shared_ptr<LILSelector> value = std::static_pointer_cast<LILSelector>(node);
             this->_validate(value);
             break;
         }
         case NodeTypeCombinator:
         {
-            LILCombinator * value = static_cast<LILCombinator *>(node);
+            std::shared_ptr<LILCombinator> value = std::static_pointer_cast<LILCombinator>(node);
             this->_validate(value);
             break;
         }
         case NodeTypeFilter:
         {
-            LILFilter * value = static_cast<LILFilter *>(node);
+            std::shared_ptr<LILFilter> value = std::static_pointer_cast<LILFilter>(node);
             this->_validate(value);
             break;
         }
         case NodeTypeFlag:
         {
-            LILFlag * value = static_cast<LILFlag *>(node);
+            std::shared_ptr<LILFlag> value = std::static_pointer_cast<LILFlag>(node);
             this->_validate(value);
             break;
         }
         case NodeTypeFunctionDecl:
         {
-            LILFunctionDecl * value = static_cast<LILFunctionDecl *>(node);
+            std::shared_ptr<LILFunctionDecl> value = std::static_pointer_cast<LILFunctionDecl>(node);
             this->_validate(value);
             break;
         }
         case NodeTypeFunctionCall:
         {
-            LILFunctionCall * value = static_cast<LILFunctionCall *>(node);
+            std::shared_ptr<LILFunctionCall> value = std::static_pointer_cast<LILFunctionCall>(node);
             this->_validate(value);
             break;
         }
         case NodeTypeFlowControl:
         {
-            LILFlowControl * value = static_cast<LILFlowControl *>(node);
+            std::shared_ptr<LILFlowControl> value = std::static_pointer_cast<LILFlowControl>(node);
             this->_validate(value);
             break;
         }
         case NodeTypeFlowControlCall:
         {
-            LILFlowControlCall * value = static_cast<LILFlowControlCall *>(node);
+            std::shared_ptr<LILFlowControlCall> value = std::static_pointer_cast<LILFlowControlCall>(node);
             this->_validate(value);
             break;
         }
         case NodeTypeInstruction:
         {
-            LILInstruction * value = static_cast<LILInstruction *>(node);
+            std::shared_ptr<LILInstruction> value = std::static_pointer_cast<LILInstruction>(node);
             this->_validate(value);
             break;
         }
         case NodeTypeForeignLang:
         {
-            LILForeignLang * value = static_cast<LILForeignLang *>(node);
+            std::shared_ptr<LILForeignLang> value = std::static_pointer_cast<LILForeignLang>(node);
             this->_validate(value);
             break;
         }
         case NodeTypeValueList:
         {
-            LILValueList * value = static_cast<LILValueList *>(node);
+            std::shared_ptr<LILValueList> value = std::static_pointer_cast<LILValueList>(node);
             this->_validate(value);
             break;
         }
         case NodeTypeIndexAccessor:
         {
-            LILIndexAccessor * value = static_cast<LILIndexAccessor *>(node);
+            std::shared_ptr<LILIndexAccessor> value = std::static_pointer_cast<LILIndexAccessor>(node);
             this->_validate(value);
             break;
         }
@@ -282,14 +281,14 @@ void LILASTValidator::validate(LILNode * node)
     }
 }
 
-void LILASTValidator::_validate(LILBoolLiteral * value)
+void LILASTValidator::_validate(const std::shared_ptr<LILBoolLiteral> & value)
 {
     if (this->getDebug()) {
         std::cerr << "Nothing to do. OK\n";
     }
 }
 
-void LILASTValidator::_validate(LILNumberLiteral * value)
+void LILASTValidator::_validate(const std::shared_ptr<LILNumberLiteral> & value)
 {
     if (value->getValue().length() == 0) {
         LILErrorMessage ei;
@@ -306,14 +305,14 @@ void LILASTValidator::_validate(LILNumberLiteral * value)
     }
 }
 
-void LILASTValidator::_validate(LILPercentageLiteral * value)
+void LILASTValidator::_validate(const std::shared_ptr<LILPercentageLiteral> & value)
 {
     if (this->getDebug()) {
         std::cerr << "Nothing to do. OK\n";
     }
 }
 
-void LILASTValidator::_validate(LILExpression * value)
+void LILASTValidator::_validate(const std::shared_ptr<LILExpression> & value)
 {
     auto left = value->getLeft();
     switch (left->getNodeType()) {
@@ -326,7 +325,7 @@ void LILASTValidator::_validate(LILExpression * value)
             
         default:
         {
-            this->illegalNodeType(left.get(), value);
+            this->illegalNodeType(left.get(), value.get());
             break;
         }
     }
@@ -342,20 +341,20 @@ void LILASTValidator::_validate(LILExpression * value)
         case NodeTypeType:
         {
             if (!value->isA(ExpressionTypeCast)) {
-                this->illegalNodeType(right.get(), value);
+                this->illegalNodeType(right.get(), value.get());
             }
             break;
         }
             
         default:
         {
-            this->illegalNodeType(right.get(), value);
+            this->illegalNodeType(right.get(), value.get());
             break;
         }
     }
 }
 
-void LILASTValidator::_validate(LILUnaryExpression * value)
+void LILASTValidator::_validate(const std::shared_ptr<LILUnaryExpression> & value)
 {
     auto val = value->getValue();
     switch (val->getNodeType()) {
@@ -368,20 +367,20 @@ void LILASTValidator::_validate(LILUnaryExpression * value)
             
         default:
         {
-            this->illegalNodeType(val.get(), value);
+            this->illegalNodeType(val.get(), value.get());
             break;
         }
     }
 }
 
-void LILASTValidator::_validate(LILStringLiteral * value)
+void LILASTValidator::_validate(const std::shared_ptr<LILStringLiteral> & value)
 {
     if (this->getDebug()) {
         std::cerr << "Nothing to do. OK\n";
     }
 }
 
-void LILASTValidator::_validate(LILStringFunction * value)
+void LILASTValidator::_validate(const std::shared_ptr<LILStringFunction> & value)
 {
     auto children = value->getChildNodes();
     for (size_t i=0, j=children.size(); i<j; ++i) {
@@ -403,21 +402,21 @@ void LILASTValidator::_validate(LILStringFunction * value)
             }
             default:
             {
-                this->illegalNodeType(children[i].get(), value);
+                this->illegalNodeType(children[i].get(), value.get());
                 return;
             }
         }
     }
 }
 
-void LILASTValidator::_validate(LILNullLiteral * value)
+void LILASTValidator::_validate(const std::shared_ptr<LILNullLiteral> & value)
 {
     if (this->getDebug()) {
         std::cerr << "Nothing to do. OK\n";
     }
 }
 
-void LILASTValidator::_validate(LILType * value)
+void LILASTValidator::_validate(const std::shared_ptr<LILType> & value)
 {
     switch (value->getTypeType()) {
         case TypeTypeSingle:
@@ -442,10 +441,10 @@ void LILASTValidator::_validate(LILType * value)
             
         case TypeTypePointer:
         {
-            auto ptrTy = static_cast<LILPointerType *>(value);
+            auto ptrTy = std::static_pointer_cast<LILPointerType>(value);
             auto arg = ptrTy->getArgument();
             if (arg && !arg->LILNode::isA(NodeTypeType)) {
-                    this->illegalNodeType(arg.get(), value);
+                    this->illegalNodeType(arg.get(), value.get());
             }
             if (this->getDebug() && !this->hasErrors()) {
                 std::cerr << "The subtype in the type is a type. OK\n";
@@ -481,15 +480,15 @@ bool LILASTValidator::_isCustomType(const std::shared_ptr<LILType> & ty) const
     return false;
 }
 
-void LILASTValidator::_validate(LILVarDecl * value)
+void LILASTValidator::_validate(const std::shared_ptr<LILVarDecl> & value)
 {
     auto ty = value->getType();
     if (ty) {
-        this->validate(ty.get());
+        this->validate(ty);
     }
 }
 
-void LILASTValidator::_validate(LILAliasDecl * value)
+void LILASTValidator::_validate(const std::shared_ptr<LILAliasDecl> & value)
 {
     if (!value->getSrcType()) {
         LILErrorMessage ei;
@@ -511,7 +510,7 @@ void LILASTValidator::_validate(LILAliasDecl * value)
     }
 }
 
-void LILASTValidator::_validate(LILTypeDecl * value)
+void LILASTValidator::_validate(const std::shared_ptr<LILTypeDecl> & value)
 {
     if (!value->getSrcType()) {
         LILErrorMessage ei;
@@ -537,7 +536,7 @@ void LILASTValidator::_validate(LILTypeDecl * value)
     }
 }
 
-void LILASTValidator::_validate(LILConversionDecl * value)
+void LILASTValidator::_validate(const std::shared_ptr<LILConversionDecl> & value)
 {
     auto varDecl = value->getVarDecl();
     if (!varDecl) {
@@ -571,18 +570,18 @@ void LILASTValidator::_validate(LILConversionDecl * value)
     }
 }
 
-void LILASTValidator::_validate(LILClassDecl * value)
+void LILASTValidator::_validate(const std::shared_ptr<LILClassDecl> & value)
 {
     if (this->getDebug()) {
         std::cerr << "Nothing to do. OK\n";
     }
 }
 
-void LILASTValidator::_validate(LILObjectDefinition * value)
+void LILASTValidator::_validate(const std::shared_ptr<LILObjectDefinition> & value)
 {
     auto ty = value->getType();
     if (!ty->isA(TypeTypeObject)) {
-        this->illegalNodeType(ty.get(), value);
+        this->illegalNodeType(ty.get(), value.get());
         return;
     }
     auto classValue = this->findClassWithName(ty->getName());
@@ -597,84 +596,84 @@ void LILASTValidator::_validate(LILObjectDefinition * value)
     }
 }
 
-void LILASTValidator::_validate(LILAssignment * value)
+void LILASTValidator::_validate(const std::shared_ptr<LILAssignment> & value)
 {
     if (this->getDebug()) {
         std::cerr << "Nothing to do. OK\n";
     }
 }
 
-void LILASTValidator::_validate(LILValuePath * value)
+void LILASTValidator::_validate(const std::shared_ptr<LILValuePath> & value)
 {
     if (this->getDebug()) {
         std::cerr << "Nothing to do. OK\n";
     }
 }
 
-void LILASTValidator::_validate(LILPropertyName * value)
+void LILASTValidator::_validate(const std::shared_ptr<LILPropertyName> & value)
 {
     if (this->getDebug()) {
         std::cerr << "Nothing to do. OK\n";
     }
 }
 
-void LILASTValidator::_validate(LILRule * value)
+void LILASTValidator::_validate(const std::shared_ptr<LILRule> & value)
 {
     if (this->getDebug()) {
         std::cerr << "Nothing to do. OK\n";
     }
 }
 
-void LILASTValidator::_validate(LILSimpleSelector * value)
+void LILASTValidator::_validate(const std::shared_ptr<LILSimpleSelector> & value)
 {
     if (this->getDebug()) {
         std::cerr << "Nothing to do. OK\n";
     }
 }
 
-void LILASTValidator::_validate(LILSelectorChain * value)
+void LILASTValidator::_validate(const std::shared_ptr<LILSelectorChain> & value)
 {
     if (this->getDebug()) {
         std::cerr << "Nothing to do. OK\n";
     }
 }
 
-void LILASTValidator::_validate(LILSelector * value)
+void LILASTValidator::_validate(const std::shared_ptr<LILSelector> & value)
 {
     if (this->getDebug()) {
         std::cerr << "Nothing to do. OK\n";
     }
 }
 
-void LILASTValidator::_validate(LILCombinator * value)
+void LILASTValidator::_validate(const std::shared_ptr<LILCombinator> & value)
 {
     if (this->getDebug()) {
         std::cerr << "Nothing to do. OK\n";
     }
 }
 
-void LILASTValidator::_validate(LILFilter * value)
+void LILASTValidator::_validate(const std::shared_ptr<LILFilter> & value)
 {
     if (this->getDebug()) {
         std::cerr << "Nothing to do. OK\n";
     }
 }
 
-void LILASTValidator::_validate(LILFlag * value)
+void LILASTValidator::_validate(const std::shared_ptr<LILFlag> & value)
 {
     if (this->getDebug()) {
         std::cerr << "Nothing to do. OK\n";
     }
 }
 
-void LILASTValidator::_validate(LILVarName * value)
+void LILASTValidator::_validate(const std::shared_ptr<LILVarName> & value)
 {
     if (this->getDebug()) {
         std::cerr << "Nothing to do. OK\n";
     }
 }
 
-void LILASTValidator::_validate(LILFunctionDecl * value)
+void LILASTValidator::_validate(const std::shared_ptr<LILFunctionDecl> & value)
 {
     switch (value->getFunctionDeclType()) {
         case FunctionDeclTypeFn:
@@ -682,7 +681,7 @@ void LILASTValidator::_validate(LILFunctionDecl * value)
             auto evals = value->getBody();
             for (size_t i=0, j=evals.size(); i<j; ++i) {
                 const auto & eval = evals[i];
-                this->_validateFunctionDeclChild(value, eval.get());
+                this->_validateFunctionDeclChild(value.get(), eval.get());
             }
             break;
         }
@@ -759,7 +758,7 @@ void LILASTValidator::_validateFunctionDeclChild(LILFunctionDecl * value, LILNod
     }
 }
 
-void LILASTValidator::_validate(LILFunctionCall * value)
+void LILASTValidator::_validate(const std::shared_ptr<LILFunctionCall> & value)
 {
     switch (value->getFunctionCallType()) {
         case FunctionCallTypeValuePath:
@@ -828,14 +827,14 @@ void LILASTValidator::_validate(LILFunctionCall * value)
     }
 }
 
-void LILASTValidator::_validate(LILFlowControl * value)
+void LILASTValidator::_validate(const std::shared_ptr<LILFlowControl> & value)
 {
     if (this->getDebug()) {
         std::cerr << "Nothing to do. OK\n";
     }
 }
 
-void LILASTValidator::_validate(LILFlowControlCall * value)
+void LILASTValidator::_validate(const std::shared_ptr<LILFlowControlCall> & value)
 {
     auto arg = value->getArgument();
     if (arg) {
@@ -853,7 +852,7 @@ void LILASTValidator::_validate(LILFlowControlCall * value)
             case NodeTypeFunctionCall:
                 break;
             default:
-                this->illegalNodeType(arg.get(), value);
+                this->illegalNodeType(arg.get(), value.get());
                 break;
         }
         if (this->getDebug() && !this->hasErrors()) {
@@ -862,28 +861,28 @@ void LILASTValidator::_validate(LILFlowControlCall * value)
     }
 }
 
-void LILASTValidator::_validate(LILInstruction * value)
+void LILASTValidator::_validate(const std::shared_ptr<LILInstruction> & value)
 {
     if (this->getDebug()) {
         std::cerr << "Nothing to do. OK\n";
     }
 }
 
-void LILASTValidator::_validate(LILForeignLang * value)
+void LILASTValidator::_validate(const std::shared_ptr<LILForeignLang> & value)
 {
     if (this->getDebug()) {
         std::cerr << "Nothing to do. OK\n";
     }
 }
 
-void LILASTValidator::_validate(LILValueList * value)
+void LILASTValidator::_validate(const std::shared_ptr<LILValueList> & value)
 {
     if (this->getDebug()) {
         std::cerr << "Nothing to do. OK\n";
     }
 }
 
-void LILASTValidator::_validate(LILIndexAccessor * value)
+void LILASTValidator::_validate(const std::shared_ptr<LILIndexAccessor> & value)
 {
     auto arg = value->getArgument();
     if (arg) {
@@ -897,7 +896,7 @@ void LILASTValidator::_validate(LILIndexAccessor * value)
             case NodeTypeFunctionCall:
                 break;
             default:
-                this->illegalNodeType(arg.get(), value);
+                this->illegalNodeType(arg.get(), value.get());
                 break;
         }
         if (this->getDebug() && !this->hasErrors()) {
@@ -910,6 +909,6 @@ void LILASTValidator::validateChildren(const std::vector<std::shared_ptr<LILNode
 {
     for (auto it = children.begin(); it!=children.end(); ++it)
     {
-        this->validate((*it).get());
+        this->validate(*it);
     };
 }

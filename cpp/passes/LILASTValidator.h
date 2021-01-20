@@ -63,7 +63,6 @@ namespace LIL
         LILASTValidator();
         virtual ~LILASTValidator();
         void initializeVisit() override;
-        void visit(LILNode * node) override;
         void performVisit(std::shared_ptr<LILRootNode> rootNode) override;
         void illegalNodeType(LILNode* illegalNode, LILNode * container);
 
@@ -98,13 +97,13 @@ namespace LIL
         void _validate(const std::shared_ptr<LILFlag> & value);
         void _validate(const std::shared_ptr<LILFunctionDecl> & value);
         void _validateFunctionDeclChild(LILFunctionDecl * value, LILNode *node);
-        void _validate(LILFunctionCall * value);
-        void _validate(LILFlowControl * value);
-        void _validate(LILFlowControlCall * value);
-        void _validate(LILInstruction * value);
-        void _validate(LILForeignLang * value);
-        void _validate(LILValueList * value);
-        void _validate(LILIndexAccessor * value);
+        void _validate(const std::shared_ptr<LILFunctionCall> & value);
+        void _validate(const std::shared_ptr<LILFlowControl> & value);
+        void _validate(const std::shared_ptr<LILFlowControlCall> & value);
+        void _validate(const std::shared_ptr<LILInstruction> & value);
+        void _validate(const std::shared_ptr<LILForeignLang> & value);
+        void _validate(const std::shared_ptr<LILValueList> & value);
+        void _validate(const std::shared_ptr<LILIndexAccessor> & value);
         inline void validateChildren(const std::vector<std::shared_ptr<LILNode>> & children);
     };
 }
