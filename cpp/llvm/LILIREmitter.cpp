@@ -19,6 +19,7 @@
 #include "LILFunctionType.h"
 #include "LILIndexAccessor.h"
 #include "LILMultipleType.h"
+#include "LILNodeToString.h"
 #include "LILPointerType.h"
 #include "LILRootNode.h"
 #include "LILStaticArrayType.h"
