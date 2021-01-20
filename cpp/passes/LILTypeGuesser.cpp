@@ -1522,6 +1522,11 @@ std::shared_ptr<LILType> LILTypeGuesser::findReturnTypeForFunctionCall(std::shar
             break;
         }
             
+        case FunctionCallTypeSizeOf:
+        {
+            return LILType::make("i64");
+        }
+            
         case FunctionCallTypePointerTo:
         {
             auto firstArg = fc->getArguments().front();

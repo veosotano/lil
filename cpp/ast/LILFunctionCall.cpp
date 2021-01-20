@@ -102,6 +102,10 @@ void LILFunctionCall::receiveNodeData(const LILString &data)
     {
         this->setFunctionCallType(FunctionCallTypeSet);
     }
+    else if (data == "sizeOf")
+    {
+        this->setFunctionCallType(FunctionCallTypeSizeOf);
+    }
     this->_name = data;
 }
 

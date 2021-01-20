@@ -584,6 +584,10 @@ LILString LILNodeToString::stringify(LILNode * node)
                 {
                     return "set";
                 }
+                case FunctionCallTypeSizeOf:
+                {
+                    return "sizeOf";
+                }
                 default:
                     break;
             }

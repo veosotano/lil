@@ -175,6 +175,7 @@ namespace LIL
         FunctionCallTypePointerTo,
         FunctionCallTypeValueOf,
         FunctionCallTypeSet,
+        FunctionCallTypeSizeOf,
         FunctionCallTypeConversion,
     };
 

@@ -988,6 +988,7 @@ bool LILCodeParser::isBuiltinFunctionCall() const
         || value == "pointerTo"
         || value == "valueOf"
         || value == "set"
+        || value == "sizeOf"
         )
     {
         return true;
@@ -4443,6 +4444,10 @@ bool LILCodeParser::readFunctionCall()
         else if (name == "set")
         {
             return this->readStandardFunctionCall(true);
+        }
+        else if (name == "sizeOf")
+        {
+            return this->readSingleArgumentFunctionCall("sizeOf");
         }
         // <fnName>(arg1, arg2, argN, ...)
         else

@@ -835,6 +835,19 @@ void LILASTValidator::_validate(const std::shared_ptr<LILFunctionCall> & value)
             }
             break;
         }
+        case FunctionCallTypeSizeOf:
+        {
+            if (value->getArguments().size() != 1) {
+                LILErrorMessage ei;
+                ei.message =  "Call to sizeOf() needs one argument";
+                LILNode::SourceLocation sl = value->getSourceLocation();
+                ei.file = sl.file;
+                ei.line = sl.line;
+                ei.column = sl.column;
+                this->errors.push_back(ei);
+            }
+            break;
+        }
         default:
             break;
     }

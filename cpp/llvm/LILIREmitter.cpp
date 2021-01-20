@@ -22,7 +22,7 @@
 #include "LILPointerType.h"
 #include "LILRootNode.h"
 #include "LILStaticArrayType.h"
-#include "LILNodeToString.h"
+#include "LILTypeDecl.h"
 
 #include "LLVMIRParser.h"
 
@@ -1819,6 +1819,22 @@ llvm::Value * LILIREmitter::_emit(LILFunctionCall * value)
             auto firstArg = value->getArguments().front();
             auto llvmValue = this->emit(firstArg.get());
             return d->irBuilder.CreateLoad(llvmValue);
+        }
+        case FunctionCallTypeSizeOf:
+        {
+            auto firstArg = value->getArguments().front();
+            llvm::Type * llvmTy;
+            if (firstArg->isA(NodeTypeTypeDecl)) {
+                auto td = std::static_pointer_cast<LILTypeDecl>(firstArg);
+                llvmTy = this->llvmTypeFromLILType(td->getSrcType().get());
+            } else {
+                auto llvmVal = this->emit(firstArg.get());
+                llvmTy = llvmVal->getType();
+            }
+            auto nullConst = llvm::Constant::getNullValue(llvmTy->getPointerTo());
+            auto gep = this->_emitGEP(nullConst, llvmTy, false, 0, "", false, true, 1);
+            auto numTy = LILType::make("i64");
+            return d->irBuilder.CreatePointerCast(gep, this->llvmTypeFromLILType(numTy.get()));
         }
         case FunctionCallTypeSet:
         {
