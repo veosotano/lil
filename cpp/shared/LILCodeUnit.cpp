@@ -204,6 +204,10 @@ void LILCodeUnit::buildAST()
     auto rootNode = this->getRootNode();
     if (d->needsStdLil) {
         auto needsInstr = std::make_shared<LILInstruction>();
+        LILNode::SourceLocation loc;
+        loc.line = 0;
+        loc.column = 0;
+        needsInstr->setSourceLocation(loc);
         needsInstr->setInstructionType(InstructionTypeNeeds);
         needsInstr->setName("needs");
         auto strConst = std::make_shared<LILStringLiteral>();

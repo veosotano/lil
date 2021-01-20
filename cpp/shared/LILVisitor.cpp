@@ -73,40 +73,50 @@ void LILVisitor::printErrors(const LILString & code) const
     for (auto it=errors.begin(); it!=errors.end(); ++it) {
         LILErrorMessage ei = *it;
         std::cerr << ei.message.chardata();
-        std::cerr << " on line ";
-        std::cerr << ei.line;
-        std::cerr << " column ";
-        std::cerr << ei.column;
-        std::cerr << "\n\n";
+        if (ei.line > 0) {
+            std::cerr << " on line ";
+            std::cerr << ei.line;
+            std::cerr << " column ";
+            std::cerr << ei.column;
+            std::cerr << "\n\n";
 
-        if (ei.line > 2)
-        {
-            std::cerr << ei.line - 1;
-            std::cerr << ": ";
-            std::cerr << lines[ei.line-2];
-            std::cerr << "\n";
-        }
-
-        std::cerr << ei.line;
-        std::cerr << ": ";
-        std::cerr << lines[ei.line-1];
-        std::cerr << "\n";
-        std::string indicator = "   ";
-        if (ei.column > 2) {
-            for (unsigned i=0; i<ei.column-3; ++i) {
-                indicator += " ";
+            if (ei.line > 2)
+            {
+                std::cerr << ei.line - 1;
+                std::cerr << ": ";
+                std::cerr << lines[ei.line-2];
+                std::cerr << "\n";
             }
-        }
-        indicator+= "__^__\n";
-        std::cerr << indicator;
-        if (ei.line < lines.size()-1)
-        {
-            std::cerr << ei.line+1;
+
+            std::cerr << ei.line;
             std::cerr << ": ";
-            std::cerr << lines[ei.line];
+            std::cerr << lines[ei.line-1];
+            std::cerr << "\n";
+            std::string indicator = "   ";
+            if (ei.column > 2) {
+                for (unsigned i=0; i<ei.column-3; ++i) {
+                    indicator += " ";
+                }
+            }
+            if (ei.column == 0) {
+                indicator+= "^__\n";
+            } else if (ei.column == 1) {
+                indicator+= "_^__\n";
+            } else {
+                indicator+= "__^__\n";
+            }
+            std::cerr << indicator;
+
+            if (ei.line < lines.size()-1)
+            {
+                std::cerr << ei.line+1;
+                std::cerr << ": ";
+                std::cerr << lines[ei.line];
+                std::cerr << "\n";
+            }
+        } else {
             std::cerr << "\n";
         }
-
     }
     std::cerr << "\n";
 }
