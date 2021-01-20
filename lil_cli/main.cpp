@@ -266,7 +266,10 @@ int main(int argc, const char * argv[]) {
     codeUnit->setDebugTypeValidator(debugTypeValidator);
     codeUnit->setDebugConversionInserter(debugConversionInserter);
     codeUnit->setFile(inName);
-    codeUnit->addAlreadyImportedFile(directory+"/"+inName);
+    std::vector<std::shared_ptr<LILNode>> emptyVect;
+    auto fullPath = directory+"/"+inName;
+    codeUnit->addAlreadyImportedFile(fullPath, emptyVect, true);
+    codeUnit->addAlreadyImportedFile(fullPath, emptyVect, false);
     codeUnit->setDir(directory);
     codeUnit->setSource(lilStr);
     

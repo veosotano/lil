@@ -786,6 +786,7 @@ void LILASTBuilder::receiveNodeCommit()
             auto instr = std::static_pointer_cast<LILInstruction>(this->currentContainer.back());
             switch (instr->getInstructionType()) {
                 case InstructionTypeNeeds:
+                case InstructionTypeImport:
                 case InstructionTypePaste:
                     instr->setArgument(this->currentNode);
                     break;
@@ -1271,6 +1272,8 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
                     std::shared_ptr<LILInstruction> instr = std::static_pointer_cast<LILInstruction>(this->currentContainer.back());
                     if (data == "needs") {
                         instr->setInstructionType(InstructionTypeNeeds);
+                    } else if (data == "import") {
+                        instr->setInstructionType(InstructionTypeImport);
                     } else if (data == "export") {
                         instr->setInstructionType(InstructionTypeExport);
                     } else if (data == "paste") {

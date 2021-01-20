@@ -105,7 +105,7 @@ namespace LIL
         bool readNameSelector(bool isNegating);
         bool readInstruction();
         bool readColor();
-        bool readNeedsInstr();
+        bool readNeedsOrImportInstr();
         bool readExportInstr();
         bool readIfInstr();
         bool readSnippetInstr();

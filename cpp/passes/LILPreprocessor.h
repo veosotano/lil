@@ -64,11 +64,13 @@ namespace LIL
         LILString getDir() const;
         bool getDebugAST() const;
         void setDebugAST(bool value);
-        void addAlreadyImportedFile(const LILString & path);
-        bool isAlreadyImported(const LILString & path);
+        void addAlreadyImportedFile(LILString path, std::vector<std::shared_ptr<LILNode>> nodes, bool isNeeds);
+        bool isAlreadyImported(const LILString & path, bool isNeeds);
+        std::vector<std::shared_ptr<LILNode>> getNodesForAlreadyImportedFile(const LILString & path, bool isNeeds);
 
     private:
-        std::vector<LILString> _alreadyImportedFiles;
+        std::map<LILString, std::vector<std::shared_ptr<LILNode>>> _alreadyImportedFilesNeeds;
+        std::map<LILString, std::vector<std::shared_ptr<LILNode>>> _alreadyImportedFilesImport;
         std::vector<std::vector<std::shared_ptr<LILNode>>> _nodeBuffer;
         LILString _dir;
         bool _debugAST;
@@ -76,7 +78,7 @@ namespace LIL
 
         std::vector<LILString> _resolveFilePaths(LILString argStr) const;
         std::vector<std::string> _glob(const std::string& pattern) const;
-        void _getNodesForImportNeedsInstr(std::vector<std::shared_ptr<LILNode>> * newNodes, std::shared_ptr<LILRootNode> rootNode) const;
+        void _importNodeIfNeeded(std::vector<std::shared_ptr<LILNode>> * newNodes, std::shared_ptr<LILNode> node, bool isExported) const;
         LILString _getDir(LILString path) const;
         bool _processIfInstr(std::shared_ptr<LILExpression> value);
         bool _processIfInstr(std::shared_ptr<LILUnaryExpression> value);

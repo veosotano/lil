@@ -25,6 +25,7 @@ namespace llvm
 namespace LIL
 {
     class LILCodeUnitPrivate;
+    class LILNode;
     class LILRootNode;
     class LILCodeUnit
     {
@@ -42,12 +43,16 @@ namespace LIL
         LILString getSource() const;
         void setNeedsStdLil(bool value);
         bool getNeedsStdLil() const;
-        void setIsBeingImported(bool value);
-        bool getIsBeingImported() const;
+        void setIsBeingImportedWithNeeds(bool value);
+        bool getIsBeingImportedWithNeeds() const;
+        void setIsBeingImportedWithImport(bool value);
+        bool getIsBeingImportedWithImport() const;
 
         void run();
         void buildAST();
         void runPasses();
+        void runPassesForNeeds();
+        void runPassesForImport();
         void compileToO(std::string outName);
         void compileToS(std::string outName);
         void printToOutput();
@@ -69,8 +74,8 @@ namespace LIL
         void setDebugTypeValidator(bool value);
         void setDebugConversionInserter(bool value);
         bool hasErrors() const;
-        void addAlreadyImportedFile(const LILString & path);
-        bool isAlreadyImported(const LILString & path);
+        void addAlreadyImportedFile(const LILString & path, const std::vector<std::shared_ptr<LILNode>> & nodes, bool isNeeds);
+        bool isAlreadyImported(const LILString & path, bool isNeeds);
 
     private:
         LILCodeUnitPrivate * d;

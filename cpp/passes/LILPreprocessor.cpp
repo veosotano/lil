@@ -64,19 +64,31 @@ void LILPreprocessor::performVisit(std::shared_ptr<LILRootNode> rootNode)
     while (this->_needsAnotherPass) {
         this->_needsAnotherPass = false;
         this->processImportingInstr(rootNode);
+        if (this->hasErrors()) {
+            return;
+        }
         this->processIfInstr(rootNode);
+        if (this->hasErrors()) {
+            return;
+        }
         this->processPasteInstr(rootNode);
+        if (this->hasErrors()) {
+            return;
+        }
     }
     this->removeSnippets(rootNode);
 }
 
 void LILPreprocessor::processImportingInstr(const std::shared_ptr<LILRootNode> & rootNode)
 {
-    std::vector<std::shared_ptr<LILNode>> nodes = rootNode->getNodes();
+    const std::vector<std::shared_ptr<LILNode>> & nodes = rootNode->getNodes();
     auto it = nodes.begin();
+    std::vector<std::shared_ptr<LILNode>> resultNodes;
     while (it != nodes.end()) {
         auto node = *it;
-        if (node->isA(InstructionTypeNeeds) || node->isA(InstructionTypeImport)) {
+        if (!node->isA(InstructionTypeNeeds) && !node->isA(InstructionTypeImport)) {
+            resultNodes.push_back(node);
+        } else {
             std::vector<std::shared_ptr<LILNode>> newNodes;
             bool isNeeds = node->isA(InstructionTypeNeeds);
             if (this->getDebug()) {
@@ -94,10 +106,12 @@ void LILPreprocessor::processImportingInstr(const std::shared_ptr<LILRootNode> &
             LILString argStr = std::static_pointer_cast<LILStringLiteral>(arg)->getValue().stripQuotes();
             auto paths = this->_resolveFilePaths(argStr);
             for (auto path : paths) {
-                if (this->isAlreadyImported(path)) {
+                if (this->isAlreadyImported(path, isNeeds)) {
                     if (this->getVerbose() && instr->getVerbose()) {
                         std::cerr << "File " << path.data() << " was already imported. Skipping.\n\n";
                     }
+                    auto aiNodes = this->getNodesForAlreadyImportedFile(path, isNeeds);
+                    resultNodes.insert(resultNodes.end(), aiNodes.begin(), aiNodes.end());
                     continue;
                 }
                 if (this->getVerbose() && instr->getVerbose()) {
@@ -106,9 +120,18 @@ void LILPreprocessor::processImportingInstr(const std::shared_ptr<LILRootNode> &
                 
                 std::unique_ptr<LILCodeUnit> codeUnit = std::make_unique<LILCodeUnit>();
                 codeUnit->setNeedsStdLil(false);
-                codeUnit->setIsBeingImported(true);
-                for (auto aif : this->_alreadyImportedFiles) {
-                    codeUnit->addAlreadyImportedFile(aif);
+                if (isNeeds) {
+                    codeUnit->setIsBeingImportedWithNeeds(true);
+                    for (auto it = this->_alreadyImportedFilesNeeds.begin(); it != this->_alreadyImportedFilesNeeds.end(); ++it) {
+                        auto pair = *it;
+                        codeUnit->addAlreadyImportedFile(pair.first, pair.second, true);
+                    }
+                } else {
+                    codeUnit->setIsBeingImportedWithImport(true);
+                    for (auto it = this->_alreadyImportedFilesImport.begin(); it != this->_alreadyImportedFilesImport.end(); ++it) {
+                        auto pair = *it;
+                        codeUnit->addAlreadyImportedFile(pair.first, pair.second, false);
+                    }
                 }
                 auto newRoot = codeUnit->getRootNode();
                 for (auto alias : rootNode->getAliases()) {
@@ -138,33 +161,50 @@ void LILPreprocessor::processImportingInstr(const std::shared_ptr<LILRootNode> &
                 codeUnit->setDebugAST(this->getDebugAST());
                 codeUnit->setVerbose(this->getVerbose() && instr->getVerbose());
                 codeUnit->run();
-                if (isNeeds) {
-                    this->_getNodesForImportNeedsInstr(&newNodes, newRoot);
-                } else {
-                    const auto & newRootChildren = newRoot->getNodes();
-                    newNodes.insert(newNodes.end(), newRootChildren.begin(), newRootChildren.end());
+                bool hasErrs = codeUnit->hasErrors();
+                bool instrIsExported = instr->getIsExported();
+                if (!hasErrs) {
+                    if (isNeeds) {
+                        for (auto node : newRoot->getChildNodes()) {
+                            this->_importNodeIfNeeded(&newNodes, node, instrIsExported);
+                        }
+                    } else {
+                        for (const auto & node : newRoot->getChildNodes()) {
+                            if (node->getIsExported()) {
+                                node->setIsExported(instrIsExported);
+                                newNodes.push_back(node);
+                            }
+                        }
+                    }
                 }
-                
                 if (this->getVerbose() && instr->getVerbose()) {
                     std::cerr << "\nEnd of file " << path.data() << "\n\n========================================\n\n";
                 }
-                this->_needsAnotherPass = true;
-                rootNode->clearNodes();
-                for (auto beforeIt = nodes.begin(); beforeIt != it; beforeIt += 1) {
-                    rootNode->addNode(*beforeIt);
+                if (hasErrs) {
+                    LILErrorMessage ei;
+                    ei.message =  "Errors encountered while importing file "+path;
+                    LILNode::SourceLocation sl = node->getSourceLocation();
+                    ei.file = sl.file;
+                    ei.line = sl.line;
+                    ei.column = sl.column;
+                    this->errors.push_back(ei);
+                    return;
                 }
+                this->_needsAnotherPass = true;
                 for (auto newNode : newNodes) {
                     if ( ! (this->getVerbose() && instr->getVerbose()) ) {
                         newNode->hidden = true;
                     }
-                    rootNode->add(newNode);
                 }
-                for (auto afterIt = it+1; afterIt != nodes.end(); afterIt += 1) {
-                    rootNode->addNode(*afterIt);
-                }
+                this->addAlreadyImportedFile(path, newNodes, isNeeds);
+                resultNodes.insert(resultNodes.end(), newNodes.begin(), newNodes.end());
             }
         }
         it += 1;
+    }
+    rootNode->clearNodes();
+    for (auto resultIt = resultNodes.begin(); resultIt != resultNodes.end(); resultIt += 1) {
+        rootNode->add(*resultIt);
     }
 }
 
@@ -613,21 +653,34 @@ void LILPreprocessor::setDebugAST(bool value)
     this->_debugAST = value;
 }
 
-void LILPreprocessor::addAlreadyImportedFile(const LILString & path)
+void LILPreprocessor::addAlreadyImportedFile(LILString path, std::vector<std::shared_ptr<LILNode>> nodes, bool isNeeds)
 {
-    this->_alreadyImportedFiles.push_back(path);
-}
-
-bool LILPreprocessor::isAlreadyImported(const LILString & path)
-{
-    for (auto str : this->_alreadyImportedFiles) {
-        if (str == path) {
-            return true;
-        }
+    if (isNeeds) {
+        this->_alreadyImportedFilesNeeds[path] = nodes;
+    } else {
+        this->_alreadyImportedFilesImport[path] = nodes;
     }
-    return false;
 }
 
+bool LILPreprocessor::isAlreadyImported(const LILString & path, bool isNeeds)
+{
+    if (isNeeds) {
+        return this->_alreadyImportedFilesNeeds.count(path) > 0;
+    } else {
+        return this->_alreadyImportedFilesImport.count(path) > 0;
+    }
+}
+
+std::vector<std::shared_ptr<LILNode>> LILPreprocessor::getNodesForAlreadyImportedFile(const LILString & path, bool isNeeds)
+{
+    if (isNeeds && this->_alreadyImportedFilesNeeds.count(path)) {
+        return this->_alreadyImportedFilesNeeds.at(path);
+    } else if (!isNeeds && this->_alreadyImportedFilesImport.count(path)) {
+        return this->_alreadyImportedFilesImport.at(path);
+    }
+    std::vector<std::shared_ptr<LILNode>> emptyVect;
+    return emptyVect;
+}
 
 std::vector<LILString> LILPreprocessor::_resolveFilePaths(LILString argStr) const
 {
@@ -675,35 +728,39 @@ std::vector<std::string> LILPreprocessor::_glob(const std::string& pattern) cons
     return filenames;
 }
 
-void LILPreprocessor::_getNodesForImportNeedsInstr(std::vector<std::shared_ptr<LILNode>> * newNodes, std::shared_ptr<LILRootNode> rootNode) const
+void LILPreprocessor::_importNodeIfNeeded(std::vector<std::shared_ptr<LILNode>> * newNodes, std::shared_ptr<LILNode> node, bool isExported) const
 {
-    for (auto node : rootNode->getNodes()) {
-        if (!node->getIsExported()) {
-            continue;
-        }
-        switch (node->getNodeType()) {
-            case NodeTypeVarDecl:
-            {
-                auto vd = std::static_pointer_cast<LILVarDecl>(node);
-                auto ty = vd->getType();
-                if (ty && ty->isA(TypeTypeFunction)) {
-                    auto newVd = std::make_shared<LILVarDecl>();
-                    newVd->setIsExtern(true);
-                    newVd->setIsExported(node->getIsExported());
-                    newVd->setName(vd->getName());
-                    newVd->setType(ty->clone());
-                    newNodes->push_back(newVd);
-                }
-                break;
+    if (!node->getIsExported()) {
+        return;
+    }
+    switch (node->getNodeType()) {
+        case NodeTypeVarDecl:
+        {
+            auto vd = std::static_pointer_cast<LILVarDecl>(node);
+            auto ty = vd->getType();
+            if (ty && ty->isA(TypeTypeFunction)) {
+                auto newVd = std::make_shared<LILVarDecl>();
+                newVd->setIsExtern(true);
+                newVd->setIsExported(isExported);
+                newVd->setName(vd->getName());
+                newVd->setType(ty->clone());
+                newNodes->push_back(newVd);
             }
-                
-            case NodeTypeClassDecl:
+            break;
+        }
+            
+        case NodeTypeClassDecl:
+        {
+            auto cd = std::static_pointer_cast<LILClassDecl>(node);
+            if (cd->isTemplate())
             {
-                auto cd = std::static_pointer_cast<LILClassDecl>(node);
-                
+                newNodes->push_back(cd);
+            }
+            else
+            {
                 auto newCd = std::make_shared<LILClassDecl>();
                 newCd->setIsExtern(true);
-                newCd->setIsExported(node->getIsExported());
+                newCd->setIsExported(isExported);
                 auto newTy = std::make_shared<LILObjectType>();
                 newTy->setTypeType(TypeTypeObject);
                 newTy->setName(cd->getName());

@@ -3116,9 +3116,9 @@ bool LILCodeParser::readInstruction()
     {
         currentval = peekToken->getString();
 
-        if (currentval == "needs")
+        if (currentval == "needs" || currentval == "import")
         {
-            bool isValid = this->readNeedsInstr();
+            bool isValid = this->readNeedsOrImportInstr();
             if (isValid && !this->atEndOfSource()) {
                 this->skip(TokenTypeWhitespace);
                 return true;
@@ -3273,7 +3273,7 @@ bool LILCodeParser::readColor()
     LIL_END_NODE_SKIP(false)
 }
 
-bool LILCodeParser::readNeedsInstr()
+bool LILCodeParser::readNeedsOrImportInstr()
 {
     LIL_START_NODE(NodeTypeInstruction)
 
