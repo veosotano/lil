@@ -505,17 +505,13 @@ LILToStrInfo LILToStringVisitor::_stringify(LILClassDecl * value)
 {
     LILToStrInfo ret;
     LILString externStr = value->getIsExtern() ? "extern " : "";
-    auto ty = value->getType();
+    bool isTmpl = value->isTemplate();
     LILString templateStr = "";
-    if (ty && ty->getParamTypes().size() > 0) {
-        templateStr = " template";
-    }
-    ret.value = "Class"+ templateStr + " declaration: " + externStr;
-    
-    LILToStrInfo typeInfo;
-    typeInfo.isExported = false;
-    if (ty) {
-        ret.children.push_back(this->stringify(ty.get()));
+    if (isTmpl) {
+        ret.value = "Class template declaration: " + externStr;
+        ret.children.push_back(this->stringify(value->getType().get()));
+    } else {
+        ret.value = "Class declaration: " + externStr;
     }
 
     std::shared_ptr<LILNode> inheritTypeNode = value->getInheritType();
@@ -524,6 +520,13 @@ LILToStrInfo LILToStringVisitor::_stringify(LILClassDecl * value)
         inheritInfo.isExported = false;
         inheritInfo.value = "Inherited type: "+LILNodeToString::stringify(inheritTypeNode.get());
         ret.children.push_back(inheritInfo);
+    }
+    std::vector<std::shared_ptr<LILAliasDecl>> aliases = value->getAliases();
+    if (aliases.size() > 0) {
+        for (auto it = aliases.begin(); it!=aliases.end(); ++it)
+        {
+            ret.children.push_back(this->stringify((*it).get()));
+        };
     }
     std::vector<std::shared_ptr<LILNode>> fields = value->getFields();
     if (fields.size() > 0) {
