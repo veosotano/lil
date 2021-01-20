@@ -1173,7 +1173,6 @@ std::shared_ptr<LILType> LILTypeGuesser::getNodeType(std::shared_ptr<LILNode> no
                         fd->setType(ty);
                     }
                     return ty;
-
                 }
 
                 default:

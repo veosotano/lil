@@ -1747,7 +1747,7 @@ llvm::Value * LILIREmitter::_emitFCMultipleValues(std::vector<std::shared_ptr<LI
                 llvm::BasicBlock * defaultBB = llvm::BasicBlock::Create(d->llvmContext, "case.null");
                 llvm::SwitchInst * switchInstr = d->irBuilder.CreateSwitch(argVal, defaultBB);
                 llvm::BasicBlock * mergeBB = llvm::BasicBlock::Create(d->llvmContext, "switch.merge");
-                
+
                 fun->getBasicBlockList().push_back(defaultBB);
                 d->irBuilder.SetInsertPoint(defaultBB);
                 d->irBuilder.CreateBr(mergeBB);
@@ -2191,7 +2191,7 @@ llvm::Value * LILIREmitter::_emitIf(LILFlowControl * value)
     for (auto & node : value->getThen()) {
         bool breakAfter = false;
         if (node->isA(FlowControlCallTypeReturn)) {
-            breakAfter = true;;
+            breakAfter = true;
         }
         this->emit(node.get());
         if (breakAfter) {
@@ -3165,7 +3165,7 @@ llvm::Value * LILIREmitter::emitNullable(LILNode * node, LILType * targetTy)
         std::cerr << "UNKNOWN NULLABLE TARGET TY FAIL!!!!!!!!!!!!!!!!\n\n";
         return nullptr;
     }
-    
+
     return nullptr;
 }
 
@@ -3179,7 +3179,7 @@ llvm::Value * LILIREmitter::emitForMultipleType(LIL::LILNode *node, std::shared_
     if (ty->equalTo(multiTy)) {
         return this->emit(node);
     }
-    
+
     auto mtAlloca = d->currentAlloca;
 
     const auto & types = multiTy->getTypes();

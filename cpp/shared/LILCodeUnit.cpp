@@ -182,7 +182,7 @@ void LILCodeUnit::run()
     bool verbose = d->verbose;
 
     d->pm->setVerbose(verbose);
-    
+
     this->buildAST();
 
     if (d->astBuilder->hasErrors()) {
@@ -251,7 +251,7 @@ void LILCodeUnit::runPasses()
         auto stringVisitor = new LILToStringVisitor();
         passes.push_back(stringVisitor);
     }
-    
+
     //handle #needs, #if and #snippet instructions
     auto preprocessor = new LILPreprocessor();
     for (auto it = d->_alreadyImportedFilesNeeds.begin(); it != d->_alreadyImportedFilesNeeds.end(); ++it) {
@@ -316,7 +316,7 @@ void LILCodeUnit::runPasses()
         stringVisitor->setPrintHeadline(false);
         passes.push_back(stringVisitor);
     }
-    
+
     //field sorting
     auto fieldSorter = new LILFieldSorter();
     fieldSorter->setDebug(d->debugFieldSorter);
@@ -326,7 +326,7 @@ void LILCodeUnit::runPasses()
         stringVisitor->setPrintHeadline(false);
         passes.push_back(stringVisitor);
     }
-    
+
     //parameter sorting
     auto parameterSorter = new LILParameterSorter();
     parameterSorter->setDebug(d->debugParameterSorter);
@@ -503,7 +503,7 @@ void LILCodeUnit::runPassesForNeeds()
         stringVisitor->setPrintHeadline(false);
         passes.push_back(stringVisitor);
     }
-    
+
     //name lowering
     auto nameLowerer = new LILNameLowerer();
     nameLowerer->setDebug(d->debugNameLowerer);

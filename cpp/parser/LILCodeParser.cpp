@@ -1621,13 +1621,13 @@ bool LILCodeParser::readConstDecl()
     if ( d->currentToken->getString() != "const" ) {
         return false;
     }
-    
+
     LIL_START_NODE(NodeTypeConstDecl)
     d->receiver->receiveNodeData(ParserEventConstDecl, d->currentToken->getString());
-    
+
     this->readNextToken();
     LIL_CHECK_FOR_END
-    
+
     if (d->currentToken->isA(TokenTypeDot)) {
         d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
         this->readNextToken();
@@ -1639,16 +1639,16 @@ bool LILCodeParser::readConstDecl()
         }
     }
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-    
+
     //read the variable name
     LIL_EXPECT(TokenTypeIdentifier, "identifier")
-    
+
     LILString name = d->currentToken->getString();
     
     d->receiver->receiveNodeData(ParserEventConstName, d->currentToken->getString());
-    
+
     std::shared_ptr<LILToken> theIdentifier = d->currentToken;
-    
+
     this->readNextToken();
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
     
@@ -1672,7 +1672,7 @@ bool LILCodeParser::readConstDecl()
     d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
     this->readNextToken();
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-    
+
     bool outIsSingleValue;
     NodeType svExpTy = NodeTypeInvalid;
     bool svIsValid = this->readExpression(outIsSingleValue, svExpTy);
@@ -1687,7 +1687,7 @@ bool LILCodeParser::readConstDecl()
     } else {
         LIL_CANCEL_NODE
     }
-    
+
     LIL_END_NODE
 }
 

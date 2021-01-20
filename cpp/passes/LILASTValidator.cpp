@@ -435,7 +435,6 @@ void LILASTValidator::_validate(const std::shared_ptr<LILType> & value)
                 ei.column = sl.column;
                 this->errors.push_back(ei);
             }
-            
             break;
         }
         case TypeTypeObject:
