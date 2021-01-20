@@ -21,6 +21,8 @@
 
 namespace LIL
 {
+    class LILAliasDecl;
+    
     class LILClassDecl : public LILTypedNode
     {
     public:
@@ -34,6 +36,8 @@ namespace LIL
         
         bool getReceivesInherits() const;
         void setReceivesInherits(bool value);
+        bool getReceivesBody() const;
+        void setReceivesBody(bool value);
         
         void addField(std::shared_ptr<LILNode> value);
         const std::vector<std::shared_ptr<LILNode>> & getFields() const;
@@ -46,6 +50,9 @@ namespace LIL
 
         bool getIsExtern() const;
         void setIsExtern(bool value);
+
+        void addAlias(std::shared_ptr<LILAliasDecl> value);
+        const std::vector<std::shared_ptr<LILAliasDecl>> & getAliases() const;
         
     protected:
         virtual std::shared_ptr<LILClonable> cloneImpl() const;
@@ -54,8 +61,10 @@ namespace LIL
         bool _isExtern;
         std::shared_ptr<LILNode> _inheritType;
         bool _receivesInherits;
+        bool _receivesBody;
         std::vector<std::shared_ptr<LILNode>> _fields;
         std::vector<std::shared_ptr<LILNode>> _methods;
+        std::vector<std::shared_ptr<LILAliasDecl>> _aliases;
     };
 }
 

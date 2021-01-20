@@ -13,6 +13,7 @@
  ********************************************************************/
 
 #include "LILClassDecl.h"
+#include "LILAliasDecl.h"
 #include "LILVarDecl.h"
 
 using namespace LIL;
@@ -20,17 +21,21 @@ using namespace LIL;
 LILClassDecl::LILClassDecl()
 : LILTypedNode(NodeTypeClassDecl)
 , _isExtern(false)
+, _receivesInherits(false)
+, _receivesBody(false)
 {
-    this->_receivesInherits = false;
 }
 
 LILClassDecl::LILClassDecl(const LILClassDecl &other)
 : LILTypedNode(other)
+, _isExtern(other._isExtern)
+, _inheritType(other._inheritType)
+, _receivesInherits(other._receivesInherits)
+, _receivesBody(other._receivesBody)
+, _fields(other._fields)
+, _methods(other._methods)
+, _aliases(other._aliases)
 {
-    this->_inheritType = other._inheritType;
-    this->_isExtern = other._isExtern;
-    this->_fields = other._fields;
-    this->_methods = other._methods;
 }
 
 std::shared_ptr<LILClassDecl> LILClassDecl::clone() const
@@ -62,6 +67,10 @@ std::shared_ptr<LILClonable> LILClassDecl::cloneImpl() const
     for (auto method : this->_methods) {
         clone->addMethod(method->clone());
     }
+    clone->_aliases.clear();
+    for (auto alias : this->_aliases) {
+        clone->addAlias(alias->clone());
+    }
     return clone;
 }
 
@@ -88,6 +97,16 @@ bool LILClassDecl::getReceivesInherits() const
 void LILClassDecl::setReceivesInherits(bool value)
 {
     this->_receivesInherits = value;
+}
+
+bool LILClassDecl::getReceivesBody() const
+{
+    return this->_receivesBody;
+}
+
+void LILClassDecl::setReceivesBody(bool value)
+{
+    this->_receivesBody = value;
 }
 
 void LILClassDecl::addField(std::shared_ptr<LILNode> value)
@@ -153,4 +172,14 @@ bool LILClassDecl::getIsExtern() const
 void LILClassDecl::setIsExtern(bool value)
 {
     this->_isExtern = value;
+}
+
+void LILClassDecl::addAlias(std::shared_ptr<LILAliasDecl> value)
+{
+    this->_aliases.push_back(value);
+}
+
+const std::vector<std::shared_ptr<LILAliasDecl>> & LILClassDecl::getAliases() const
+{
+    return this->_aliases;
 }

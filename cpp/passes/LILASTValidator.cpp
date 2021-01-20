@@ -149,6 +149,7 @@ void LILASTValidator::validate(const std::shared_ptr<LILNode> & node)
         {
             std::shared_ptr<LILClassDecl> value = std::static_pointer_cast<LILClassDecl>(node);
             this->_validate(value);
+            this->enterClassContext(value);
             break;
         }
         case NodeTypeObjectDefinition:
@@ -278,6 +279,9 @@ void LILASTValidator::validate(const std::shared_ptr<LILNode> & node)
     }
     if (LILNode::isContainerNode(node->getNodeType())) {
         this->validateChildren(node->getChildNodes());
+    }
+    if (node->isA(NodeTypeClassDecl)) {
+        this->exitClassContext();
     }
 }
 
@@ -462,6 +466,15 @@ void LILASTValidator::_validate(const std::shared_ptr<LILType> & value)
 
 bool LILASTValidator::_isCustomType(const std::shared_ptr<LILType> & ty) const
 {
+    auto cd = this->getClassContext();
+    if (cd) {
+        for (auto alias : cd->getAliases()) {
+            auto aTy = alias->getSrcType();
+            if (aTy && aTy->equalTo(ty)) {
+                return true;
+            }
+        }
+    }
     auto rootNode = this->getRootNode();
     auto aliases = rootNode->getAliases();
     for (auto alias : aliases) {
@@ -911,4 +924,22 @@ void LILASTValidator::validateChildren(const std::vector<std::shared_ptr<LILNode
     {
         this->validate(*it);
     };
+}
+
+std::shared_ptr<LILClassDecl> LILASTValidator::getClassContext() const
+{
+    if (this->_classContext.size() > 0) {
+        return this->_classContext.back();
+    }
+    return nullptr;
+}
+
+void LILASTValidator::enterClassContext(std::shared_ptr<LILClassDecl> value)
+{
+    this->_classContext.push_back(value);
+}
+
+void LILASTValidator::exitClassContext()
+{
+    this->_classContext.pop_back();
 }

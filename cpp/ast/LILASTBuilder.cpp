@@ -701,16 +701,20 @@ void LILASTBuilder::receiveNodeCommit()
                 }
                 case NodeTypeTypeDecl:
                 {
-                    auto td = std::static_pointer_cast<LILTypeDecl>(this->currentNode);
-                    auto name = td->getName();
-                    std::shared_ptr<LILType> ty;
-                    if (td->getIsObjName()) {
-                        ty = LILObjectType::make(name);
-                    } else {
-                        ty = LILType::make(name);
+                    if (!cd->getReceivesBody()) {
+                        auto td = std::static_pointer_cast<LILTypeDecl>(this->currentNode);
+                        std::shared_ptr<LILType> ty = td->getSrcType();
+                        auto cdTy = cd->getType();
+                        cdTy->addParamType(ty);
                     }
-                    auto cdTy = cd->getType();
-                    cdTy->addParamType(ty);
+                    break;
+                }
+                case NodeTypeAliasDecl:
+                {
+                    if (cd->getReceivesBody()) {
+                        auto ad = std::static_pointer_cast<LILAliasDecl>(this->currentNode);
+                        cd->addAlias(ad);
+                    }
                     break;
                 }
                 default:
@@ -1177,6 +1181,11 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
             {
                 std::shared_ptr<LILClassDecl> cd = std::static_pointer_cast<LILClassDecl>(this->currentContainer.back());
                 cd->setReceivesInherits(true);
+            }
+            else if (eventType == ParserEventFunctionBody)
+            {
+                std::shared_ptr<LILClassDecl> cd = std::static_pointer_cast<LILClassDecl>(this->currentContainer.back());
+                cd->setReceivesBody(true);
             }
             return;
         }

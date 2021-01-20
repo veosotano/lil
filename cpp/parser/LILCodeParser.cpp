@@ -1224,41 +1224,30 @@ bool LILCodeParser::readClassDecl()
 
     LIL_EXPECT(TokenTypeBlockOpen, "block open");
     d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+    d->receiver->receiveNodeData(ParserEventFunctionBody, "");
     this->readNextToken();
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
 
     bool done = false;
     while (!done) {
         done = true;
-        if (d->currentToken->isA(TokenTypeBlockClose)) {
+        if (d->currentToken && d->currentToken->isA(TokenTypeBlockClose)) {
             break;
         }
-        LIL_EXPECT(TokenTypeIdentifier, "identifier");
-        bool childValid = false;
-        if (
-            d->currentToken->getString() == "var"
-            || d->currentToken->getString() == "ivar"
-            || d->currentToken->getString() == "vvar"
-            ){
-            childValid = this->readVarDecl();
-        }
-        else if (d->currentToken->getString() == "fn")
-        {
-            childValid = this->readFunctionDecl();
-        }
-        if (childValid) {
+        
+        bool outIsSV = false;
+        NodeType svExpTy = NodeTypeInvalid;
+        bool isValid = this->readExpression(outIsSV, svExpTy);
+        if (isValid) {
             d->receiver->receiveNodeCommit();
-        } else {
-            LIL_CANCEL_NODE
         }
-        LIL_CHECK_FOR_END
+        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
         if (d->currentToken->isA(TokenTypeSemicolon)) {
             done = false;
             d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
             this->readNextToken();
             LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
         }
-        
     }
 
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
