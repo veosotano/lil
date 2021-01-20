@@ -1378,6 +1378,20 @@ bool LILCodeParser::readTypeSimple()
         if (d->currentToken->isA(TokenTypePercentSign)) {
             d->receiver->receiveNodeData(ParserEventType, d->currentToken->getString());
             this->readNextToken();
+        } else if (d->currentToken->isA(TokenTypeParenthesisOpen)){
+            d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+            this->readNextToken();
+            LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+            bool valid = this->readType();
+            if (valid) {
+                d->receiver->receiveNodeCommit();
+            } else {
+                LIL_CANCEL_NODE
+            }
+            LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+            LIL_EXPECT(TokenTypeParenthesisClose, "closing parenthesis");
+            d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+            this->readNextToken();
         }
         LIL_END_NODE_SKIP(false)
     }
