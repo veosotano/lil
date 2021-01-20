@@ -1606,21 +1606,12 @@ bool LILCodeParser::readVarDecl()
     this->readNextToken();
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
 
-    bool outIsSingleValue;
-    NodeType svExpTy = NodeTypeInvalid;
-    bool svIsValid = this->readExpression(outIsSingleValue, svExpTy);
-    if (svIsValid){
-        if (d->currentToken->isA(TokenTypeComma)) {
-            bool vlValid = this->readValueList();
-            if (!vlValid) {
-                LIL_CANCEL_NODE
-            }
-        }
-        d->receiver->receiveNodeCommit();
-    } else {
+    //this auto commits
+    bool valuesValid = this->readVals(true, true);
+    if (!valuesValid)
+    {
         LIL_CANCEL_NODE
     }
-
     LIL_END_NODE
 }
 
@@ -1687,7 +1678,7 @@ bool LILCodeParser::readConstDecl()
     bool svIsValid = this->readExpression(outIsSingleValue, svExpTy);
     if (svIsValid){
         if (d->currentToken->isA(TokenTypeComma)) {
-            bool vlValid = this->readValueList();
+            bool vlValid = this->readValueList(true);
             if (!vlValid) {
                 LIL_CANCEL_NODE
             }
@@ -1963,67 +1954,32 @@ bool LILCodeParser::readVals()
 
 bool LILCodeParser::readVals(bool useComma, bool strict)
 {
-    bool done = false;
     bool valid = true;
 
     //if strict, requires value to be valid
-    bool outIsSV = false;
+    bool outIsSingleValue = false;
     NodeType svExpTy = NodeTypeInvalid;
-    bool singleValValid = this->readExpression(outIsSV, svExpTy);
+    bool svIsValid = this->readExpression(outIsSingleValue, svExpTy);
 
-    if (strict && !singleValValid)
+    if (strict && !svIsValid)
         valid = false;
-
-    while (!done && singleValValid && valid)
-    {
-        done = true;
-
-        if ((valid))
-        {
-            d->receiver->receiveNodeCommit();
+    
+    if (svIsValid){
+        if (
+            (useComma &&  d->currentToken->isA(TokenTypeComma))
+            || (!useComma &&  d->currentToken->isA(TokenTypeSemicolon))
+        ) {
+            bool vlValid = this->readValueList(useComma);
+            if (!vlValid) {
+                return false;
+            }
         }
-
-        this->skip(TokenTypeWhitespace);
-        if (this->atEndOfSource())
-            return false;
-
-        if (useComma && d->currentToken->isA(TokenTypeComma))
-        {
-            done = false;
-            d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
-            this->readNextToken();
-            if (this->atEndOfSource())
-                return false;
-
-            this->skip(TokenTypeWhitespace);
-            if (this->atEndOfSource())
-                return false;
-
-            bool outIsSV = false;
-            NodeType svExpTy = NodeTypeInvalid;
-            bool expValid = this->readExpression(outIsSV, svExpTy);
-            if(!expValid) valid = false;
-            continue;
-        }
-        else if (!useComma && d->currentToken->isA(TokenTypeSemicolon))
-        {
-            d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
-            this->readNextToken();
-            if (this->atEndOfSource())
-                return false;
-
-            this->skip(TokenTypeWhitespace);
-            if (this->atEndOfSource())
-                return false;
-
-            bool outIsSV = false;
-            NodeType svExpTy = NodeTypeInvalid;
-            bool expValid = this->readExpression(outIsSV, svExpTy);
-            if(!expValid) valid = false;
-            done = false;
-            continue;
-        }
+        d->receiver->receiveNodeCommit();
+        
+    } else {
+        return false;
     }
+
     return valid;
 }
 
@@ -2425,13 +2381,14 @@ bool LILCodeParser::readBasicValue(NodeType &nodeType)
     return false;
 }
 
-bool LILCodeParser::readValueList()
+bool LILCodeParser::readValueList(bool useComma)
 {
     LIL_START_NODE(NodeTypeValueList)
     bool valid;
     bool outIsSV;
     NodeType outType;
-    while (d->currentToken->isA(TokenTypeComma)) {
+    auto tokTy = useComma ? TokenTypeComma : TokenTypeSemicolon;
+    while (d->currentToken->isA(tokTy)) {
         d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
         this->readNextToken();
 

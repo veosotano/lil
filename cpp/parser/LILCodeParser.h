@@ -88,7 +88,7 @@ namespace LIL
         bool readUnaryExpression();
         bool readSingleValue(NodeType &nodeType);
         bool readBasicValue(NodeType &nodeType);
-        bool readValueList();
+        bool readValueList(bool useComma);
         bool readStringLiteral();
         bool readStringFunction();
         bool readStringArgument();
