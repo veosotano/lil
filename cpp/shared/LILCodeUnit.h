@@ -64,6 +64,7 @@ namespace LIL
         void setDebugPreprocessor(bool value);
         void setDebugASTValidator(bool value);
         void setDebugTypeResolver(bool value);
+        void setDebugClassTemplateLowerer(bool value);
         void setDebugTypeGuesser(bool value);
         void setDebugStructureLowerer(bool value);
         void setDebugConstantFolder(bool value);

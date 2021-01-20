@@ -629,6 +629,11 @@ void LILCodeUnit::setDebugTypeResolver(bool value)
     d->debugTypeResolver = value;
 }
 
+void LILCodeUnit::setDebugClassTemplateLowerer(bool value)
+{
+    d->debugClassTemplateLowerer = value;
+}
+
 void LILCodeUnit::setDebugTypeGuesser(bool value)
 {
     d->debugTypeGuesser = value;

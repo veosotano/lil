@@ -51,6 +51,7 @@ int main(int argc, const char * argv[]) {
     bool debugParameterSorter = false;
     bool debugASTValidator = false;
     bool debugTypeResolver = false;
+    bool debugClassTemplateLowerer = false;
     bool debugTypeGuesser = false;
     bool debugStructureLowerer = false;
     bool debugConstantFolder = false;
@@ -143,6 +144,10 @@ int main(int argc, const char * argv[]) {
             
         } else if (command == "--debug-type-resolver") {
             debugTypeResolver = true;
+            ++i;
+            
+        } else if (command == "--debug-class-template-lowerer") {
+            debugClassTemplateLowerer = true;
             ++i;
             
         } else if (command == "--debug-field-sorter") {
@@ -256,6 +261,7 @@ int main(int argc, const char * argv[]) {
     codeUnit->setDebugAST(debugAST);
     codeUnit->setDebugASTValidator(debugASTValidator);
     codeUnit->setDebugTypeResolver(debugTypeResolver);
+    codeUnit->setDebugClassTemplateLowerer(debugClassTemplateLowerer);
     codeUnit->setDebugFieldSorter(debugFieldSorter);
     codeUnit->setDebugParameterSorter(debugParameterSorter);
     codeUnit->setDebugTypeGuesser(debugTypeGuesser);
