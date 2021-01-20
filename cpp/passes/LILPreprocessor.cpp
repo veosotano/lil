@@ -1937,7 +1937,25 @@ bool LILPreprocessor::_processPasteInstrSnippetInstr(std::shared_ptr<LILSnippetI
 
 bool LILPreprocessor::_processPasteInstr(std::shared_ptr<LILValueList> value)
 {
-    std::cerr << "UNIMPLEMENTED FAIL!!!!!!!!\n\n";
+    bool hasChanges = false;
+    std::vector<std::shared_ptr<LILNode>> resultNodes;
+    for (auto node : value->getValues()) {
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processPasteInstr(node);
+        if (!remove && this->_nodeBuffer.back().size() == 0) {
+            resultNodes.push_back(node);
+        } else {
+            hasChanges = true;
+            for (auto newNode : this->_nodeBuffer.back()) {
+                resultNodes.push_back(newNode);
+            }
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    if (hasChanges) {
+        this->_needsAnotherPass = true;
+        value->setValues(resultNodes);
+    }
     return false;
 }
 
