@@ -134,18 +134,6 @@ void LILPreprocessor::processImportingInstr(const std::shared_ptr<LILRootNode> &
                     }
                 }
                 auto newRoot = codeUnit->getRootNode();
-                for (auto alias : rootNode->getAliases()) {
-                    newRoot->addAlias(alias->clone());
-                }
-                for (auto type : rootNode->getTypes()) {
-                    newRoot->addType(type->clone());
-                }
-                for (auto classVal : rootNode->getClasses()) {
-                    newRoot->addClass(classVal);
-                }
-                for (auto constVal : rootNode->getConstants()) {
-                    newRoot->add(constVal);
-                }
                 codeUnit->setFile(path);
                 LILString dir = this->_getDir(path);
                 codeUnit->setDir(dir);
@@ -797,47 +785,50 @@ void LILPreprocessor::_importNodeIfNeeded(std::vector<std::shared_ptr<LILNode>> 
                 }
                 
                 newNodes->push_back(newCd);
-                break;
             }
-                
-            case NodeTypeAliasDecl:
-            case NodeTypeTypeDecl:
-            {
-                newNodes->push_back(node->clone());
-                break;
-            }
-
-            case NodeTypeFunctionDecl:
-            {
-                auto fd = std::static_pointer_cast<LILFunctionDecl>(node);
-                auto newFd = std::make_shared<LILFunctionDecl>();
-                newFd->setFunctionDeclType(FunctionDeclTypeFn);
-                newFd->setName(fd->getName());
-                newFd->setIsExtern(true);
-                newFd->setIsExported(true);
-                newFd->setHasOwnType(true);
-                newFd->setType(fd->getType()->clone());
-                
-                if (fd->getHasMultipleImpls()) {
-                    newFd->setHasMultipleImpls(true);
-                    for (auto impl : fd->getImpls()) {
-                        auto newImpl = std::make_shared<LILFunctionDecl>();
-                        newImpl->setFunctionDeclType(FunctionDeclTypeFn);
-                        newImpl->setName(impl->getName());
-                        newImpl->setIsExtern(true);
-                        newImpl->setHasOwnType(true);
-                        newImpl->setType(impl->getType()->clone());
-                        newFd->addImpl(newImpl);
-                    }
-                }
-
-                newNodes->push_back(newFd);
-                break;
-            }
-
-            default:
-                break;
+            break;
         }
+            
+        case NodeTypeAliasDecl:
+        case NodeTypeTypeDecl:
+        {
+            auto clone = node->clone();
+            clone->setIsExported(isExported);
+            newNodes->push_back(clone);
+            break;
+        }
+
+        case NodeTypeFunctionDecl:
+        {
+            auto fd = std::static_pointer_cast<LILFunctionDecl>(node);
+            auto newFd = std::make_shared<LILFunctionDecl>();
+            newFd->setFunctionDeclType(FunctionDeclTypeFn);
+            newFd->setName(fd->getName());
+            newFd->setIsExtern(true);
+            newFd->setIsExported(isExported);
+            newFd->setHasOwnType(true);
+            newFd->setType(fd->getType()->clone());
+            
+            if (fd->getHasMultipleImpls()) {
+                newFd->setHasMultipleImpls(true);
+                for (auto impl : fd->getImpls()) {
+                    auto newImpl = std::make_shared<LILFunctionDecl>();
+                    newImpl->setFunctionDeclType(FunctionDeclTypeFn);
+                    newImpl->setName(impl->getName());
+                    newImpl->setIsExtern(true);
+                    newImpl->setHasOwnType(true);
+                    newImpl->setType(impl->getType()->clone());
+                    newFd->addImpl(newImpl);
+                }
+            }
+
+            newNodes->push_back(newFd);
+            break;
+        }
+
+        default:
+            std::cerr << "UNIMPLEMENTED FAIL !!!!!! \n\n";
+            break;
     }
 }
 
