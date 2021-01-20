@@ -764,6 +764,9 @@ llvm::Value * LILIREmitter::_emit(LILConversionDecl * value)
 
 llvm::Value * LILIREmitter::_emit(LILClassDecl * value)
 {
+    if (value->isTemplate()) {
+        return nullptr;
+    }
     std::string name = value->getName().data();
 
     d->classTypes[name] = this->extractStructFromClass(value);

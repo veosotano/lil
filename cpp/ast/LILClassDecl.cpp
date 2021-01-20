@@ -183,3 +183,12 @@ const std::vector<std::shared_ptr<LILAliasDecl>> & LILClassDecl::getAliases() co
 {
     return this->_aliases;
 }
+
+bool LILClassDecl::isTemplate() const
+{
+    const auto & ty = this->getType();
+    if (ty && ty->getParamTypes().size() > 0) {
+        return true;
+    }
+    return false;
+}

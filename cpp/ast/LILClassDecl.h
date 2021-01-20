@@ -54,6 +54,8 @@ namespace LIL
         void addAlias(std::shared_ptr<LILAliasDecl> value);
         const std::vector<std::shared_ptr<LILAliasDecl>> & getAliases() const;
         
+        bool isTemplate() const;
+        
     protected:
         virtual std::shared_ptr<LILClonable> cloneImpl() const;
         
