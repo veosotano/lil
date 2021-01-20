@@ -144,6 +144,7 @@ namespace LIL
         void setDebug(bool value);
 
         llvm::StructType * extractStructFromClass(LILClassDecl * value);
+        size_t extractSizeFromNumberLiteral(LILNumberLiteral * value) const;
         
         llvm::Value * emitNullable(LILNode * node, LILType * targetTy);
         llvm::Value * emitForMultipleType(LILNode * node, std::shared_ptr<LILMultipleType> multiTy);

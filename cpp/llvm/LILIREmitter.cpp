@@ -2904,15 +2904,19 @@ llvm::Type * LILIREmitter::llvmTypeFromLILType(LILType * type)
         }
         auto arrType = this->llvmTypeFromLILType(arrTy.get());
         auto arg = sa->getArgument();
-        if (!arg->isA(NodeTypeNumberLiteral)) {
+        if (arg) {
+            arg = this->recursiveFindNode(arg);
+        }
+        if (arg && arg->isA(NodeTypeVarDecl)) {
+            auto vd = std::static_pointer_cast<LILVarDecl>(arg);
+            arg = vd->getInitVal();
+        }
+        if (!arg || !arg->isA(NodeTypeNumberLiteral)) {
             std::cerr << "STATIC ARRAY ARGUMENT WAS NOT NUMBER FAIL!!!!!!!!!!!!!!!!\n";
             return nullptr;
         }
         auto num = std::static_pointer_cast<LILNumberLiteral>(arg);
-        auto numStr = num->getValue().data();
-        auto numCstr = numStr.c_str();
-        char * endPtr;
-        auto numElements = std::strtoull(numCstr, &endPtr, 10);
+        auto numElements = this->extractSizeFromNumberLiteral(num.get());
         return llvm::ArrayType::get(arrType, numElements);
     }
 
@@ -3011,6 +3015,15 @@ llvm::StructType * LILIREmitter::extractStructFromClass(LILClassDecl * value)
         }
     }
     return llvm::StructType::create(d->llvmContext, types, value->getName().data());
+}
+
+size_t LILIREmitter::extractSizeFromNumberLiteral(LILNumberLiteral * value) const
+{
+    auto numStr = value->getValue().data();
+    auto numCstr = numStr.c_str();
+    char * endPtr;
+    size_t numElements = std::strtoull(numCstr, &endPtr, 10);
+    return numElements;
 }
 
 llvm::Value * LILIREmitter::emitNullable(LILNode * node, LILType * targetTy)
@@ -3307,6 +3320,27 @@ size_t LILIREmitter::getSizeOfType(std::shared_ptr<LILType> ty) const
                 total += this->getSizeOfType(field->getType());
             }
             ret = total;
+            break;
+        }
+            
+        case TypeTypeStaticArray:
+        {
+            auto saTy = std::static_pointer_cast<LILStaticArrayType>(ty);
+            auto baseSize = this->getSizeOfType(saTy->getType());
+            auto arg = this->recursiveFindNode(saTy->getArgument());
+            if (!arg) {
+                std::cerr << "ARGUMENT OF STATIC ARRAY TYPE NOT FOUND FAIL!!!!!!!!!!!!!!!!\n\n";
+            }
+            if (arg->isA(NodeTypeVarDecl)) {
+                auto vd = std::static_pointer_cast<LILVarDecl>(arg);
+                arg = vd->getInitVal();
+            }
+            if (!arg || !arg->isA(NodeTypeNumberLiteral)) {
+                std::cerr << "ARGUMENT OF STATIC ARRAY TYPE NOT FOUND FAIL!!!!!!!!!!!!!!!!\n\n";
+            }
+            auto num = std::static_pointer_cast<LILNumberLiteral>(arg);
+            size_t argNum = this->extractSizeFromNumberLiteral(num.get());
+            ret = baseSize * argNum;
             break;
         }
 
