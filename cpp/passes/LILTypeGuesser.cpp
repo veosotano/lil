@@ -141,6 +141,9 @@ void LILTypeGuesser::_propagateStrongType(std::shared_ptr<LILNode> node, std::sh
         case NodeTypeExpression:
         {
             auto exp = std::static_pointer_cast<LILExpression>(node);
+            if (exp->isA(ExpressionTypeCast)) {
+                break;
+            }
             exp->setType(ty);
             this->_propagateStrongType(exp->getLeft(), ty);
             this->_propagateStrongType(exp->getRight(), ty);
