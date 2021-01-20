@@ -1368,10 +1368,6 @@ bool LILCodeParser::readTypeSimple()
             return this->readFunctionType(true);
         } else if (tokenStr == "ptr"){
             return this->readPointerType();
-        } else if (tokenStr == "array") {
-//            return this->readArrayType();
-        } else if (tokenStr == "map") {
-//            return this->readMapType();
         }
 
         LIL_START_NODE(NodeTypeType)

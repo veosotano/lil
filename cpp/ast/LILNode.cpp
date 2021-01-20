@@ -98,8 +98,6 @@ LILString LILNode::nodeTypeToString(NodeType nodeType)
             return "function declaration";
         case NodeTypeFunctionCall:
             return "function call";
-        case NodeTypeArray:
-            return "array";
         case NodeTypeIndexAccessor:
             return "index accessor";
         case NodeTypeFlowControl:

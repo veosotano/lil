@@ -303,7 +303,6 @@ bool LILPreprocessor::processIfInstr(std::shared_ptr<LILNode> node)
             break;
             
         case NodeTypeNegation:
-        case NodeTypeArray:
             std::cerr << "UNIMPLEMENTED FAIL !!!!!\n\n";
             return false;
             
@@ -480,7 +479,6 @@ bool LILPreprocessor::processPasteInstr(std::shared_ptr<LILNode> node)
             break;
             
         case NodeTypeNegation:
-        case NodeTypeArray:
             std::cerr << "UNIMPLEMENTED FAIL !!!!!\n\n";
             return false;
             

@@ -870,7 +870,6 @@ void LILASTValidator::_validate(const std::shared_ptr<LILFlowControlCall> & valu
             case NodeTypeStringFunction:
             case NodeTypeBoolLiteral:
             case NodeTypeExpression:
-            case NodeTypeArray:
             case NodeTypeVarName:
             case NodeTypeValuePath:
             case NodeTypeSelector:

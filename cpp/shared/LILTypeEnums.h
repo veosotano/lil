@@ -113,7 +113,6 @@ namespace LIL
         NodeTypeFunctionCall,
         NodeTypeFlowControl,
         NodeTypeFlowControlCall,
-        NodeTypeArray,
         NodeTypeIndexAccessor,
         NodeTypeValueList,
         NodeTypeForeignLang,

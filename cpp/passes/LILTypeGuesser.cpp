@@ -1140,12 +1140,6 @@ std::shared_ptr<LILType> LILTypeGuesser::getNodeType(std::shared_ptr<LILNode> no
             type->setName("string");
             return type;
         }
-        case NodeTypeArray:
-        {
-            std::shared_ptr<LILType> type = std::make_shared<LILType>();
-            type->setName("arr");
-            return type;
-        }
         case NodeTypeObjectDefinition:
         {
             std::shared_ptr<LILObjectDefinition> objdef = std::static_pointer_cast<LILObjectDefinition>(node);
