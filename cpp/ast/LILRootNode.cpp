@@ -70,6 +70,7 @@ void LILRootNode::add(std::shared_ptr<LILNode> node, bool addToNodeTree)
             if (
                 vd->getIsExtern()
                 || vd->getIsExported()
+                || vd->getIsConst()
             ) {
                 if (addToNodeTree) {
                     this->addNode(node);
@@ -85,10 +86,6 @@ void LILRootNode::add(std::shared_ptr<LILNode> node, bool addToNodeTree)
                 }
                 //local variables on root are globals
                 this->setLocalVariable(vd->getName(), node);
-            }
-            else  if (vd->getIsConst() && vd->getIsExported())
-            {
-                this->addConstant(vd);
             }
             else
             {
@@ -292,16 +289,6 @@ std::shared_ptr<LILConversionDecl> LILRootNode::getConversionNamed(LILString nam
     }
     return nullptr;
 
-}
-
-const std::vector<std::shared_ptr<LILVarDecl>> & LILRootNode::getConstants() const
-{
-    return this->_constants;
-}
-
-void LILRootNode::addConstant(std::shared_ptr<LILVarDecl> value)
-{
-    this->_constants.push_back(value);
 }
 
 const std::map<LILString, std::shared_ptr<LILSnippetInstruction>> & LILRootNode::getSnippets() const

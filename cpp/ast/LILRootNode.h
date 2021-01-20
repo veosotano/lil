@@ -55,9 +55,6 @@ namespace LIL {
         const std::map<LILString, std::shared_ptr<LILConversionDecl>> & getConversions() const;
         std::shared_ptr<LILConversionDecl> getConversionNamed(LILString name);
 
-        const std::vector<std::shared_ptr<LILVarDecl>> & getConstants() const;
-        void addConstant(std::shared_ptr<LILVarDecl> vd);
-        
         const std::map<LILString, std::shared_ptr<LILSnippetInstruction>> & getSnippets() const;
         std::shared_ptr<LILSnippetInstruction> getSnippetNamed(LILString key);
         void addSnippet(std::shared_ptr<LILSnippetInstruction> snippet);
