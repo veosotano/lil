@@ -681,6 +681,14 @@ LILToStrInfo LILToStringVisitor::_stringify(LILFunctionDecl * value)
         if (argsInfo.children.size() > 0) {
             ret.children.push_back(argsInfo);
         }
+        const auto retTy = ty->getReturnType();
+        if (retTy) {
+            LILToStrInfo retInfo;
+            retInfo.isExported = false;
+            retInfo.value = "return =>";
+            retInfo.children.push_back(this->stringify(retTy.get()));
+            ret.children.push_back(retInfo);
+        }
     }
     
     auto body = value->getBody();
