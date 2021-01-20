@@ -864,6 +864,7 @@ void LILASTValidator::_validate(const std::shared_ptr<LILFlowControlCall> & valu
     auto arg = value->getArgument();
     if (arg) {
         switch (arg->getNodeType()) {
+            case NodeTypeNull:
             case NodeTypeNumberLiteral:
             case NodeTypeStringLiteral:
             case NodeTypeStringFunction:

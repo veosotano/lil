@@ -424,9 +424,11 @@ void LILStructureLowerer::_process(std::shared_ptr<LILFunctionDecl> value)
                         newFd->setName(value->getName());
 
                         this->_nodeBuffer.back().push_back(newFd);
-                        
-                        
-                        for (auto argChild : std::static_pointer_cast<LILMultipleType>(tyArg)->getTypes()) {
+                        auto tyArgTypes = std::static_pointer_cast<LILMultipleType>(tyArg)->getTypes();
+                        if (tyArg->getIsNullable()) {
+                            tyArgTypes.push_back(LILType::make("null"));
+                        }
+                        for (auto argChild : tyArgTypes) {
                             auto newChildFd = std::make_shared<LILFunctionDecl>();
                             newChildFd->setFunctionDeclType(FunctionDeclTypeFn);
                             newChildFd->setIsExtern(value->getIsExtern());

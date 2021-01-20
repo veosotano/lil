@@ -244,19 +244,38 @@ void LILTypeValidator::_validate(std::shared_ptr<LILFunctionCall> fc)
                 if (argTy->isA(TypeTypeMultiple)) {
                     auto mtTy = std::static_pointer_cast<LILMultipleType>(argTy);
                     bool found = false;
-                    for (auto mtArgTy : mtTy->getTypes()) {
-                        if (mtArgTy->equalTo(fcArgTy) || this->_isDefinitionOf(fcArgTy, mtArgTy)) {
-                            i += 1;
-                            found = true;
-                            break;
-                        } else {
-                            LILString conversionName = LILNodeToString::stringify(fcArgTy.get());
-                            conversionName += "_to_";
-                            conversionName += LILNodeToString::stringify(mtArgTy.get());
-                            if (conversions.count(conversionName)) {
+                    if (fcArgTy->isA(TypeTypeMultiple)) {
+                        auto fcArgMultipleTy = std::static_pointer_cast<LILMultipleType>(fcArgTy);
+                        bool allFound = true;
+                        for (auto fcArgMtTy : fcArgMultipleTy->getTypes()) {
+                            found = false;
+                            for (auto mtArgTy : mtTy->getTypes()) {
+                                if (fcArgMtTy->equalTo(mtArgTy) || this->_isDefinitionOf(fcArgMtTy, mtArgTy)) {
+                                    found = true;
+                                    break;
+                                }
+                            }
+                            if (!found) {
+                                allFound = false;
+                                break;
+                            }
+                        }
+                        found = allFound;
+                    } else {
+                        for (auto mtArgTy : mtTy->getTypes()) {
+                            if (mtArgTy->equalTo(fcArgTy) || this->_isDefinitionOf(fcArgTy, mtArgTy)) {
                                 i += 1;
                                 found = true;
                                 break;
+                            } else {
+                                LILString conversionName = LILNodeToString::stringify(fcArgTy.get());
+                                conversionName += "_to_";
+                                conversionName += LILNodeToString::stringify(mtArgTy.get());
+                                if (conversions.count(conversionName)) {
+                                    i += 1;
+                                    found = true;
+                                    break;
+                                }
                             }
                         }
                     }
@@ -426,12 +445,49 @@ void LILTypeValidator::_validate(std::shared_ptr<LILVarDecl> vd)
         bool found = false;
         if (ty->isA(TypeTypeMultiple)) {
             auto multiTy = std::static_pointer_cast<LILMultipleType>(ty);
-            for (auto mtTy : multiTy->getTypes()) {
-                if (mtTy->equalTo(ivTy)) {
+            if (ivTy->isA(TypeTypeMultiple)) {
+                bool allFound = true;
+                auto ivMtTy = std::static_pointer_cast<LILMultipleType>(ivTy);
+                for (auto ivMtTy : ivMtTy->getTypes()) {
+                    found = false;
+                    for (auto mtTy : multiTy->getTypes()) {
+                        if (mtTy->equalTo(ivMtTy)) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        allFound = false;
+                        break;
+                    }
+                }
+                found = allFound;
+            } else if (ivTy->getIsNullable()) {
+                ivTy->setIsNullable(false);
+                for (auto mtTy : multiTy->getTypes()) {
+                    if (mtTy->equalTo(ivTy)) {
+                        found = true;
+                        break;
+                    }
+                }
+                ivTy->setIsNullable(true);
+
+            } else {
+                if (ty->getIsNullable() && ivTy->getName() == "null") {
                     found = true;
-                    break;
+                } else {
+                    for (auto mtTy : multiTy->getTypes()) {
+                        if (mtTy->equalTo(ivTy)) {
+                            found = true;
+                            break;
+                        }
+                    }
                 }
             }
+        } else if (ty->getIsNullable()) {
+            ty->setIsNullable(false);
+            found = ty->equalTo(ivTy);
+            ty->setIsNullable(true);
         } else {
             found = ty->equalTo(ivTy);
         }

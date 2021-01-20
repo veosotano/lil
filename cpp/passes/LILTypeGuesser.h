@@ -125,6 +125,7 @@ namespace LIL
          std::shared_ptr<LILType> findTypeFromFunctionCalls(std::vector<std::shared_ptr<LILNode>> nodes, const std::shared_ptr<LILVarDecl> & vd) const;
         std::shared_ptr<LILType> findTypeFromExpressions(std::vector<std::shared_ptr<LILNode>> nodes, const std::shared_ptr<LILVarDecl> & vd) const;
         std::shared_ptr<LILType> findTypeFromCallers(const std::vector<std::shared_ptr<LILNode>> & nodes, const std::shared_ptr<LILVarDecl> & vd, size_t argCount) const;
+        std::shared_ptr<LILType> nullsToNullableTypes(std::shared_ptr<LILType> ty) const;
     };
 }
 
