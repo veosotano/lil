@@ -399,6 +399,37 @@ llvm::Value * LILIREmitter::_emit(LILExpression * value)
         std::cerr << "!!!!!!!!!!LEFT OR RIGHT EMIT FAIL!!!!!!!!!!!!!!!!\n";
         return nullptr;
     }
+    auto ty = value->getType();
+    if (!ty) {
+        std::cerr << "EXPRESION HAD NO TYPE FAIL!!!!!!!!!!!!!!!!\n";
+        return nullptr;
+    }
+    if (ty->isA(TypeTypePointer)) {
+        auto leftTy = left->getType();
+        if (!leftTy) {
+            std::cerr << "LEFT NODE OF EXPRESSION HAD NO TYPE FAIL!!!!!!!!!!!!!!!!\n";
+            return nullptr;
+        }
+        auto rightTy = right->getType();
+        if (!rightTy) {
+            std::cerr << "RIGHT NODE OF EXPRESSION HAD NO TYPE FAIL!!!!!!!!!!!!!!!!\n";
+            return nullptr;
+        }
+        if (leftTy->isA(TypeTypePointer) && LILType::isNumberType(rightTy.get())) {
+            auto llvmType = this->llvmTypeFromLILType(rightTy.get());
+            leftV = d->irBuilder.CreatePtrToInt(leftV, llvmType);
+        } else if (LILType::isNumberType(leftTy.get()) && rightTy->isA(TypeTypePointer)) {
+            auto llvmType = this->llvmTypeFromLILType(leftTy.get());
+            rightV = d->irBuilder.CreatePtrToInt(rightV, llvmType);
+        } else if (leftTy->isA(TypeTypePointer) && rightTy->isA(TypeTypePointer)){
+            auto ptrTy = std::static_pointer_cast<LILPointerType>(leftTy);
+            auto llvmType = this->llvmTypeFromLILType(ptrTy->getArgument().get());
+            leftV = d->irBuilder.CreatePtrToInt(leftV, llvmType);
+            rightV = d->irBuilder.CreatePtrToInt(rightV, llvmType);
+        }
+        auto result = this->_emitExpression(value->getExpressionType(), leftV, rightV);
+        return d->irBuilder.CreateIntToPtr(result, this->llvmTypeFromLILType(ty.get()));
+    }
     if (leftV->getType() != rightV->getType()) {
         std::cerr << "!!!!!!!!!!LEFT AND RIGHT TYPE DONT MATCH FAIL!!!!!!!!!!!!!!!!\n";
         return nullptr;
