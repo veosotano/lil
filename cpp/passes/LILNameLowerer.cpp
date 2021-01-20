@@ -338,8 +338,11 @@ void LILNameLowerer::_process(LILVarDecl * value)
 void LILNameLowerer::_process(LILClassDecl * value)
 {
     if (!value->getIsExtern()) {
-        this->processChildren(value->getFields());
-        this->processChildren(value->getMethods());
+        auto ty = value->getType();
+        if (!ty || !value->isTemplate()) {
+            this->processChildren(value->getFields());
+            this->processChildren(value->getMethods());
+        }
     }
 }
 
