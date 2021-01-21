@@ -1753,6 +1753,12 @@ llvm::Value * LILIREmitter::_emitFCMultipleValues(std::vector<std::shared_ptr<LI
             if (fcTy->isA(TypeTypeMultiple)) {
                 auto multiTy = std::static_pointer_cast<LILMultipleType>(fcTy);
                 auto argument = arguments[i];
+                std::string namestr;
+                if (argument->isA(NodeTypeVarName)) {
+                    namestr = std::static_pointer_cast<LILVarName>(argument)->getName().data();
+                } else {
+                    namestr = value->getName().data();
+                }
                 
                 auto llvmIr = this->emitPointer(argument.get());
                 
@@ -1761,11 +1767,11 @@ llvm::Value * LILIREmitter::_emitFCMultipleValues(std::vector<std::shared_ptr<LI
                 gepIndices1.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 1, false)));
                 auto gep = d->irBuilder.CreateGEP(llvmIr, gepIndices1);
                 
-                auto argVal = d->irBuilder.CreateLoad(gep, "_lil_type_index");
+                auto argVal = d->irBuilder.CreateLoad(gep, namestr + "_lil_type_index");
                 
-                llvm::BasicBlock * defaultBB = llvm::BasicBlock::Create(d->llvmContext, "case.null");
+                llvm::BasicBlock * defaultBB = llvm::BasicBlock::Create(d->llvmContext, namestr+ ".null");
                 llvm::SwitchInst * switchInstr = d->irBuilder.CreateSwitch(argVal, defaultBB);
-                llvm::BasicBlock * mergeBB = llvm::BasicBlock::Create(d->llvmContext, "switch.merge");
+                llvm::BasicBlock * mergeBB = llvm::BasicBlock::Create(d->llvmContext, namestr + ".merge");
 
                 fun->getBasicBlockList().push_back(defaultBB);
                 d->irBuilder.SetInsertPoint(defaultBB);
@@ -1780,7 +1786,7 @@ llvm::Value * LILIREmitter::_emitFCMultipleValues(std::vector<std::shared_ptr<LI
                     if (mfcTy->getName() == "null") {
                         bb = defaultBB;
                     } else {
-                        bb = llvm::BasicBlock::Create(d->llvmContext, "case."+mfcTy->getName().data(), fun);
+                        bb = llvm::BasicBlock::Create(d->llvmContext, namestr+"."+mfcTy->getName().data(), fun);
                         switchInstr->addCase(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(8, j, false)), bb);
                     }
                     
@@ -3100,6 +3106,12 @@ llvm::Value * LILIREmitter::emitNullable(LILNode * node, LILType * targetTy)
 
 llvm::Value * LILIREmitter::emitForMultipleType(LIL::LILNode *node, std::shared_ptr<LILMultipleType> multiTy)
 {
+    LILString name;
+    if (node->isA(NodeTypeVarName)) {
+        name = static_cast<LILVarName *>(node)->getName();
+    } else {
+        name = "tmp";
+    }
     auto ty = node->getType();
     if (!ty) {
         std::cerr << "NODE HAD NO TY FAIL!!!!!!!!!!!!!!!!\n\n";
@@ -3109,10 +3121,10 @@ llvm::Value * LILIREmitter::emitForMultipleType(LIL::LILNode *node, std::shared_
         if (ty->equalTo(multiTy)) {
             return this->emit(node);
         } else {
-            return this->emitMultiTyToMultiTyConversion(node, multiTy.get());
+            return this->emitMultiTyToMultiTyConversion(node, multiTy.get(), name);
         }
     } else if (ty->getIsNullable()) {
-        return this->emitNullableToMultiTyConversion(node, multiTy.get());
+        return this->emitNullableToMultiTyConversion(node, multiTy.get(), name);
     }
 
     auto mtAlloca = d->currentAlloca;
@@ -3175,8 +3187,9 @@ llvm::Value * LILIREmitter::emitForMultipleType(LIL::LILNode *node, std::shared_
     return nullptr;
 }
 
-llvm::Value * LILIREmitter::emitNullableToMultiTyConversion(LILNode * node, LILMultipleType * multiTy)
+llvm::Value * LILIREmitter::emitNullableToMultiTyConversion(LILNode * node, LILMultipleType * multiTy, const LILString & name)
 {
+    auto namestr = name.data();
     auto ty = node->getType();
     llvm::Function * fun = d->irBuilder.GetInsertBlock()->getParent();
 
@@ -3209,15 +3222,15 @@ llvm::Value * LILIREmitter::emitNullableToMultiTyConversion(LILNode * node, LILM
     if (isPtr) {
         auto ptrType = llvm::cast<llvm::PointerType>(this->llvmTypeFromLILType(ty.get()));
         auto zeroVal = llvm::ConstantPointerNull::get(ptrType);
-        cond = d->irBuilder.CreateICmpNE(nullableValue, zeroVal, "not.null.cond");
+        cond = d->irBuilder.CreateICmpNE(nullableValue, zeroVal, namestr + ".not.null.cond");
     } else {
         auto zeroVal = llvm::ConstantInt::get(d->llvmContext, llvm::APInt(2, 0, true));
-        cond = d->irBuilder.CreateICmpSGE(nullableValue, zeroVal, "not.null.cond");
+        cond = d->irBuilder.CreateICmpSGE(nullableValue, zeroVal, namestr + ".not.null.cond");
     }
 
-    llvm::BasicBlock * notNullBB = llvm::BasicBlock::Create(d->llvmContext, "if.not.null", fun);
-    llvm::BasicBlock * isNullBB = llvm::BasicBlock::Create(d->llvmContext, "if.null");
-    llvm::BasicBlock * mergeBB = llvm::BasicBlock::Create(d->llvmContext, "if.end");
+    llvm::BasicBlock * notNullBB = llvm::BasicBlock::Create(d->llvmContext, namestr + ".if.not.null", fun);
+    llvm::BasicBlock * isNullBB = llvm::BasicBlock::Create(d->llvmContext, namestr + ".if.null");
+    llvm::BasicBlock * mergeBB = llvm::BasicBlock::Create(d->llvmContext, namestr + ".if.end");
     d->irBuilder.CreateCondBr(cond, notNullBB, isNullBB);
     d->irBuilder.SetInsertPoint(notNullBB);
     if (isPtr) {
@@ -3226,10 +3239,10 @@ llvm::Value * LILIREmitter::emitNullableToMultiTyConversion(LILNode * node, LILM
         auto castedMember1 = d->irBuilder.CreatePointerCast(member1, llvm::Type::getInt1Ty(d->llvmContext)->getPointerTo());
 
         auto nullableTrueVal = llvm::ConstantInt::get(d->llvmContext, llvm::APInt(2, 1, true));
-        auto boolCond = d->irBuilder.CreateICmpEQ(nullableValue, nullableTrueVal, "bool.val.cond");
-        llvm::BasicBlock * ifTrueBB = llvm::BasicBlock::Create(d->llvmContext, "bool.true", fun);
-        llvm::BasicBlock * ifFalseBB = llvm::BasicBlock::Create(d->llvmContext, "bool.false");
-        llvm::BasicBlock * boolMergeBB = llvm::BasicBlock::Create(d->llvmContext, "bool.val.end");
+        auto boolCond = d->irBuilder.CreateICmpEQ(nullableValue, nullableTrueVal, namestr + ".bool.val.cond");
+        llvm::BasicBlock * ifTrueBB = llvm::BasicBlock::Create(d->llvmContext, namestr + ".bool.true", fun);
+        llvm::BasicBlock * ifFalseBB = llvm::BasicBlock::Create(d->llvmContext, namestr + ".bool.false");
+        llvm::BasicBlock * boolMergeBB = llvm::BasicBlock::Create(d->llvmContext, namestr + ".bool.val.end");
 
         d->irBuilder.CreateCondBr(boolCond, ifTrueBB, ifFalseBB);
         d->irBuilder.SetInsertPoint(ifTrueBB);
@@ -3262,8 +3275,9 @@ llvm::Value * LILIREmitter::emitNullableToMultiTyConversion(LILNode * node, LILM
     return nullptr;
 }
 
-llvm::Value * LILIREmitter::emitMultiTyToMultiTyConversion(LILNode * node, LILMultipleType * multiTy)
+llvm::Value * LILIREmitter::emitMultiTyToMultiTyConversion(LILNode * node, LILMultipleType * multiTy, const LILString & name)
 {
+    auto namestr = name.data();
     auto ty = node->getType();
     llvm::Function * fun = d->irBuilder.GetInsertBlock()->getParent();
 
@@ -3274,11 +3288,11 @@ llvm::Value * LILIREmitter::emitMultiTyToMultiTyConversion(LILNode * node, LILMu
     mtGepIndices.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
     mtGepIndices.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 1, false)));
     auto mtValMember2 = d->irBuilder.CreateGEP(mtValue, mtGepIndices);
-    auto mtValIndex = d->irBuilder.CreateLoad(mtValMember2, "_lil_type_index");
+    auto mtValIndex = d->irBuilder.CreateLoad(mtValMember2, namestr + "_lil_type_index");
     
-    llvm::BasicBlock * defaultBB = llvm::BasicBlock::Create(d->llvmContext, "case.null");
+    llvm::BasicBlock * defaultBB = llvm::BasicBlock::Create(d->llvmContext, namestr + ".null");
     llvm::SwitchInst * switchInstr = d->irBuilder.CreateSwitch(mtValIndex, defaultBB);
-    llvm::BasicBlock * mergeBB = llvm::BasicBlock::Create(d->llvmContext, "switch.merge");
+    llvm::BasicBlock * mergeBB = llvm::BasicBlock::Create(d->llvmContext, namestr + ".merge");
     
     fun->getBasicBlockList().push_back(defaultBB);
     d->irBuilder.SetInsertPoint(defaultBB);
@@ -3301,7 +3315,7 @@ llvm::Value * LILIREmitter::emitMultiTyToMultiTyConversion(LILNode * node, LILMu
     }
     size_t i = 1;
     for (auto ty1 : types1) {
-        llvm::BasicBlock * bb = llvm::BasicBlock::Create(d->llvmContext, "case."+ty1->getName().data(), fun);
+        llvm::BasicBlock * bb = llvm::BasicBlock::Create(d->llvmContext, namestr +"."+ty1->getName().data(), fun);
         switchInstr->addCase(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(8, i, false)), bb);
         d->irBuilder.SetInsertPoint(bb);
 
