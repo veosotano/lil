@@ -2048,6 +2048,9 @@ llvm::Value * LILIREmitter::_emitFunctionCallMT(LILFunctionCall *value, LILStrin
 {
     llvm::Function* fun = d->llvmModule->getFunction(name.data());
     auto fcArgs = value->getArguments();
+    if (!fun) {
+        fun = this->_emitFnSignature(name.data(), fnTy);
+    }
     if (fun) {
         std::vector<llvm::Value *> argsvect;
         
