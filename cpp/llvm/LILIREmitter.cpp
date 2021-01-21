@@ -1563,6 +1563,9 @@ llvm::Function * LILIREmitter::_emit(LILFunctionDecl * value)
     switch (value->getFunctionDeclType()) {
         case FunctionDeclTypeFn:
         {
+            if (value->getIsExtern()) {
+                return nullptr;
+            }
             if (value->getHasMultipleImpls()) {
                 for (auto impl : value->getImpls()) {
                     this->_emit(impl.get());
