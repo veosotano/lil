@@ -382,11 +382,11 @@ void LILASTBuilder::receiveNodeStart(NodeType nodeType)
         case NodeTypeValueList:
         {
             this->state.push_back(BuilderStateValueList);
+            std::shared_ptr<LILValueList> sat = std::make_shared<LILValueList>();
+            this->currentContainer.push_back(sat);
             if (this->currentNode)
             {
-                std::shared_ptr<LILValueList> sat = std::make_shared<LILValueList>();
                 sat->addValue(this->currentNode);
-                this->currentContainer.push_back(sat);
                 this->currentNode.reset();
             }
             break;

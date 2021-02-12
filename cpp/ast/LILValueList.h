@@ -15,11 +15,11 @@
 #ifndef LILVALUELIST_H
 #define LILVALUELIST_H
 
-#include "LILNode.h"
+#include "LILTypedNode.h"
 
 namespace LIL
 {
-    class LILValueList : public LILNode
+    class LILValueList : public LILTypedNode
     {
     public:
         LILValueList();
@@ -33,8 +33,6 @@ namespace LIL
         void setValues(std::vector<std::shared_ptr<LILNode>> vals);
         std::vector<std::shared_ptr<LILNode>> getValues() const;
         void clearValues();
-
-        std::shared_ptr<LILType> getType() const override;
 
     protected:
         std::shared_ptr<LILClonable> cloneImpl() const override;

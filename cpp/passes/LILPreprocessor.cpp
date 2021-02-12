@@ -1341,7 +1341,25 @@ bool LILPreprocessor::_processIfInstrSnippetInstr(std::shared_ptr<LILSnippetInst
 
 bool LILPreprocessor::_processIfInstr(std::shared_ptr<LILValueList> value)
 {
-    std::cerr << "UNIMPLEMENTED FAIL!!!!!!!!\n\n";
+    bool hasChanges = false;
+    std::vector<std::shared_ptr<LILNode>> resultValues;
+    for (auto value : value->getValues()) {
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processIfInstr(value);
+        if (!remove && this->_nodeBuffer.back().size() == 0) {
+            resultValues.push_back(value);
+        } else {
+            hasChanges = true;
+            for (auto newValue : this->_nodeBuffer.back()) {
+                resultValues.push_back(newValue);
+            }
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    if (hasChanges) {
+        this->_needsAnotherPass = true;
+        value->setValues(resultValues);
+    }
     return false;
 }
 

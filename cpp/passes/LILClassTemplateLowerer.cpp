@@ -13,13 +13,18 @@
  ********************************************************************/
 
 #include "LILClassTemplateLowerer.h"
+#include "LILAssignment.h"
 #include "LILClassDecl.h"
+#include "LILFlowControl.h"
+#include "LILFunctionDecl.h"
 #include "LILFunctionType.h"
 #include "LILMultipleType.h"
 #include "LILNodeToString.h"
 #include "LILObjectType.h"
 #include "LILPointerType.h"
 #include "LILStaticArrayType.h"
+#include "LILTypeDecl.h"
+#include "LILValueList.h"
 #include "LILVarDecl.h"
 
 using namespace LIL;
@@ -54,26 +59,62 @@ void LILClassTemplateLowerer::performVisit(std::shared_ptr<LILRootNode> rootNode
             auto cd = std::static_pointer_cast<LILClassDecl>(node);
             auto ty = node->getType();
             if (cd->isTemplate()) {
-                std::vector<std::shared_ptr<LILClassDecl>> newClasses;
-                
-                auto specializations = this->findClassSpecializations(nodes, ty);
+                std::map<std::shared_ptr<LILType>, std::shared_ptr<LILClassDecl>> newClasses;
+
+                std::vector<std::shared_ptr<LILNode>> specializations;
+                if (ty->isA(TypeTypeObject) && ty->getName() == "array") {
+                    specializations = findArraySpecializations(nodes);
+                } else {
+                    specializations = this->findClassSpecializations(nodes, ty);
+                }
                 if (specializations.size() > 0) {
                     for (auto spNode : specializations) {
-                        auto spTy = spNode->getType();
-                        auto newClass = this->makeSpecializedClass(cd, spTy);
-                        if (newClass) {
-                            newClasses.push_back(newClass);
+                        std::shared_ptr<LILType> spTy;
+                        if (spNode->isA(NodeTypeValueList)) {
+                            auto vl = std::static_pointer_cast<LILValueList>(spNode);
+                            spTy = vl->getType();
+                            if (!spTy) {
+                                auto vlTy = this->findTypeForValueList(vl);
+                                if (vlTy->getIsWeakType()) {
+                                    auto intType = vlTy->getDefaultType();
+                                    vlTy = intType;
+                                }
+                                if (vlTy) {
+                                    spTy = LILObjectType::make("array");
+                                    spTy->addParamType(vlTy);
+                                } else {
+                                    std::cerr << "COULD NOT MAKE SPECIALIZATION TYPE FROM VALUE LIST FAIL !!!!!!! \n\n";
+                                }
+                            }
+                        } else {
+                            spTy = spNode->getType();
                         }
-                        if (spNode->isTypedNode()) {
-                            auto spTyNode = std::static_pointer_cast<LILTypedNode>(spNode);
-                            spTyNode->setType(newClass->getType()->clone());
+                        if (!spTy) {
+                            std::cerr << "COULD NOT FIND SPECIALIZATION TYPE FAIL !!!!!!! \n\n";
+                            continue;
+                        }
+                        std::shared_ptr<LILClassDecl> newClass;
+                        if (newClasses.count(spTy)) {
+                            newClass = newClasses.at(spTy);
+                        } else {
+                            newClass = this->makeSpecializedClass(cd, spTy);
+                            if (newClass) {
+                                newClasses[spTy] = newClass;
+                            }
+                        }
+                        if (newClass) {
+                            if (spNode->isTypedNode()) {
+                                auto spTyNode = std::static_pointer_cast<LILTypedNode>(spNode);
+                                spTyNode->setType(newClass->getType()->clone());
+                            }
                         }
                     }
                     //out with the old
                     rootNode->removeClass(std::static_pointer_cast<LILClassDecl>(node));
                     rootNode->removeNode(node);
                     //in with the new
-                    for (auto newCd : newClasses) {
+                    for (auto newCdPair : newClasses) {
+                        auto newCd = newCdPair.second;
                         resultNodes.push_back(newCd);
                         rootNode->addClass(newCd);
                     }
@@ -144,6 +185,74 @@ std::vector<std::shared_ptr<LILNode>> LILClassTemplateLowerer::findClassSpeciali
     return ret;
 }
 
+std::vector<std::shared_ptr<LILNode>> LILClassTemplateLowerer::findArraySpecializations(const std::vector<std::shared_ptr<LILNode>> & nodes) const
+{
+    std::vector<std::shared_ptr<LILNode>> ret;
+    for (auto node : nodes) {
+        const auto & childNodes = node->getChildNodes();
+        if (childNodes.size() > 0) {
+            auto childRet = this->findArraySpecializations(childNodes);
+            if (childRet.size() > 0) {
+                ret.insert(ret.end(), childRet.begin(), childRet.end());
+            }
+        }
+        if (node->isA(NodeTypeVarDecl)) {
+            auto vd = std::static_pointer_cast<LILVarDecl>(node);
+            auto vdTy = vd->getType();
+            
+            if (vdTy && vdTy->getName() == "array") {
+                ret.push_back(node);
+            }
+            if (!vdTy) {
+                auto initVal = vd->getInitVal();
+                if (initVal) {
+                    vdTy = initVal->getType();
+                    if ( vdTy && vdTy->getName() == "array") {
+                        ret.push_back(initVal);
+                    }
+                }
+            }
+        } else if (node->isA(NodeTypeObjectDefinition)) {
+            auto objDefParent = node->getParentNode();
+            if (objDefParent && objDefParent->isA(NodeTypeVarDecl)) {
+                //it will get added when reaching the var decl as the init val
+                continue;
+            }
+            auto objDefTy = node->getType();
+            if ( objDefTy && objDefTy->getName() == "array" ) {
+                ret.push_back(node);
+            }
+        } else if (node->isA(NodeTypeValueList)) {
+            auto vl = std::static_pointer_cast<LILValueList>(node);
+            auto vlParent = vl->getParentNode();
+            switch (vlParent->getNodeType()) {
+                case NodeTypeVarDecl:
+                {
+                    auto vlTy = vlParent->getType();
+                    if (vlTy) {
+                        if (!vlTy->isA(TypeTypeStaticArray)) {
+                            ret.push_back(node);
+                        }
+                    } else {
+                        ret.push_back(node);
+                    }
+                    break;
+                }
+                    
+                case NodeTypeAssignment:
+                {
+                    break;
+                }
+
+                default:
+                    std::cerr << "UNKNOWN NODE TYPE WHILE FINDING ARRAY SPECIALIZATION FAIL !!!!!\n\n";
+                    return ret;
+            }
+        }
+    }
+    return ret;
+}
+
 std::shared_ptr<LILClassDecl> LILClassTemplateLowerer::makeSpecializedClass(std::shared_ptr<LILClassDecl> cd, std::shared_ptr<LILType> specializedType) const
 {
     auto ty = cd->getType();
@@ -159,15 +268,7 @@ std::shared_ptr<LILClassDecl> LILClassTemplateLowerer::makeSpecializedClass(std:
         auto spParamTy = std::static_pointer_cast<LILType>(specializedParamTys.at(i));
         this->replaceTypeWithSpecializedType(ret->getChildNodes(), cdParamTy, spParamTy);
     }
-    LILString newName = "lil_"+specializedType->getName();
-    for (auto paramTyNode : specializedType->getParamTypes()) {
-        if (!paramTyNode->isA(NodeTypeType)) {
-            std::cerr << "PARAM TYPE WAS NOT TYPE FAIL!!!!!!\n\n";
-            continue;
-        }
-        auto paramTy = std::static_pointer_cast<LILType>(paramTyNode);
-        newName += "_"+paramTy->getName();
-    }
+    LILString newName = "lil_"+this->typeToString(specializedType);
     auto newObjType = LILObjectType::make(newName);
     ret->setType(newObjType);
     return ret;
@@ -188,6 +289,85 @@ void LILClassTemplateLowerer::replaceTypeWithSpecializedType(const std::vector<s
                 if (replacementTy) {
                     tyNode->setType(replacementTy);
                 }
+            }
+        } else if (node->isA(NodeTypeFunctionDecl)) {
+            auto fd = std::static_pointer_cast<LILFunctionDecl>(node);
+            auto fnTy = fd->getFnType();
+            std::vector<std::shared_ptr<LILNode>> newArgs;
+            bool argsChanges = false;
+            for (auto arg : fnTy->getArguments()) {
+                if (arg->isA(NodeTypeType)) {
+                    auto replacementTy = this->replaceType(std::static_pointer_cast<LILType>(arg), templateType, specializedType);
+                    if (replacementTy) {
+                        newArgs.push_back(replacementTy);
+                        argsChanges = true;
+                    } else {
+                        newArgs.push_back(arg);
+                    }
+                } else if (arg->isTypedNode()) {
+                    auto typedArgNode = std::static_pointer_cast<LILTypedNode>(arg);
+                    auto argTy = arg->getType();
+                    auto replacementTy = this->replaceType(argTy, templateType, specializedType);
+                    if (replacementTy) {
+                        argsChanges = true;
+                        typedArgNode->setType(replacementTy);
+                    }
+                    newArgs.push_back(arg);
+                }
+            }
+            if (argsChanges) {
+                fnTy->setArguments(newArgs);
+            }
+            auto returnTy = fnTy->getReturnType();
+            if (returnTy) {
+                auto replacementReturnTy = this->replaceType(returnTy, templateType, specializedType);
+                if (replacementReturnTy) {
+                    fnTy->setReturnType(replacementReturnTy);
+                }
+            }
+
+        } else if (node->isA(NodeTypeTypeDecl)){
+            auto td = std::static_pointer_cast<LILTypeDecl>(node);
+            auto srcTy = td->getSrcType();
+            if (srcTy) {
+                auto replacementSrcTy = this->replaceType(srcTy, templateType, specializedType);
+                if (replacementSrcTy) {
+                    td->setSrcType(replacementSrcTy);
+                }
+            }
+            auto dstTy = td->getDstType();
+            if (dstTy) {
+                auto replacementDstTy = this->replaceType(dstTy, templateType, specializedType);
+                if (replacementDstTy) {
+                    td->setDstType(replacementDstTy);
+                }
+            }
+        } else if (node->isA(NodeTypeFlowControl)) {
+            auto fc = std::static_pointer_cast<LILFlowControl>(node);
+            std::vector<std::shared_ptr<LILNode>> newArgs;
+            bool argsChanges = false;
+            for (auto arg : fc->getArguments()) {
+                if (arg->isA(NodeTypeType)) {
+                    auto replacementTy = this->replaceType(std::static_pointer_cast<LILType>(arg), templateType, specializedType);
+                    if (replacementTy) {
+                        newArgs.push_back(replacementTy);
+                        argsChanges = true;
+                    } else {
+                        newArgs.push_back(arg);
+                    }
+                } else if (arg->isTypedNode()) {
+                    auto typedArgNode = std::static_pointer_cast<LILTypedNode>(arg);
+                    auto argTy = arg->getType();
+                    auto replacementTy = this->replaceType(std::static_pointer_cast<LILType>(arg), templateType, specializedType);
+                    if (replacementTy) {
+                        argsChanges = true;
+                        typedArgNode->setType(replacementTy);
+                    }
+                    newArgs.push_back(arg);
+                }
+            }
+            if (argsChanges) {
+                fc->setArguments(std::move(newArgs));
             }
         }
     }
@@ -308,4 +488,32 @@ std::shared_ptr<LILType> LILClassTemplateLowerer::replaceType(std::shared_ptr<LI
             break;
     }
     return ret;
+}
+
+//this is copied from LILTypeGuesser
+std::shared_ptr<LILType> LILClassTemplateLowerer::findTypeForValueList(std::shared_ptr<LILValueList> value) const
+{
+    std::vector<std::shared_ptr<LILType>> types;
+    for (const auto & val : value->getValues()) {
+        const auto & ty = val->getType();
+        bool found = false;
+        for (const auto existingTy : types) {
+            if (existingTy->equalTo(ty)) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            types.push_back(ty);
+        }
+    }
+    if (types.size() == 1) {
+        return *(types.begin());
+    }
+    auto mTy = std::make_shared<LILMultipleType>();
+    for (const auto ty : types) {
+        mTy->addType(ty);
+    }
+    
+    return mTy;
 }

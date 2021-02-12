@@ -21,6 +21,7 @@
 
 namespace LIL
 {
+    class LILValueList;
     class LILClassTemplateLowerer : public LILVisitor
     {
     public:
@@ -29,9 +30,11 @@ namespace LIL
         void initializeVisit() override;
         void performVisit(std::shared_ptr<LILRootNode> rootNode) override;
         std::vector<std::shared_ptr<LILNode>> findClassSpecializations(const std::vector<std::shared_ptr<LILNode>> & nodes, const std::shared_ptr<LILType> & ty) const;
+        std::vector<std::shared_ptr<LILNode>> findArraySpecializations(const std::vector<std::shared_ptr<LILNode>> & nodes) const;
         std::shared_ptr<LILClassDecl> makeSpecializedClass(std::shared_ptr<LILClassDecl> cd, std::shared_ptr<LILType> specializedType) const;
         void replaceTypeWithSpecializedType(const std::vector<std::shared_ptr<LILNode>> & nodes, std::shared_ptr<LILType> templateType, std::shared_ptr<LILType> specializedType) const;
         std::shared_ptr<LILType> replaceType(std::shared_ptr<LILType> sourceTy, std::shared_ptr<LILType> templateTy, std::shared_ptr<LILType> specializedTy) const;
+        std::shared_ptr<LILType> findTypeForValueList(std::shared_ptr<LILValueList> value) const;
     };
 }
 

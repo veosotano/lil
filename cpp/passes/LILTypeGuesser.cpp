@@ -180,14 +180,26 @@ void LILTypeGuesser::searchForTypesFromInitVal(std::shared_ptr<LILNode> node)
         if (initVal) {
             auto ty = vd->getType();
             if (!ty) {
-                auto ivTy = this->getNodeType(initVal);
-                if (ivTy && !ivTy->getIsWeakType()) {
-                    vd->setType(ivTy);
+                if (initVal->isA(NodeTypeValueList)) {
+                    auto vl = std::static_pointer_cast<LILValueList>(initVal);
+                    auto vlTy = this->findTypeForValueList(vl);
+                    std::shared_ptr<LILType> baseTy;
+                    if (vlTy->getIsWeakType()) {
+                        baseTy = vlTy->getDefaultType();
+                    } else {
+                        baseTy = vlTy;
+                    }
+                    auto arrTy = LILObjectType::make("lil_array_"+this->typeToString(baseTy));
+                    vd->setType(arrTy);
+                } else {
+                    auto ivTy = this->getNodeType(initVal);
+                    if (ivTy && !ivTy->getIsWeakType()) {
+                        vd->setType(ivTy);
+                    }
                 }
             }
         }
     }
-    
     for (auto childNode : node->getChildNodes()) {
         this->searchForTypesFromInitVal(childNode);
     }
@@ -830,6 +842,99 @@ void LILTypeGuesser::_process(LILInstruction * value)
 
 void LILTypeGuesser::_process(LILValueList * value)
 {
+    auto ty = value->getType();
+    if (!ty) {
+        auto vlTy = this->findTypeForValueList(std::static_pointer_cast<LILValueList>(value->shared_from_this()));
+        if (vlTy) {
+            if (vlTy->isA(TypeTypeSingle)) {
+                auto vlParent = value->getParentNode();
+                if (vlParent) {
+                    switch (vlParent->getNodeType()) {
+                        case NodeTypeVarDecl:
+                        {
+                            std::cerr << "UNIMPLEMENTED FAIL !!!!!!!!! \n\n";
+                            break;
+                        }
+                        case NodeTypeAssignment:
+                        {
+                            auto as = std::static_pointer_cast<LILAssignment>(vlParent);
+                            const auto & subj = as->getSubject();
+                            auto remoteNode = this->recursiveFindNode(subj);
+                            if (remoteNode) {
+                                auto asTy = remoteNode->getType();
+                                if (asTy) {
+                                    if (asTy->isA(TypeTypeMultiple)) {
+                                        auto asTyMtTys = std::static_pointer_cast<LILMultipleType>(asTy)->getTypes();
+                                        for (auto asTyMtTy : asTyMtTys) {
+                                            if (asTyMtTy->isA(TypeTypeStaticArray)) {
+                                                auto staticArrayTy = std::static_pointer_cast<LILStaticArrayType>(asTyMtTy);
+                                                if (staticArrayTy->getArgument()->equalTo(vlTy)) {
+                                                    value->setType(staticArrayTy);
+                                                    return;
+                                                }
+                                            } else if (asTyMtTy->isA(TypeTypeObject) && asTyMtTy->getName() == "array"){
+                                                auto paramTy = asTyMtTy->getParamTypes().front();
+                                                if (paramTy && paramTy->equalTo(vlTy)) {
+                                                    value->setType(asTyMtTy);
+                                                    return;
+                                                }
+                                            }
+                                        }
+                                    } else if (asTy->isA(TypeTypeStaticArray)) {
+                                        auto staticArrayTy = std::static_pointer_cast<LILStaticArrayType>(asTy);
+                                        if (staticArrayTy->getArgument()->equalTo(vlTy)) {
+                                            value->setType(staticArrayTy);
+                                            return;
+                                        }
+                                    } else if (asTy->isA(TypeTypeObject) && asTy->getName() == "array"){
+                                        auto paramTy = asTy->getParamTypes().front();
+                                        if (paramTy && paramTy->equalTo(vlTy)) {
+                                            value->setType(asTy);
+                                            return;
+                                        }
+                                    }
+                                }
+                            } else {
+                                std::cerr << "REMOTE NODE NOT FOUND FAIL!!!!!!!\n\n";
+                            }
+                        }
+                        default:
+                            std::cerr << "UNKNOWN PARENT TYPE FAIL!!!!!!!\n\n";
+                            return;
+                    }
+                    
+                }
+            } else if (vlTy->isA(TypeTypeMultiple)){
+                auto mt = std::static_pointer_cast<LILMultipleType>(vlTy);
+                if (mt->getTypes().size() > 0) {
+                    value->setType(vlTy);
+                    return;
+                } else {
+                    vlTy = nullptr;
+                }
+            }
+            if (!vlTy) {
+                auto ancestorTy = this->recursiveFindTypeFromAncestors(value->shared_from_this());
+                if (ancestorTy) {
+                    if (ancestorTy->isA(TypeTypeMultiple)) {
+                        for (auto ancestorMtTy : std::static_pointer_cast<LILMultipleType>(ancestorTy)->getTypes()) {
+                            if (ancestorMtTy->isA(TypeTypeStaticArray)) {
+                                auto staticArrayTy = std::static_pointer_cast<LILStaticArrayType>(ancestorMtTy);
+                                value->setType(staticArrayTy);
+                                return;
+                            } else if (ancestorMtTy->isA(TypeTypeObject) && ancestorMtTy->getName() == "array"){
+                                value->setType(ancestorMtTy);
+                                return;
+                            }
+                        }
+                    } else {
+                        value->setType(ancestorTy);
+                    }
+                    return;
+                }
+            }
+        }
+    }
 }
 
 void LILTypeGuesser::_process(LILIndexAccessor * value)
@@ -1238,6 +1343,17 @@ std::shared_ptr<LILType> LILTypeGuesser::getNodeType(std::shared_ptr<LILNode> no
         case NodeTypePropertyName:
         {
             return this->recursiveFindTypeFromAncestors(node);
+        }
+        case NodeTypeValueList:
+        {
+            auto vl = std::static_pointer_cast<LILValueList>(node);
+            auto ty = this->findTypeForValueList(vl);
+            if (ty && !ty->getIsWeakType()) {
+                auto objTy = LILObjectType::make("array");
+                objTy->addParamType(ty);
+                return objTy;
+            }
+            return nullptr;
         }
         default:
             return nullptr;
@@ -1866,4 +1982,31 @@ std::shared_ptr<LILType> LILTypeGuesser::nullsToNullableTypes(std::shared_ptr<LI
         }
     }
     return ty;
+}
+
+std::shared_ptr<LILType> LILTypeGuesser::findTypeForValueList(std::shared_ptr<LILValueList> value) const
+{
+    std::vector<std::shared_ptr<LILType>> types;
+    for (const auto & val : value->getValues()) {
+        const auto & ty = val->getType();
+        bool found = false;
+        for (const auto existingTy : types) {
+            if (existingTy->equalTo(ty)) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            types.push_back(ty);
+        }
+    }
+    if (types.size() == 1) {
+        return *(types.begin());
+    }
+    auto mTy = std::make_shared<LILMultipleType>();
+    for (const auto ty : types) {
+        mTy->addType(ty);
+    }
+    
+    return mTy;
 }

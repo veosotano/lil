@@ -53,6 +53,8 @@
 
 #define LILIREMITTEROPTIMIZE
 #define LIL_GEP_INDEX_SIZE 32
+#define LIL_ARRAY_SMALL_BUFFER_SIZE 2
+#define LIL_ARRAY_BIG_BUFFER_MIN_SIZE 10
 
 
 using namespace LIL;
@@ -2694,15 +2696,118 @@ llvm::Value * LILIREmitter::_emit(LILForeignLang * value)
 
 llvm::Value * LILIREmitter::_emit(LILValueList * value)
 {
-    auto ty = value->getType();
-    //FIXME: optimize this into a global and memcpy when profitable
-    size_t i = 0;
-    for (auto node : value->getValues()) {
-        auto ir = this->emit(node.get());
-        auto gep = this->_emitGEP(d->currentAlloca, this->llvmTypeFromLILType(ty.get()), false, 0, "", true, true, i);
-        d->irBuilder.CreateStore(ir, gep);
-        i += 1;
+    if (d->currentAlloca == nullptr) {
+        std::cerr << "CURRENT ALLOCA WAS NULL FAIL !!!!!!!!\n\n";
+        return nullptr;
     }
+    auto allocaBackup = d->currentAlloca;
+    auto ty = value->getType();
+    if (ty->isA(TypeTypeStaticArray)) {
+        //FIXME: optimize this into a global and memcpy when profitable
+        size_t i = 0;
+        for (auto node : value->getValues()) {
+            auto ir = this->emit(node.get());
+            auto gep = this->_emitGEP(d->currentAlloca, this->llvmTypeFromLILType(ty.get()), false, 0, "", true, true, i);
+            d->irBuilder.CreateStore(ir, gep);
+            i += 1;
+        }
+    } else if (ty->isA(TypeTypeObject) && ty->getName().substr(0, 9) == "lil_array") {
+        auto cd = this->findClassWithName(ty->getName());
+        if (!cd) {
+            std::cerr << "ARRAY CLASS NOT FOUND FAIL!!!! \n\n";
+            return nullptr;
+        }
+        const auto & values = value->getValues();
+        size_t valuesSize = values.size();
+        const auto & fields = cd->getFields();
+        size_t index = 0;
+        for (auto field : fields) {
+            if (field->isA(NodeTypeVarDecl)) {
+                auto fldTy = field->getType();
+                auto vd = std::static_pointer_cast<LILVarDecl>(field);
+                auto fldName = vd->getName();
+                if (fldName == "buffer") {
+                    if (valuesSize <= LIL_ARRAY_SMALL_BUFFER_SIZE) {
+                        d->currentAlloca = this->_emitGEP(d->currentAlloca, nullptr, true, index, fldName, true, false, 0);
+                        if (!fldTy->isA(TypeTypeMultiple)) {
+                            std::cerr << "BUFFER FIELD WAS NOT MULTIPLE TYPE FAIL!!!! \n\n";
+                            return nullptr;
+                        }
+                        auto mtTy = std::static_pointer_cast<LILMultipleType>(fldTy);
+                        std::shared_ptr<LILType> saTy;
+                        bool found = false;
+                        for (auto mtTyTy : mtTy->getTypes()) {
+                            if (mtTyTy->isA(TypeTypeStaticArray)) {
+                                saTy = mtTyTy;
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found) {
+                            std::cerr << "STATIC ARRAY TYPE NOT FOUND FAIL!!!! \n\n";
+                            return nullptr;
+                        }
+                        value->setType(saTy);
+                        this->emitForMultipleType(value, std::static_pointer_cast<LILMultipleType>(fldTy));
+                        value->setType(ty);
+                        d->currentAlloca = allocaBackup;
+                    }
+                    else
+                    {
+                        auto initializeMethod = cd->getMethodNamed("initialize");
+                        if (initializeMethod) {
+                            if (!initializeMethod->isA(NodeTypeVarDecl)) {
+                                std::cerr << "NODE WAS NOT VAR DECL FAIL!!!!!!!!!!!!!!!!\n\n";
+                                return nullptr;
+                            }
+                            auto vd = std::static_pointer_cast<LILVarDecl>(initializeMethod);
+                            auto initVal = vd->getInitVal();
+                            if (!initVal->isA(NodeTypeFunctionDecl)) {
+                                std::cerr << "NODE WAS NOT FUNCTION DECL FAIL!!!!!!!!!!!!!!!!\n\n";
+                                return nullptr;
+                            }
+                            auto fd = std::static_pointer_cast<LILFunctionDecl>(initVal);
+                            llvm::Function* fun = d->llvmModule->getFunction(fd->getName().data());
+                            llvm::Value * pointer;
+                            if (fun) {
+                                std::vector<llvm::Value *> argsvect;
+                                argsvect.push_back(d->currentAlloca);
+                                size_t capacityNum = valuesSize;
+                                if (valuesSize < LIL_ARRAY_BIG_BUFFER_MIN_SIZE) {
+                                    capacityNum = LIL_ARRAY_BIG_BUFFER_MIN_SIZE;
+                                }
+                                auto capacityVal = llvm::ConstantInt::get(d->llvmContext, llvm::APInt(64, capacityNum, false));
+                                argsvect.push_back(capacityVal);
+                                pointer = d->irBuilder.CreateCall(fun, argsvect);
+                            } else {
+                                std::cerr << "COULD NOT CALL INITIALIZE FUNCTION FAIL!!!!!!!!!!!!!!!!\n\n";
+                                return nullptr;
+                            }
+                            size_t i = 0;
+                            for (auto node : value->getValues()) {
+                                d->currentAlloca = this->_emitGEP(pointer, nullptr, false, 0, "", false, true, i);
+                                auto ir = this->emit(node.get());
+                                if (ir) {
+                                    d->irBuilder.CreateStore(ir, d->currentAlloca);
+                                }
+                                d->currentAlloca = allocaBackup;
+                                i += 1;
+                            }
+                        } else {
+                            std::cerr << "INITIALIZE METHOD NOT FOUND FAIL!!!!!!!!!!!!!!!!\n\n";
+                            return nullptr;
+                        }
+                    }
+                } else if (fldName == "size") {
+                    auto gep = this->_emitGEP(d->currentAlloca, nullptr, true, index, fldName, true, false, 0);
+                    auto sizeVal = llvm::ConstantInt::get(d->llvmContext, llvm::APInt(64, valuesSize, false));
+                    d->irBuilder.CreateStore(sizeVal, gep);
+                }
+            }
+            index += 1;
+        }
+    }
+    d->currentAlloca = allocaBackup;
     return nullptr;
 }
 
@@ -3472,6 +3577,7 @@ bool LILIREmitter::_needsTemporaryVariable(LILNode * node)
             return !string->getIsCString();
         }
         case NodeTypeObjectDefinition:
+        case NodeTypeValueList:
         {
             return true;
         }

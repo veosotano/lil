@@ -18,13 +18,13 @@
 using namespace LIL;
 
 LILValueList::LILValueList()
-: LILNode(NodeTypeValueList)
+: LILTypedNode(NodeTypeValueList)
 {
     
 }
 
 LILValueList::LILValueList(const LILValueList &other)
-: LILNode(other)
+: LILTypedNode(other)
 {
     
 }
@@ -39,6 +39,10 @@ std::shared_ptr<LILClonable> LILValueList::cloneImpl() const
     std::shared_ptr<LILValueList> clone(new LILValueList(*this));
     for (auto node : this->getChildNodes()) {
         clone->addValue(node->clone());
+    }
+    //clone LILTypedNode
+    if (this->_type) {
+        clone->setType(this->_type->clone());
     }
     return clone;
 }
@@ -75,13 +79,3 @@ std::vector<std::shared_ptr<LILNode>> LILValueList::getValues() const
 {
     return this->getChildNodes();
 }
-
-std::shared_ptr<LILType> LILValueList::getType() const
-{
-    auto parent = this->getParentNode();
-    if (parent) {
-        return parent->getType();
-    }
-    return nullptr;
-}
-

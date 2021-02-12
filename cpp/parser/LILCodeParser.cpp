@@ -2399,6 +2399,11 @@ bool LILCodeParser::readBasicValue(NodeType &nodeType)
             nodeType = NodeTypeDocumentation;
             return this->readDocumentation();
         }
+        case TokenTypeSquareBracketOpen:
+        {
+            nodeType = NodeTypeValueList;
+            return this->readValueList(true);
+        }
         default:
             break;
     }
@@ -2408,6 +2413,13 @@ bool LILCodeParser::readBasicValue(NodeType &nodeType)
 bool LILCodeParser::readValueList(bool useComma)
 {
     LIL_START_NODE(NodeTypeValueList)
+    bool needsSquareBracketClose = false;
+    if (d->currentToken->isA(TokenTypeSquareBracketOpen)) {
+        needsSquareBracketClose = true;
+        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+        this->readNextToken();
+        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+    }
     bool valid;
     bool outIsSV;
     NodeType outType;
@@ -2415,7 +2427,6 @@ bool LILCodeParser::readValueList(bool useComma)
     while (d->currentToken->isA(tokTy)) {
         d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
         this->readNextToken();
-
         LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
 
         valid = this->readExpression(outIsSV, outType);
@@ -2428,6 +2439,12 @@ bool LILCodeParser::readValueList(bool useComma)
             LIL_END_NODE
         }
         this->skip(TokenTypeWhitespace);
+    }
+    if (needsSquareBracketClose) {
+        LIL_EXPECT(TokenTypeSquareBracketClose, "closing square bracket")
+        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+        this->readNextToken();
+        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
     }
     LIL_END_NODE
 }
