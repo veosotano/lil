@@ -276,6 +276,12 @@ LILToStrInfo LILToStringVisitor::stringify(LILNode * node)
             info = this->_stringify(value);
             break;
         }
+        case NodeTypeDocumentation:
+        {
+            LILDocumentation * value = static_cast<LILDocumentation *>(node);
+            info = this->_stringify(value);
+            break;
+        }
         case NodeTypeValueList:
         {
             LILValueList * value = static_cast<LILValueList *>(node);
@@ -543,6 +549,13 @@ LILToStrInfo LILToStringVisitor::_stringify(LILClassDecl * value)
         methodsInfo.value = "Methods:";
         this->stringifyChildren(methods, methodsInfo);
         ret.children.push_back(methodsInfo);
+    }
+    std::vector<std::shared_ptr<LILDocumentation>> docs = value->getDocs();
+    if (docs.size() > 0) {
+        for (auto it = docs.begin(); it!=docs.end(); ++it)
+        {
+            ret.children.push_back(this->stringify((*it).get()));
+        };
     }
     return ret;
 }
@@ -882,6 +895,23 @@ LILToStrInfo LILToStringVisitor::_stringify(LILForeignLang * value)
 {
     LILToStrInfo ret;
     ret.value = "Foreign lang: <"+value->getLanguage()+">";
+    return ret;
+}
+
+LILToStrInfo LILToStringVisitor::_stringify(LILDocumentation * value)
+{
+    LILToStrInfo ret;
+    ret.value = "Documentation: "+value->getContent();
+    const auto & children = value->getChildNodes();
+    for (auto node : children)
+    {
+        if (node->isA(NodeTypeDocumentation)) {
+            LILToStrInfo child;
+            child.isExported = false;
+            child.value = std::static_pointer_cast<LILDocumentation>(node)->getContent();
+            ret.children.push_back(child);
+        }
+    };
     return ret;
 }
 

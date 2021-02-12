@@ -243,9 +243,7 @@ std::shared_ptr<LILToken> LILLexer::readNextToken()
         case '\'':
             return this->readString();
         case '#':
-            ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeInstructionSign, cc, d->currentLine, d->currentColumn - 1, d->index));
-            this->readNextChar();
-            return ret;
+            return this->readInstructionSignOrDoc();
         case '@':
             ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeObjectSign, cc, d->currentLine, d->currentColumn - 1, d->index));
             this->readNextChar();
@@ -758,6 +756,33 @@ std::shared_ptr<LILStringToken> LILLexer::readString(std::shared_ptr<LILStringTo
     strToken->setString(currentStr + endStr);
 
     return endToken;
+}
+
+std::shared_ptr<LILToken> LILLexer::readInstructionSignOrDoc()
+{
+    const size_t line = d->currentLine;
+    const size_t column = d->currentColumn - 1;
+    const size_t index = d->index;
+    
+    std::shared_ptr<LILToken> ret;
+    this->storeCurrentCharAndReadNext();
+    if (d->currentChar == '=' || d->currentChar == '-')
+    {
+        this->storeCurrentCharAndReadNext(); // skip '=' or '-'
+        
+        // Read all chars until end of line
+        while (d->currentChar != '\n' && d->currentChar != '\r' && d->currentChar != '\f' && !this->atEndOfSource())
+        {
+            this->storeCurrentCharAndReadNext();
+        }
+        
+        ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeDocumentation, this->extractCurrentTokenText(), line, column, index));
+    }
+    else
+    {
+        ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeInstructionSign, this->extractCurrentTokenText(), line, column, index));
+    }
+    return ret;
 }
 
 /*!

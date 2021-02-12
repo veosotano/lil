@@ -16,6 +16,7 @@
 #include "LILAliasDecl.h"
 #include "LILClassDecl.h"
 #include "LILConversionDecl.h"
+#include "LILDocumentation.h"
 #include "LILFunctionDecl.h"
 #include "LILInstruction.h"
 #include "LILNodeToString.h"
@@ -199,6 +200,11 @@ void LILRootNode::add(std::shared_ptr<LILNode> node, bool addToNodeTree)
             }
             break;
         }
+        case NodeTypeDocumentation:
+        {
+            this->addDoc(std::static_pointer_cast<LILDocumentation>(node));
+            break;
+        }
         default:
             this->addEvaluable(node);
             break;
@@ -324,3 +330,13 @@ const std::vector<std::shared_ptr<LILNode>> & LILRootNode::getInitializers() con
     return this->_initializers;
 }
 
+void LILRootNode::addDoc(std::shared_ptr<LILDocumentation> value)
+{
+    this->addNode(value);
+    this->_docs.push_back(value);
+}
+
+const std::vector<std::shared_ptr<LILDocumentation>> & LILRootNode::getDocs() const
+{
+    return this->_docs;
+}

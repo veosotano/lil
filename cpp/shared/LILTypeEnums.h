@@ -64,6 +64,7 @@ namespace LIL
         TokenTypeThinArrow,
         TokenTypeFatArrow,
         TokenTypeForeignLang,
+        TokenTypeDocumentation,
     };
 
     enum NodeType
@@ -116,6 +117,7 @@ namespace LIL
         NodeTypeIndexAccessor,
         NodeTypeValueList,
         NodeTypeForeignLang,
+        NodeTypeDocumentation,
         NodeTypeInvalid,
     };
 
@@ -461,6 +463,7 @@ namespace LIL
         ParserEventIfInstruction,
         ParserEventIfInstructionElse,
         ParserEventForeignLang,
+        ParserEventDocumentation,
         ParserEventInvalid,
     };
 

@@ -23,6 +23,7 @@
 #include "LILClassDecl.h"
 #include "LILCombinator.h"
 #include "LILConversionDecl.h"
+#include "LILDocumentation.h"
 #include "LILExpression.h"
 #include "LILFilter.h"
 #include "LILFlag.h"
@@ -96,6 +97,7 @@ namespace LIL
         LILToStrInfo _stringify(LILFlowControlCall * value);
         LILToStrInfo _stringify(LILInstruction * value);
         LILToStrInfo _stringify(LILForeignLang * value);
+        LILToStrInfo _stringify(LILDocumentation * value);
         LILToStrInfo _stringify(LILValueList * value);
         LILToStrInfo _stringify(LILIndexAccessor * value);
         LILString stringForIndent(size_t indents, std::vector<size_t> moreItems);

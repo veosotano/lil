@@ -559,8 +559,26 @@ bool LILCodeParser::isAssignment() const
 
     std::shared_ptr<LILToken> peekToken;
     peekToken = d->currentToken;
+    switch (peekToken->getType()) {
+        case TokenTypeIdentifier:
+            peekToken = d->lexer->peekNextToken();
+            break;
+        case TokenTypeParenthesisOpen:
+        case TokenTypeSquareBracketOpen:
+        case TokenTypeInstructionSign:
+        case TokenTypeDocumentation:
+        case TokenTypeDot:
+        case TokenTypeSingleQuoteString:
+        case TokenTypeDoubleQuoteString:
+        case TokenTypeAsterisk:
+        case TokenTypeNegator:
+            //add more here?
+            return false;
+        default:
+            break;
+    }
     if (peekToken->isA(TokenTypeIdentifier)) {
-        peekToken = d->lexer->peekNextToken();
+        
     }
     bool done = false;
     while (peekToken && !done) {
@@ -1159,6 +1177,7 @@ bool LILCodeParser::isPunctuation(std::shared_ptr<LILToken> token) const
         case TokenTypePercentageNumberInt:
         case TokenTypePercentageNumberFP:
         case TokenTypeForeignLang:
+        case TokenTypeDocumentation:
             return false;
     }
     return false;
@@ -2374,6 +2393,11 @@ bool LILCodeParser::readBasicValue(NodeType &nodeType)
         {
             nodeType = NodeTypeForeignLang;
             return this->readForeignLang();
+        }
+        case TokenTypeDocumentation:
+        {
+            nodeType = NodeTypeDocumentation;
+            return this->readDocumentation();
         }
         default:
             break;
@@ -5535,5 +5559,25 @@ bool LILCodeParser::readForeignLang()
     d->receiver->receiveNodeData(ParserEventForeignLang, d->currentToken->getString());
     d->receiver->receiveForeignLang(flTok->getLanguage(), flTok->getContent());
     this->readNextToken();
+    LIL_END_NODE_SKIP(false)
+}
+
+bool LILCodeParser::readDocumentation()
+{
+    LIL_START_NODE(NodeTypeDocumentation)
+
+    d->receiver->receiveNodeData(ParserEventDocumentation, d->currentToken->getString());
+    this->readNextToken();
+    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+
+    while (d->currentToken && d->currentToken->isA(TokenTypeDocumentation)) {
+        LIL_START_NODE(NodeTypeDocumentation)
+        //skip the instruction sign
+        d->receiver->receiveNodeData(ParserEventDocumentation, d->currentToken->getString());
+        this->readNextToken();
+        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+        LIL_END_NODE_NO_RETURN
+        d->receiver->receiveNodeCommit();
+    }
     LIL_END_NODE_SKIP(false)
 }

@@ -61,6 +61,7 @@ namespace LIL
         std::shared_ptr<LILToken> readNumberOrPercentage();
         std::shared_ptr<LILToken> readString();
         std::shared_ptr<LILToken> readCString();
+        std::shared_ptr<LILToken> readInstructionSignOrDoc();
         std::shared_ptr<LILToken> readCommentOrSymbol();
         std::shared_ptr<LILToken> readDotChars();
         std::shared_ptr<LILToken> readComparator();

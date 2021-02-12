@@ -24,6 +24,7 @@
 #include "LILClassDecl.h"
 #include "LILCombinator.h"
 #include "LILConversionDecl.h"
+#include "LILDocumentation.h"
 #include "LILExpression.h"
 #include "LILFilter.h"
 #include "LILFlag.h"
@@ -102,6 +103,7 @@ namespace LIL
         void _validate(const std::shared_ptr<LILFlowControlCall> & value);
         void _validate(const std::shared_ptr<LILInstruction> & value);
         void _validate(const std::shared_ptr<LILForeignLang> & value);
+        void _validate(const std::shared_ptr<LILDocumentation> & value);
         void _validate(const std::shared_ptr<LILValueList> & value);
         void _validate(const std::shared_ptr<LILIndexAccessor> & value);
         inline void validateChildren(const std::vector<std::shared_ptr<LILNode>> & children);

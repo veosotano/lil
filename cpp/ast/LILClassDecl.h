@@ -22,6 +22,7 @@
 namespace LIL
 {
     class LILAliasDecl;
+    class LILDocumentation;
     
     class LILClassDecl : public LILTypedNode
     {
@@ -53,6 +54,9 @@ namespace LIL
 
         void addAlias(std::shared_ptr<LILAliasDecl> value);
         const std::vector<std::shared_ptr<LILAliasDecl>> & getAliases() const;
+
+        void addDoc(std::shared_ptr<LILDocumentation> value);
+        const std::vector<std::shared_ptr<LILDocumentation>> & getDocs() const;
         
         bool isTemplate() const;
         
@@ -67,6 +71,7 @@ namespace LIL
         std::vector<std::shared_ptr<LILNode>> _fields;
         std::vector<std::shared_ptr<LILNode>> _methods;
         std::vector<std::shared_ptr<LILAliasDecl>> _aliases;
+        std::vector<std::shared_ptr<LILDocumentation>> _docs;
     };
 }
 

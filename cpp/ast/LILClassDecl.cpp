@@ -14,6 +14,7 @@
 
 #include "LILClassDecl.h"
 #include "LILAliasDecl.h"
+#include "LILDocumentation.h"
 #include "LILVarDecl.h"
 
 using namespace LIL;
@@ -35,6 +36,7 @@ LILClassDecl::LILClassDecl(const LILClassDecl &other)
 , _fields(other._fields)
 , _methods(other._methods)
 , _aliases(other._aliases)
+, _docs(other._docs)
 {
 }
 
@@ -70,6 +72,10 @@ std::shared_ptr<LILClonable> LILClassDecl::cloneImpl() const
     clone->_aliases.clear();
     for (auto alias : this->_aliases) {
         clone->addAlias(alias->clone());
+    }
+    clone->_docs.clear();
+    for (auto doc : this->_docs) {
+        clone->addDoc(doc->clone());
     }
     return clone;
 }
@@ -182,6 +188,17 @@ void LILClassDecl::addAlias(std::shared_ptr<LILAliasDecl> value)
 const std::vector<std::shared_ptr<LILAliasDecl>> & LILClassDecl::getAliases() const
 {
     return this->_aliases;
+}
+
+void LILClassDecl::addDoc(std::shared_ptr<LILDocumentation> value)
+{
+    this->addNode(value);
+    this->_docs.push_back(value);
+}
+
+const std::vector<std::shared_ptr<LILDocumentation>> & LILClassDecl::getDocs() const
+{
+    return this->_docs;
 }
 
 bool LILClassDecl::isTemplate() const

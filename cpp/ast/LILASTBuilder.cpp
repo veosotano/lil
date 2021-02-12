@@ -20,6 +20,7 @@
 #include "LILClassDecl.h"
 #include "LILCombinator.h"
 #include "LILConversionDecl.h"
+#include "LILDocumentation.h"
 #include "LILExpression.h"
 #include "LILFilter.h"
 #include "LILFlag.h"
@@ -396,6 +397,12 @@ void LILASTBuilder::receiveNodeStart(NodeType nodeType)
             this->currentContainer.push_back(std::make_shared<LILIndexAccessor>());
             break;
         }
+        case NodeTypeDocumentation:
+        {
+            this->state.push_back(BuilderStateDocumentation);
+            this->currentContainer.push_back(std::make_shared<LILDocumentation>());
+            break;
+        }
         default:
             std::cerr << "Error: Unknown node type\n";
             break;
@@ -717,6 +724,11 @@ void LILASTBuilder::receiveNodeCommit()
                     }
                     break;
                 }
+                case NodeTypeDocumentation:
+                {
+                    cd->addDoc(std::static_pointer_cast<LILDocumentation>(this->currentNode));
+                    break;
+                }
                 default:
                     break;
             }
@@ -841,6 +853,17 @@ void LILASTBuilder::receiveNodeCommit()
         {
             auto ia = std::static_pointer_cast<LILIndexAccessor>(this->currentContainer.back());
             ia->setArgument(this->currentNode);
+            break;
+        }
+        case BuilderStateDocumentation:
+        {
+            auto doc = std::static_pointer_cast<LILDocumentation>(this->currentContainer.back());
+            if (this->currentNode->isA(NodeTypeDocumentation)) {
+                auto childDoc = std::static_pointer_cast<LILDocumentation>(this->currentNode);
+                if (childDoc->getContent().length() > 0) {
+                    doc->add(this->currentNode);
+                }
+            }
             break;
         }
         default:

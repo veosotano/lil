@@ -22,6 +22,8 @@
 
 namespace LIL
 {
+    class LILDocumentation;
+
     class LILFunctionDecl : public LILVarNode
     {
     public:
@@ -74,12 +76,16 @@ namespace LIL
         void setImpls(const std::vector<std::shared_ptr<LILFunctionDecl>> & impls);
         void clearImpls();
         
+        void addDoc(std::shared_ptr<LILDocumentation> value);
+        const std::vector<std::shared_ptr<LILDocumentation>> & getDocs() const;
+
     protected:
         virtual std::shared_ptr<LILClonable> cloneImpl() const;
         
     private:
         std::vector<std::shared_ptr<LILNode>> _body;
         std::vector<std::shared_ptr<LILFunctionDecl>> _impls;
+        std::vector<std::shared_ptr<LILDocumentation>> _docs;
         std::shared_ptr<LILNode> _finally;
         std::shared_ptr<LILFunctionType> _fnType;
         bool _receivesFunctionBody;

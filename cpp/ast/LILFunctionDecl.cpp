@@ -12,6 +12,7 @@
  *
  ********************************************************************/
 
+#include "LILDocumentation.h"
 #include "LILFunctionDecl.h"
 #include "LILVarDecl.h"
 
@@ -33,19 +34,20 @@ LILFunctionDecl::LILFunctionDecl()
 
 LILFunctionDecl::LILFunctionDecl(const LILFunctionDecl &other)
 : LILVarNode(other)
+, _body(other._body)
+, _impls(other._impls)
+, _docs(other._docs)
+, _finally(other._finally)
+, _fnType(other._fnType)
+, _receivesFunctionBody(other._receivesFunctionBody)
+, _functionDeclType(other._functionDeclType)
+, _name(other._name)
+, _hasReturn(other._hasReturn)
+, _isConstructor(other._isConstructor)
+, _hasOwnType(other._hasOwnType)
+, _isExtern(other._isExtern)
+, _hasMultipleImpls(other._hasMultipleImpls)
 {
-    this->_body = other._body;
-    this->_receivesFunctionBody = other._receivesFunctionBody;
-    this->_functionDeclType = other._functionDeclType;
-    this->_name = other._name;
-    this->_hasReturn = other._hasReturn;
-    this->_isConstructor = other._isConstructor;
-    this->_finally = other._finally;
-    this->_hasOwnType = other._hasOwnType;
-    this->_fnType = other._fnType;
-    this->_isExtern = other._isExtern;
-    this->_hasMultipleImpls = other._hasMultipleImpls;
-    this->_impls = other._impls;
 }
 
 bool LILFunctionDecl::isTypedNode() const
@@ -124,6 +126,10 @@ std::shared_ptr<LILClonable> LILFunctionDecl::cloneImpl() const
     for (auto it = this->_impls.begin(); it != this->_impls.end(); ++it)
     {
         clone->addImpl((*it)->clone());
+    }
+    clone->_docs.clear();
+    for (auto doc : this->_docs) {
+        clone->addDoc(doc->clone());
     }
     return clone;
 }
@@ -347,4 +353,15 @@ void LILFunctionDecl::clearImpls()
         this->removeNode(impl);
     }
     this->_impls.clear();
+}
+
+void LILFunctionDecl::addDoc(std::shared_ptr<LILDocumentation> value)
+{
+    this->addNode(value);
+    this->_docs.push_back(value);
+}
+
+const std::vector<std::shared_ptr<LILDocumentation>> & LILFunctionDecl::getDocs() const
+{
+    return this->_docs;
 }

@@ -152,6 +152,7 @@ namespace LIL
         bool readContinueFlowControlCall();
 
         bool readForeignLang();
+        bool readDocumentation();
     private:
         LILCodeParserPrivate *const d;
     };

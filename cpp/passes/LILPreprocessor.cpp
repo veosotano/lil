@@ -287,6 +287,7 @@ bool LILPreprocessor::processIfInstr(std::shared_ptr<LILNode> node)
         case NodeTypeForeignLang:
         case NodeTypeComment:
         case NodeTypeInvalid:
+        case NodeTypeDocumentation:
             //do nothing
             break;
             
@@ -463,6 +464,7 @@ bool LILPreprocessor::processPasteInstr(std::shared_ptr<LILNode> node)
         case NodeTypeForeignLang:
         case NodeTypeComment:
         case NodeTypeInvalid:
+        case NodeTypeDocumentation:
             //do nothing
             break;
             

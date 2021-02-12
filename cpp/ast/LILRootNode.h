@@ -22,6 +22,7 @@ namespace LIL {
     class LILAliasDecl;
     class LILClassDecl;
     class LILConversionDecl;
+    class LILDocumentation;
     class LILFunctionDecl;
     class LILInstruction;
     class LILTypeDecl;
@@ -63,6 +64,9 @@ namespace LIL {
         bool hasInitializers() const;
         const std::vector<std::shared_ptr<LILNode>> & getInitializers() const;
 
+        void addDoc(std::shared_ptr<LILDocumentation> value);
+        const std::vector<std::shared_ptr<LILDocumentation>> & getDocs() const;
+
     private:
         std::map<LILString, std::shared_ptr<LILNode>> _localVars;
         std::vector<std::shared_ptr<LILClassDecl>> _classes;
@@ -72,6 +76,7 @@ namespace LIL {
         std::vector<std::shared_ptr<LILVarDecl>> _constants;
         std::map<LILString, std::shared_ptr<LILSnippetInstruction>> _snippets;
         std::vector<std::shared_ptr<LILNode>> _initializers;
+        std::vector<std::shared_ptr<LILDocumentation>> _docs;
     };
 }
 

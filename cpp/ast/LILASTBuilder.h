@@ -65,6 +65,7 @@ namespace LIL
         BuilderStateForeignLang,
         BuilderStateValueList,
         BuilderStateIndexAccessor,
+        BuilderStateDocumentation,
     };
     class LILNode;
     class LILRootNode;

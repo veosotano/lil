@@ -178,6 +178,7 @@ bool LILNode::isContainerNode(NodeType nodeType)
         case NodeTypeSnippetInstruction:
         case NodeTypeValueList:
         case NodeTypeIndexAccessor:
+        case NodeTypeDocumentation:
             return true;
         default:
             return false;

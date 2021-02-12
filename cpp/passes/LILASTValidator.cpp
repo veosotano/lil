@@ -260,6 +260,12 @@ void LILASTValidator::validate(const std::shared_ptr<LILNode> & node)
             this->_validate(value);
             break;
         }
+        case NodeTypeDocumentation:
+        {
+            std::shared_ptr<LILDocumentation> value = std::static_pointer_cast<LILDocumentation>(node);
+            this->_validate(value);
+            break;
+        }
         case NodeTypeValueList:
         {
             std::shared_ptr<LILValueList> value = std::static_pointer_cast<LILValueList>(node);
@@ -894,6 +900,13 @@ void LILASTValidator::_validate(const std::shared_ptr<LILInstruction> & value)
 }
 
 void LILASTValidator::_validate(const std::shared_ptr<LILForeignLang> & value)
+{
+    if (this->getDebug()) {
+        std::cerr << "Nothing to do. OK\n";
+    }
+}
+
+void LILASTValidator::_validate(const std::shared_ptr<LILDocumentation> & value)
 {
     if (this->getDebug()) {
         std::cerr << "Nothing to do. OK\n";

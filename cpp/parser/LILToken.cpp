@@ -99,6 +99,7 @@ LILString LILToken::tokenStringRepresentation(TokenType type)
         types[TokenTypeSmallerOrEqualComparator] = "TokenTypeSmallerOrEqualComparator";
         types[TokenTypeSquareBracketOpen] = "TokenTypeSquareBracketOpen";
         types[TokenTypeSquareBracketClose] = "TokenTypeSquareBracketClose";
+        types[TokenTypeDocumentation] = "TokenTypeDocumentation";
     }
     
     if (types.count(type)){
