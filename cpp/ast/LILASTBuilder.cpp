@@ -472,6 +472,7 @@ void LILASTBuilder::receiveNodeCommit()
             break;
         }
         case BuilderStateType:
+        case BuilderStateObjectType:
         {
             if (this->currentNode && this->currentNode->isA(NodeTypeType)) {
                 std::shared_ptr<LILType> ty = std::static_pointer_cast<LILType>(this->currentContainer.back());
