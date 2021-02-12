@@ -42,7 +42,7 @@ std::shared_ptr<LILClonable> LILAssignment::cloneImpl() const
         clone->setSubject(this->_subject->clone());
     }
     if (this->_value) {
-        clone->_value = this->_value->clone();
+        clone->setValue(this->_value->clone());
     }
 
     //clone LILTypedNode
