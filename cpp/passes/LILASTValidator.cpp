@@ -616,8 +616,43 @@ void LILASTValidator::_validate(const std::shared_ptr<LILObjectDefinition> & val
 
 void LILASTValidator::_validate(const std::shared_ptr<LILAssignment> & value)
 {
-    if (this->getDebug()) {
-        std::cerr << "Nothing to do. OK\n";
+    auto parent = value->getParentNode();
+    if (parent && parent->isA(NodeTypeFunctionDecl)) {
+        auto subject = value->getSubject();
+        if (subject) {
+            switch (subject->getNodeType()) {
+                case NodeTypeValuePath:
+                {
+                    auto remoteNode = this->findNodeForValuePath(static_cast<LILValuePath *>(subject.get()));
+                    if (!remoteNode) {
+                        LILErrorMessage ei;
+                        ei.message =  LILNodeToString::stringify(subject.get())+" not found";
+                        LILNode::SourceLocation sl = subject->getSourceLocation();
+                        ei.file = sl.file;
+                        ei.line = sl.line;
+                        ei.column = sl.column;
+                        this->errors.push_back(ei);
+                    }
+                    break;
+                }
+                case NodeTypeVarName:
+                {
+                    auto remoteNode = this->findNodeForVarName(static_cast<LILVarName *>(subject.get()));
+                    if (!remoteNode) {
+                        LILErrorMessage ei;
+                        ei.message =  LILNodeToString::stringify(subject.get())+" not found";
+                        LILNode::SourceLocation sl = subject->getSourceLocation();
+                        ei.file = sl.file;
+                        ei.line = sl.line;
+                        ei.column = sl.column;
+                        this->errors.push_back(ei);
+                    }
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
     }
 }
 
