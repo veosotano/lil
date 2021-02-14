@@ -120,6 +120,7 @@ namespace LIL
         llvm::Value * _emit(LILFunctionCall * value);
         llvm::Value * _emitFCMultipleValues(std::vector<std::shared_ptr<LILFunctionDecl>> funcDecls, LILFunctionCall * value);
         llvm::Value * _emitFunctionCall(LILFunctionCall * value, LILString name, LILFunctionType * fnTy, llvm::Value * instance);
+        llvm::Value * _emitFCArg(LILNode * value, LILType * ty);
         llvm::Value * _emitFunctionCallMT(LILFunctionCall * value, LILString name, std::vector<std::shared_ptr<LILType>> types, LILFunctionType * fnTy, llvm::Value * instance);
         llvm::Value * _emit(LILFlowControl * value);
         llvm::Value * _emitIf(LILFlowControl * value);
@@ -151,6 +152,7 @@ namespace LIL
         llvm::Value * emitNullableToMultiTyConversion(LILNode * node, LILMultipleType * multiTy, const LILString & name);
         llvm::Value * emitMultiTyToMultiTyConversion(LILNode * node, LILMultipleType * multiTy, const LILString & name);
         llvm::Value * emitUnwrappedFromMT(LILNode * node, LILType * targetTy);
+        llvm::Value * emitUnwrappedPointerFromMT(llvm::Value * val, LILType *targetTy);
         
         std::shared_ptr<LILType> getMostAlignedType(const std::vector<std::shared_ptr<LILType>> & types) const;
         size_t getSizeOfType(std::shared_ptr<LILType> ty) const;

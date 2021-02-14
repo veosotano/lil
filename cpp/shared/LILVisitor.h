@@ -28,6 +28,8 @@ namespace LIL
     class LILVisitor
     {
     public:
+        bool inhibitSearchingForIfCastType;
+
         LILVisitor();
         virtual ~LILVisitor();
         virtual void initializeVisit() = 0;

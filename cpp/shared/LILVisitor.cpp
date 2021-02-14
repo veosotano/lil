@@ -29,7 +29,8 @@
 using namespace LIL;
 
 LILVisitor::LILVisitor()
-: _printHeadline(true)
+: inhibitSearchingForIfCastType(false)
+, _printHeadline(true)
 , _verbose(false)
 , _debug(false)
 {
@@ -207,7 +208,7 @@ std::shared_ptr<LILNode> LILVisitor::findNodeForValuePath(LILValuePath * vp) con
             auto localNode = this->recursiveFindNode(firstNode);
             if (localNode) {
                 auto subjTy = localNode->getType();
-                if (subjTy->isA(TypeTypeMultiple)) {
+                if (!this->inhibitSearchingForIfCastType && subjTy->isA(TypeTypeMultiple)) {
                     size_t outStartIndex = 0;
                     auto ifCastTy = this->findIfCastType(vp, outStartIndex);
                     if (ifCastTy) {

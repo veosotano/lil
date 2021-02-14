@@ -113,7 +113,7 @@ void LILTypeValidator::_validate(std::shared_ptr<LILFunctionCall> fc)
         
         auto vd = std::static_pointer_cast<LILVarDecl>(remoteNode);
         auto fieldTy = vd->getType();
-        if (fieldTy->isA(TypeTypeMultiple)) {
+        if (!this->inhibitSearchingForIfCastType && fieldTy->isA(TypeTypeMultiple)) {
             size_t outVpSize = 0;
             auto ifCastTy = this->findIfCastType(vp.get(), outVpSize);
             if (ifCastTy) {

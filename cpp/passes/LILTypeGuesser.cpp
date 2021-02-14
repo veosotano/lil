@@ -826,7 +826,13 @@ void LILTypeGuesser::_process(LILFunctionCall * value)
 
 void LILTypeGuesser::_process(LILFlowControl * value)
 {
-
+    if (value->isA(FlowControlTypeIfCast)) {
+        this->inhibitSearchingForIfCastType = true;
+        for (auto arg : value->getArguments()) {
+            this->process(arg.get());
+        }
+        this->inhibitSearchingForIfCastType = false;
+    }
 }
 
 void LILTypeGuesser::_process(LILFlowControlCall * value)
@@ -1737,9 +1743,15 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(std::shared_ptr<LI
         }
     } else if (nodes.size() > 1){
         size_t startIndex = 1;
-        auto ifCastType = this->findIfCastType(vp.get(), startIndex);
+        std::shared_ptr<LILType> ifCastType;
+        if (!this->inhibitSearchingForIfCastType) {
+            ifCastType = this->findIfCastType(vp.get(), startIndex);
+        }
         if (ifCastType) {
             currentTy = ifCastType;
+            if (startIndex == nodes.size()) {
+                return currentTy;
+            }
 
         } else {
             firstNode = nodes.front();
