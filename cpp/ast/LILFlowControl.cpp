@@ -131,11 +131,20 @@ void LILFlowControl::clearArguments()
 void LILFlowControl::setArguments(const std::vector<std::shared_ptr<LILNode>> && newArgs)
 {
     for (auto node : this->_arguments) {
+        if (node->isA(NodeTypeVarDecl)) {
+            auto vd = std::static_pointer_cast<LILVarDecl>(node);
+            this->unsetLocalVariable(vd->getName());
+        }
+
         this->removeNode(node);
     }
     this->_arguments = std::move(newArgs);
-    for (auto node : this->_then) {
-        this->addNode(node);
+    for (auto arg : this->_arguments) {
+        arg->setParentNode(this->shared_from_this());
+        if (arg->isA(NodeTypeVarDecl)) {
+            auto vd = std::static_pointer_cast<LILVarDecl>(arg);
+            this->setLocalVariable(vd->getName(), arg);
+        }
     }
 }
 
@@ -143,6 +152,11 @@ void LILFlowControl::addThen(std::shared_ptr<LILNode> node)
 {
     this->addNode(node);
     this->_then.push_back(node);
+
+    if (node->isA(NodeTypeVarDecl)) {
+        auto vd = std::static_pointer_cast<LILVarDecl>(node);
+        this->setLocalVariable(vd->getName(), node);
+    }
 }
 
 const std::vector<std::shared_ptr<LILNode>> & LILFlowControl::getThen() const
@@ -153,11 +167,21 @@ const std::vector<std::shared_ptr<LILNode>> & LILFlowControl::getThen() const
 void LILFlowControl::setThen(const std::vector<std::shared_ptr<LILNode>> && newThen)
 {
     for (auto node : this->_then) {
+        if (node->isA(NodeTypeVarDecl)) {
+            auto vd = std::static_pointer_cast<LILVarDecl>(node);
+            this->unsetLocalVariable(vd->getName());
+        }
+
         this->removeNode(node);
     }
     this->_then = std::move(newThen);
     for (auto node : this->_then) {
         this->addNode(node);
+
+        if (node->isA(NodeTypeVarDecl)) {
+            auto vd = std::static_pointer_cast<LILVarDecl>(node);
+            this->setLocalVariable(vd->getName(), node);
+        }
     }
 }
 
@@ -165,16 +189,31 @@ void LILFlowControl::addElse(std::shared_ptr<LILNode> node)
 {
     this->addNode(node);
     this->_else.push_back(node);
+
+    if (node->isA(NodeTypeVarDecl)) {
+        auto vd = std::static_pointer_cast<LILVarDecl>(node);
+        this->setLocalVariable(vd->getName(), vd);
+    }
 }
 
 void LILFlowControl::setElse(const std::vector<std::shared_ptr<LILNode>> && newElse)
 {
     for (auto node : this->_else) {
+        if (node->isA(NodeTypeVarDecl)) {
+            auto vd = std::static_pointer_cast<LILVarDecl>(node);
+            this->unsetLocalVariable(vd->getName());
+        }
+
         this->removeNode(node);
     }
     this->_else = std::move(newElse);
     for (auto node : this->_else) {
         this->addNode(node);
+
+        if (node->isA(NodeTypeVarDecl)) {
+            auto vd = std::static_pointer_cast<LILVarDecl>(node);
+            this->setLocalVariable(vd->getName(), node);
+        }
     }
 }
 

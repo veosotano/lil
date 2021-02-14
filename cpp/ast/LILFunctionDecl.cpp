@@ -121,6 +121,12 @@ std::shared_ptr<LILClonable> LILFunctionDecl::cloneImpl() const
     }
     if (this->_fnType) {
         clone->_fnType = this->_fnType->clone();
+        for (auto arg : clone->_fnType->getArguments()) {
+            if (arg->isA(NodeTypeVarDecl)) {
+                auto vd = std::static_pointer_cast<LILVarDecl>(arg);
+                clone->setLocalVariable(vd->getName(), vd);
+            }
+        }
     }
     clone->_impls.clear();
     for (auto it = this->_impls.begin(); it != this->_impls.end(); ++it)
