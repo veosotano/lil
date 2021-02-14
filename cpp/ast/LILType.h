@@ -45,6 +45,7 @@ namespace LIL
         void setStrongTypeName(LILString newName);
 
         virtual bool getIsWeakType() const;
+        std::shared_ptr<LILType> getDefaultType() const;
 
         TypeType getTypeType() const override;
         void setTypeType(TypeType newType);

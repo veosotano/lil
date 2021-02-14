@@ -505,25 +505,24 @@ void LILTypeGuesser::_process(LILNumberLiteral * value)
             ty2 = ty2->clone();
             ty2->setIsNullable(false);
         }
+        bool isDefaultType = false;
         if (ty2 && ty2->isA(TypeTypePointer)) {
-            auto ptrTy = std::static_pointer_cast<LILPointerType>(ty2);
-            auto argTy = ptrTy->getArgument();
-            if (argTy) {
-                ty2 = argTy;
+            isDefaultType = true;
+        } else {
+            auto ty3 = LILType::merge(ty1, ty2);
+            if (ty3 && !ty3->getIsWeakType()) {
+                value->setType(ty3);
+                this->setTypeOnAncestorIfNeeded(sharedVal, ty3);
+            }
+            else if (ty1->getIsWeakType())
+            {
+                isDefaultType = true;
             }
         }
-        auto ty3 = LILType::merge(ty1, ty2);
-        if (ty3 && !ty3->getIsWeakType()) {
-            value->setType(ty3);
-            this->setTypeOnAncestorIfNeeded(sharedVal, ty3);
-        }
-        else
-        {
+        if (isDefaultType) {
             //decay to default
-            auto intType = std::make_shared<LILType>();
-            intType->setName("i64");
+            auto intType = ty1->getDefaultType();
             value->setType(intType);
-            this->setTypeOnAncestorIfNeeded(sharedVal, intType);
         }
     }
 }
@@ -674,7 +673,6 @@ void LILTypeGuesser::_process(LILVarDecl * value)
 
 void LILTypeGuesser::_process(LILClassDecl * value)
 {
-    
 }
 
 void LILTypeGuesser::_process(LILObjectDefinition * value)
@@ -1470,8 +1468,7 @@ std::shared_ptr<LILType> LILTypeGuesser::getFnReturnType(const std::vector<std::
     }
     
     if (returnType->getIsWeakType()) {
-        auto intType = std::make_shared<LILType>();
-        intType->setName("i64");
+        auto intType = returnType->getDefaultType();
         returnType = intType;
     }
 
