@@ -1376,6 +1376,24 @@ std::shared_ptr<LILType> LILTypeGuesser::getExpType(std::shared_ptr<LILExpressio
         if( leftType->equalTo(rightType)) {
             return leftType;
         }
+        if (
+            leftType->isA(TypeTypePointer)
+            && (
+                rightType->getIsWeakType()
+                || LILType::combinesWithPointer(rightType.get())
+            )
+        ) {
+            return leftType;
+        }
+        if (
+            rightType->isA(TypeTypePointer)
+            && (
+                leftType->getIsWeakType()
+                || LILType::combinesWithPointer(leftType.get())
+            )
+        ) {
+            return rightType;
+        }
         auto mergedTy = LILType::merge(leftType, rightType);
         return mergedTy;
     }

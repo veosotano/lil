@@ -193,6 +193,21 @@ bool LILType::isNumberType(LILType * ty)
     return false;
 }
 
+bool LILType::combinesWithPointer(LILType * ty)
+{
+    const auto & name = ty->getName();
+    if (
+        name == "i8"
+        || name == "i16"
+        || name == "i32"
+        || name == "i64"
+        || name == "i128"
+        ) {
+        return true;
+    }
+    return false;
+}
+
 LILType::LILType()
 : LIL::LILNode(NodeTypeType)
 , _typeType(TypeTypeSingle)
