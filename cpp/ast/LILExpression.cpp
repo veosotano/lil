@@ -147,3 +147,19 @@ const std::vector<std::shared_ptr<LILNode>> & LILExpression::getNodes() const
 {
     return this->getChildNodes();
 }
+
+void LILExpression::setType(std::shared_ptr<LILType> value)
+{
+    if (this->getExpressionType() == ExpressionTypeCast) {
+        this->setRight(value);
+    }
+    LILTypedNode::setType(value);
+}
+
+std::shared_ptr<LILType> LILExpression::getType() const
+{
+    if (this->getExpressionType() == ExpressionTypeCast) {
+        return std::dynamic_pointer_cast<LILType>(this->_rightNode);
+    }
+    return LILTypedNode::getType();
+}

@@ -38,6 +38,9 @@ namespace LIL
         std::shared_ptr<LILNode> getRight();
         const std::vector<std::shared_ptr<LILNode>> & getNodes() const;
 
+        void setType(std::shared_ptr<LILType> value) override;
+        std::shared_ptr<LILType> getType() const override;
+
     protected:
         std::shared_ptr<LILClonable> cloneImpl() const override;
         std::shared_ptr<LILNode> _leftNode;
