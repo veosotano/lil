@@ -808,7 +808,10 @@ LILToStrInfo LILToStringVisitor::_stringify(LILFlowControlCall * value)
     LILToStrInfo ret;
     ret.value = "Flow control call: "+LILNodeToString::stringify(value);
     if (value->isA(FlowControlCallTypeReturn)) {
-        ret.children.push_back(this->stringify(value->getArgument().get()));
+        auto arg = value->getArgument();
+        if (arg) {
+            ret.children.push_back(this->stringify(arg.get()));
+        }
     }
     return ret;
 }
