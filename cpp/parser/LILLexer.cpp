@@ -956,9 +956,18 @@ std::shared_ptr<LILToken> LILLexer::readComparatorOrForeignLang()
 
             return token;
         } else {
-            auto token = std::make_shared<LILToken>(TokenTypeSmallerComparator, d->currentChar, line, column, index);
             this->readNextChar();
-            return token;
+            if (d->currentChar == '=')
+            {
+                ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeSmallerOrEqualComparator, "<=", line, column, index));
+                this->readNextChar();
+                return ret;
+            }
+            else
+            {
+                ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeSmallerComparator, "<", line, column, index));
+                return ret;
+            }
         }
     }
     return nullptr;
