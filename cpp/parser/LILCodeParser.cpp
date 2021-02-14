@@ -4268,35 +4268,54 @@ bool LILCodeParser::readEvaluables()
                 if (!vnValid) {
                     return false;
                 }
+                evalsDone = false;
                 bool ppValid = this->readValuePath(true);
                 if (ppValid) {
-                    d->receiver->receiveNodeCommit();
-                }
-                if (this->isAssignment())
-                {
-                    bool asgmValid = this->readAssignment(true, true, true);
-                    if (asgmValid) {
-                        d->receiver->receiveNodeCommit();
-                    } else {
-                        d->receiver->receiveError(LILString::format("Error while reading function on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
+                    if (this->atEndOfSource()) {
+                        return false;
                     }
-                }
-                else if (this->isExpression())
-                {
-                    bool outIsSV = false;
-                    NodeType outType;
-                    bool expValid = this->readExpression(outIsSV, outType);
-                    if (expValid) {
-                        d->receiver->receiveNodeCommit();
+                    this->skip(TokenTypeWhitespace);
+                    if (this->atEndOfSource()) {
+                        return false;
                     }
-                    else
+                    if (this->isAssignment())
                     {
-                        d->receiver->receiveError(LILString::format("Error while reading expression on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
+                        bool asgmValid = this->readAssignment(true, true, true);
+                        if (asgmValid) {
+                            d->receiver->receiveNodeCommit();
+                        } else {
+                            d->receiver->receiveError(LILString::format("Error while reading function on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
+                        }
                     }
+                    else if (this->isExpression())
+                    {
+                        bool outIsSV = false;
+                        NodeType outType;
+                        bool expValid = this->readExpression(outIsSV, outType);
+                        if (expValid) {
+                            d->receiver->receiveNodeCommit();
+                        }
+                        else
+                        {
+                            d->receiver->receiveError(LILString::format("Error while reading expression on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
+                        }
+                    } else if (this->isUnaryExpression()) {
+                        bool expValid = this->readUnaryExpression();
+                        if (expValid) {
+                            d->receiver->receiveNodeCommit();
+                        }
+                        else
+                        {
+                            d->receiver->receiveError(LILString::format("Error while reading unary expression on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
+                        }
+                    } else {
+                        d->receiver->receiveNodeCommit();
+                    }
+                } else {
+                    continue;
                 }
                 if (this->atEndOfSource())
                     return ret;
-                evalsDone = false;
                 this->skip(TokenTypeWhitespace);
                 if (this->atEndOfSource())
                     return ret;
@@ -4410,6 +4429,15 @@ bool LILCodeParser::readEvaluables()
                 else
                 {
                     d->receiver->receiveError(LILString::format("Error while reading expression on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
+                }
+            } else if (this->isUnaryExpression()) {
+                bool expValid = this->readUnaryExpression();
+                if (expValid) {
+                    d->receiver->receiveNodeCommit();
+                }
+                else
+                {
+                    d->receiver->receiveError(LILString::format("Error while reading unary expression on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
                 }
             } else {
                 d->receiver->receiveNodeCommit();
