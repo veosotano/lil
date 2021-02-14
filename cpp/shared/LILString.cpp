@@ -418,6 +418,27 @@ LILString LILString::stripQuotes() const
     return LILString(string.substr(position, n));
 }
 
+LILString LILString::strip(const LILChar & c) const
+{
+    std::string str = d->string;
+    size_t startIndex = 0;
+    for (auto it = str.begin(); it != str.end(); ++it) {
+        if (c != *it) {
+            break;
+        }
+        ++startIndex;
+    }
+    size_t len = str.length();
+    size_t endIndex = 0;
+    for (auto it = str.rbegin(); it != str.rend(); ++it) {
+        if (c != *it) {
+            break;
+        }
+        ++endIndex;
+    }
+    return LILString(str.substr(startIndex, (len - startIndex - endIndex)));
+}
+
 LILString LILString::replaceEscapes() const
 {
     std::string string = d->string;

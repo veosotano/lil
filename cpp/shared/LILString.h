@@ -71,6 +71,7 @@ namespace LIL
         unsigned int toHex() const;
         LILString trimmed() const;
         LILString stripQuotes() const;
+        LILString strip(const LILChar & c) const;
         LILString replaceEscapes() const;
         LILString toUpperFirstCase() const;
         bool isEmpty() const;
