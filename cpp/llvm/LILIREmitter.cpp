@@ -2268,34 +2268,40 @@ llvm::Value * LILIREmitter::_emitIf(LILFlowControl * value)
     //configure the body of the if
     d->irBuilder.SetInsertPoint(bodyBB);
 
+    bool hasReturn = false;
     for (auto & node : value->getThen()) {
-        bool breakAfter = false;
         if (node->isA(FlowControlCallTypeReturn)) {
-            breakAfter = true;
+            hasReturn = true;
         }
         this->emit(node.get());
-        if (breakAfter) {
+        if (hasReturn) {
             break;
         }
     }
-
-    d->irBuilder.CreateBr(mergeBB);
+    if (hasReturn) {
+        d->irBuilder.CreateBr(d->finallyBB);
+    } else {
+        d->irBuilder.CreateBr(mergeBB);
+    }
 
     fun->getBasicBlockList().push_back(elseBB);
     d->irBuilder.SetInsertPoint(elseBB);
 
+    hasReturn = false;
     for (auto & node : value->getElse()) {
-        bool breakAfter = false;
         if (node->isA(FlowControlCallTypeReturn)) {
-            breakAfter = true;;
+            hasReturn = true;
         }
         this->emit(node.get());
-        if (breakAfter) {
+        if (hasReturn) {
             break;
         }
     }
-
-    d->irBuilder.CreateBr(mergeBB);
+    if (hasReturn) {
+        d->irBuilder.CreateBr(d->finallyBB);
+    } else {
+        d->irBuilder.CreateBr(mergeBB);
+    }
 
     fun->getBasicBlockList().push_back(mergeBB);
     d->irBuilder.SetInsertPoint(mergeBB);
@@ -2375,38 +2381,41 @@ llvm::Value * LILIREmitter::_emitIfCast(LILFlowControl * value)
     //configure the body of the if
     d->irBuilder.SetInsertPoint(bodyBB);
     
+    bool hasReturn = false;
     for (auto & node : value->getThen()) {
-        bool breakAfter = false;
         if (node->isA(FlowControlCallTypeReturn)) {
-            breakAfter = true;;
+            hasReturn = true;
         }
         this->emit(node.get());
-        if (breakAfter) {
+        if (hasReturn) {
             break;
         }
     }
-    
-    d->irBuilder.CreateBr(mergeBB);
-    
-    d->namedValues[nameData] = currentLlvmValue;
-    value->unsetLocalVariable(name);
-    
+    if (hasReturn) {
+        d->irBuilder.CreateBr(d->finallyBB);
+    } else {
+        d->irBuilder.CreateBr(mergeBB);
+    }
+
     fun->getBasicBlockList().push_back(elseBB);
     d->irBuilder.SetInsertPoint(elseBB);
     
+    hasReturn = false;
     for (auto & node : value->getElse()) {
-        bool breakAfter = false;
         if (node->isA(FlowControlCallTypeReturn)) {
-            breakAfter = true;;
+            hasReturn = true;;
         }
         this->emit(node.get());
-        if (breakAfter) {
+        if (hasReturn) {
             break;
         }
     }
-    
-    d->irBuilder.CreateBr(mergeBB);
-    
+    if (hasReturn) {
+        d->irBuilder.CreateBr(d->finallyBB);
+    } else {
+        d->irBuilder.CreateBr(mergeBB);
+    }
+
     fun->getBasicBlockList().push_back(mergeBB);
     d->irBuilder.SetInsertPoint(mergeBB);
     return nullptr;
