@@ -499,6 +499,11 @@ bool LILCodeParser::isUnaryExpression() const
 {
     std::shared_ptr<LILToken> peekToken;
     peekToken = d->currentToken;
+    //skip all whitespace and comments
+    while (peekToken && (peekToken->isA(TokenTypeWhitespace) || peekToken->isA(TokenTypeBlockComment) || peekToken->isA(TokenTypeLineComment)))
+    {
+        peekToken = d->lexer->peekNextToken();
+    }
     if (!this->isUnaryExpressionSign(peekToken)) {
         return false;
     }
