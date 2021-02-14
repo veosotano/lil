@@ -319,6 +319,7 @@ const std::vector<std::shared_ptr<LILNode>> & LILType::getParamTypes() const
 
 void LILType::addParamType(std::shared_ptr<LILNode> value)
 {
+    value->setParentNode(this->shared_from_this());
     this->_paramTypes.push_back(value);
 }
 
