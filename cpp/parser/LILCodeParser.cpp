@@ -4406,6 +4406,13 @@ bool LILCodeParser::readEvaluables()
                 evalsDone = false;
                 continue;
             }
+            if (this->atEndOfSource()) {
+                return ret;
+            }
+            this->skip(TokenTypeWhitespace);
+            if (this->atEndOfSource()) {
+                return ret;
+            }
             if (this->isAssignment())
             {
                 bool asgmtValid = this->readAssignment(true, true, true);
