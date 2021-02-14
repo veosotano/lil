@@ -3080,8 +3080,10 @@ llvm::Type * LILIREmitter::llvmTypeFromLILType(LILType * type)
     else if (type->isA(TypeTypeObject))
     {
         auto className = type->getName().data();
-        auto classTy = d->classTypes[className];
-        if (!classTy) {
+        llvm::StructType * classTy;
+        if (d->classTypes.count(className)) {
+            return d->classTypes.at(className);
+        } else {
             auto classDecl = this->findClassWithName(className);
             if (!classDecl) {
                 std::cerr << "CLASS NOT FOUND FAIL!!!!!!!!!!!!!!!!\n";
