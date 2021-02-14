@@ -354,6 +354,14 @@ LILString LILVisitor::typeToString(std::shared_ptr<LILType> type) const
     } else {
         ret = type->getName();
     }
+    for (auto paramTyNode : type->getParamTypes()) {
+        if (!paramTyNode->isA(NodeTypeType)) {
+            std::cerr << "PARAM TYPE WAS NOT TYPE FAIL!!!!!!\n\n";
+            continue;
+        }
+        auto paramTy = std::static_pointer_cast<LILType>(paramTyNode);
+        ret += "_"+paramTy->getName();
+    }
     return ret;
 }
 
