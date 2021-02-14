@@ -50,11 +50,6 @@ LILFunctionDecl::LILFunctionDecl(const LILFunctionDecl &other)
 {
 }
 
-bool LILFunctionDecl::isTypedNode() const
-{
-    return true;
-}
-
 std::shared_ptr<LILType> LILFunctionDecl::getType() const
 {
     if (this->_hasOwnType) {

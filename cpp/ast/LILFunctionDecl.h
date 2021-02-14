@@ -29,7 +29,6 @@ namespace LIL
     public:
         LILFunctionDecl();
         LILFunctionDecl(const LILFunctionDecl &other);
-        bool isTypedNode() const;
         std::shared_ptr<LILType> getType() const;
         void setType(std::shared_ptr<LILType> value);
         std::shared_ptr<LILFunctionType> getFnType() const;
