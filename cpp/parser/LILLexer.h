@@ -50,7 +50,6 @@ namespace LIL
         std::shared_ptr<LILStringToken> readString(std::shared_ptr<LILStringToken> strToken, bool & done);
 
     private:
-        void skipWhitespace();
         void storeCurrentCharAndReadNext();
 
         LILString extractCurrentTokenText();

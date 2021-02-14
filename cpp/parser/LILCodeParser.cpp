@@ -1331,7 +1331,7 @@ bool LILCodeParser::readType()
                     return true;
                 }
             } else {
-                //not static array, valid state
+                //simple type
                 return true;
             }
         }
@@ -3571,7 +3571,6 @@ bool LILCodeParser::readNewInstr()
     }
     LIL_END_NODE
 }
-
 
 bool LILCodeParser::readInstructionRule()
 {

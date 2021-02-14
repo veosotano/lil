@@ -408,28 +408,6 @@ void LILLexer::rewindToPreviousToken()
 }
 
 /*!
- * Skips over any whitespace characters.
- */
-void LILLexer::skipWhitespace()
-{
-    while (d->currentChar.isSpace())
-    {
-        // We only want to consider something after \n to be a new line, as this
-        // effectively matches \n and \r\n. No modern system considers \r alone
-        // to be a new line, and checking for it here would cause most Windows
-        // files to show incorrect line numbers, as a new line would be registered
-        // for both the \r AND the \n.
-        if (d->currentChar == '\n')
-        {
-            d->currentLine++;
-            d->currentColumn = 1;
-        }
-
-        this->readNextChar();
-    }
-}
-
-/*!
  * Stores the current character in the multi-character token buffer,
  * then reads the next character.
  */

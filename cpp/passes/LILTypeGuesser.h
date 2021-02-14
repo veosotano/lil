@@ -59,7 +59,7 @@ namespace LIL
     class LILTypeGuesser : public LILVisitor
     {
     public:
-
+        
         LILTypeGuesser();
         virtual ~LILTypeGuesser();
 

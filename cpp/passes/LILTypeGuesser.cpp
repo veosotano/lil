@@ -483,9 +483,11 @@ void LILTypeGuesser::process(LILNode * node)
     if (node->isTypedNode()) {
         auto tyNode = static_cast<LILTypedNode *>(node);
         auto ty = tyNode->getType();
-        auto newTy = this->nullsToNullableTypes(ty);
-        if (newTy.get() != ty.get()) {
-            tyNode->setType(newTy);
+        if (ty) {
+            auto newTy = this->nullsToNullableTypes(ty);
+            if (newTy.get() != ty.get()) {
+                tyNode->setType(newTy);
+            }
         }
     }
 }
@@ -1826,7 +1828,7 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(std::shared_ptr<LI
                 case NodeTypeIndexAccessor:
                 {
                     if (!currentTy->isA(TypeTypeStaticArray)) {
-                        std::cerr << "METHOD TYPE IS NOT ARRAY TYPE FAIL!!!!\n";
+                        std::cerr << "FIELD TYPE IS NOT ARRAY TYPE FAIL!!!!\n";
                         return nullptr;
                     }
                     auto saTy = std::static_pointer_cast<LILStaticArrayType>(currentTy);

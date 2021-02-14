@@ -1141,6 +1141,7 @@ llvm::Value * LILIREmitter::_emit(LILAssignment * value)
                             }
                         } else {
                             std::cerr << "!!!!!!!!!!COULD NOT FIND METHOD FAIL!!!!!!!!!!!!!!!!\n";
+                            return nullptr;
                         }
                         
                     } else {
@@ -1378,6 +1379,10 @@ llvm::Value * LILIREmitter::_emit(LILValuePath * value)
                         return nullptr;
                     }
                     auto field = classDecl->getFieldNamed(pnName);
+                    if (!field) {
+                        std::cerr << "!!!!!!!!!!FIELD NOT FOUND FAIL !!!!!!!!!!!!!!!!\n";
+                        return nullptr;
+                    }
                     if (!field->isA(NodeTypeVarDecl)) {
                         std::cerr << "!!!!!!!!!!NODE IS NOT VAR DECL FAIL !!!!!!!!!!!!!!!!\n";
                         return nullptr;
@@ -2327,12 +2332,6 @@ llvm::Value * LILIREmitter::_emitIfCast(LILFlowControl * value)
     } else if (firstArg->isA(NodeTypeValuePath)){
         auto vp = std::static_pointer_cast<LILValuePath>(firstArg);
         ty = vp->getType();
-//        auto subjNode = this->findNodeForValuePath(vp.get());
-//        if (!subjNode->isA(NodeTypeVarDecl)) {
-//            std::cerr << "SUBJECT NODE WAS NOT VAR DECL FAIL!!!!!!!!!!!!!!!!\n\n";
-//            return nullptr;
-//        }
-//        subject = std::static_pointer_cast<LILVarDecl>(subjNode);
     } else {
         std::cerr << "UNKNOWN FIRST ARG FAIL!!!!!!!!!!!!!!!!\n\n";
         return nullptr;
@@ -3641,7 +3640,7 @@ bool LILIREmitter::_needsTemporaryVariable(LILNode * node)
         {
             return true;
         }
-            
+
         default:
             return false;
     }

@@ -132,6 +132,16 @@ void LILTypeValidator::_validate(std::shared_ptr<LILFunctionCall> fc)
                 return;
             }
             auto method = classDecl->getMethodNamed(fc->getName());
+            if (!method) {
+                LILErrorMessage ei;
+                ei.message =  "The class "+fieldTy->getName()+" does not contain a field named "+fc->getName();
+                LILNode::SourceLocation sl = fc->getSourceLocation();
+                ei.file = sl.file;
+                ei.line = sl.line;
+                ei.column = sl.column;
+                this->errors.push_back(ei);
+                return;
+            }
             ty = method->getType();
             isMethod = true;
         }
