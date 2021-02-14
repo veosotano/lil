@@ -1228,7 +1228,7 @@ bool LILCodeParser::readClassDecl()
     LIL_CHECK_FOR_END
 
     LIL_EXPECT(TokenTypeIdentifier, "identifier");
-    bool otValid = this->readObjectType();
+    bool otValid = this->readObjectType(false);
     if (otValid) {
         d->receiver->receiveNodeCommit();
     }
@@ -1245,7 +1245,7 @@ bool LILCodeParser::readClassDecl()
         LIL_CHECK_FOR_END
 
         LIL_EXPECT(TokenTypeIdentifier, "identifier");
-        bool otValid = this->readObjectType();
+        bool otValid = this->readObjectType(true);
         if (otValid) {
             d->receiver->receiveNodeCommit();
         }
@@ -1450,7 +1450,7 @@ bool LILCodeParser::readTypeSimple()
     {
         d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
         this->readNextToken();
-        return this->readObjectType();
+        return this->readObjectType(true);
     }
     else
     {
@@ -2629,12 +2629,32 @@ bool LILCodeParser::readStringArgument()
     return true;
 }
 
-bool LILCodeParser::readObjectType()
+bool LILCodeParser::readObjectType(bool readingParamTys)
 {
     LIL_START_NODE(NodeTypeObjectType)
     LIL_EXPECT(TokenTypeIdentifier, "identifier");
     d->receiver->receiveNodeData(ParserEventType, d->currentToken->getString());
     this->readNextToken();
+
+    if (readingParamTys) {
+        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+        
+        if (d->currentToken->isA(TokenTypeParenthesisOpen)){
+            d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+            this->readNextToken();
+            LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+            bool valid = this->readType();
+            if (valid) {
+                d->receiver->receiveNodeCommit();
+            } else {
+                LIL_CANCEL_NODE
+            }
+            LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+            LIL_EXPECT(TokenTypeParenthesisClose, "closing parenthesis");
+            d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+            this->readNextToken();
+        }
+    }
     LIL_END_NODE_SKIP(false)
 }
 

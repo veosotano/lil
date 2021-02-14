@@ -92,7 +92,7 @@ namespace LIL
         bool readStringLiteral();
         bool readStringFunction();
         bool readStringArgument();
-        bool readObjectType();
+        bool readObjectType(bool readingParamTys);
         bool readObjectPath();
         bool readObjectDefinition();
         bool readRule();
