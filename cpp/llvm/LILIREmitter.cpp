@@ -1724,9 +1724,11 @@ llvm::Function * LILIREmitter::_emitFnBody(llvm::Function * fun, LILFunctionDecl
     if (ty && ty->getName() != "null") {
         d->returnAlloca = d->irBuilder.CreateAlloca(fun->getReturnType(), 0, "return");
     }
+    d->finallyBB = llvm::BasicBlock::Create(d->llvmContext, "finally");
+
     this->_emitEvaluables(body);
 
-    d->finallyBB = llvm::BasicBlock::Create(d->llvmContext, "finally", fun);
+    fun->getBasicBlockList().push_back(d->finallyBB);
     d->irBuilder.CreateBr(d->finallyBB);
     d->irBuilder.SetInsertPoint(d->finallyBB);
 
