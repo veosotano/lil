@@ -28,7 +28,7 @@ namespace LIL {
         virtual bool equalTo(std::shared_ptr<LILNode> otherNode);
 
         virtual void setType(std::shared_ptr<LILType> value);
-        std::shared_ptr<LILType> getType() const;
+        virtual std::shared_ptr<LILType> getType() const;
         
     protected:
         std::shared_ptr<LILType> _type;
