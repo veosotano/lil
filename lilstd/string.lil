@@ -1,6 +1,7 @@
 fn malloc (i64)=>ptr(i8) extern;
 fn free (ptr(i8)) extern;
 fn memcpy (var.ptr(i8) dst; var.ptr(i8) src; var.i64 len) extern;
+alias cstr => ptr(i8);
 //#needs "std/cstd.lil";
 
 #export {
