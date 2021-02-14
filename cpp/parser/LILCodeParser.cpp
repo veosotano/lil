@@ -1294,8 +1294,12 @@ bool LILCodeParser::readClassDecl()
             d->receiver->receiveNodeCommit();
         }
         LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-        if (d->currentToken->isA(TokenTypeSemicolon)) {
+
+        if (!d->currentToken->isA(TokenTypeBlockClose)) {
             done = false;
+        }
+        if (d->currentToken->isA(TokenTypeSemicolon)) {
+            
             d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
             this->readNextToken();
             LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
