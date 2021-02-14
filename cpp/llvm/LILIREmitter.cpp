@@ -3092,14 +3092,15 @@ llvm::Type * LILIREmitter::llvmTypeFromLILType(LILType * type)
             auto newClassTy = this->extractStructFromClass(classDecl.get());
             d->classTypes[className] = newClassTy;
             classTy = newClassTy;
-        }
-        if (type->getIsNullable()) {
-            std::vector<llvm::Type*> types;
-            types.push_back(classTy);
-            types.push_back(llvm::Type::getInt1Ty(d->llvmContext));
-            return llvm::StructType::get(d->llvmContext, types);
-        } else {
-            return classTy;
+            
+            if (type->getIsNullable()) {
+                std::vector<llvm::Type*> types;
+                types.push_back(classTy);
+                types.push_back(llvm::Type::getInt1Ty(d->llvmContext));
+                return llvm::StructType::get(d->llvmContext, types);
+            } else {
+                return classTy;
+            }
         }
     }
     else if (type->isA(TypeTypeStaticArray))
