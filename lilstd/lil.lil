@@ -1,7 +1,7 @@
-#needs "string.lil";
-#needs "print.lil";
-
 #export {
+	#needs "string.lil";
+	#needs "print.lil";
+	
 	alias cstr => ptr(i8);
 	alias str => @string;
 }
