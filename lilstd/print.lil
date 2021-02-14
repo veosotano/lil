@@ -1,5 +1,5 @@
-fn printf (cstr...)=>i32 extern;
-fn puts (cstr)=>i32 extern;
+fn printf (ptr(i8)...)=>i32 extern;
+fn puts (ptr(i8))=>i32 extern;
 
 #export fn print(var.bool|i64|f64|cstr|str value) {
 	if value => bool {
@@ -15,7 +15,7 @@ fn puts (cstr)=>i32 extern;
 	if value => f64 {
 		printf(`%lf\n`, value);
 	}
-	if value => cstr {
+	if value => ptr(i8) {
 		puts value;
 	}
 	if value => str {

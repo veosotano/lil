@@ -1,4 +1,4 @@
 #export {
-	fn printf (cstr...)=>i32 extern;
-	fn puts (cstr)=>i32 extern;
+	fn printf (ptr(i8)...)=>i32 extern;
+	fn puts (ptr(i8))=>i32 extern;
 }
