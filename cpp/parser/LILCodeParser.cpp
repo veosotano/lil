@@ -1090,11 +1090,38 @@ bool LILCodeParser::isIfCast() const
             }
         }
     }
-    if (peekToken && peekToken->isA(TokenTypeIdentifier)){
-        peekToken = d->lexer->peekNextToken();
-    } else {
-        d->lexer->resetPeek();
-        return false;
+    bool done = false;
+    while (peekToken && !done) {
+        done = true;
+        
+        switch (peekToken->getType()) {
+            case TokenTypeIdentifier:
+            case TokenTypeObjectSign:
+            case TokenTypeDot:
+                peekToken = d->lexer->peekNextToken();
+                done = false;
+                break;
+            case TokenTypeParenthesisOpen:
+            {
+                while (peekToken && !peekToken->isA(TokenTypeParenthesisClose)) {
+                    peekToken = d->lexer->peekNextToken();
+                }
+                peekToken = d->lexer->peekNextToken();
+                done = false;
+                break;
+            }
+            case TokenTypeSquareBracketOpen:
+            {
+                while (peekToken && !peekToken->isA(TokenTypeSquareBracketClose)) {
+                    peekToken = d->lexer->peekNextToken();
+                }
+                peekToken = d->lexer->peekNextToken();
+                done = false;
+                break;
+            }
+            default:
+                break;
+        }
     }
     while (peekToken && peekToken->isA(TokenTypeWhitespace))
     {
@@ -4961,9 +4988,21 @@ bool LILCodeParser::readIfFlowControl()
         this->readNextToken();
         LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
 
-        LIL_EXPECT(TokenTypeIdentifier, "identifier")
-        bool varNameValid = this->readVarName();
-        if (varNameValid) {
+        bool pathValid;
+        if (d->currentToken->isA(TokenTypeObjectSign)) {
+            pathValid = this->readObjectPath();
+        } else {
+            LIL_EXPECT(TokenTypeIdentifier, "identifier")
+            bool isVp = this->isValuePath();
+            pathValid = this->readVarName();
+            if (!pathValid) {
+                LIL_CANCEL_NODE
+            }
+            if (isVp) {
+                pathValid = this->readValuePath(true);
+            }
+        }
+        if (pathValid) {
             d->receiver->receiveNodeCommit();
         } else {
             LIL_CANCEL_NODE
