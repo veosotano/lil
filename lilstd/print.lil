@@ -2,7 +2,7 @@ fn printf (ptr(i8)...)=>i32 extern;
 fn puts (ptr(i8))=>i32 extern;
 #needs "string.lil";
 
-#export fn print(var.bool|i64|f64|ptr(i8)|@string value) {
+#export fn print(var.bool|i64|f64|ptr(i8)|@string|null value) {
 	if value => bool {
 		if value {
 			puts `true`;
@@ -21,5 +21,8 @@ fn puts (ptr(i8))=>i32 extern;
 	}
 	if value => @string {
 		puts value.cstr();
+	}
+	if value => null {
+		puts `null`;
 	}
 };
