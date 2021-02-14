@@ -4,4 +4,4 @@
 	
 	alias cstr => ptr(i8);
 	alias str => @string;
-}
+};

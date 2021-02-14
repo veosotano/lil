@@ -10,7 +10,7 @@ fn memcpy (var.ptr(i8) dst; var.ptr(i8) src; var.i64 len) extern;
 		//the idea here is to keep the string inside of one cache line
 		//which is usually 64 bytes. The i64 are 8 bytes, so 64 - 8 = 56
 		var.i8[56] buffer;
-	
+
 		fn construct {
 			//puts `Constructing string`;
 		};
