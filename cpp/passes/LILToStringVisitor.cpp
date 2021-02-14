@@ -515,10 +515,10 @@ LILToStrInfo LILToStringVisitor::_stringify(LILClassDecl * value)
     LILString templateStr = "";
     if (isTmpl) {
         ret.value = "Class template declaration: " + externStr;
-        ret.children.push_back(this->stringify(value->getType().get()));
     } else {
         ret.value = "Class declaration: " + externStr;
     }
+    ret.children.push_back(this->stringify(value->getType().get()));
 
     std::shared_ptr<LILNode> inheritTypeNode = value->getInheritType();
     if (inheritTypeNode) {
