@@ -494,7 +494,7 @@ void LILTypeValidator::_validate(std::shared_ptr<LILVarDecl> vd)
                     }
                 }
             }
-        } else if (ty->getIsNullable()) {
+        } else if (ty->getIsNullable() && !ivTy->getIsNullable()) {
             ty->setIsNullable(false);
             found = ty->equalTo(ivTy);
             ty->setIsNullable(true);
