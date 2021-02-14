@@ -1,7 +1,9 @@
 #export {
+	#needs "array.lil";
 	#needs "string.lil";
 	#needs "print.lil";
 	
+	alias arr => @array;
 	alias cstr => ptr(i8);
 	alias str => @string;
 };
