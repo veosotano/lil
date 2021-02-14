@@ -33,7 +33,7 @@ alias cstr => ptr(i8);
 			}
 		};
 
-		fn append(var.str otherStr) {
+		fn append(var.@string otherStr) {
 			//puts `Appending to string`;
 			var otherLength: otherStr.length;
 			var currentLength: @self.length;
