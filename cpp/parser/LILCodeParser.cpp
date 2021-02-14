@@ -1332,16 +1332,29 @@ bool LILCodeParser::readType()
             peekToken = d->lexer->peekNextToken();
             expectSquareBracketClose = true;
         }
-        if (peekToken && (peekToken->isA(TokenTypeIdentifier) || peekToken->isA(TokenTypeNumberInt))) {
+        if (
+            peekToken
+            && (
+                peekToken->isA(TokenTypeIdentifier)
+                || peekToken->isA(TokenTypeNumberInt)
+                || peekToken->isA(TokenTypeObjectSign)
+            )
+        ) {
             peekToken = d->lexer->peekNextToken();
         }
         if (expectSquareBracketClose) {
-            if (peekToken->isA(TokenTypeSquareBracketClose)) {
+            while (peekToken && !peekToken->isA(TokenTypeSquareBracketClose)) {
+                peekToken = d->lexer->peekNextToken();
+            }
+            if (peekToken && peekToken->isA(TokenTypeSquareBracketClose)) {
                 peekToken = d->lexer->peekNextToken();
             }
         }
         if (expectParenthesisClose) {
-            if (peekToken->isA(TokenTypeParenthesisClose)) {
+            while (peekToken && !peekToken->isA(TokenTypeParenthesisClose)) {
+                peekToken = d->lexer->peekNextToken();
+            }
+            if (peekToken && peekToken->isA(TokenTypeParenthesisClose)) {
                 peekToken = d->lexer->peekNextToken();
             }
         }
