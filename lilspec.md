@@ -15,9 +15,10 @@ floating point and the number is how many bits.
 	var.f32 bar: 12.45564;
 
 When you write a number literal without any decimals in the soure code, it could either be an integer or floating point. The compiler will try
-to determine what was meant and if it can't, it defaults to the smallest type that can fit that number. In this example it will default to `i8`:
+to determine what was meant and if it can't, it defaults to an integer number type which is large enough to hold most numbers. In this example the type will be `i64`:
 
-	var length: 37;
+	var length: 37; //defaults to i64
+	var weight: 1.5; //defaults to f64
 
 ### Percentages:
 
