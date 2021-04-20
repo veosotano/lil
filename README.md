@@ -51,9 +51,9 @@ Now let's add a hover state:
 		}
 	}
 
-Now we have a button we can interact with. But we would like to reuse this button style, so we put it into a variable:
+Now we have a button we can interact with. But we would like to reuse this button style, so we put it into a snippet:
 
-	var buttonStyle: @container {
+	#snippet buttonStyle {
 		width: 200;
 		height: 60;
 		font.color: #F;
@@ -68,19 +68,19 @@ Now we have a button we can interact with. But we would like to reuse this butto
 	@root {
 		padding: 10;
 
-		//apply the styles with the isA property
+		//apply the styles by pasting them
 		#new myButton {
-			isA: buttonStyle;
+			#paste buttonStyle;
 			content: "Press me";
 		}
 		//we can make another one 
 		#new myButton2 {
-			isA: buttonStyle;
+			#paste buttonStyle;
 			content: "No thank you";
 		}
 	}
 
-But a button would be not be a real button if it doesn't do anything. Let's change that:
+But a button would be not be a real button if was not doing anything. Let's change that:
 
 	fn button1Pressed {
 		//just put some text into the terminal output
@@ -89,7 +89,7 @@ But a button would be not be a real button if it doesn't do anything. Let's chan
 	fn aPress(var.i64 number) {
 		print "Pressed button %number";
 	};
-	var buttonStyle: @container {
+	#snippet buttonStyle {
 		width: 200;
 		height: 60;
 		font.color: #F;
@@ -103,17 +103,17 @@ But a button would be not be a real button if it doesn't do anything. Let's chan
 	@root {
 		padding: 10;
 
-		//apply the styles with the isA property
+		//apply the styles by pasting them
 		#new myButton {
-			isA: buttonStyle;
+			#paste buttonStyle;
 			content: "Press me";
-			on.click: button1Pressed();
+			on.click: button1Pressed(); //implicitly wrapped in a fn {}
 		}
 		//we can make another one 
 		#new myButton2 {
-			isA: buttonStyle;
+			#paste buttonStyle;
 			content: "No thank you";
-			on.click: aPress(2);
+			on.click: aPress(2); //implicitly wrapped in a fn {}
 		}
 	}
 
