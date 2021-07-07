@@ -1364,7 +1364,7 @@ llvm::Value * LILIREmitter::_emit(LILValuePath * value)
                     }
                     auto fnTy = std::static_pointer_cast<LILFunctionType>(ty);
                     if (targetFn) {
-                        llvmSubject = this->_emitFunctionCall(fc.get(), targetFn->getName(), fnTy.get(), llvmSubject);
+                        llvmSubject = this->_emitFunctionCall(fc.get(), targetFn->getName(), targetFn->getFnType().get(), llvmSubject);
                     } else {
                         auto fnTyWithoutSelf = fnTy->clone();
                         fnTyWithoutSelf->removeFirstArgument();
