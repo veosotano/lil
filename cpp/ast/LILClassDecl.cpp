@@ -37,6 +37,7 @@ LILClassDecl::LILClassDecl(const LILClassDecl &other)
 , _methods(other._methods)
 , _aliases(other._aliases)
 , _docs(other._docs)
+, _tmplParams(other._tmplParams)
 {
 }
 
@@ -76,6 +77,11 @@ std::shared_ptr<LILClonable> LILClassDecl::cloneImpl() const
     clone->_docs.clear();
     for (auto doc : this->_docs) {
         clone->addDoc(doc->clone());
+    }
+    
+    clone->_tmplParams.clear();
+    for (auto tmplParam : this->_tmplParams) {
+        clone->addTmplParam(tmplParam->clone());
     }
     return clone;
 }
@@ -203,9 +209,26 @@ const std::vector<std::shared_ptr<LILDocumentation>> & LILClassDecl::getDocs() c
 
 bool LILClassDecl::isTemplate() const
 {
-    const auto & ty = this->getType();
-    if (ty && ty->getParamTypes().size() > 0) {
-        return true;
-    }
-    return false;
+    return this->_tmplParams.size() > 0;
+}
+
+const std::vector<std::shared_ptr<LILNode>> & LILClassDecl::getTmplParams() const
+{
+    return this->_tmplParams;
+}
+
+void LILClassDecl::addTmplParam(std::shared_ptr<LILNode> value)
+{
+    value->setParentNode(this->shared_from_this());
+    this->_tmplParams.push_back(value);
+}
+
+void LILClassDecl::setTmplParams(const std::vector<std::shared_ptr<LILNode>> && values)
+{
+    this->_tmplParams = std::move(values);
+}
+
+void LILClassDecl::clearTmplParams()
+{
+    this->_tmplParams.clear();
 }

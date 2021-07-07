@@ -59,7 +59,12 @@ namespace LIL
         const std::vector<std::shared_ptr<LILDocumentation>> & getDocs() const;
         
         bool isTemplate() const;
-        
+
+        const std::vector<std::shared_ptr<LILNode>> & getTmplParams() const;
+        void addTmplParam(std::shared_ptr<LILNode> value);
+        void setTmplParams(const std::vector<std::shared_ptr<LILNode>> && values);
+        void clearTmplParams();
+
     protected:
         virtual std::shared_ptr<LILClonable> cloneImpl() const;
         
@@ -72,6 +77,7 @@ namespace LIL
         std::vector<std::shared_ptr<LILNode>> _methods;
         std::vector<std::shared_ptr<LILAliasDecl>> _aliases;
         std::vector<std::shared_ptr<LILDocumentation>> _docs;
+        std::vector<std::shared_ptr<LILNode>> _tmplParams;
     };
 }
 
