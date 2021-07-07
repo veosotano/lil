@@ -1503,6 +1503,30 @@ llvm::Value * LILIREmitter::_emit(LILValuePath * value)
                             }
                             break;
                         }
+                        case TypeTypeObject:
+                        {
+                            const auto & className = currentTy->getName();
+                            const auto & cd = this->findClassWithName(className);
+                            auto method = cd->getMethodNamed("at");
+                            if (!method) {
+                                std::cerr << "CLASS " + className.data() + " HAD NOT at METHOD FAIL!!!!\n\n";
+                                return nullptr;
+                            }
+                            auto vd = std::static_pointer_cast<LILVarDecl>(method);
+                            auto methodVal = vd->getInitVal();
+                            if (!methodVal || !methodVal->isA(NodeTypeFunctionDecl)) {
+                                std::cerr << "BAD METHOD FAIL!!!!!!!\n\n";
+                                return nullptr;
+                            }
+                            auto fd = std::static_pointer_cast<LILFunctionDecl>(methodVal);
+                            auto fc = std::make_shared<LILFunctionCall>();
+                            fc->setFunctionCallType(FunctionCallTypeValuePath);
+                            fc->setName(fd->getName());
+                            fc->addArgument(ia->getArgument());
+                            fc->setParentNode(value->shared_from_this());
+                            llvmSubject = this->_emitFunctionCall(fc.get(), fd->getName(), fd->getFnType().get(), llvmSubject);
+                            break;
+                        }
                         default:
                             std::cerr << "!!!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!\n";
                             return nullptr;
