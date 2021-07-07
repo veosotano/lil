@@ -35,6 +35,7 @@
 #include "LILNullLiteral.h"
 #include "LILNumberLiteral.h"
 #include "LILObjectDefinition.h"
+#include "LILObjectType.h"
 #include "LILPercentageLiteral.h"
 #include "LILPointerType.h"
 #include "LILPropertyName.h"
@@ -307,7 +308,8 @@ LILString LILNodeToString::stringify(LILNode * node)
                     } else {
                         ret = value->getName();
                     }
-                    auto paramTypes = value->getParamTypes();
+                    auto objTy = static_cast<LILObjectType *>(value);
+                    auto paramTypes = objTy->getTmplParams();
                     if (paramTypes.size() > 0) {
                         ret += "(";
                         for (size_t i = 0, j = paramTypes.size(); i<j; i+=1) {
@@ -327,16 +329,6 @@ LILString LILNodeToString::stringify(LILNode * node)
                 case TypeTypeSingle:
                 {
                     LILString ret = value->getName();
-                    auto paramTypes = value->getParamTypes();
-                    if (paramTypes.size() > 0) {
-                        for (size_t i = 0, j = paramTypes.size(); i<j; i+=1) {
-                            auto paramTy = paramTypes.at(i);
-                            ret += LILNodeToString::stringify(paramTy.get());
-                            if (i<j-1) {
-                                ret += ",";
-                            }
-                        }
-                    }
                     if (value->getIsNullable()) {
                         ret += "|null";
                     }
