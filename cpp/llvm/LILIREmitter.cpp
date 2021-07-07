@@ -753,6 +753,9 @@ llvm::Value * LILIREmitter::_emit(LILVarDecl * value)
                 llvmValue = this->emit(initVal.get());
             }
             if (llvmValue) {
+                if (this->_isAnyPtrTy(ty) || this->_isAnyPtrTy(initVal->getType())) {
+                    llvmValue = d->irBuilder.CreatePointerCast(llvmValue, this->llvmTypeFromLILType(ty.get()));
+                }
                 if (
                     !ty->isA(TypeTypePointer)
                     && initVal->getType()->isA(TypeTypePointer)
@@ -765,6 +768,19 @@ llvm::Value * LILIREmitter::_emit(LILVarDecl * value)
         d->currentAlloca = nullptr;
     }
     return nullptr;
+}
+
+bool LILIREmitter::_isAnyPtrTy(std::shared_ptr<LILType> ty)
+{
+    if (!ty->isA(TypeTypePointer)) {
+        return false;
+    }
+    auto ptrTy = std::static_pointer_cast<LILPointerType>(ty);
+    auto arg = ptrTy->getArgument();
+    if (!arg) {
+        return false;
+    }
+    return arg->getName() == "any";
 }
 
 llvm::Value * LILIREmitter::_emit(LILConversionDecl * value)
@@ -950,6 +966,10 @@ llvm::Value * LILIREmitter::_emit(LILAssignment * value)
             }
 
             if (llvmValue) {
+                if (this->_isAnyPtrTy(ty) || this->_isAnyPtrTy(theValue->getType())) {
+                    llvmValue = d->irBuilder.CreatePointerCast(llvmValue, this->llvmTypeFromLILType(ty.get()));
+                }
+                
                 if (
                     ty->isA(TypeTypePointer)
                     && llvmValue->getType()->getTypeID() != llvm::Type::PointerTyID
