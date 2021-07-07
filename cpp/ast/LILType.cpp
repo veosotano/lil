@@ -263,6 +263,7 @@ bool LILType::equalTo(std::shared_ptr<LILNode> otherNode)
     if ( this->_strongTypeName != castedNode->_strongTypeName ) return false;
     if ( this->_typeType != castedNode->_typeType ) return false;
     if ( this->_isNullable != castedNode->_isNullable )  return false;
+    if ( this->_tmplParams.size() != castedNode->_tmplParams.size() ) return false;
     return true;
 }
 
