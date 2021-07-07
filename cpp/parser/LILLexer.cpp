@@ -1029,7 +1029,7 @@ std::shared_ptr<LILToken> LILLexer::readEqualSignOrFatArrow()
         this->readNextChar();
         return ret;
     } else {
-        std::shared_ptr<LILToken> ret = std::make_shared<LILToken>(TokenTypeEqualSign, d->currentChar, d->currentLine, d->currentColumn - 1, d->index);
+        std::shared_ptr<LILToken> ret = std::make_shared<LILToken>(TokenTypeEqualSign, cc, d->currentLine, d->currentColumn - 1, d->index);
         //do not read next char here, since it was already read
         return ret;
     }
