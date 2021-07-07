@@ -44,3 +44,8 @@ LILSimpleSelector::~LILSimpleSelector()
 {
     
 }
+
+const std::vector<std::shared_ptr<LILNode>> & LILSimpleSelector::getNodes() const
+{
+    return this->getChildNodes();
+}
