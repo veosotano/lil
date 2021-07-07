@@ -711,8 +711,11 @@ llvm::Value * LILIREmitter::_emit(LILVarDecl * value)
         if (ty->isA(TypeTypeFunction)) {
             return this->_emitFnSignature(name, static_cast<LILFunctionType *>(ty.get()));
         } else {
-            std::cerr << "!!!!!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!\n";
-            return nullptr;
+            d->llvmModule->getOrInsertGlobal(name, this->llvmTypeFromLILType(ty.get()));
+            auto globalVar = d->llvmModule->getNamedGlobal(name);
+            globalVar->setLinkage(llvm::GlobalValue::ExternalLinkage);
+            d->namedValues[name] = globalVar;
+            return globalVar;
         }
     } else {
         if (value->getIsConst()) {
