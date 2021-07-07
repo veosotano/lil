@@ -24,6 +24,7 @@ LILDocumentation::LILDocumentation()
 
 LILDocumentation::LILDocumentation(const LILDocumentation &other)
 : LILNode(other)
+, content(other.content)
 {
 }
 
