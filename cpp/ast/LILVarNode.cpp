@@ -46,6 +46,11 @@ std::shared_ptr<LILNode> LILVarNode::getLocalVariable(LILString name)
     return nullptr;
 }
 
+const std::map<LILString, std::shared_ptr<LILNode>> & LILVarNode::getLocalVariables()
+{
+    return this->_localVars;
+}
+
 void LILVarNode::setLocalVariable(LILString name, std::shared_ptr<LILNode> value)
 {
     this->_localVars[name] = value;
