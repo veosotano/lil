@@ -94,6 +94,8 @@ LILLexer::LILLexer()
 : d(new LILLexerPrivate)
 {
     this->reset();
+    d->sourceString = "";
+    d->bufferLength = 0;
 }
 
 LILLexer::~LILLexer()
@@ -107,13 +109,10 @@ LILLexer::~LILLexer()
  */
 void LILLexer::reset()
 {
-    d->sourceString = "";
-
     d->currentChar = '\0';
     d->currentTokenText = LILString();
 
     d->index = 0;
-    d->bufferLength = 0;
 
     d->currentLine = 1;
     d->currentColumn = 1;
@@ -130,12 +129,13 @@ void LILLexer::reset()
 
 void LILLexer::setString(const LILString & theString)
 {
+    this->reset();
     d->sourceString = theString;
-    d->index = 0;
     d->bufferLength = theString.length();
-    std::string::const_iterator beginIt = theString.begin();
+
+    std::string::const_iterator beginIt = d->sourceString.begin();
     d->bufferBegin = d->iterator = beginIt;
-    d->bufferEnd = theString.end();
+    d->bufferEnd = d->sourceString.end();
 }
 
 bool LILLexer::isHexPreferred() const
