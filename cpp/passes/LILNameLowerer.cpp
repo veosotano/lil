@@ -223,6 +223,12 @@ void LILNameLowerer::process(LILNode * node)
             this->_process(value);
             break;
         }
+        case NodeTypeDocumentation:
+        {
+            LILDocumentation * value = static_cast<LILDocumentation *>(node);
+            this->_process(value);
+            break;
+        }
         case NodeTypeIndexAccessor:
         {
             LILIndexAccessor * value = static_cast<LILIndexAccessor *>(node);
@@ -466,6 +472,10 @@ void LILNameLowerer::_process(LILInstruction * value)
 void LILNameLowerer::_process(LILValueList * value)
 {
     this->processChildren(value->getValues());
+}
+
+void LILNameLowerer::_process(LILDocumentation * value)
+{
 }
 
 void LILNameLowerer::_process(LILIndexAccessor * value)

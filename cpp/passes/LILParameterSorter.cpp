@@ -226,6 +226,12 @@ void LILParameterSorter::process(LILNode * node)
             this->_process(value);
             break;
         }
+        case NodeTypeDocumentation:
+        {
+            LILDocumentation * value = static_cast<LILDocumentation *>(node);
+            this->_process(value);
+            break;
+        }
         case NodeTypeIndexAccessor:
         {
             LILIndexAccessor * value = static_cast<LILIndexAccessor *>(node);
@@ -555,6 +561,10 @@ void LILParameterSorter::_process(LILInstruction * value)
 void LILParameterSorter::_process(LILValueList * value)
 {
     this->processChildren(value->getValues());
+}
+
+void LILParameterSorter::_process(LILDocumentation * value)
+{
 }
 
 void LILParameterSorter::_process(LILIndexAccessor * value)

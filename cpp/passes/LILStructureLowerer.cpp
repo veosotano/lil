@@ -252,6 +252,11 @@ void LILStructureLowerer::process(std::shared_ptr<LILNode> node)
             std::shared_ptr<LILValueList> value = std::static_pointer_cast<LILValueList>(node);
             return this->_process(value);
         }
+        case NodeTypeDocumentation:
+        {
+            std::shared_ptr<LILDocumentation> value = std::static_pointer_cast<LILDocumentation>(node);
+            return this->_process(value);
+        }
         case NodeTypeIndexAccessor:
         {
             std::shared_ptr<LILIndexAccessor> value = std::static_pointer_cast<LILIndexAccessor>(node);
@@ -569,6 +574,9 @@ void LILStructureLowerer::_process(std::shared_ptr<LILValueList> value)
     this->processChildren(value->getValues());
 }
 
+void LILStructureLowerer::_process(std::shared_ptr<LILDocumentation> value)
+{
+}
 
 void LILStructureLowerer::_process(std::shared_ptr<LILIndexAccessor> value)
 {

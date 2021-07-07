@@ -345,6 +345,7 @@ void LILTypeGuesser::process(LILNode * node)
         case NodeTypeAliasDecl:
         case NodeTypeTypeDecl:
         case NodeTypeConversionDecl:
+        case NodeTypeDocumentation:
         {
             //do nothing
             break;

@@ -20,6 +20,7 @@
 #include "LILClassDecl.h"
 #include "LILConversionDecl.h"
 #include "LILExpression.h"
+#include "LILDocumentation.h"
 #include "LILFlowControl.h"
 #include "LILFlowControlCall.h"
 #include "LILFunctionCall.h"

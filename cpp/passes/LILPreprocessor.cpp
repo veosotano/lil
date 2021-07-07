@@ -827,6 +827,12 @@ void LILPreprocessor::_importNodeIfNeeded(std::vector<std::shared_ptr<LILNode>> 
             newNodes->push_back(newFd);
             break;
         }
+            
+        case NodeTypeDocumentation:
+        {
+            //ignore
+            break;
+        }
 
         default:
             std::cerr << "UNIMPLEMENTED FAIL !!!!!! \n\n";

@@ -205,6 +205,12 @@ void LILFieldSorter::process(LILNode * node)
             this->_process(value);
             break;
         }
+        case NodeTypeDocumentation:
+        {
+            LILDocumentation * value = static_cast<LILDocumentation *>(node);
+            this->_process(value);
+            break;
+        }
         case NodeTypeType:
         {
             break;
@@ -340,6 +346,10 @@ void LILFieldSorter::_process(LILFlowControlCall * value)
 }
 
 void LILFieldSorter::_process(LILInstruction * value)
+{
+}
+
+void LILFieldSorter::_process(LILDocumentation * value)
 {
 }
 

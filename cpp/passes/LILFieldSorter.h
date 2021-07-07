@@ -23,6 +23,7 @@
 #include "LILClassDecl.h"
 #include "LILCombinator.h"
 #include "LILExpression.h"
+#include "LILDocumentation.h"
 #include "LILFilter.h"
 #include "LILFlag.h"
 #include "LILFlowControl.h"
@@ -87,6 +88,7 @@ namespace LIL
         void _process(LILFlowControl * value);
         void _process(LILFlowControlCall * value);
         void _process(LILInstruction * value);
+        void _process(LILDocumentation * value);
         inline void processChildren(const std::vector<std::shared_ptr<LILNode>> & children);
     };
 }
