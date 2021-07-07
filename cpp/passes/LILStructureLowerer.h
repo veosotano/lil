@@ -102,7 +102,7 @@ namespace LIL
     private:
         std::vector<std::vector<std::shared_ptr<LILNode>>> _nodeBuffer;
 
-        std::vector<std::shared_ptr<LILNode>> reduceIfCastBlocks(std::shared_ptr<LILNode> node, LILString argName, LILString tyName);
+        std::vector<std::shared_ptr<LILNode>> reduceIfCastBlocks(std::shared_ptr<LILNode> node, LILString argName, std::shared_ptr<LILType> ty);
     };
 }
 
