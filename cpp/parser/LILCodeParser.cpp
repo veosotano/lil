@@ -473,7 +473,7 @@ bool LILCodeParser::isExpression() const
             }
             break;
         }
-        case TokenTypeEqualComparator:
+        case TokenTypeEqualSign:
         case TokenTypeBiggerComparator:
         case TokenTypeSmallerComparator:
         case TokenTypeBiggerOrEqualComparator:
@@ -1181,7 +1181,6 @@ bool LILCodeParser::isPunctuation(std::shared_ptr<LILToken> token) const
         case TokenTypeEqualSign:
         case TokenTypePercentSign:
         case TokenTypeVerticalBar:
-        case TokenTypeEqualComparator:
         case TokenTypeBiggerComparator:
         case TokenTypeSmallerComparator:
         case TokenTypeSquareBracketOpen:

@@ -92,7 +92,6 @@ LILString LILToken::tokenStringRepresentation(TokenType type)
         types[TokenTypeDot] = "TokenTypeDot";
         types[TokenTypeDoubleDot] = "TokenTypeDoubleDot";
         types[TokenTypeEqualSign] = "TokenTypeEqualSign";
-        types[TokenTypeEqualComparator] = "TokenTypeEqualComparator";
         types[TokenTypeBiggerComparator] = "TokenTypeBiggerComparator";
         types[TokenTypeBiggerOrEqualComparator] = "TokenTypeBiggerOrEqualComparator";
         types[TokenTypeSmallerComparator] = "TokenTypeSmallerComparator";

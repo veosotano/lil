@@ -48,7 +48,6 @@ namespace LIL
         TokenTypeDoubleDot,
         TokenTypeEllipsis,
         TokenTypeEqualSign,
-        TokenTypeEqualComparator,
         TokenTypeBiggerComparator,
         TokenTypeBiggerOrEqualComparator,
         TokenTypeSmallerComparator,
