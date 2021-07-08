@@ -2748,6 +2748,7 @@ llvm::Value * LILIREmitter::_emitLoop(LILFlowControl * value)
     boolVal->setValue(false);
     auto boolTy = std::make_shared<LILType>();
     boolTy->setName("bool");
+    boolVal->setType(boolTy);
     condVd->setType(boolTy);
     condVd->setInitVal(boolVal);
     this->emit(condVd.get());
@@ -2756,6 +2757,8 @@ llvm::Value * LILIREmitter::_emitLoop(LILFlowControl * value)
     
     auto exp = std::make_shared<LILExpression>();
     exp->setExpressionType(ExpressionTypeEqualComparison);
+    exp->setParentNode(value->shared_from_this());
+    exp->setType(boolTy);
     auto leftVn = std::make_shared<LILVarName>();
     leftVn->setName(condName);
     exp->setLeft(leftVn);
