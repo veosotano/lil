@@ -1838,7 +1838,34 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(std::shared_ptr<LI
                 }
                 case NodeTypeIndexAccessor:
                 {
-                    if (!currentTy->isA(TypeTypeStaticArray)) {
+                    if (currentTy->isA(TypeTypeObject)) {
+                        const auto & className = currentTy->getName();
+                        auto cd = this->findClassWithName(className);
+                        if (!cd) {
+                            std::cerr << "CLASS " + className.data() + " NOT FOUND FAIL!!!!\n";
+                            return nullptr;
+                        }
+                        auto method = cd->getMethodNamed("at");
+                        if (!method) {
+                            std::cerr << "CLASS " + className.data() + " HAD NOT at METHOD FAIL!!!!\n";
+                            return nullptr;
+                        }
+                        auto methodTy = method->getType();
+                        if (!methodTy || !methodTy->isA(TypeTypeFunction)) {
+                            std::cerr << "BAD AT METHOD FAIL!!!!\n";
+                            return nullptr;
+                        }
+                        auto mFnTy = std::static_pointer_cast<LILFunctionType>(methodTy);
+                        auto retTy = mFnTy->getReturnType();
+                        if (!retTy) {
+                            std::cerr << "FN TYPE HAD NO RETURN TY FAIL!!!!\n";
+                            return nullptr;
+                        }
+                        currentTy = retTy;
+                        break;
+                    }
+                    else if (!currentTy->isA(TypeTypeStaticArray))
+                    {
                         std::cerr << "FIELD TYPE IS NOT ARRAY TYPE FAIL!!!!\n";
                         return nullptr;
                     }
