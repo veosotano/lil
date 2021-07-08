@@ -117,7 +117,6 @@ LILCodeParser::~LILCodeParser()
 
 void LILCodeParser::parseString(const LILString & theString)
 {
-    //needs reset on next load
     d->lexer->setString(theString);
     d->lexer->readNextChar();
 
