@@ -2133,7 +2133,7 @@ llvm::Value * LILIREmitter::_emit(LILFunctionCall * value)
 
 }
 
-llvm::Value * LILIREmitter::_emitFunctionCall(LILFunctionCall * value, LILString name, LILFunctionType * fnTy, llvm::Value * instance)
+llvm::Value * LILIREmitter::_emitFunctionCall(LILFunctionCall * value, LILString name, LILFunctionType * fnTy, llvm::Value * instance, bool useProvidedArg, llvm::Value * providedArg, size_t providedIndex)
 {
     bool isMethod = instance != nullptr;
     llvm::Function* fun = d->llvmModule->getFunction(name.data());
@@ -2159,6 +2159,12 @@ llvm::Value * LILIREmitter::_emitFunctionCall(LILFunctionCall * value, LILString
             size_t declIndex = i;
             if (isMethod) {
                 declIndex += 1;
+            }
+            if (useProvidedArg && declIndex == providedIndex) {
+                if (providedArg != nullptr) {
+                    argsvect.push_back(providedArg);
+                }
+                continue;
             }
             std::shared_ptr<LILNode> fcArg;
             if (fcArgsSize <= i) {

@@ -119,7 +119,7 @@ namespace LIL
         llvm::Value * _emitEvaluables(const std::vector<std::shared_ptr<LILNode>> & nodes);
         llvm::Value * _emit(LILFunctionCall * value);
         llvm::Value * _emitFCMultipleValues(std::vector<std::shared_ptr<LILFunctionDecl>> funcDecls, LILFunctionCall * value);
-        llvm::Value * _emitFunctionCall(LILFunctionCall * value, LILString name, LILFunctionType * fnTy, llvm::Value * instance);
+        llvm::Value * _emitFunctionCall(LILFunctionCall * value, LILString name, LILFunctionType * fnTy, llvm::Value * instance, bool useProvidedArg = false, llvm::Value * providedArg = nullptr, size_t providedIndex = 0);
         llvm::Value * _emitFCArg(LILNode * value, LILType * ty);
         llvm::Value * _emitFunctionCallMT(LILFunctionCall * value, LILString name, std::vector<std::shared_ptr<LILType>> types, LILFunctionType * fnTy, llvm::Value * instance);
         llvm::Value * _emit(LILFlowControl * value);
