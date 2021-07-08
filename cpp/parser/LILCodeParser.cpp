@@ -1058,6 +1058,7 @@ bool LILCodeParser::isBuiltinFunctionCall() const
         || value == "valueOf"
         || value == "set"
         || value == "sizeOf"
+        || value == "exit"
         )
     {
         return true;
