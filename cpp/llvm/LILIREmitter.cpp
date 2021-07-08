@@ -3335,7 +3335,7 @@ llvm::Type * LILIREmitter::llvmTypeFromLILType(LILType * type)
         } else {
             return llvm::Type::getInt1Ty(d->llvmContext);
         }
-    } else if (typestr == "i8" || typestr == "i8%"){
+    } else if (typestr == "any" || typestr == "i8" || typestr == "i8%"){
         ret = llvm::Type::getInt8Ty(d->llvmContext);
     } else if (typestr == "i16" || typestr == "i16%"){
         ret = llvm::Type::getInt16Ty(d->llvmContext);
