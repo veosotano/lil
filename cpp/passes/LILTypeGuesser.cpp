@@ -1801,6 +1801,10 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(std::shared_ptr<LI
                 case NodeTypeFunctionCall:
                 {
                     auto fc = std::static_pointer_cast<LILFunctionCall>(node);
+                    if (currentTy->isA(TypeTypePointer)) {
+                        auto ptrTy = std::static_pointer_cast<LILPointerType>(currentTy);
+                        currentTy = ptrTy->getArgument();
+                    }
                     auto className = currentTy->getName().data();
                     auto classDecl = this->findClassWithName(className);
                     if (!classDecl) {
