@@ -2406,7 +2406,7 @@ bool LILCodeParser::readBasicValue(NodeType &nodeType)
             }
             else
             {
-                d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+                LILString sign = d->currentToken->getString();
                 this->readNextToken();
                 if (atEndOfSource())
                 {
@@ -2416,7 +2416,7 @@ bool LILCodeParser::readBasicValue(NodeType &nodeType)
                 if (d->currentToken->isA(TokenTypeNumberInt))
                 {
                     LIL_START_NODE(NodeTypeNumberLiteral)
-                    d->receiver->receiveNodeData(ParserEventNumberLiteral, d->currentToken->getString());
+                    d->receiver->receiveNodeData(ParserEventNumberLiteral, sign + d->currentToken->getString());
                     this->readNextToken();
                     d->receiver->receiveNodeData(ParserEventNumberInt, "");
                     nodeType = __nodeType;
@@ -2425,7 +2425,7 @@ bool LILCodeParser::readBasicValue(NodeType &nodeType)
                 else if (d->currentToken->isA(TokenTypeNumberFP))
                 {
                     LIL_START_NODE(NodeTypeNumberLiteral)
-                    d->receiver->receiveNodeData(ParserEventNumberLiteral, d->currentToken->getString());
+                    d->receiver->receiveNodeData(ParserEventNumberLiteral, sign + d->currentToken->getString());
                     this->readNextToken();
                     d->receiver->receiveNodeData(ParserEventNumberFP, "");
                     nodeType = __nodeType;
@@ -2434,7 +2434,7 @@ bool LILCodeParser::readBasicValue(NodeType &nodeType)
                 else if (d->currentToken->isA(TokenTypePercentageNumberInt))
                 {
                     LIL_START_NODE(NodeTypePercentage)
-                    d->receiver->receiveNodeData(ParserEventPercentageLiteral, d->currentToken->getString());
+                    d->receiver->receiveNodeData(ParserEventPercentageLiteral, sign + d->currentToken->getString());
                     this->readNextToken();
                     d->receiver->receiveNodeData(ParserEventNumberInt, "");
                     nodeType = __nodeType;
@@ -2443,7 +2443,7 @@ bool LILCodeParser::readBasicValue(NodeType &nodeType)
                 else if (d->currentToken->isA(TokenTypePercentageNumberFP))
                 {
                     LIL_START_NODE(NodeTypePercentage)
-                    d->receiver->receiveNodeData(ParserEventPercentageLiteral, d->currentToken->getString());
+                    d->receiver->receiveNodeData(ParserEventPercentageLiteral, sign + d->currentToken->getString());
                     this->readNextToken();
                     d->receiver->receiveNodeData(ParserEventNumberFP, "");
                     nodeType = __nodeType;
