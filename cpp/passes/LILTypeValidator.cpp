@@ -284,6 +284,11 @@ void LILTypeValidator::_validate(std::shared_ptr<LILFunctionCall> fc)
                         }
                         found = allFound;
                     } else {
+                        bool wasNullable = false;
+                        if (fcArgTy->getIsNullable() && mtTy->getIsNullable()) {
+                            wasNullable = true;
+                            fcArgTy->setIsNullable(false);
+                        }
                         for (auto mtArgTy : mtTy->getTypes()) {
                             if (mtArgTy->equalTo(fcArgTy) || this->_isDefinitionOf(fcArgTy, mtArgTy)) {
                                 i += 1;
@@ -299,6 +304,9 @@ void LILTypeValidator::_validate(std::shared_ptr<LILFunctionCall> fc)
                                     break;
                                 }
                             }
+                        }
+                        if (wasNullable) {
+                            fcArgTy->setIsNullable(true);
                         }
                     }
                     if (found) {
