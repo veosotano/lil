@@ -42,6 +42,7 @@ LILRootNode::LILRootNode(const LILRootNode & other)
 , _constants(other._constants)
 , _snippets(other._snippets)
 , _initializers(other._initializers)
+, _config(other._config)
 {
 
 }
@@ -159,7 +160,6 @@ void LILRootNode::add(std::shared_ptr<LILNode> node, bool addToNodeTree)
                 case InstructionTypeGrayscale1:
                 case InstructionTypeGrayscale2:
                 case InstructionTypeDelete:
-                case InstructionTypeConfigure:
                 case InstructionTypeSnippet:
                     //do nothing
                     break;
@@ -172,6 +172,11 @@ void LILRootNode::add(std::shared_ptr<LILNode> node, bool addToNodeTree)
                     if (addToNodeTree) {
                         this->addNode(instr);
                     }
+                    break;
+                }
+                case InstructionTypeConfigure:
+                {
+                    this->addConfigureInstr(instr);
                     break;
                 }
                 case InstructionTypeExport:
@@ -339,4 +344,43 @@ void LILRootNode::addDoc(std::shared_ptr<LILDocumentation> value)
 const std::vector<std::shared_ptr<LILDocumentation>> & LILRootNode::getDocs() const
 {
     return this->_docs;
+}
+void LILRootNode::addConfigureInstr(const std::shared_ptr<LILInstruction> & instr)
+{
+    auto arg = instr->getArgument();
+    if (arg)
+    {
+        this->_config["configureFile"] = arg;
+    }
+    else
+    {
+        for (auto node : instr->getChildNodes()) {
+            switch (node->getNodeType()) {
+                case NodeTypeAssignment:
+                {
+                    auto as = std::static_pointer_cast<LILAssignment>(node);
+                    const auto & subj = as->getSubject();
+                    const auto & value = as->getValue();
+                    LILString name;
+                    if (subj->getNodeType() == NodeTypeVarName) {
+                        auto vn = std::static_pointer_cast<LILVarName>(subj);
+                        name = vn->getName();
+                    }
+                    if (name.length() > 0) {
+                        this->_config[name] = value;
+                    }
+                    break;
+                }
+                    
+                case NodeTypeRule:
+                {
+                    break;
+                }
+                    
+                default:
+                    std::cerr << "UNEXPECTED NODE TYPE IN CONFIGURE INSTRUCTION FAIL !!!!!!!\n\n";
+                    break;
+            }
+        }
+    }
 }

@@ -119,6 +119,7 @@ void LILPreprocessor::processImportingInstr(const std::shared_ptr<LILRootNode> &
                 }
                 
                 std::unique_ptr<LILCodeUnit> codeUnit = std::make_unique<LILCodeUnit>();
+                codeUnit->setNeedsConfigureDefaults(false);
                 codeUnit->setNeedsStdLil(false);
                 if (isNeeds) {
                     codeUnit->setIsBeingImportedWithNeeds(true);

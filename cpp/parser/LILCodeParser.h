@@ -111,6 +111,7 @@ namespace LIL
         bool readSnippetInstr();
         bool readPasteInstr();
         bool readNewInstr();
+        bool readConfigureInstr();
         bool readBugInstr();
         bool readInstructionRule();
         bool readValuePath(bool allowFunctionCall);

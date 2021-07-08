@@ -820,6 +820,11 @@ void LILASTBuilder::receiveNodeCommit()
                     instr->addNode(this->currentNode);
                     break;
                 }
+                case InstructionTypeConfigure:
+                {
+                    instr->addNode(this->currentNode);
+                    break;
+                }
                 default:
                     std::cerr << "UNIMPLEMENTED FAIL !!!! \n\n";
                     break;

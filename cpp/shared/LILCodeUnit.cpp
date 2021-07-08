@@ -62,6 +62,7 @@ namespace LIL
         , debugParameterSorter(false)
         , debugTypeValidator(false)
         , debugConversionInserter(false)
+        , needsConfigureDefaults(true)
         , needsStdLil(true)
         , isBeingImportedWithNeeds(false)
         , isBeingImportedWithImport(false)
@@ -94,6 +95,7 @@ namespace LIL
         bool debugParameterSorter;
         bool debugTypeValidator;
         bool debugConversionInserter;
+        bool needsConfigureDefaults;
         bool needsStdLil;
         bool isBeingImportedWithNeeds;
         bool isBeingImportedWithImport;
@@ -145,6 +147,16 @@ void LILCodeUnit::setSource(LILString source)
 LILString LILCodeUnit::getSource() const
 {
     return d->source;
+}
+
+void LILCodeUnit::setNeedsConfigureDefaults(bool value)
+{
+    d->needsConfigureDefaults = value;
+}
+
+bool LILCodeUnit::getNeedsConfigureDefaults() const
+{
+    return d->needsConfigureDefaults;
 }
 
 void LILCodeUnit::setNeedsStdLil(bool value)
@@ -202,6 +214,26 @@ void LILCodeUnit::run()
 void LILCodeUnit::buildAST()
 {
     auto rootNode = this->getRootNode();
+    if (d->needsConfigureDefaults) {
+        if (d->verbose) {
+            std::cerr << "============================\n";
+            std::cerr << "==== CONFIGURE DEFAULTS ====\n";
+            std::cerr << "============================\n\n";
+        }
+        LILString path = this->getDir()+"/configure_defaults.lil";
+        std::ifstream file(path.data(), std::ios::in);
+        if (file.fail()) {
+            std::cerr << "\nERROR: Failed to read the file "+path.data()+"\n\n";
+        } else {
+            std::stringstream buffer;
+            buffer << file.rdbuf();
+            const LILString & lilStr(buffer.str());
+            d->parser->parseString(lilStr);
+        }
+        if (d->verbose) {
+            std::cerr << "\n\n";
+        }
+    }
     if (d->needsStdLil) {
         auto needsInstr = std::make_shared<LILInstruction>();
         LILNode::SourceLocation loc;
@@ -220,7 +252,40 @@ void LILCodeUnit::buildAST()
         }
     }
 
+    if (d->verbose) {
+        std::cerr << "============================\n";
+        std::cerr << "===== PARSE MAIN FILE ======\n";
+        std::cerr << "============================\n\n";
+    }
     d->parser->parseString(d->source);
+
+    LILString configFileKey = "configureFile";
+    if (rootNode->_config.count(configFileKey)) {
+        if (d->verbose) {
+            std::cerr << "============================\n";
+            std::cerr << "====== CONFIGURE FILE ======\n";
+            std::cerr << "============================\n\n";
+        }
+        auto configFileNode = rootNode->_config[configFileKey];
+        if (configFileNode->getNodeType() != NodeTypeStringLiteral) {
+            std::cerr << "\nERROR: Argument to configure instruction must be a string literal\n\n";
+        } else {
+            const auto & configFile = std::static_pointer_cast<LILStringLiteral>(configFileNode)->getValue().stripQuotes();
+            LILString path = this->getDir()+"/"+configFile;
+            std::ifstream file(path.data(), std::ios::in);
+            if (file.fail()) {
+                std::cerr << "\nERROR: Failed to read the file "+path.data()+"\n\n";
+            } else {
+                std::stringstream buffer;
+                buffer << file.rdbuf();
+                LILString lilStr(buffer.str());
+                d->parser->parseString(lilStr);
+            }
+            if (d->verbose) {
+                std::cerr << "\n\n";
+            }
+        }
+    }
 
     if (d->isMain) {
         if (rootNode->hasInitializers()) {

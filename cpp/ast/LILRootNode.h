@@ -66,6 +66,8 @@ namespace LIL {
 
         void addDoc(std::shared_ptr<LILDocumentation> value);
         const std::vector<std::shared_ptr<LILDocumentation>> & getDocs() const;
+        
+        void addConfigureInstr(const std::shared_ptr<LILInstruction> & instr);
 
     private:
         std::map<LILString, std::shared_ptr<LILNode>> _localVars;
@@ -77,6 +79,7 @@ namespace LIL {
         std::map<LILString, std::shared_ptr<LILSnippetInstruction>> _snippets;
         std::vector<std::shared_ptr<LILNode>> _initializers;
         std::vector<std::shared_ptr<LILDocumentation>> _docs;
+        std::map<LILString, std::shared_ptr<LILNode>> _config;
     };
 }
 
