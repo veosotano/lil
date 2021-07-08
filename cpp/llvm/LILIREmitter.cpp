@@ -2678,53 +2678,58 @@ llvm::Value * LILIREmitter::_emitIfCastConditionForNullable(bool negated, LILTyp
 llvm::Value * LILIREmitter::_emitFor(LILFlowControl * value)
 {
     auto arguments = value->getArguments();
-    auto initial = arguments.front();
-    this->emit(initial.get());
-    
-    auto currentBB = d->irBuilder.GetInsertBlock();
-    auto fun = currentBB->getParent();
-    auto loopBB = llvm::BasicBlock::Create(d->llvmContext, "loop", fun);
-    d->irBuilder.CreateBr(loopBB);
-    d->irBuilder.SetInsertPoint(loopBB);
-    this->_emitEvaluables(value->getThen());
-    
-    auto stepNode = arguments[2];
-    if (!stepNode) {
-        return nullptr;
-    }
-    this->emit(stepNode.get());
-    
-    auto condNode = arguments[1];
-    if (!condNode) {
-        return nullptr;
-    }
-    auto condition = this->emit(condNode.get());
-    if (!condNode->isA(NodeTypeExpression)) {
-        switch (condition->getType()->getTypeID()) {
-            case llvm::Type::IntegerTyID:
-            {
-                auto bitWidth = condition->getType()->getIntegerBitWidth();
-                if (bitWidth == 1){
-                    condition = d->irBuilder.CreateICmpNE(condition, llvm::ConstantInt::get(d->llvmContext, llvm::APInt(bitWidth, 0, true)), "for.cond");
-                } else {
-                    condition = d->irBuilder.CreateICmpSGT(condition, llvm::ConstantInt::get(d->llvmContext, llvm::APInt(bitWidth, 0, true)), "for.cond");
-                }
-            }
-                break;
-            case llvm::Type::FloatTyID:
-                condition = d->irBuilder.CreateFCmpONE(condition, llvm::ConstantFP::get(d->llvmContext, llvm::APFloat(0.0)), "for.cond");
-                break;
-                
-            default:
-                break;
+    if (arguments.size() > 1) {
+        auto initial = arguments.front();
+        this->emit(initial.get());
+        
+        auto currentBB = d->irBuilder.GetInsertBlock();
+        auto fun = currentBB->getParent();
+        auto loopBB = llvm::BasicBlock::Create(d->llvmContext, "loop", fun);
+        d->irBuilder.CreateBr(loopBB);
+        d->irBuilder.SetInsertPoint(loopBB);
+        this->_emitEvaluables(value->getThen());
+        
+        auto stepNode = arguments[2];
+        if (stepNode) {
+            this->emit(stepNode.get());
         }
+
+        auto condNode = arguments[1];
+        if (!condNode) {
+            return nullptr;
+        }
+        auto condition = this->emit(condNode.get());
+        if (!condNode->isA(NodeTypeExpression)) {
+            switch (condition->getType()->getTypeID()) {
+                case llvm::Type::IntegerTyID:
+                {
+                    auto bitWidth = condition->getType()->getIntegerBitWidth();
+                    if (bitWidth == 1){
+                        condition = d->irBuilder.CreateICmpNE(condition, llvm::ConstantInt::get(d->llvmContext, llvm::APInt(bitWidth, 0, true)), "for.cond");
+                    } else {
+                        condition = d->irBuilder.CreateICmpSGT(condition, llvm::ConstantInt::get(d->llvmContext, llvm::APInt(bitWidth, 0, true)), "for.cond");
+                    }
+                }
+                    break;
+                case llvm::Type::FloatTyID:
+                    condition = d->irBuilder.CreateFCmpONE(condition, llvm::ConstantFP::get(d->llvmContext, llvm::APFloat(0.0)), "for.cond");
+                    break;
+                    
+                default:
+                    break;
+            }
+        }
+        
+        auto afterBB = llvm::BasicBlock::Create(d->llvmContext, "for.after", fun);
+        d->irBuilder.CreateCondBr(condition, loopBB, afterBB);
+        
+        d->irBuilder.SetInsertPoint(afterBB);
+        
+    } else {
+        std::cerr << "UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!\n\n";
+        return nullptr;
     }
     
-    auto afterBB = llvm::BasicBlock::Create(d->llvmContext, "for.after", fun);
-    d->irBuilder.CreateCondBr(condition, loopBB, afterBB);
-    
-    d->irBuilder.SetInsertPoint(afterBB);
-
     return nullptr;
 }
 
