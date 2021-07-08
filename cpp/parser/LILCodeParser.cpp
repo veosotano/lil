@@ -4243,6 +4243,7 @@ bool LILCodeParser::readEvaluables()
                     d->receiver->receiveNodeCommit();
                 } else {
                     d->receiver->receiveError(LILString::format("Error while reading var declaration on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
+                    return ret;
                 }
                 if (this->atEndOfSource())
                     return ret;
@@ -4270,6 +4271,7 @@ bool LILCodeParser::readEvaluables()
                     d->receiver->receiveNodeCommit();
                 } else {
                     d->receiver->receiveError(LILString::format("Error while reading function on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
+                    return ret;
                 }
                 if (this->atEndOfSource())
                     return ret;
@@ -4297,6 +4299,7 @@ bool LILCodeParser::readEvaluables()
                     d->receiver->receiveNodeCommit();
                 } else {
                     d->receiver->receiveError(LILString::format("Error while reading flow control on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
+                    return ret;
                 }
                 if (this->atEndOfSource())
                     return ret;
@@ -4313,6 +4316,7 @@ bool LILCodeParser::readEvaluables()
                     d->receiver->receiveNodeCommit();
                 } else {
                     d->receiver->receiveError(LILString::format("Error while reading flow control call on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
+                    return ret;
                 }
                 if (this->atEndOfSource())
                     return ret;
@@ -4340,6 +4344,7 @@ bool LILCodeParser::readEvaluables()
                     d->receiver->receiveNodeCommit();
                 } else {
                     d->receiver->receiveError(LILString::format("Error while reading function on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
+                    return ret;
                 }
                 if (this->atEndOfSource())
                     return ret;
@@ -4383,6 +4388,7 @@ bool LILCodeParser::readEvaluables()
                             d->receiver->receiveNodeCommit();
                         } else {
                             d->receiver->receiveError(LILString::format("Error while reading function on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
+                            return ret;
                         }
                     }
                     else if (this->isExpression())
@@ -4396,6 +4402,7 @@ bool LILCodeParser::readEvaluables()
                         else
                         {
                             d->receiver->receiveError(LILString::format("Error while reading expression on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
+                            return ret;
                         }
                     } else if (this->isUnaryExpression()) {
                         bool expValid = this->readUnaryExpression();
@@ -4405,6 +4412,7 @@ bool LILCodeParser::readEvaluables()
                         else
                         {
                             d->receiver->receiveError(LILString::format("Error while reading unary expression on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
+                            return ret;
                         }
                     } else {
                         d->receiver->receiveNodeCommit();
@@ -4437,6 +4445,7 @@ bool LILCodeParser::readEvaluables()
                     d->receiver->receiveNodeCommit();
                 } else {
                     d->receiver->receiveError(LILString::format("Error while reading assignment on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
+                    return ret;
                 }
                 if (this->atEndOfSource())
                     return ret;
@@ -4521,6 +4530,7 @@ bool LILCodeParser::readEvaluables()
                 else
                 {
                     d->receiver->receiveError(LILString::format("Error while reading assignment on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
+                    return ret;
                 }
             }
             else if (this->isExpression())
@@ -4534,6 +4544,7 @@ bool LILCodeParser::readEvaluables()
                 else
                 {
                     d->receiver->receiveError(LILString::format("Error while reading expression on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
+                    return ret;
                 }
             } else if (this->isUnaryExpression()) {
                 bool expValid = this->readUnaryExpression();
@@ -4543,6 +4554,7 @@ bool LILCodeParser::readEvaluables()
                 else
                 {
                     d->receiver->receiveError(LILString::format("Error while reading unary expression on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
+                    return ret;
                 }
             } else {
                 d->receiver->receiveNodeCommit();
@@ -4573,6 +4585,7 @@ bool LILCodeParser::readEvaluables()
                 d->receiver->receiveNodeCommit();
             } else {
                 d->receiver->receiveError(LILString::format("Error while reading foreign language on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
+                return ret;
             }
             if (this->atEndOfSource())
                 return ret;
