@@ -814,6 +814,13 @@ bool LILCodeParser::isRule() const
                 done = false;
                 continue;
             }
+            else if (
+                peekToken->isA(TokenTypeSemicolon)
+                || peekToken->isA(TokenTypeParenthesisClose)
+                || peekToken->isA(TokenTypeSquareBracketClose)
+            ){
+                ret = false;
+            }
             else
             {
                 if (d->currentToken->isA(TokenTypeObjectSign))
@@ -838,6 +845,13 @@ bool LILCodeParser::isRule() const
 
                             case TokenTypeBlockOpen:
                                 ret = true;
+                                done = true;
+                                break;
+                            
+                            case TokenTypeParenthesisClose:
+                            case TokenTypeSquareBracketClose:
+                            case TokenTypeSemicolon:
+                                ret = false;
                                 done = true;
                                 break;
 
