@@ -22,6 +22,7 @@
 #include "LILMultipleType.h"
 #include "LILNodeToString.h"
 #include "LILObjectType.h"
+#include "LILPointerType.h"
 #include "LILPropertyName.h"
 #include "LILTypeDecl.h"
 #include "LILValuePath.h"
@@ -499,7 +500,7 @@ void LILTypeValidator::_validate(std::shared_ptr<LILVarDecl> vd)
             found = ty->equalTo(ivTy);
             ty->setIsNullable(true);
         } else {
-            found = ty->equalTo(ivTy);
+            found = this->typesCompatible(ty, ivTy);
         }
         if (!found) {
             LILErrorMessage ei;
@@ -519,4 +520,37 @@ void LILTypeValidator::validateChildren(const std::vector<std::shared_ptr<LILNod
     {
         this->validate((*it));
     };
+}
+
+bool LILTypeValidator::typesCompatible(const std::shared_ptr<LILType> & ty1, const std::shared_ptr<LILType> & ty2)
+{
+    switch (ty1->getTypeType())
+    {
+        case TypeTypePointer:
+        {
+            if (!ty2->isA(TypeTypePointer)) {
+                return false;
+            }
+            auto ty1p = std::static_pointer_cast<LILPointerType>(ty1);
+            auto arg = ty1p->getArgument();
+            if (arg) {
+                if (arg->getName() == "any") {
+                    return true;
+                } else {
+                    auto ty2p = std::static_pointer_cast<LILPointerType>(ty2);
+                    auto arg2 = ty2p->getArgument();
+                    if (arg2->getName() == "any") {
+                        return true;
+                    }
+
+                    return ty1->equalTo(ty2);
+                }
+            }
+            break;
+        }
+            
+        default:
+            return ty1->equalTo(ty2);
+    }
+    return false;
 }

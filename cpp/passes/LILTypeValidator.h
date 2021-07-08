@@ -40,7 +40,7 @@ namespace LIL
         void _validate(std::shared_ptr<LILObjectDefinition> od);
         void _validate(std::shared_ptr<LILVarDecl> vd);
         inline void validateChildren(const std::vector<std::shared_ptr<LILNode>> & children);
-
+        bool typesCompatible(const std::shared_ptr<LILType> & ty1, const std::shared_ptr<LILType> & ty2);
     };
 }
 
