@@ -18,6 +18,7 @@
 #include "LILConversionDecl.h"
 #include "LILErrorMessage.h"
 #include "LILFunctionCall.h"
+#include "LILFunctionDecl.h"
 #include "LILFunctionType.h"
 #include "LILMultipleType.h"
 #include "LILNodeToString.h"
@@ -147,7 +148,13 @@ void LILTypeValidator::_validate(std::shared_ptr<LILFunctionCall> fc)
                 this->errors.push_back(ei);
                 return;
             }
-            ty = method->getType();
+            auto methodFdVal = std::static_pointer_cast<LILVarDecl>(method)->getInitVal();
+            if (methodFdVal) {
+                auto methodFd = std::static_pointer_cast<LILFunctionDecl>(methodFdVal);
+                ty = methodFd->getFnType();
+            } else {
+                ty = method->getType();
+            }
             isMethod = true;
         }
         
