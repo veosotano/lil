@@ -127,6 +127,14 @@ void LILConversionInserter::process(std::shared_ptr<LILFunctionCall> fc)
                 auto vd = std::static_pointer_cast<LILVarDecl>(fnTyArg);
                 argName = vd->getName();
             }
+            if (!argTy) {
+                std::cerr << "ARG TY WAS NULL FAIL !!!!!!!!\n\n";
+                continue;
+            }
+            if (!fcArgTy) {
+                std::cerr << "FC ARG TY WAS NULL FAIL !!!!!!!!\n\n";
+                continue;
+            }
             if (argTy->equalTo(fcArgTy)) {
                 newArguments.push_back(fcArg);
                 newArgumentTypes.push_back(argTy);
