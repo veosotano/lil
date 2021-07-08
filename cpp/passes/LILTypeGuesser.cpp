@@ -1715,7 +1715,7 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForVarName(std::shared_ptr<LILV
         }
         parent = parent->getParentNode();
     }
-    if (ret && ret->isA(TypeTypeMultiple)) {
+    if (ret && !this->inhibitSearchingForIfCastType && (ret->isA(TypeTypeMultiple) || ret->getIsNullable())) {
         parent = name->getParentNode();
         while (parent) {
             if (parent->isA(FlowControlTypeIfCast)) {
