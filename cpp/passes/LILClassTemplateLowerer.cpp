@@ -57,12 +57,13 @@ void LILClassTemplateLowerer::performVisit(std::shared_ptr<LILRootNode> rootNode
     for (auto node : nodes) {
         if (node->isA(NodeTypeClassDecl)) {
             auto cd = std::static_pointer_cast<LILClassDecl>(node);
-            auto ty = node->getType();
             if (cd->isTemplate()) {
-                std::map<std::shared_ptr<LILType>, std::shared_ptr<LILClassDecl>> newClasses;
+                auto ty = std::static_pointer_cast<LILObjectType>(node->getType());
+
+                std::vector<std::pair<std::shared_ptr<LILType>, std::shared_ptr<LILClassDecl>>> newClasses;
 
                 std::vector<std::shared_ptr<LILNode>> specializations;
-                if (ty->isA(TypeTypeObject) && ty->getName() == "array") {
+                if (ty->getName() == "array") {
                     specializations = findArraySpecializations(nodes);
                 } else {
                     specializations = this->findClassSpecializations(nodes, ty);
@@ -71,17 +72,18 @@ void LILClassTemplateLowerer::performVisit(std::shared_ptr<LILRootNode> rootNode
                     for (auto spNode : specializations) {
                         std::shared_ptr<LILType> spTy;
                         if (spNode->isA(NodeTypeValueList)) {
+                            std::shared_ptr<LILType> vlTy;
                             auto vl = std::static_pointer_cast<LILValueList>(spNode);
-                            spTy = vl->getType();
-                            if (!spTy) {
-                                auto vlTy = this->findTypeForValueList(vl);
+                            vlTy = vl->getType();
+                            if (!vlTy) {
+                                vlTy = this->findTypeForValueList(vl);
                                 if (vlTy->getIsWeakType()) {
                                     auto intType = vlTy->getDefaultType();
                                     vlTy = intType;
                                 }
                                 if (vlTy) {
                                     spTy = LILObjectType::make("array");
-                                    spTy->addParamType(vlTy);
+                                    spTy->addTmplParam(vlTy);
                                 } else {
                                     std::cerr << "COULD NOT MAKE SPECIALIZATION TYPE FROM VALUE LIST FAIL !!!!!!! \n\n";
                                 }
@@ -94,12 +96,19 @@ void LILClassTemplateLowerer::performVisit(std::shared_ptr<LILRootNode> rootNode
                             continue;
                         }
                         std::shared_ptr<LILClassDecl> newClass;
-                        if (newClasses.count(spTy)) {
-                            newClass = newClasses.at(spTy);
-                        } else {
+                        bool found = false;
+                        for (auto item : newClasses) {
+                            auto itemTy = item.first;
+                            if (itemTy->equalTo(spTy)) {
+                                found = true;
+                                newClass = item.second;
+                                break;
+                            }
+                        }
+                        if (!found) {
                             newClass = this->makeSpecializedClass(cd, spTy);
                             if (newClass) {
-                                newClasses[spTy] = newClass;
+                                newClasses.push_back(std::make_pair(spTy, newClass));
                             }
                         }
                         if (newClass) {
@@ -142,26 +151,10 @@ std::vector<std::shared_ptr<LILNode>> LILClassTemplateLowerer::findClassSpeciali
             
             if (
                 vdTy
-                && vdTy->getParamTypes().size() > 0
                 && vdTy->getName() == ty->getName()
             ) {
                 ret.push_back(node);
             }
-            if (!vdTy) {
-                auto initVal = vd->getInitVal();
-                if (initVal) {
-                    vdTy = initVal->getType();
-                    if (
-                        vdTy
-                        && vdTy->getParamTypes().size() > 0
-                        && vdTy->getName() == ty->getName()
-                        ) {
-                        ret.push_back(initVal);
-                    }
-                }
-            }
-            
-            continue;
         }
 
         const auto & childNodes = node->getChildNodes();
@@ -175,7 +168,6 @@ std::vector<std::shared_ptr<LILNode>> LILClassTemplateLowerer::findClassSpeciali
             auto objDefTy = node->getType();
             if (
                 objDefTy
-                && objDefTy->getParamTypes().size() > 0
                 && objDefTy->getName() == ty->getName()
             ) {
                 ret.push_back(node);
@@ -255,20 +247,32 @@ std::vector<std::shared_ptr<LILNode>> LILClassTemplateLowerer::findArraySpeciali
 
 std::shared_ptr<LILClassDecl> LILClassTemplateLowerer::makeSpecializedClass(std::shared_ptr<LILClassDecl> cd, std::shared_ptr<LILType> specializedType) const
 {
-    auto ty = cd->getType();
-    const auto & paramTys = ty->getParamTypes();
-    const auto & specializedParamTys = specializedType->getParamTypes();
-    if (paramTys.size() != specializedParamTys.size()) {
-        std::cerr << "PARAM TYS AND SPECIALIZED PARAM TYS WERE NOT OF THE SAME SIZE FAIL!!!!!!\n\n";
-        return nullptr;
-    }
+    const auto & paramTys = cd->getTmplParams();
+    const auto & specializedParamTys = specializedType->getTmplParams();
     auto ret = cd->clone();
+    auto newSpTy = specializedType->clone();
+    ret->clearTmplParams();
     for (size_t i=0, j=paramTys.size(); i<j; i+=1) {
-        auto cdParamTy = std::static_pointer_cast<LILType>(paramTys.at(i));
-        auto spParamTy = std::static_pointer_cast<LILType>(specializedParamTys.at(i));
-        this->replaceTypeWithSpecializedType(ret->getChildNodes(), cdParamTy, spParamTy);
+        auto cdParamNode = paramTys.at(i);
+        if (cdParamNode->isA(NodeTypeTypeDecl)) {
+            auto cdParamTyDecl = std::static_pointer_cast<LILTypeDecl>(cdParamNode);
+            auto cdParamTy = cdParamTyDecl->getSrcType();
+            
+            std::shared_ptr<LILType> spParamTy;
+            if (specializedParamTys.size() > i) {
+                spParamTy = std::static_pointer_cast<LILType>(specializedParamTys.at(i));
+            } else {
+                spParamTy = cdParamTyDecl->getDstType();
+                newSpTy->addTmplParam(spParamTy);
+            }
+            this->replaceTypeWithSpecializedType(ret->getChildNodes(), cdParamTy, spParamTy);
+
+        } else {
+            std::cerr << "UNIMPLEMENTED FAIL !!!! !! ! \n\n";
+            return ret;
+        }
     }
-    LILString newName = "lil_"+this->typeToString(specializedType);
+    LILString newName = "lil_"+this->typeToString(newSpTy);
     auto newObjType = LILObjectType::make(newName);
     ret->setType(newObjType);
     return ret;
@@ -443,7 +447,9 @@ std::shared_ptr<LILType> LILClassTemplateLowerer::replaceType(std::shared_ptr<LI
                     break;
                 }
             }
-            if (fnTy->getReturnType()->equalTo(templateTy)) {
+            auto retTy = fnTy->getReturnType();
+            auto replacementRetTy = this->replaceType(retTy, templateTy, specializedTy);
+            if (replacementRetTy) {
                 hasChanges = true;
                 hasChangesRet = true;
             }
@@ -455,7 +461,7 @@ std::shared_ptr<LILType> LILClassTemplateLowerer::replaceType(std::shared_ptr<LI
                     newFnTy->setArguments(fnTy->getArguments());
                 }
                 if (hasChangesRet) {
-                    newFnTy->setReturnType(specializedTy->clone());
+                    newFnTy->setReturnType(replacementRetTy);
                 }
                 ret = newFnTy;
             }
@@ -482,10 +488,14 @@ std::shared_ptr<LILType> LILClassTemplateLowerer::replaceType(std::shared_ptr<LI
             }
             break;
         }
-            
         case TypeTypeNone:
+        {
             //do nothing
             break;
+        }
+    }
+    if (ret && sourceTy->getIsNullable()) {
+        ret->setIsNullable(true);
     }
     return ret;
 }

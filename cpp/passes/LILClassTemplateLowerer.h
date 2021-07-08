@@ -21,6 +21,7 @@
 
 namespace LIL
 {
+    class LILObjectType;
     class LILValueList;
     class LILClassTemplateLowerer : public LILVisitor
     {
