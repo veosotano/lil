@@ -257,13 +257,137 @@ std::shared_ptr<LILType> LILTypeResolver::_process(std::shared_ptr<LILType> valu
             break;
         }
             
-        default:
+        case TypeTypeObject:
+        {
+            auto cd = this->getClassContext();
+            if (cd) {
+                for (auto alias : cd->getAliases()) {
+                    auto aTy = alias->getSrcType();
+                    if (aTy->equalTo(value)) {
+                        auto dstTy = alias->getDstType();
+                        auto newTy = this->_process(dstTy);
+                        if (newTy) {
+                            ret = newTy;
+                        } else {
+                            ret = dstTy->clone();
+                        }
+                        break;
+                    }
+                }
+            }
+            if (!ret) {
+                const auto & rootNode = this->getRootNode();
+                auto aliases = rootNode->getAliases();
+                for (auto alias : aliases) {
+                    auto aTy = alias->getSrcType();
+                    if (aTy->equalTo(value)) {
+                        auto dstTy = alias->getDstType();
+                        auto newTy = this->_process(dstTy);
+                        if (newTy) {
+                            ret = newTy;
+                        } else {
+                            ret = dstTy->clone();
+                        }
+                        break;
+                    }
+                }
+            }
+            if (!ret) {
+                const auto & rootNode = this->getRootNode();
+                auto typeDecls = rootNode->getTypes();
+                for (auto typeDecl : typeDecls) {
+                    auto tTy = typeDecl->getSrcType();
+                    if (tTy->equalTo(value)) {
+                        auto dstTy = typeDecl->getDstType();
+                        auto newTy = this->_process(dstTy);
+                        if (newTy) {
+                            ret = newTy;
+                        } else {
+                            ret = dstTy->clone();
+                        }
+                        ret->setStrongTypeName(value->getName());
+                        break;
+                    }
+                }
+            }
+            if (ret) {
+                auto objTy = std::static_pointer_cast<LILObjectType>(value);
+                if (objTy->getTmplParams().size() > 0) {
+                    auto retObjTy = std::static_pointer_cast<LILObjectType>(ret);
+                    for (auto pTy : objTy->getTmplParams()) {
+                        retObjTy->addTmplParam(pTy->clone());
+                    }
+                }
+            }
             break;
-    }
-    if (ret && ret->getParamTypes().size() == 0 && value->getParamTypes().size() > 0) {
-        for (auto pTy : value->getParamTypes()) {
-            ret->addParamType(pTy->clone());
         }
+        case TypeTypeStaticArray:
+        {
+            auto cd = this->getClassContext();
+            if (cd) {
+                for (auto alias : cd->getAliases()) {
+                    auto aTy = alias->getSrcType();
+                    if (aTy->equalTo(value)) {
+                        auto dstTy = alias->getDstType();
+                        auto newTy = this->_process(dstTy);
+                        if (newTy) {
+                            ret = newTy;
+                        } else {
+                            ret = dstTy->clone();
+                        }
+                        break;
+                    }
+                }
+            }
+            if (!ret) {
+                const auto & rootNode = this->getRootNode();
+                auto aliases = rootNode->getAliases();
+                for (auto alias : aliases) {
+                    auto aTy = alias->getSrcType();
+                    if (aTy->equalTo(value)) {
+                        auto dstTy = alias->getDstType();
+                        auto newTy = this->_process(dstTy);
+                        if (newTy) {
+                            ret = newTy;
+                        } else {
+                            ret = dstTy->clone();
+                        }
+                        break;
+                    }
+                }
+            }
+            if (!ret) {
+                const auto & rootNode = this->getRootNode();
+                auto typeDecls = rootNode->getTypes();
+                for (auto typeDecl : typeDecls) {
+                    auto tTy = typeDecl->getSrcType();
+                    if (tTy->equalTo(value)) {
+                        auto dstTy = typeDecl->getDstType();
+                        auto newTy = this->_process(dstTy);
+                        if (newTy) {
+                            ret = newTy;
+                        } else {
+                            ret = dstTy->clone();
+                        }
+                        ret->setStrongTypeName(value->getName());
+                        break;
+                    }
+                }
+            }
+            auto saTy = std::static_pointer_cast<LILStaticArrayType>(value);
+            auto saChildTy = saTy->getType();
+            if (saChildTy) {
+                auto retSaTy = std::static_pointer_cast<LILStaticArrayType>(ret);
+                auto processedSaChildTy = this->_process(saChildTy);
+                if (processedSaChildTy) {
+                    retSaTy->setType(processedSaChildTy);
+                }
+            }
+            break;
+        }
+        case TypeTypeNone:
+            //do nothing
+            break;
     }
     return ret;
 }
