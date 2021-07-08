@@ -43,6 +43,7 @@ LILRootNode::LILRootNode(const LILRootNode & other)
 , _constants(other._constants)
 , _snippets(other._snippets)
 , _initializers(other._initializers)
+, _docs(other._docs)
 , _rules(other._rules)
 , _config(other._config)
 {
