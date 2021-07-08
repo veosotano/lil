@@ -37,7 +37,7 @@ namespace LIL
         void skip(TokenType type);
         void skipInvalidToken();
         void skipStringArgument();
-        void skipUntilSemicolon();
+        void skipUntilEndOfExpression();
         void skipUntilEndOfValuePath();
         void parseNext();
 
