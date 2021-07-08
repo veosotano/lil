@@ -1783,6 +1783,58 @@ llvm::Function * LILIREmitter::_emitFnBody(llvm::Function * fun, LILFunctionDecl
     if (finally) {
         this->emit(finally.get());
     }
+    for (auto it : value->getLocalVariables()) {
+        auto localValue = it.second;
+        if (localValue->isA(NodeTypeVarDecl)) {
+            auto vd = std::static_pointer_cast<LILVarDecl>(localValue);
+            auto ty = vd->getType();
+            if (ty && ty->isA(TypeTypeObject)) {
+                const auto & className = ty->getName();
+                auto cd = this->findClassWithName(className);
+                if (!cd) {
+                    std::cerr << "CLASS NOT FOUND FAIL!!!!\n\n";
+                    continue;
+                }
+                
+                auto dtor = cd->getMethodNamed("destruct");
+                if (dtor) {
+                    if (!dtor->isA(NodeTypeVarDecl)) {
+                        std::cerr << "DESTRUCTOR NODE WAS NOT VAR DECL FAIL!!!\n\n";
+                        return nullptr;
+                    }
+                    auto dtorVd = std::static_pointer_cast<LILVarDecl>(dtor);
+                    auto initVal = dtorVd->getInitVal();
+                    std::shared_ptr<LILFunctionType> fnTy;
+                    LILString fnName;
+                    if (initVal && initVal->isA(NodeTypeFunctionDecl)) {
+                        auto fd = std::static_pointer_cast<LILFunctionDecl>(initVal);
+                        fnName = fd->getName();
+                        fnTy = fd->getFnType();
+                    } else {
+                        fnTy = std::static_pointer_cast<LILFunctionType>(dtorVd->getType());
+                        auto fnTyWithoutSelf = fnTy->clone();
+                        fnTyWithoutSelf->removeFirstArgument();
+                        fnName = this->decorate("", cd->getName(), dtorVd->getName(), fnTyWithoutSelf);
+                    }
+                    llvm::Function* fun = d->llvmModule->getFunction(fnName.data());
+                    if (!fun) {
+                        fun = this->_emitFnSignature(fnName.data(), fnTy.get());
+                    }
+                    if (fun) {
+                        const auto & name = vd->getName();
+                        auto ir = d->namedValues[name.data()];
+                        std::vector<llvm::Value *> argsvect;
+                        argsvect.push_back(ir);
+                        d->irBuilder.CreateCall(fun, argsvect);
+                    } else {
+                        std::cerr << "COULD NOT CALL DESTRUCTOR FAIL!!!!\n\n";
+                        return nullptr;
+                    }
+                }
+                
+            }
+        }
+    }
 
     if (d->needsReturnValue) {
         llvm::Value * loadInstr = d->irBuilder.CreateLoad(d->returnAlloca);
@@ -2780,6 +2832,30 @@ llvm::Value * LILIREmitter::_emit(LILValueList * value)
             std::cerr << "ARRAY CLASS NOT FOUND FAIL!!!! \n\n";
             return nullptr;
         }
+        auto ctor = cd->getMethodNamed("construct");
+        if (ctor) {
+            if (!ctor->isA(NodeTypeVarDecl)) {
+                std::cerr << "CONSTRUCTOR NODE WAS NOT VAR DECL FAIL!!!\n\n";
+                return nullptr;
+            }
+            auto vd = std::static_pointer_cast<LILVarDecl>(ctor);
+            auto initVal = vd->getInitVal();
+            if (!initVal->isA(NodeTypeFunctionDecl)) {
+                std::cerr << "CONSTRUCTOR WAS NOT FUNCTION DECL FAIL!!!\n\n";
+                return nullptr;
+            }
+            auto fd = std::static_pointer_cast<LILFunctionDecl>(initVal);
+            llvm::Function* fun = d->llvmModule->getFunction(fd->getName().data());
+            if (fun) {
+                std::vector<llvm::Value *> argsvect;
+                argsvect.push_back(d->currentAlloca);
+                d->irBuilder.CreateCall(fun, argsvect);
+            } else {
+                std::cerr << "COULD NOT CALL CONSTRUCTOR FAIL!!!!\n\n";
+                return nullptr;
+            }
+        }
+        
         const auto & values = value->getValues();
         size_t valuesSize = values.size();
         const auto & fields = cd->getFields();
