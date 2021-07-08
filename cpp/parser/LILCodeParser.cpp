@@ -4695,6 +4695,12 @@ bool LILCodeParser::readFunctionCallSimple()
         LIL_CHECK_FOR_END
     }
 
+    if (d->currentToken->isA(TokenTypeWhitespace)){
+        this->skip(TokenTypeWhitespace);
+        if (atEndOfSource())
+            LIL_CANCEL_NODE
+    }
+
     //open parenthesis
     bool needsParenthesisClose  = false;
     if (d->currentToken->isA(TokenTypeParenthesisOpen)){
@@ -4703,13 +4709,6 @@ bool LILCodeParser::readFunctionCallSimple()
         this->readNextToken();
         LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
     }
-    else if (d->currentToken->isA(TokenTypeWhitespace)){
-        this->skip(TokenTypeWhitespace);
-        if (atEndOfSource())
-            LIL_CANCEL_NODE
-            } else {
-                LIL_CANCEL_NODE
-            }
 
     bool valueValid = true;
     if (needsParenthesisClose)
