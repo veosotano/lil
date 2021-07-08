@@ -623,16 +623,17 @@ void LILASTValidator::_validate(const std::shared_ptr<LILAssignment> & value)
             switch (subject->getNodeType()) {
                 case NodeTypeValuePath:
                 {
-                    auto remoteNode = this->findNodeForValuePath(static_cast<LILValuePath *>(subject.get()));
-                    if (!remoteNode) {
-                        LILErrorMessage ei;
-                        ei.message =  LILNodeToString::stringify(subject.get())+" not found";
-                        LILNode::SourceLocation sl = subject->getSourceLocation();
-                        ei.file = sl.file;
-                        ei.line = sl.line;
-                        ei.column = sl.column;
-                        this->errors.push_back(ei);
-                    }
+                    //fixme: validate this once types have been guessed
+//                    auto remoteNode = this->findNodeForValuePath(static_cast<LILValuePath *>(subject.get()));
+//                    if (!remoteNode) {
+//                        LILErrorMessage ei;
+//                        ei.message =  LILNodeToString::stringify(subject.get())+" not found";
+//                        LILNode::SourceLocation sl = subject->getSourceLocation();
+//                        ei.file = sl.file;
+//                        ei.line = sl.line;
+//                        ei.column = sl.column;
+//                        this->errors.push_back(ei);
+//                    }
                     break;
                 }
                 case NodeTypeVarName:
