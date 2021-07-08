@@ -4610,7 +4610,7 @@ bool LILCodeParser::readEvaluables()
             if (instrValid) {
                 d->receiver->receiveNodeCommit();
             } else {
-               d->receiver->receiveError("Error while reading instruction", d->file, d->line, d->column);
+                this->skipUntilEndOfExpression();
             }
             if (this->atEndOfSource())
                 return ret;
