@@ -14,6 +14,7 @@
 
 #include "LILRootNode.h"
 #include "LILAliasDecl.h"
+#include "LILAssignment.h"
 #include "LILClassDecl.h"
 #include "LILConversionDecl.h"
 #include "LILDocumentation.h"
@@ -24,6 +25,7 @@
 #include "LILSnippetInstruction.h"
 #include "LILTypeDecl.h"
 #include "LILVarDecl.h"
+#include "LILVarName.h"
 
 using namespace LIL;
 
