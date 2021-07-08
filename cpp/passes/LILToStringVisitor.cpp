@@ -634,7 +634,8 @@ LILToStrInfo LILToStringVisitor::_stringify(LILRule * value)
 LILToStrInfo LILToStringVisitor::_stringify(LILSimpleSelector * value)
 {
     LILToStrInfo ret;
-    ret.value = "Simple selector: "+LILNodeToString::stringify(value);
+    ret.value = "Simple selector:";
+    this->stringifyChildren(value->getNodes(), ret);
     return ret;
 }
 
