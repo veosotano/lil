@@ -20,6 +20,7 @@
 #include "LILFunctionDecl.h"
 #include "LILInstruction.h"
 #include "LILNodeToString.h"
+#include "LILRule.h"
 #include "LILSnippetInstruction.h"
 #include "LILTypeDecl.h"
 #include "LILVarDecl.h"
@@ -42,6 +43,7 @@ LILRootNode::LILRootNode(const LILRootNode & other)
 , _constants(other._constants)
 , _snippets(other._snippets)
 , _initializers(other._initializers)
+, _rules(other._rules)
 , _config(other._config)
 {
 
@@ -210,6 +212,11 @@ void LILRootNode::add(std::shared_ptr<LILNode> node, bool addToNodeTree)
             this->addDoc(std::static_pointer_cast<LILDocumentation>(node));
             break;
         }
+        case NodeTypeRule:
+        {
+            this->addRule(std::static_pointer_cast<LILRule>(node));
+            break;
+        }
         default:
             this->addEvaluable(node);
             break;
@@ -345,6 +352,18 @@ const std::vector<std::shared_ptr<LILDocumentation>> & LILRootNode::getDocs() co
 {
     return this->_docs;
 }
+
+void LILRootNode::addRule(std::shared_ptr<LILRule> value)
+{
+    this->addNode(value);
+    this->_rules.push_back(value);
+}
+
+const std::vector<std::shared_ptr<LILRule>> & LILRootNode::getRules() const
+{
+    return this->_rules;
+}
+
 void LILRootNode::addConfigureInstr(const std::shared_ptr<LILInstruction> & instr)
 {
     auto arg = instr->getArgument();

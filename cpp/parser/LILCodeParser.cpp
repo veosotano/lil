@@ -845,8 +845,10 @@ bool LILCodeParser::isInstructionRule() const
         || peekToken->getString() == "move"
         || peekToken->getString() == "delete"
         ) {
+        d->lexer->resetPeek();
         return true;
     }
+    d->lexer->resetPeek();
     return false;
 }
 
@@ -2237,6 +2239,8 @@ bool LILCodeParser::readSingleValue(NodeType &nodeType)
     }
     if (this->isAssignment()) {
         return this->readAssignment(true, d->readVarNameOverPropertyName);
+    } else if (this->isRule()) {
+        return this->readRule();
     }
     return this->readBasicValue(nodeType);
  }
