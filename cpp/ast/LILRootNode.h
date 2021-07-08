@@ -33,6 +33,8 @@ namespace LIL {
     class LILRootNode : public LILVarNode
     {
     public:
+        friend class LILCodeUnit;
+
         LILRootNode();
         LILRootNode(const LILRootNode & other);
         virtual ~LILRootNode();
