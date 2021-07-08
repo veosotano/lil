@@ -669,11 +669,6 @@ void LILCodeUnit::setDebugAST(bool value)
     }
 }
 
-void LILCodeUnit::setNoLilStd(bool value)
-{
-    d->needsStdLil = !value;
-}
-
 void LILCodeUnit::setDebugLilStd(bool value)
 {
     d->debugLilStd = value;
