@@ -1875,74 +1875,137 @@ llvm::Value * LILIREmitter::_emitFCMultipleValues(std::vector<std::shared_ptr<LI
     auto fcTypes = value->getArgumentTypes();
     llvm::Function * fun = d->irBuilder.GetInsertBlock()->getParent();
     size_t i = 0;
-    bool hasMultipleType = false;
+    bool needsRuntimeSelect = false;
     for (auto fcTy : fcTypes) {
-        if (fcTy->isA(TypeTypeMultiple)) {
-            hasMultipleType = true;
+        if (fcTy->isA(TypeTypeMultiple) || fcTy->getIsNullable()) {
+            needsRuntimeSelect = true;
             break;
         }
+        i += 1;
     }
-    if (hasMultipleType) {
-        for (auto fcTy : fcTypes) {
-            if (fcTy->isA(TypeTypeMultiple)) {
-                auto multiTy = std::static_pointer_cast<LILMultipleType>(fcTy);
-                auto argument = arguments[i];
-                std::string namestr;
-                if (argument->isA(NodeTypeVarName)) {
-                    namestr = std::static_pointer_cast<LILVarName>(argument)->getName().data();
-                } else {
-                    namestr = value->getName().data();
-                }
-                
-                auto llvmIr = this->emitPointer(argument.get());
-                
-                std::vector<llvm::Value *> gepIndices1;
-                gepIndices1.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
-                gepIndices1.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 1, false)));
-                auto gep = d->irBuilder.CreateGEP(llvmIr, gepIndices1);
-                
-                auto argVal = d->irBuilder.CreateLoad(gep, namestr + "_lil_type_index");
-                
-                llvm::BasicBlock * defaultBB = llvm::BasicBlock::Create(d->llvmContext, namestr+ ".null");
-                llvm::SwitchInst * switchInstr = d->irBuilder.CreateSwitch(argVal, defaultBB);
-                llvm::BasicBlock * mergeBB = llvm::BasicBlock::Create(d->llvmContext, namestr + ".merge");
-
-                fun->getBasicBlockList().push_back(defaultBB);
-                d->irBuilder.SetInsertPoint(defaultBB);
-                
-                auto mfcTys = multiTy->getTypes();
-                if (multiTy->getIsNullable()){
-                    mfcTys.push_back(LILType::make("null"));
-                }
-                size_t j = 1;
-                for (auto mfcTy : mfcTys) {
-                    llvm::BasicBlock * bb;
-                    if (mfcTy->getName() == "null") {
-                        bb = defaultBB;
-                    } else {
-                        bb = llvm::BasicBlock::Create(d->llvmContext, namestr+"."+mfcTy->getName().data(), fun);
-                        switchInstr->addCase(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(8, j, false)), bb);
-                    }
-                    
-                    std::vector<std::shared_ptr<LILType>> types;
-                    for (size_t k=0; k<fcTypes.size(); ++k) {
-                        if (k == i) {
-                            types.push_back(mfcTy);
-                        } else {
-                            types.push_back(fcTy);
-                        }
-                    }
-                    auto fd = this->chooseFnByType(funcDecls, types);
-                    d->irBuilder.SetInsertPoint(bb);
-                    this->_emitFunctionCallMT(value, fd->getName(), types, fd->getFnType().get(), nullptr);
-                    d->irBuilder.CreateBr(mergeBB);
-                    j += 1;
-                }
-                
-                fun->getBasicBlockList().push_back(mergeBB);
-                d->irBuilder.SetInsertPoint(mergeBB);
+    if (needsRuntimeSelect) {
+        auto fcTy = fcTypes[i];
+        if (fcTy->isA(TypeTypeMultiple)) {
+            auto multiTy = std::static_pointer_cast<LILMultipleType>(fcTy);
+            auto argument = arguments[i];
+            std::string namestr;
+            if (argument->isA(NodeTypeVarName)) {
+                namestr = std::static_pointer_cast<LILVarName>(argument)->getName().data();
+            } else {
+                namestr = value->getName().data();
             }
-            i += 1;
+            
+            auto llvmIr = this->emitPointer(argument.get());
+            
+            std::vector<llvm::Value *> gepIndices1;
+            gepIndices1.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
+            gepIndices1.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 1, false)));
+            auto gep = d->irBuilder.CreateGEP(llvmIr, gepIndices1);
+            
+            auto argVal = d->irBuilder.CreateLoad(gep, namestr + "_lil_type_index");
+            
+            llvm::BasicBlock * defaultBB = llvm::BasicBlock::Create(d->llvmContext, namestr+ ".null");
+            llvm::SwitchInst * switchInstr = d->irBuilder.CreateSwitch(argVal, defaultBB);
+            llvm::BasicBlock * mergeBB = llvm::BasicBlock::Create(d->llvmContext, namestr + ".merge");
+
+            fun->getBasicBlockList().push_back(defaultBB);
+            d->irBuilder.SetInsertPoint(defaultBB);
+            
+            auto mfcTys = multiTy->getTypes();
+            if (multiTy->getIsNullable()){
+                mfcTys.push_back(LILType::make("null"));
+            }
+            size_t j = 1;
+            for (auto mfcTy : mfcTys) {
+                llvm::BasicBlock * bb;
+                if (mfcTy->getName() == "null") {
+                    bb = defaultBB;
+                } else {
+                    bb = llvm::BasicBlock::Create(d->llvmContext, namestr+"."+mfcTy->getName().data(), fun);
+                    switchInstr->addCase(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(8, j, false)), bb);
+                }
+                
+                std::vector<std::shared_ptr<LILType>> types;
+                for (size_t k=0; k<fcTypes.size(); ++k) {
+                    if (k == i) {
+                        types.push_back(mfcTy);
+                    } else {
+                        types.push_back(fcTy);
+                    }
+                }
+                auto fd = this->chooseFnByType(funcDecls, types);
+                d->irBuilder.SetInsertPoint(bb);
+                this->_emitFunctionCallMT(value, fd->getName(), types, fd->getFnType().get(), nullptr);
+                d->irBuilder.CreateBr(mergeBB);
+                j += 1;
+            }
+            
+            fun->getBasicBlockList().push_back(mergeBB);
+            d->irBuilder.SetInsertPoint(mergeBB);
+        }
+        else if (fcTy->getIsNullable())
+        {
+            auto argument = arguments[i];
+            std::string namestr;
+            if (argument->isA(NodeTypeVarName)) {
+                namestr = std::static_pointer_cast<LILVarName>(argument)->getName().data();
+            } else {
+                namestr = value->getName().data();
+            }
+            
+            auto ir = this->emit(argument.get());
+            llvm::Value * cond;
+            bool isPtr = fcTy->isA(TypeTypePointer);
+            if (isPtr) {
+                auto ptrType = llvm::cast<llvm::PointerType>(this->llvmTypeFromLILType(fcTy.get()));
+                auto zeroVal = llvm::ConstantPointerNull::get(ptrType);
+                cond = d->irBuilder.CreateICmpNE(ir, zeroVal, namestr + ".not.null.cond");
+            } else {
+                auto zeroVal = llvm::ConstantInt::get(d->llvmContext, llvm::APInt(2, 0, true));
+                cond = d->irBuilder.CreateICmpSGE(ir, zeroVal, namestr + ".not.null.cond");
+            }
+
+            llvm::BasicBlock * notNullBB = llvm::BasicBlock::Create(d->llvmContext, namestr + ".if.not.null", fun);
+            llvm::BasicBlock * isNullBB = llvm::BasicBlock::Create(d->llvmContext, namestr + ".if.null");
+            llvm::BasicBlock * mergeBB = llvm::BasicBlock::Create(d->llvmContext, namestr + ".if.end");
+            d->irBuilder.CreateCondBr(cond, notNullBB, isNullBB);
+            
+            //when not null
+            d->irBuilder.SetInsertPoint(notNullBB);
+            auto currentTy = std::static_pointer_cast<LILPointerType>(fcTy);
+            currentTy->setIsNullable(false);
+            std::vector<std::shared_ptr<LILType>> types;
+            for (size_t k=0; k<fcTypes.size(); ++k) {
+                if (k == i) {
+                    types.push_back(currentTy);
+                } else {
+                    types.push_back(fcTy);
+                }
+            }
+            auto fd = this->chooseFnByType(funcDecls, types);
+            currentTy->setIsNullable(true);
+            this->_emitFunctionCall(value, fd->getName(), fd->getFnType().get(), nullptr, true, ir, i);
+            d->irBuilder.CreateBr(mergeBB);
+
+            fun->getBasicBlockList().push_back(isNullBB);
+            d->irBuilder.SetInsertPoint(isNullBB);
+            
+            //when null
+            std::vector<std::shared_ptr<LILType>> types2;
+            auto nullTy = LILType::make("null");
+            for (size_t k=0; k<fcTypes.size(); ++k) {
+                if (k == i) {
+                    types2.push_back(nullTy);
+                } else {
+                    types2.push_back(fcTy);
+                }
+            }
+            auto fd2 = this->chooseFnByType(funcDecls, types2);
+            this->_emitFunctionCall(value, fd2->getName(), fd2->getFnType().get(), nullptr, true, nullptr, i);
+            d->irBuilder.CreateBr(mergeBB);
+            
+            fun->getBasicBlockList().push_back(mergeBB);
+            d->irBuilder.SetInsertPoint(mergeBB);
         }
     } else {
         auto fd = this->chooseFnByType(funcDecls, fcTypes);
