@@ -1153,7 +1153,7 @@ std::shared_ptr<LILFunctionType> LILTypeGuesser::findFnTypeForFunctionCall(std::
         {
             auto vp = fc->getSubject();
             auto subjTy = this->findTypeForValuePath(vp);
-            if (!subjTy->isA(TypeTypeObject)) {
+            if (!subjTy || !subjTy->isA(TypeTypeObject)) {
                 std::cerr << "VAR PATH DOES NOT POINT TO OBJECT FAIL!!!!\n\n";
                 return nullptr;
             }
