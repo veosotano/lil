@@ -229,6 +229,10 @@ std::shared_ptr<LILNode> LILVisitor::findNodeForValuePath(LILValuePath * vp) con
             auto localNode = this->recursiveFindNode(firstNode);
             if (localNode) {
                 auto subjTy = localNode->getType();
+                if (!subjTy) {
+                    std::cerr << "CANNOT TRAVERSE VALUE PATH IF SUBJECT TYPE IS NULL FAIL !!!!!!!\n\n";
+                    return nullptr;
+                }
                 if (!this->inhibitSearchingForIfCastType && subjTy->isA(TypeTypeMultiple)) {
                     size_t outStartIndex = 0;
                     auto ifCastTy = this->findIfCastType(vp, outStartIndex);
@@ -236,7 +240,7 @@ std::shared_ptr<LILNode> LILVisitor::findNodeForValuePath(LILValuePath * vp) con
                         subjTy = ifCastTy;
                     }
                 }
-                if (subjTy && subjTy->isA(TypeTypeObject)) {
+                if (subjTy->isA(TypeTypeObject)) {
                     auto objTy = std::static_pointer_cast<LILObjectType>(subjTy);
                     classDecl = this->findClassWithName(objTy->getName().data());
                 }
