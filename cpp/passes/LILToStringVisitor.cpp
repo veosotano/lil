@@ -882,6 +882,17 @@ LILToStrInfo LILToStringVisitor::_stringify(LILInstruction * value)
                 };
                 break;
             }
+            case InstructionTypeBug:
+            {
+                auto instr = static_cast<LILInstruction *>(value);
+                ret.value = "#bug ";
+                const auto & arg = instr->getArgument();
+                if (arg && (arg->isA(NodeTypeStringLiteral) || arg->isA(NodeTypeCStringLiteral))) {
+                    auto str = std::static_pointer_cast<LILStringLiteral>(arg);
+                    ret.value += str->getValue();
+                }
+                break;
+            }
             default:
             {
                 LILString nameStr;

@@ -55,6 +55,8 @@ LILString LILInstruction::instructionTypeToString(InstructionType instrType)
             return "paste";
         case InstructionTypeSnippet:
             return "snippet";
+        case InstructionTypeBug:
+            return "bug";
         default:
             return "ERROR: unknown instruction type";
     }

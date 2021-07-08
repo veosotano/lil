@@ -3238,49 +3238,11 @@ bool LILCodeParser::readInstruction()
         }
         else if (currentval == "configure")
         {
-//            ret = std::shared_ptr<LILInstruction>(new LILInstruction(LILConfigureInstruction, currentval, this));
-//
-//            if (d->notifiesReceiver)
-//            {
-//                //notify the receiver
-//                d->receiver->receiveNodeData(ParserEventInstruction, ret);
-//            }
-//
-//            this->readNextToken();
-//            if (atEndOfSource())
-//                return false;
-//            this->skip(TokenTypeWhitespace);
-//            if (atEndOfSource())
-//                return false;
-//
-//            bool argValid = true;
-//            std::shared_ptr<LILNode> arg = this->readExpression(argValid);
-//            if (!argValid)
-//                return false;
-//
-//            ret->setArgument(arg);
-//
-//            if (d->notifiesReceiver)
-//            {
-//                //notify the receiver
-//                d->receiver->receiveNodeData(ParserEventConfiguration, ret);
-//            }
-//
-//            if (atEndOfSource())
-//                return ret;
-//            this->skip(TokenTypeWhitespace);
-//            if (atEndOfSource())
-//                return ret;
-//
-//            if (d->currentToken->isA(TokenTypeSemicolon))
-//            {
-//                this->skip(TokenTypeSemicolon);
-//                if (atEndOfSource())
-//                    return ret;
-//                this->skip(TokenTypeWhitespace);
-//                if (atEndOfSource())
-//                    return ret;
-//            }
+            return this->readConfigureInstr();
+        }
+        else if (currentval == "bug")
+        {
+            return this->readBugInstr();
         }
         else
         {
@@ -3636,6 +3598,42 @@ bool LILCodeParser::readNewInstr()
         d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
         this->readNextToken();
         LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+    }
+    LIL_END_NODE
+}
+
+bool LILCodeParser::readBugInstr()
+{
+    LIL_START_NODE(NodeTypeInstruction)
+    
+    //skip the instruction sign
+    d->receiver->receiveNodeData(ParserEventInstruction, d->currentToken->getString());
+    this->readNextToken();
+    if (atEndOfSource())
+        return false;
+    
+    d->receiver->receiveNodeData(ParserEventInstruction, d->currentToken->getString());
+    
+    this->readNextToken();
+    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+    
+    if (
+           d->currentToken->isA(TokenTypeDoubleQuoteString)
+        || d->currentToken->isA(TokenTypeSingleQuoteString)
+        || d->currentToken->isA(TokenTypeCString)
+    ){
+        bool strValid = this->readStringLiteral();
+        if (strValid) {
+            d->receiver->receiveNodeCommit();
+        } else {
+            LIL_CANCEL_NODE
+        }
+        this->readNextToken();
+        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+        
+    } else {
+        d->receiver->receiveError("Expected string literal for bug instruction", d->file, d->line, d->column);
+        LIL_CANCEL_NODE
     }
     LIL_END_NODE
 }

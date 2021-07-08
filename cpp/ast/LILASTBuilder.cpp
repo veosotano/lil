@@ -810,6 +810,7 @@ void LILASTBuilder::receiveNodeCommit()
                 case InstructionTypeNeeds:
                 case InstructionTypeImport:
                 case InstructionTypePaste:
+                case InstructionTypeBug:
                     instr->setArgument(this->currentNode);
                     break;
 
@@ -1324,6 +1325,8 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
                         instr->setInstructionType(InstructionTypeDelete);
                     } else if (data == "configure") {
                         instr->setInstructionType(InstructionTypeConfigure);
+                    } else if (data == "bug") {
+                        instr->setInstructionType(InstructionTypeBug);
                     }
                     break;
                 }
