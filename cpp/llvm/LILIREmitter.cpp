@@ -3813,6 +3813,7 @@ size_t LILIREmitter::getSizeOfType(std::shared_ptr<LILType> ty) const
             auto arg = this->recursiveFindNode(saTy->getArgument());
             if (!arg) {
                 std::cerr << "ARGUMENT OF STATIC ARRAY TYPE NOT FOUND FAIL!!!!!!!!!!!!!!!!\n\n";
+                return 0;
             }
             if (arg->isA(NodeTypeVarDecl)) {
                 auto vd = std::static_pointer_cast<LILVarDecl>(arg);
