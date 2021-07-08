@@ -469,12 +469,8 @@ bool LILCodeParser::isExpression() const
         case TokenTypeNegator:
         {
             peekToken = d->lexer->peekNextToken();
-            if (peekToken->isA(TokenTypeEqualSign))
-            {
-                d->lexer->resetPeek();
-                return true;
-            }
-            break;
+            d->lexer->resetPeek();
+            return peekToken->isA(TokenTypeEqualSign);
         }
         case TokenTypeEqualSign:
         case TokenTypeBiggerComparator:
@@ -491,11 +487,42 @@ bool LILCodeParser::isExpression() const
             d->lexer->resetPeek();
             return true;
         }
-        default:
-            break;
+
+        case TokenTypeNone:
+        case TokenTypeSemicolon:
+        case TokenTypeSquareBracketOpen:
+        case TokenTypeSquareBracketClose:
+        case TokenTypeParenthesisOpen:
+        case TokenTypeParenthesisClose:
+        case TokenTypeDot:
+        case TokenTypeColon:
+        case TokenTypeComma:
+        case TokenTypeCString:
+        case TokenTypeEllipsis:
+        case TokenTypeNumberFP:
+        case TokenTypeAmpersand:
+        case TokenTypeBlockOpen:
+        case TokenTypeDoubleDot:
+        case TokenTypeHexNumber:
+        case TokenTypeNumberInt:
+        case TokenTypeThinArrow:
+        case TokenTypeBlockClose:
+        case TokenTypeIdentifier:
+        case TokenTypeBlockComment:
+        case TokenTypeObjectSign:
+        case TokenTypeWhitespace:
+        case TokenTypeForeignLang:
+        case TokenTypeLineComment:
+        case TokenTypeVerticalBar:
+        case TokenTypeDocumentation:
+        case TokenTypeInstructionSign:
+        case TokenTypeDoubleQuoteString:
+        case TokenTypeSingleQuoteString:
+        case TokenTypePercentageNumberFP:
+        case TokenTypePercentageNumberInt:
+            d->lexer->resetPeek();
+            return false;
     }
-    d->lexer->resetPeek();
-    return false;
 }
 
 bool LILCodeParser::isUnaryExpression() const
