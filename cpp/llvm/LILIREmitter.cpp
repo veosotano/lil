@@ -2181,23 +2181,21 @@ llvm::Value * LILIREmitter::_emitFunctionCall(LILFunctionCall * value, LILString
             
             llvm::Value * fcArgIr;
             std::shared_ptr<LILNode> fcValue;
+            if (fcArg->isA(NodeTypeAssignment)) {
+                auto asgmt = std::static_pointer_cast<LILAssignment>(fcArg);
+                fcValue = asgmt->getValue();
+            } else {
+                fcValue = fcArg;
+            }
 
             if (declArgsSize <= i)
             {
-                fcArgIr = this->_emitFCArg(fcArg.get(), fcArg->getType().get());
+                fcArgIr = this->_emitFCArg(fcValue.get(), fcArg->getType().get());
             }
             else
             {
                 auto declArg = declArgs[declIndex];
                 auto declArgTy = declArg->getType();
-                
-                if (fcArg->isA(NodeTypeAssignment)) {
-                    auto asgmt = std::static_pointer_cast<LILAssignment>(fcArg);
-                    fcValue = asgmt->getValue();
-                } else {
-                    fcValue = fcArg;
-                }
-                
                 fcArgIr = this->_emitFCArg(fcValue.get(), declArgTy.get());
             }
 
