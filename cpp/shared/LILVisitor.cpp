@@ -21,12 +21,33 @@
 #include "LILVarNode.h"
 #include "LILRootNode.h"
 #include "LILFunctionType.h"
+#include "LILMultipleType.h"
+#include "LILNumberLiteral.h"
 #include "LILObjectType.h"
+#include "LILPointerType.h"
 #include "LILPropertyName.h"
+#include "LILStaticArrayType.h"
+#include "LILStringLiteral.h"
 #include "LILValuePath.h"
 #include "LILVarDecl.h"
 
 using namespace LIL;
+
+LILString LILVisitor__getTypeName(LILType * ty)
+{
+    switch (ty->getTypeType()) {
+        case LIL::TypeTypePointer:
+        {
+            LILPointerType * ptrTy = static_cast<LILPointerType *>(ty);
+            LILString ret = ty->getName();
+            ret += "_"+LILVisitor__getTypeName(ptrTy->getArgument().get());
+            return ret;
+        }
+            
+        default:
+            return ty->getName();
+    }
+}
 
 LILVisitor::LILVisitor()
 : inhibitSearchingForIfCastType(false)
@@ -321,46 +342,93 @@ LILString LILVisitor::decorate(LILString ns, LILString className, LILString name
 LILString LILVisitor::typeToString(std::shared_ptr<LILType> type) const
 {
     LILString ret("");
-    auto ft = std::dynamic_pointer_cast<LILFunctionType>(type);
-    if (ft) {
-        const auto & args = ft->getArguments();
-        if (args.size() == 0) {
-            return ret;
-        } else {
-            ret = "_";
-        }
-        for (size_t i=0, j=args.size(); i<j; ++i) {
-            const auto & arg = args[i];
-            LILString tyName;
-            if (arg->isA(NodeTypeType)) {
-                tyName = this->typeToString(std::static_pointer_cast<LILType>(arg));
-            } else if (arg->isA(NodeTypeVarDecl)){
-                auto vd = std::static_pointer_cast<LILVarDecl>(arg);
-                auto vdTy = vd->getType();
-                if (vdTy) {
-                    tyName = this->typeToString(vdTy);
+    switch (type->getTypeType()) {
+        case TypeTypeFunction:
+        {
+            const auto & args = std::static_pointer_cast<LILFunctionType>(type)->getArguments();
+            if (args.size() == 0) {
+                return ret;
+            } else {
+                ret = "_";
+            }
+            for (size_t i=0, j=args.size(); i<j; ++i) {
+                const auto & arg = args[i];
+                LILString tyName;
+                if (arg->isA(NodeTypeType)) {
+                    tyName = this->typeToString(std::static_pointer_cast<LILType>(arg));
+                } else if (arg->isA(NodeTypeVarDecl)){
+                    auto vd = std::static_pointer_cast<LILVarDecl>(arg);
+                    auto vdTy = vd->getType();
+                    if (vdTy) {
+                        tyName = this->typeToString(vdTy);
+                    }
+                }
+                
+                if (arg->isA(TypeTypeFunction)) {
+                    ret += LILString("f0") + tyName;
+                } else {
+                    ret += "a" + LILString::number((LILUnitI64)tyName.length())+"_"+tyName;
+                }
+                if (i<j-1) {
+                    ret += "_";
                 }
             }
-
-            if (arg->isA(TypeTypeFunction)) {
-                ret += LILString("f0") + tyName;
-            } else {
-                ret += "a" + LILString::number((LILUnitI64)tyName.length())+"_"+tyName;
-            }
-            if (i<j-1) {
-                ret += "_";
-            }
+            break;
         }
-    } else {
-        ret = type->getName();
-    }
-    for (auto paramTyNode : type->getParamTypes()) {
-        if (!paramTyNode->isA(NodeTypeType)) {
-            std::cerr << "PARAM TYPE WAS NOT TYPE FAIL!!!!!!\n\n";
-            continue;
+        case TypeTypePointer:
+        {
+            auto ptrTy = std::static_pointer_cast<LILPointerType>(type);
+            ret += "ptr_"+LILVisitor::typeToString(ptrTy->getArgument());
+            break;
         }
-        auto paramTy = std::static_pointer_cast<LILType>(paramTyNode);
-        ret += "_"+paramTy->getName();
+        case TypeTypeStaticArray:
+        {
+            auto saTy = std::static_pointer_cast<LILStaticArrayType>(type);
+            ret += "sarr_"+LILVisitor::typeToString(std::static_pointer_cast<LILType>(saTy->getArgument()));
+            break;
+        }
+        case TypeTypeMultiple:
+        {
+            auto mt = std::static_pointer_cast<LILMultipleType>(type);
+            ret += "mt";
+            for (auto mtTy : mt->getTypes()) {
+                ret += "_" + LILVisitor::typeToString(mtTy);
+            }
+            break;
+        }
+        case TypeTypeObject:
+        case TypeTypeSingle:
+        {
+            ret += type->getName();
+            for (const auto & node : type->getTmplParams()) {
+                switch (node->getNodeType()) {
+                    case NodeTypeType:
+                    {
+                        ret += "_" + LILVisitor::typeToString(std::static_pointer_cast<LILType>(node));
+                        break;
+                    }
+                    case NodeTypeStringLiteral:
+                    {
+                        auto str = std::static_pointer_cast<LILStringLiteral>(node);
+                        ret += "_" + str->getValue();
+                        break;
+                    }
+                    case NodeTypeNumberLiteral:
+                    {
+                        auto num = std::static_pointer_cast<LILNumberLiteral>(node);
+                        ret += "_" + num->getValue();
+                        break;
+                    }
+                    default:
+                        std::cerr << "UNKNOWN NODE TYPE FAIL!!!!!!! !!!! !!!!!\n";
+                        return "error";
+                }
+            }
+            break;
+        }
+        case TypeTypeNone:
+            //do nothing;
+            break;
     }
     return ret;
 }
