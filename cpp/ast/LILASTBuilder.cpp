@@ -472,11 +472,15 @@ void LILASTBuilder::receiveNodeCommit()
             break;
         }
         case BuilderStateType:
+        {
+            std::cerr << "CANNOT ADD PARAMETER TYPE TO SINGLE TYPE FAIL !!!!! \n\n";
+            break;
+        }
         case BuilderStateObjectType:
         {
-            if (this->currentNode && this->currentNode->isA(NodeTypeType)) {
-                std::shared_ptr<LILType> ty = std::static_pointer_cast<LILType>(this->currentContainer.back());
-                ty->addParamType(std::static_pointer_cast<LILType>(this->currentNode));
+            if (this->currentNode) {
+                std::shared_ptr<LILObjectType> objTy = std::static_pointer_cast<LILObjectType>(this->currentContainer.back());
+                objTy->addTmplParam(this->currentNode);
             }
             break;
         }
@@ -709,11 +713,11 @@ void LILASTBuilder::receiveNodeCommit()
                 }
                 case NodeTypeTypeDecl:
                 {
-                    if (!cd->getReceivesBody()) {
-                        auto td = std::static_pointer_cast<LILTypeDecl>(this->currentNode);
-                        std::shared_ptr<LILType> ty = td->getSrcType();
-                        auto cdTy = cd->getType();
-                        cdTy->addParamType(ty);
+                    if (cd->getReceivesBody()) {
+                        //fixme: not just aliases on classes
+                        //cd->addType(std::static_pointer_cast<LILTypeDecl>(this->currentNode));
+                    } else {
+                        cd->addTmplParam(this->currentNode);
                     }
                     break;
                 }
@@ -743,8 +747,9 @@ void LILASTBuilder::receiveNodeCommit()
                 case NodeTypeType:
                 {
                     auto ty = od->getType();
-                    if (ty) {
-                        ty->addParamType(this->currentNode);
+                    if (ty && ty->isA(TypeTypeObject)) {
+                        auto objTy = std::static_pointer_cast<LILObjectType>(ty);
+                        objTy->addTmplParam(this->currentNode);
                     }
                     break;
                 }
