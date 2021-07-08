@@ -880,7 +880,8 @@ void LILTypeGuesser::_process(LILValueList * value)
                                                     return;
                                                 }
                                             } else if (asTyMtTy->isA(TypeTypeObject) && asTyMtTy->getName() == "array"){
-                                                auto paramTy = asTyMtTy->getParamTypes().front();
+                                                auto objTy = std::static_pointer_cast<LILObjectType>(asTyMtTy);
+                                                auto paramTy = objTy->getTmplParams().front();
                                                 if (paramTy && paramTy->equalTo(vlTy)) {
                                                     value->setType(asTyMtTy);
                                                     return;
@@ -894,7 +895,8 @@ void LILTypeGuesser::_process(LILValueList * value)
                                             return;
                                         }
                                     } else if (asTy->isA(TypeTypeObject) && asTy->getName() == "array"){
-                                        auto paramTy = asTy->getParamTypes().front();
+                                        auto objTy = std::static_pointer_cast<LILObjectType>(asTy);
+                                        auto paramTy = objTy->getTmplParams().front();
                                         if (paramTy && paramTy->equalTo(vlTy)) {
                                             value->setType(asTy);
                                             return;
@@ -1357,7 +1359,7 @@ std::shared_ptr<LILType> LILTypeGuesser::getNodeType(std::shared_ptr<LILNode> no
             auto ty = this->findTypeForValueList(vl);
             if (ty && !ty->getIsWeakType()) {
                 auto objTy = LILObjectType::make("array");
-                objTy->addParamType(ty);
+                objTy->addTmplParam(ty);
                 return objTy;
             }
             return nullptr;
