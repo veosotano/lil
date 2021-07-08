@@ -1806,6 +1806,10 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(std::shared_ptr<LI
                         currentTy = ptrTy->getArgument();
                     }
                     auto className = currentTy->getName().data();
+                    if (!currentTy->isA(TypeTypeObject)) {
+                        std::cerr << "TYPE " << className << " IS NOT OBJECT TYPE FAIL!!!!\n";
+                        return nullptr;
+                    }
                     auto classDecl = this->findClassWithName(className);
                     if (!classDecl) {
                         std::cerr << "CLASS " << className << " NOT FOUND FAIL!!!!\n";
