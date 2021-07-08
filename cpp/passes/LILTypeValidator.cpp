@@ -126,6 +126,10 @@ void LILTypeValidator::_validate(std::shared_ptr<LILFunctionCall> fc)
         }
         bool isMethod = false;
         std::shared_ptr<LILType> ty;
+        if (fieldTy->isA(TypeTypePointer)) {
+            auto ptrTy = std::static_pointer_cast<LILPointerType>(fieldTy);
+            fieldTy = ptrTy->getArgument();
+        }
         if (fieldTy->isA(TypeTypeObject)) {
             auto classDecl = this->findClassWithName(fieldTy->getName());
             if (!classDecl) {
