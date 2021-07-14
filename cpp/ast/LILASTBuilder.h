@@ -96,6 +96,8 @@ namespace LIL
         void setIsMain(bool value);
         void setVerbose(bool value);
         void setDebugAST(bool value);
+        void setBuildFlatList(bool value);
+        bool getBuildFlatList() const;
 
     private:
         std::vector<std::shared_ptr<LILNode>> currentContainer;
@@ -105,6 +107,7 @@ namespace LIL
         bool _isMain;
         bool _verbose;
         bool _debugAST;
+        bool _buildFlatList;
     };
 }
 

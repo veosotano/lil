@@ -63,6 +63,7 @@ using namespace LIL;
 LILASTBuilder::LILASTBuilder()
 : _isMain(false)
 , _verbose(false)
+, _buildFlatList(false)
 {
     this->rootNode = std::make_shared<LILRootNode>();
     this->state.push_back(BuilderStateRoot);
@@ -433,7 +434,11 @@ void LILASTBuilder::receiveNodeCommit()
         {
             if (this->currentNode)
             {
-                this->rootNode->add(this->currentNode);
+                if (this->getBuildFlatList()) {
+                    this->rootNode->addNode(currentNode);
+                } else {
+                    this->rootNode->add(this->currentNode);
+                }
             }
             break;
         }
@@ -1546,4 +1551,14 @@ void LILASTBuilder::setDebugAST(bool value)
 std::shared_ptr<LILRootNode> LILASTBuilder::getRootNode() const
 {
     return this->rootNode;
+}
+
+void LILASTBuilder::setBuildFlatList(bool value)
+{
+    this->_buildFlatList = value;
+}
+
+bool LILASTBuilder::getBuildFlatList() const
+{
+    return this->_buildFlatList;
 }
