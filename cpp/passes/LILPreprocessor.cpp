@@ -1070,7 +1070,7 @@ bool LILPreprocessor::_processArgInstr(std::shared_ptr<LILExpression> value)
     }
     this->_nodeBuffer.emplace_back();
     bool removeLeft = this->processArgInstr(left);
-    if (removeLeft) {
+    if (removeLeft && this->_nodeBuffer.back().size() == 0) {
         LILErrorMessage ei;
         ei.message =  "Evaluation of #arg leaves expression without left side value. Please provide a default value.";
         LILNode::SourceLocation sl = left->getSourceLocation();
@@ -1090,7 +1090,7 @@ bool LILPreprocessor::_processArgInstr(std::shared_ptr<LILExpression> value)
     }
     this->_nodeBuffer.emplace_back();
     bool removeRight = this->processArgInstr(right);
-    if (removeRight) {
+    if (removeRight && this->_nodeBuffer.back().size() == 0) {
         LILErrorMessage ei;
         ei.message =  "Evaluation of #arg leaves expression without right side value. Please provide a default value.";
         LILNode::SourceLocation sl = right->getSourceLocation();
@@ -1112,7 +1112,7 @@ bool LILPreprocessor::_processArgInstr(std::shared_ptr<LILUnaryExpression> value
     if (val && val->isA(InstructionTypeIf)) {
         this->_nodeBuffer.emplace_back();
         bool remove = this->processArgInstr(val);
-        if (remove) {
+        if (remove && this->_nodeBuffer.back().size() == 0) {
             LILErrorMessage ei;
             ei.message =  "Evaluation of #arg leaves unary expression without value. Please provide a default value.";
             LILNode::SourceLocation sl = val->getSourceLocation();
@@ -1416,7 +1416,7 @@ bool LILPreprocessor::_processArgInstr(std::shared_ptr<LILInstruction> value)
         if (arg) {
             this->_nodeBuffer.emplace_back();
             bool remove = this->processArgInstr(arg);
-            if (remove) {
+            if (remove && this->_nodeBuffer.back().size() == 0) {
                 LILErrorMessage ei;
                 ei.message =  "Evaluation of #arg leaves instruction without argument. Please provide a default value.";
                 LILNode::SourceLocation sl = arg->getSourceLocation();
@@ -1440,7 +1440,7 @@ bool LILPreprocessor::_processArgInstrIfInstr(std::shared_ptr<LILIfInstruction> 
     if (arg) {
         this->_nodeBuffer.emplace_back();
         bool remove = this->processArgInstr(arg);
-        if (remove) {
+        if (remove && this->_nodeBuffer.back().size() == 0) {
             LILErrorMessage ei;
             ei.message =  "Evaluation of #arg leaves instruction without argument. Please provide a default value.";
             LILNode::SourceLocation sl = arg->getSourceLocation();
@@ -1500,7 +1500,7 @@ bool LILPreprocessor::_processArgInstrSnippetInstr(std::shared_ptr<LILSnippetIns
     if (arg) {
         this->_nodeBuffer.emplace_back();
         bool remove = this->processArgInstr(arg);
-        if (remove) {
+        if (remove && this->_nodeBuffer.back().size() == 0) {
             LILErrorMessage ei;
             ei.message =  "Evaluation of #arg leaves instruction without argument. Please provide a default value.";
             LILNode::SourceLocation sl = arg->getSourceLocation();
