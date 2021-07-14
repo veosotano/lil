@@ -611,9 +611,6 @@ bool LILCodeParser::isAssignment() const
         default:
             break;
     }
-    if (peekToken->isA(TokenTypeIdentifier)) {
-        
-    }
     bool done = false;
     while (peekToken && !done) {
         //we assume we are done
