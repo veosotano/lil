@@ -2838,86 +2838,8 @@ bool LILCodeParser::readRule()
     //read the inner part of the block
     while (!this->atEndOfSource() && valid && !d->currentToken->isA(TokenTypeBlockClose))
     {
-        switch (d->currentToken->getType())
-        {
-            case TokenTypeIdentifier:
-            case TokenTypeObjectSign:
-            {
-                if (this->isAssignment())
-                {
-                    bool asgmtValid = this->readAssignment(true, false);
-                    if (asgmtValid) {
-                        d->receiver->receiveNodeCommit();
-                    }
-                    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-                    if (d->currentToken->isA(TokenTypeSemicolon)) {
-                        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
-                        this->readNextToken();
-                        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-                    }
-                }
-                else
-                {
-                    bool ruleValid = this->readRule();
-                    if (ruleValid) {
-                        d->receiver->receiveNodeCommit();
-                    }
-                    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-                }
-                break;
-            }
-
-            case TokenTypeDoubleDot:
-            case TokenTypeNegator:
-            case TokenTypeColon:
-            case TokenTypeAsterisk:
-            {
-                bool ruleValid = this->readRule();
-                if (ruleValid){
-                    d->receiver->receiveNodeCommit();
-                }
-                break;
-            }
-
-            case TokenTypeInstructionSign:
-            {
-                bool ruleValid = this->readInstructionRule();
-                if (ruleValid){
-                    d->receiver->receiveNodeCommit();
-                }
-                break;
-            }
-
-            default:
-            {
-                d->receiver->receiveError("Unexpected token of type " + LILToken::tokenStringRepresentation(d->currentToken->getType()) + " while reading rule", d->file, d->line, d->column);
-                d->receiver->receiveNodeData(ParserEventInvalid, d->currentToken->getString());
-                this->readNextToken();
-                LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-                break;
-            }
-        }
-
-        //        if (this->atEndOfSource())
-        //        {
-        //            std::shared_ptr<LILNameSelector> sbjct = selectorChains.back()->subject()->getName();
-        //            LILString lmntnm;
-        //            if (sbjct)
-        //            {
-        //                lmntnm = sbjct->getElementName();
-        //            }
-        //            else
-        //            {
-        //                lmntnm = "unknown element";
-        //            }
-        //
-        //            d->receiver->receiveError("Auto closing block of rule targeting " + lmntnm + " because of unexpected end of file", d->file, d->line, d->column);
-        //            //leave the block context
-        //            d->currentContext.pop_back();
-        //            return newRule;
-        //        }
+        this->parseNext();
     }
-
     if (!this->atEndOfSource())
     {
         //we expect a block to close
