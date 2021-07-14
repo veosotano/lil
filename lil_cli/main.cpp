@@ -66,6 +66,7 @@ int main(int argc, const char * argv[]) {
     std::string inName;
     std::string fileName;
     std::string localDir;
+    std::vector<LILString> customArgs;
     
     for (int i=1, j=argc; i<j; /*intentionally left blank*/) {
         std::string command = argv[i];
@@ -200,7 +201,9 @@ int main(int argc, const char * argv[]) {
         } else if (command == "--debug-ir-emitter") {
             debugIREmitter = true;
             ++i;
-            
+        } else if (command.substr(0, 2) == "--") {
+            customArgs.push_back(command);
+            ++i;
         } else {
             //anything else is interpreted as the input filename
             inName = command;
@@ -283,6 +286,7 @@ int main(int argc, const char * argv[]) {
     codeUnit->setDebugNameLowerer(debugNameLowerer);
     codeUnit->setDebugTypeValidator(debugTypeValidator);
     codeUnit->setDebugConversionInserter(debugConversionInserter);
+    codeUnit->setCustomArgs(customArgs);
     
     codeUnit->setFile(fileName);
     std::vector<std::shared_ptr<LILNode>> emptyVect;
