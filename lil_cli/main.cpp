@@ -43,6 +43,7 @@ int main(int argc, const char * argv[]) {
     bool compileToO = false;
     bool compileToS = false;
     bool verbose = false;
+    bool noConfigureDefaults = false;
     bool noLilStd = false;
     bool debugLilStd = false;
     bool debugPreprocessor = false;
@@ -63,6 +64,8 @@ int main(int argc, const char * argv[]) {
     int warningLevel = 0;
     std::string outName;
     std::string inName;
+    std::string fileName;
+    std::string localDir;
     
     for (int i=1, j=argc; i<j; /*intentionally left blank*/) {
         std::string command = argv[i];
@@ -125,6 +128,10 @@ int main(int argc, const char * argv[]) {
             isMainFlag = true;
             ++i;
             
+            
+        } else if (command == "--no-configure-defaults") {
+            noConfigureDefaults = true;
+            ++i;
             
         } else if (command == "--no-lil-std") {
             noLilStd = true;
@@ -201,26 +208,26 @@ int main(int argc, const char * argv[]) {
         }
     }
     
+    size_t slashIndex = inName.find_last_of("/");
+    if (slashIndex == std::string::npos) {
+        slashIndex = 0;
+    } else {
+        localDir = inName.substr(0, slashIndex);
+        slashIndex += 1;
+    }
+    size_t dotIndex = inName.find_last_of(".");
+    if (dotIndex != std::string::npos && dotIndex > slashIndex) {
+        fileName = inName.substr(slashIndex, dotIndex - slashIndex);
+    } else {
+        fileName = inName;
+    }
     if (outName.length() == 0) {
-        size_t slashIndex = inName.find_last_of("/");
-        if (slashIndex == std::string::npos) {
-            slashIndex = 0;
+        if (compileToS) {
+            outName = fileName + ".s";
+        } else if (compileToO) {
+            outName = fileName + ".o";
         } else {
-            slashIndex += 1;
-        }
-        size_t dotIndex = inName.find_last_of(".");
-        if (dotIndex != std::string::npos && dotIndex > slashIndex) {
-            std::string name = inName.substr(slashIndex, dotIndex - slashIndex);
-            if (compileToS) {
-                outName = name + ".s";
-            } else if (compileToO) {
-                outName = name + ".o";
-            } else {
-                outName = name + ".out";
-            }
-            
-        } else {
-            outName = inName;
+            outName = fileName + ".out";
         }
     }
     
@@ -255,7 +262,12 @@ int main(int argc, const char * argv[]) {
     std::unique_ptr<LILCodeUnit> codeUnit = std::make_unique<LILCodeUnit>();
     codeUnit->setIsMain(isMain);
     codeUnit->setVerbose(verbose);
-    codeUnit->setNoLilStd(noLilStd);
+    if (noConfigureDefaults) {
+        codeUnit->setNeedsConfigureDefaults(false);
+    }
+    if (noLilStd) {
+        codeUnit->setNeedsStdLil(false);
+    }
     codeUnit->setDebugLilStd(debugLilStd);
     codeUnit->setDebugPreprocessor(debugPreprocessor);
     codeUnit->setDebugAST(debugAST);
@@ -271,12 +283,17 @@ int main(int argc, const char * argv[]) {
     codeUnit->setDebugNameLowerer(debugNameLowerer);
     codeUnit->setDebugTypeValidator(debugTypeValidator);
     codeUnit->setDebugConversionInserter(debugConversionInserter);
-    codeUnit->setFile(inName);
+    
+    codeUnit->setFile(fileName);
     std::vector<std::shared_ptr<LILNode>> emptyVect;
     auto fullPath = directory+"/"+inName;
     codeUnit->addAlreadyImportedFile(fullPath, emptyVect, true);
     codeUnit->addAlreadyImportedFile(fullPath, emptyVect, false);
-    codeUnit->setDir(directory);
+    if (localDir.length() > 0) {
+        codeUnit->setDir(directory+"/"+localDir);
+    } else {
+        codeUnit->setDir(directory);
+    }
     codeUnit->setSource(lilStr);
     
     codeUnit->run();
