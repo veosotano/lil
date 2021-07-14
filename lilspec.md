@@ -306,6 +306,24 @@ The next example shows a class with a method which takes a boolean as argument a
 ### Colors
 
 ## Constants
+### Arg
+
+The `#arg` instruction is useful when you want to allow an user to pass arguments to the
+compiler, allowing to customize the build by, for example, choosing which part of a file
+gets compiled, or allowing the user to import a file with a custom filename.
+
+The syntax is `#arg` followed by optional whitespace, then a block of curly braces, which
+contain two assignments: `name` and `default`, to which we give the desired values.
+
+	const.i64 theSize: #arg { name: "defaultSize"; default: 1024 };
+	
+	//invoke compiler with: --defaultSize:1024
+	//e.g.:  lil main.lil --defaultSize:1024
+	
+Since the command line eats the quotes, if you want to use a string put the whole command
+inside single quotes:
+	
+	lil main.lil '--appName:"My App"'
 
 ## Snippets
 

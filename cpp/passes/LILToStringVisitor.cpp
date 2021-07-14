@@ -904,6 +904,16 @@ LILToStrInfo LILToStringVisitor::_stringify(LILInstruction * value)
                 }
                 break;
             }
+            case InstructionTypeArg:
+            {
+                auto instr = static_cast<LILInstruction *>(value);
+                ret.value = "#arg";
+                for (auto it = instr->getChildNodes().begin(); it!=instr->getChildNodes().end(); ++it)
+                {
+                    ret.children.push_back(this->stringify((*it).get()));
+                };
+                break;
+            }
             default:
             {
                 LILString nameStr;

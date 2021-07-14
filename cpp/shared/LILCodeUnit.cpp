@@ -76,6 +76,7 @@ namespace LIL
         std::unique_ptr<LILPassManager> pm;
         std::map<LILString, std::vector<std::shared_ptr<LILNode>>> _alreadyImportedFilesNeeds;
         std::map<LILString, std::vector<std::shared_ptr<LILNode>>> _alreadyImportedFilesImport;
+        std::vector<LILString> customArgs;
 
         bool isMain;
 
@@ -187,6 +188,16 @@ void LILCodeUnit::setIsBeingImportedWithImport(bool value)
 bool LILCodeUnit::getIsBeingImportedWithImport() const
 {
     return d->isBeingImportedWithImport;
+}
+
+const std::vector<LILString> & LILCodeUnit::getCustomArgs() const
+{
+    return d->customArgs;
+}
+
+void LILCodeUnit::setCustomArgs(std::vector<LILString> & args)
+{
+    d->customArgs = args;
 }
 
 void LILCodeUnit::run()
@@ -330,6 +341,7 @@ void LILCodeUnit::runPasses()
     preprocessor->setDebug(d->debugPreprocessor);
     preprocessor->setDir(d->dir);
     preprocessor->setDebugAST(d->debugAST);
+    preprocessor->setCustomArgs(d->customArgs);
     passes.push_back(preprocessor);
     if (verbose) {
         auto stringVisitor = new LILToStringVisitor();

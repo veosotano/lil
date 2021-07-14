@@ -830,6 +830,11 @@ void LILASTBuilder::receiveNodeCommit()
                     instr->addNode(this->currentNode);
                     break;
                 }
+                case InstructionTypeArg:
+                {
+                    instr->addNode(this->currentNode);
+                    break;
+                }
                 default:
                     std::cerr << "UNIMPLEMENTED FAIL !!!! \n\n";
                     break;
@@ -1337,6 +1342,8 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
                         instr->setInstructionType(InstructionTypeConfigure);
                     } else if (data == "bug") {
                         instr->setInstructionType(InstructionTypeBug);
+                    } else if (data == "arg") {
+                        instr->setInstructionType(InstructionTypeArg);
                     }
                     break;
                 }

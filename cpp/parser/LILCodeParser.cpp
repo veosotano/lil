@@ -3301,6 +3301,10 @@ bool LILCodeParser::readInstruction()
         {
             return this->readBugInstr();
         }
+        else if (currentval == "arg")
+        {
+            return this->readArgInstr();
+        }
         else
         {
             d->receiver->receiveError("Error: unknown instruction type "+currentval, d->file, d->line, d->column);
@@ -3736,6 +3740,36 @@ bool LILCodeParser::readBugInstr()
         d->receiver->receiveError("Expected string literal for bug instruction", d->file, d->line, d->column);
         LIL_CANCEL_NODE
     }
+    LIL_END_NODE
+}
+
+bool LILCodeParser::readArgInstr()
+{
+    LIL_START_NODE(NodeTypeInstruction)
+
+    //skip the instruction sign
+    d->receiver->receiveNodeData(ParserEventInstruction, d->currentToken->getString());
+    this->readNextToken();
+    if (atEndOfSource())
+        return false;
+
+    d->receiver->receiveNodeData(ParserEventInstruction, d->currentToken->getString());
+
+    this->readNextToken();
+    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+
+    LIL_EXPECT(TokenTypeBlockOpen, "block open")
+    d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+    this->readNextToken();
+    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+    
+    while (!this->atEndOfSource() && !d->currentToken->isA(TokenTypeBlockClose)) {
+        this->parseNext();
+    }
+    LIL_EXPECT(TokenTypeBlockClose, "block close")
+    d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+    this->readNextToken();
+
     LIL_END_NODE
 }
 

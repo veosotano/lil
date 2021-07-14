@@ -233,6 +233,7 @@ namespace LIL
         InstructionTypeSnippet,
         InstructionTypePaste,
         InstructionTypeBug,
+        InstructionTypeArg,
     };
 
     enum SelectorType

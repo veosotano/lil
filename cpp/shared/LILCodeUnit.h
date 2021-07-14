@@ -49,6 +49,8 @@ namespace LIL
         bool getIsBeingImportedWithNeeds() const;
         void setIsBeingImportedWithImport(bool value);
         bool getIsBeingImportedWithImport() const;
+        const std::vector<LILString> & getCustomArgs() const;
+        void setCustomArgs(std::vector<LILString> & args);
 
         void run();
         void buildAST();

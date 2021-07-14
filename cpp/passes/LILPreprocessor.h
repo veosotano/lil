@@ -54,6 +54,9 @@ namespace LIL
         void initializeVisit() override;
         void visit(LILNode * node) override;
         void performVisit(std::shared_ptr<LILRootNode> rootNode) override;
+        void processArgInstr(const std::shared_ptr<LILRootNode> & rootNode);
+        bool processArgInstr(std::shared_ptr<LILNode> node);
+        
         void processImportingInstr(const std::shared_ptr<LILRootNode> & rootNode);
         void processIfInstr(const std::shared_ptr<LILRootNode> & rootNode);
         bool processIfInstr(std::shared_ptr<LILNode> node);
@@ -69,6 +72,10 @@ namespace LIL
         bool isAlreadyImported(const LILString & path, bool isNeeds);
         std::vector<std::shared_ptr<LILNode>> getNodesForAlreadyImportedFile(const LILString & path, bool isNeeds);
 
+        bool hasCustomArg(const LILString & name) const;
+        std::shared_ptr<LILNode> getCustomArg(const LILString & name);
+        void setCustomArgs(std::vector<LILString> & args);
+
     private:
         std::map<LILString, std::vector<std::shared_ptr<LILNode>>> _alreadyImportedFilesNeeds;
         std::map<LILString, std::vector<std::shared_ptr<LILNode>>> _alreadyImportedFilesImport;
@@ -81,6 +88,32 @@ namespace LIL
         std::vector<std::string> _glob(const std::string& pattern) const;
         void _importNodeIfNeeded(std::vector<std::shared_ptr<LILNode>> * newNodes, std::shared_ptr<LILNode> node, bool isExported) const;
         LILString _getDir(LILString path) const;
+
+        bool _processArgInstr(std::shared_ptr<LILExpression> value);
+        bool _processArgInstr(std::shared_ptr<LILUnaryExpression> value);
+        bool _processArgInstr(std::shared_ptr<LILStringFunction> value);
+        bool _processArgInstr(std::shared_ptr<LILType> value);
+        bool _processArgInstr(std::shared_ptr<LILVarDecl> value);
+        bool _processArgInstr(std::shared_ptr<LILClassDecl> value);
+        bool _processArgInstr(std::shared_ptr<LILObjectDefinition> value);
+        bool _processArgInstr(std::shared_ptr<LILAssignment> value);
+        bool _processArgInstr(std::shared_ptr<LILValuePath> value);
+        bool _processArgInstr(std::shared_ptr<LILPropertyName> value);
+        bool _processArgInstr(std::shared_ptr<LILVarName> value);
+        bool _processArgInstr(std::shared_ptr<LILRule> value);
+        bool _processArgInstr(std::shared_ptr<LILSelectorChain> value);
+        bool _processArgInstr(std::shared_ptr<LILSimpleSelector> value);
+        bool _processArgInstr(std::shared_ptr<LILFunctionDecl> value);
+        bool _processArgInstr(std::shared_ptr<LILFunctionCall> value);
+        bool _processArgInstr(std::shared_ptr<LILFlowControl> value);
+        bool _processArgInstr(std::shared_ptr<LILFlowControlCall> value);
+        bool _processArgInstr(std::shared_ptr<LILInstruction> value);
+        bool _processArgInstrIfInstr(std::shared_ptr<LILIfInstruction> value);
+        bool _processArgInstrSnippetInstr(std::shared_ptr<LILSnippetInstruction> value);
+        bool _processArgInstr(std::shared_ptr<LILValueList> value);
+        bool _processArgInstr(std::shared_ptr<LILIndexAccessor> value);
+        bool _processArgInstr(std::shared_ptr<LILConversionDecl> value);
+
         bool _processIfInstr(std::shared_ptr<LILExpression> value);
         bool _processIfInstr(std::shared_ptr<LILUnaryExpression> value);
         bool _processIfInstr(std::shared_ptr<LILStringFunction> value);
@@ -131,6 +164,8 @@ namespace LIL
         bool _processPasteInstr(std::shared_ptr<LILValueList> value);
         bool _processPasteInstr(std::shared_ptr<LILIndexAccessor> value);
         bool _processPasteInstr(std::shared_ptr<LILConversionDecl> value);
+
+        std::map<LILString, std::shared_ptr<LILNode>> _customArgs;
     };
 }
 
