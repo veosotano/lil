@@ -166,6 +166,7 @@ void LILRootNode::add(std::shared_ptr<LILNode> node, bool addToNodeTree)
                 case InstructionTypeGrayscale2:
                 case InstructionTypeDelete:
                 case InstructionTypeSnippet:
+                case InstructionTypeBug:
                 case InstructionTypeArg:
                     //do nothing
                     break;
