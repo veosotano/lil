@@ -98,6 +98,7 @@ There are some reserved words that can't be used as an identifier, such as:
 - var
 - ivar
 - vvar
+- const
 - class
 - alias
 - type
@@ -145,7 +146,7 @@ There is also the modulo operator `%`, which returns the remainder of a division
 
 Expressions can be wrapped in parenthesis `(<lhs> <sign> <rhs>)`, in some cases to desambiguate, and others just to increase legibility.
 
-## Functions
+## Function definitions
 
 Functions are written using the `fn` keyword, followed by the name of the function and then optionally followed by variable declarations
 wrapped in parenthesis `fn doStuff ( var myArg ) { <statements...>  }`, and then a list of commands inside a block delimited by curly braces `{ }`.
@@ -161,34 +162,12 @@ which takes no parameters, and always prints hello to the standard output when c
 		print "hello";
 	}
 
-## Classes
+## Function calls
 
-These are like templates to make identical, but separate, copies of various other values put together as a unit, which we call object instances.
+The functions that have been declared with a name are called using that name, followed by a pair of parentheses containing the arguments to be passed in to the function. The arguments themselves are separated by either commas or semicolons, and a trailing one is allowed.
 
-They are written using the `class` keyword, followed by whitespace, then the "object symbol" `@`, and then the name of the class. A semicolon
-afterwards is allowed but not required. For example:
-
-	class @myClass {
-		// more stuff here
-	}
-
-## Value paths
-
-Value paths are used to access properties and methods of objects. They are written as a series of components of a larger unit:
-
-First comes either a name or one of the special selector objects, like `@self` or `@root`.
-
-If there are more components, you use a dot `.` as a separator and then the next piece. Whitespace between components and the dot is not
-allowed.
-
-For example:
-
-	var myString: "hello";
-	print myString.length;
-
-Here we are calling the `length`method of the `myString` object
-
-### Instantiating objects
+When you write just the values, they need to be in the same order as in the declaration. When
+written using assignments they can be in any order.
 
 ## Variable declarations
 
@@ -216,6 +195,37 @@ inference to know that `myString` is a variable of the correct type.
 	} else {
 		myString: "Foo was not one";
 	}
+
+## Classes
+
+These are like a "blueprint" to make identical, but separate, copies of various other values put together as a unit, which we call object instances.
+
+They are written using the `class` keyword, followed by whitespace, then the "object symbol" `@`, and then the name of the class. A semicolon
+afterwards is allowed but not required. For example:
+
+	class @myClass {
+		// more stuff here
+	}
+
+## Value paths
+
+Value paths are used to access properties and methods of objects. They are written as a series of components of a larger unit:
+
+First comes either a name or one of the special selector objects, like `@self` or `@root`.
+
+If there are more components, you use a dot `.` as a separator and then the next piece. Whitespace between components and the dot is not
+allowed.
+
+For example:
+
+	var myString: "hello";
+	print myString.length;
+
+Here we are calling the `length` method of the `myString` object
+
+### Instantiating objects
+
+
 
 ### Fields
 
@@ -249,6 +259,24 @@ The next example shows a class with a method which takes a boolean as argument a
 	myObjectInstance.printMessage(true);
 
 ## Comparisons
+
+Comparisons are expressions that return a boolean value containing wether the condition was met. There are the following types of comparisons:
+
+- equal `=` or `==`
+- bigger than `>`
+- bigger or equal `>=`
+- lower than `<`
+- lower or equal `<=`
+
+This is an example where comparisons are used together with if else statements:
+
+		if myVar <= 100 {
+			//do something, smaller values
+		} else if myVar > 100 && myVar <= 200 {
+			//do something else, mid range
+		} else {
+			//highest values
+		}
 
 ## Pointers
 
@@ -305,7 +333,6 @@ The next example shows a class with a method which takes a boolean as argument a
 ### Delete
 ### Colors
 
-## Constants
 ### Arg
 
 The `#arg` instruction is useful when you want to allow an user to pass arguments to the
