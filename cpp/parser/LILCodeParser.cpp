@@ -814,6 +814,7 @@ bool LILCodeParser::isRule() const
                 peekToken->isA(TokenTypeSemicolon)
                 || peekToken->isA(TokenTypeParenthesisClose)
                 || peekToken->isA(TokenTypeSquareBracketClose)
+                || peekToken->isA(TokenTypeBlockClose)
             ){
                 ret = false;
             }
