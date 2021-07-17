@@ -63,7 +63,6 @@ namespace LIL
         , debugTypeValidator(false)
         , debugConversionInserter(false)
         , needsConfigureDefaults(true)
-        , needsStdLil(true)
         , isBeingImportedWithNeeds(false)
         , isBeingImportedWithImport(false)
         {
@@ -97,7 +96,6 @@ namespace LIL
         bool debugTypeValidator;
         bool debugConversionInserter;
         bool needsConfigureDefaults;
-        bool needsStdLil;
         bool isBeingImportedWithNeeds;
         bool isBeingImportedWithImport;
     };
@@ -158,16 +156,6 @@ void LILCodeUnit::setNeedsConfigureDefaults(bool value)
 bool LILCodeUnit::getNeedsConfigureDefaults() const
 {
     return d->needsConfigureDefaults;
-}
-
-void LILCodeUnit::setNeedsStdLil(bool value)
-{
-    d->needsStdLil = value;
-}
-
-bool LILCodeUnit::getNeedsStdLil() const
-{
-    return d->needsStdLil;
 }
 
 void LILCodeUnit::setIsBeingImportedWithNeeds(bool value)
@@ -243,23 +231,6 @@ void LILCodeUnit::buildAST()
         }
         if (d->verbose) {
             std::cerr << "\n\n";
-        }
-    }
-    if (d->needsStdLil) {
-        auto needsInstr = std::make_shared<LILInstruction>();
-        LILNode::SourceLocation loc;
-        loc.line = 0;
-        loc.column = 0;
-        needsInstr->setSourceLocation(loc);
-        needsInstr->setInstructionType(InstructionTypeNeeds);
-        needsInstr->setName("needs");
-        auto strConst = std::make_shared<LILStringLiteral>();
-        strConst->setValue("\"std/lil.lil\"");
-        needsInstr->setArgument(strConst);
-        rootNode->add(needsInstr);
-        if (!d->debugLilStd) {
-            needsInstr->setVerbose(false);
-            needsInstr->hidden = true;
         }
     }
 

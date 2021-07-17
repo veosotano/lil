@@ -43,8 +43,6 @@ namespace LIL
         LILString getSource() const;
         void setNeedsConfigureDefaults(bool value);
         bool getNeedsConfigureDefaults() const;
-        void setNeedsStdLil(bool value);
-        bool getNeedsStdLil() const;
         void setIsBeingImportedWithNeeds(bool value);
         bool getIsBeingImportedWithNeeds() const;
         void setIsBeingImportedWithImport(bool value);

@@ -44,7 +44,6 @@ int main(int argc, const char * argv[]) {
     bool compileToS = false;
     bool verbose = false;
     bool noConfigureDefaults = false;
-    bool noLilStd = false;
     bool debugLilStd = false;
     bool debugPreprocessor = false;
     bool debugAST = false;
@@ -133,11 +132,7 @@ int main(int argc, const char * argv[]) {
         } else if (command == "--no-configure-defaults") {
             noConfigureDefaults = true;
             ++i;
-            
-        } else if (command == "--no-lil-std") {
-            noLilStd = true;
-            ++i;
-            
+
         } else if (command == "--debug-lil-std") {
             debugLilStd = true;
             ++i;
@@ -267,9 +262,6 @@ int main(int argc, const char * argv[]) {
     codeUnit->setVerbose(verbose);
     if (noConfigureDefaults) {
         codeUnit->setNeedsConfigureDefaults(false);
-    }
-    if (noLilStd) {
-        codeUnit->setNeedsStdLil(false);
     }
     codeUnit->setDebugLilStd(debugLilStd);
     codeUnit->setDebugPreprocessor(debugPreprocessor);
