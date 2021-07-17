@@ -28,6 +28,7 @@ namespace LIL
         virtual ~LILRule();
 
         void addSelectorChain(std::shared_ptr<LILNode> newSc);
+        const std::vector<std::shared_ptr<LILNode>> & getSelectorChains() const;
         void addValue(std::shared_ptr<LILNode> newVal);
         void addChildRule(std::shared_ptr<LILRule> rule);
         const std::vector<std::shared_ptr<LILNode>> & getNodes() const;

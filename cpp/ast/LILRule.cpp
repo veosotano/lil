@@ -66,6 +66,11 @@ void LILRule::addSelectorChain(std::shared_ptr<LILNode> newSc)
     this->_selectorChains.push_back(newSc);
 }
 
+const std::vector<std::shared_ptr<LILNode>> & LILRule::getSelectorChains() const
+{
+    return this->_selectorChains;
+}
+
 void LILRule::addValue(std::shared_ptr<LILNode> newVal)
 {
     this->addNode(newVal);
