@@ -270,34 +270,6 @@ void LILCodeUnit::buildAST()
     }
     d->parser->parseString(d->source);
 
-    LILString configFileKey = "configureFile";
-    if (rootNode->_config.count(configFileKey)) {
-        if (d->verbose) {
-            std::cerr << "============================\n";
-            std::cerr << "====== CONFIGURE FILE ======\n";
-            std::cerr << "============================\n\n";
-        }
-        auto configFileNode = rootNode->_config[configFileKey];
-        if (configFileNode->getNodeType() != NodeTypeStringLiteral) {
-            std::cerr << "\nERROR: Argument to configure instruction must be a string literal\n\n";
-        } else {
-            const auto & configFile = std::static_pointer_cast<LILStringLiteral>(configFileNode)->getValue().stripQuotes();
-            LILString path = this->getDir()+"/"+configFile;
-            std::ifstream file(path.data(), std::ios::in);
-            if (file.fail()) {
-                std::cerr << "\nERROR: Failed to read the file "+path.data()+"\n\n";
-            } else {
-                std::stringstream buffer;
-                buffer << file.rdbuf();
-                LILString lilStr(buffer.str());
-                d->parser->parseString(lilStr);
-            }
-            if (d->verbose) {
-                std::cerr << "\n\n";
-            }
-        }
-    }
-
     if (d->isMain) {
         if (rootNode->hasInitializers()) {
             auto snippet = std::make_shared<LILSnippetInstruction>();

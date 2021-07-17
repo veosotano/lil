@@ -3598,32 +3598,20 @@ bool LILCodeParser::readConfigureInstr()
     this->readNextToken();
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
 
-    if (d->currentToken->isA(TokenTypeBlockOpen)) {
+    LIL_EXPECT(TokenTypeBlockOpen, "block open")
+    d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+    this->readNextToken();
+    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+    
+    while (d->currentToken && !d->currentToken->isA(TokenTypeBlockClose)) {
+        this->parseNext();
+    }
+    //block close
+    if (d->currentToken) {
         d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
         this->readNextToken();
-        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-        
-        while (d->currentToken && !d->currentToken->isA(TokenTypeBlockClose)) {
-            this->parseNext();
-        }
-        //block close
-        if (d->currentToken) {
-            d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
-            this->readNextToken();
-        } else {
-            LIL_END_NODE
-        }
-        
-
-    } else if (d->currentToken->isA(TokenTypeDoubleQuoteString) || d->currentToken->isA(TokenTypeSingleQuoteString)) {
-        d->receiver->receiveNodeData(ParserEventStringLiteral, d->currentToken->getString());
-        this->readNextToken();
-        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-
-    } else {
-        d->receiver->receiveError("Expected block open or a file name here", d->file, d->line, d->column);
-        LIL_CANCEL_NODE
     }
+
     LIL_END_NODE
 }
 
