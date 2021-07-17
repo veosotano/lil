@@ -22,6 +22,7 @@
 #include "LILInstruction.h"
 #include "LILNodeToString.h"
 #include "LILRule.h"
+#include "LILSelector.h"
 #include "LILSnippetInstruction.h"
 #include "LILTypeDecl.h"
 #include "LILVarDecl.h"
@@ -391,6 +392,35 @@ void LILRootNode::addConfigureInstr(const std::shared_ptr<LILInstruction> & inst
                 
             case NodeTypeRule:
             {
+                auto rule = std::static_pointer_cast<LILRule>(node);
+                const auto & selChains = rule->getSelectorChains();
+                LILString name;
+                bool found = false;
+                for (auto schNode : selChains) {
+                    if (schNode->isA(NodeTypeSelectorChain)) {
+                        for (auto ssNode : schNode->getChildNodes()) {
+                            if (ssNode->isA(NodeTypeSimpleSelector)) {
+                                const auto & ssNodes = ssNode->getChildNodes();
+                                for (auto sNode : ssNodes) {
+                                    if (sNode->isA(NodeTypeSelector)) {
+                                        auto selector = std::static_pointer_cast<LILSelector>(sNode);
+                                        name = selector->getName();
+                                        found = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (found) {
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (!found) {
+                    std::cerr << "NAME NOT FOUND FAIL !!!!!!!\n\n";
+                } else {
+                    this->_config[name] = rule;
+                }
                 break;
             }
                 
