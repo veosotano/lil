@@ -79,9 +79,21 @@ bool LILFunctionType::equalTo(std::shared_ptr<LILNode> otherNode)
 {
     if ( ! LILType::equalTo(otherNode)) return false;
     std::shared_ptr<LILFunctionType> castedNode = std::static_pointer_cast<LILFunctionType>(otherNode);
-    if ( this->_receivesReturnType != castedNode->_receivesReturnType ) return false;
     for (size_t i = 0, j = this->_arguments.size(); i<j; ++i) {
-        if (!this->_arguments[i]->equalTo(castedNode->_arguments[i])) return false;
+        std::shared_ptr<LILType> type1, type2;
+        const auto & arg1 = this->_arguments[i];
+        if (arg1->isA(NodeTypeType)) {
+            type1 = std::static_pointer_cast<LILType>(arg1);
+        } else {
+            type1 = arg1->getType();
+        }
+        const auto & arg2 = castedNode->_arguments[i];
+        if (arg2->isA(NodeTypeType)) {
+            type2 = std::static_pointer_cast<LILType>(arg2);
+        } else {
+            type2 = arg2->getType();
+        }
+        if (!type1->equalTo(type2)) return false;
     }
     if (this->_returnType && !castedNode->_returnType) return false;
     if (!this->_returnType && castedNode->_returnType) return false;
