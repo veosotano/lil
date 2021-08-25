@@ -1714,6 +1714,18 @@ llvm::Function * LILIREmitter::_emit(LILFunctionDecl * value)
 
 llvm::Function * LILIREmitter::_emitFnSignature(std::string name, LILFunctionType * fnTy)
 {
+    auto ft = this->_emitLlvmFnType(fnTy);
+    auto existingFun = d->llvmModule->getFunction(name);
+    if (existingFun) {
+        return existingFun;
+    } else {
+        llvm::Function * fun = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, name, d->llvmModule.get());
+        return fun;
+    }
+}
+
+llvm::FunctionType * LILIREmitter::_emitLlvmFnType(LILFunctionType * fnTy)
+{
     std::vector<llvm::Type*> types;
     auto arguments = fnTy->getArguments();
     for (auto & arg : arguments) {
@@ -1736,11 +1748,7 @@ llvm::Function * LILIREmitter::_emitFnSignature(std::string name, LILFunctionTyp
             std::cerr << "!!!!!!!!!!EMIT FN SIGNATURE FAIL!!!!!!!!!!!!!!!!\n";
         }
     }
-    return this->_emitFnSignature(name, types, fnTy);
-}
-
-llvm::Function * LILIREmitter::_emitFnSignature(std::string name, std::vector<llvm::Type*> types, LILFunctionType * fnTy)
-{
+    
     std::shared_ptr<LILType> retTy = fnTy->getReturnType();
     llvm::Type * returnType = nullptr;
     if (retTy) {
@@ -1749,18 +1757,16 @@ llvm::Function * LILIREmitter::_emitFnSignature(std::string name, std::vector<ll
     if (!returnType) {
         returnType = llvm::Type::getVoidTy(d->llvmContext);
     }
-
-    llvm::FunctionType * ft = llvm::FunctionType::get(returnType, types, fnTy->getIsVariadic());
-
-    llvm::Function * fun = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, name, d->llvmModule.get());
-    return fun;
+    return llvm::FunctionType::get(returnType, types, fnTy->getIsVariadic());
 }
 
 llvm::Function * LILIREmitter::_emitFn(LILFunctionDecl * value)
 {
     auto fnTy = std::static_pointer_cast<LILFunctionType>(value->getType());
     auto arguments = fnTy->getArguments();
-    llvm::Function * fun = this->_emitFnSignature(value->getName().data(), fnTy.get());
+    std::string fnName = value->getName().data();
+    llvm::Function * fun = this->_emitFnSignature(fnName, fnTy.get());
+    d->namedValues[fnName] = fun;
     if (value->getIsExtern()) {
         return fun;
     }
@@ -2078,7 +2084,7 @@ llvm::Value * LILIREmitter::_emit(LILFunctionCall * value)
                 std::cerr << "!!!!!!!!!!!!!!!!FUNCTION NOT FOUND FAIL\n\n";
                 break;
             }
-            std::shared_ptr<LILFunctionDecl> fd;
+            std::shared_ptr<LILFunctionType> fnTy;
             if (node->isA(NodeTypeVarDecl)) {
                 auto vd = std::static_pointer_cast<LILVarDecl>(node);
                 auto ty = node->getType();
@@ -2086,38 +2092,85 @@ llvm::Value * LILIREmitter::_emit(LILFunctionCall * value)
                     std::cerr << "!!!!!!!!!!!!!!!!NODE HAD NO TYPE FAIL\n\n";
                     break;
                 }
-                if (!ty->isA(TypeTypeFunction)) {
+                if (ty->isA(TypeTypePointer)) {
+                    auto ptrTy = std::static_pointer_cast<LILPointerType>(ty);
+                    auto argTy = ptrTy->getArgument();
+                    if (argTy->isA(TypeTypeFunction)) {
+                        fnTy = std::static_pointer_cast<LILFunctionType>(argTy);
+                    }
+                } else if (ty->isA(TypeTypeFunction)){
+                    fnTy = std::static_pointer_cast<LILFunctionType>(ty);
+                }
+                if (!fnTy) {
                     std::cerr << "TYPE IS NOT FUNCTION TYPE FAIL !!!!!!!!!!!!!!!!\n\n";
                     return nullptr;
                 }
-                auto initVal = vd->getInitVal();
+                auto initVal = this->recursiveFindNode(vd->getInitVal());
                 if (!initVal) {
-                    return nullptr;
+                    auto namestr = name.data();
+                    if (d->namedValues.count(namestr)) {
+                        llvm::Value * val = d->namedValues[namestr];
+                        val = d->irBuilder.CreateLoad(this->llvmTypeFromLILType(ty.get()), val);
+                        return this->_emitFunctionCallPointer(val, value, fnTy.get(), nullptr);
+                    } else {
+                        std::cerr << "FUNCTION " + namestr + " NOT FOUND FAIL!!!!!\n\n";
+                        return nullptr;
+                    }
                 }
                 if (initVal->isA(NodeTypeFunctionDecl)) {
-                    fd = std::static_pointer_cast<LILFunctionDecl>(initVal);
+                    auto fd = std::static_pointer_cast<LILFunctionDecl>(initVal);
+                    fnTy = fd->getFnType();
+                    if (!fnTy) {
+                        std::cerr << "!!!!!!!FUNCTION DECL HAD NO FN TYPE FAIL!!!\n\n";
+                        return nullptr;
+                    }
+                    
+                    if (fd->getHasMultipleImpls()) {
+                        std::vector<std::shared_ptr<LILFunctionDecl>> impls = fd->getImpls();
+                        return this->_emitFCMultipleValues(impls, value);
+                    } else {
+                        return this->_emitFunctionCall(value, value->getName(), fnTy.get(), nullptr);
+                    }
+                    
                 } else {
-                    std::cerr << "!!!!!!!INIT VAL OF VAR DECL WAS NOT FUNCTION DECL FAIL!!!\n\n";
-                    break;
+                    auto fnPtrTy = initVal->getType();
+                    if (fnPtrTy->isA(TypeTypePointer)) {
+                        fnPtrTy = std::static_pointer_cast<LILPointerType>(fnPtrTy)->getArgument();
+                    }
+                    if (!fnPtrTy->isA(TypeTypeFunction)) {
+                        std::cerr << "NODE DOESN'T POINT TO FUNCTION FAIL!!!\n\n";
+                        return nullptr;
+                    } else {
+                        fnTy = std::static_pointer_cast<LILFunctionType>(fnPtrTy);
+                    }
+                    auto llvmVal = this->emit(initVal.get());
+                    if (llvmVal) {
+                        return this->_emitFunctionCallPointer(llvmVal, value, fnTy.get(), nullptr);
+                    } else {
+                        std::cerr << "EMIT SUBJECT NODE OF FUNCTION CALL FAIL!!!\n\n";
+                        return nullptr;
+                    }
+                }
+            }
+            else if (node->isA(NodeTypeFunctionDecl))
+            {
+                auto fd = std::static_pointer_cast<LILFunctionDecl>(node);
+                fnTy = fd->getFnType();
+                if (!fnTy) {
+                    std::cerr << "!!!!!!!FUNCTION DECL HAD NO FN TYPE FAIL!!!\n\n";
+                    return nullptr;
                 }
                 
-            } else if (node->isA(NodeTypeFunctionDecl)) {
-                fd = std::static_pointer_cast<LILFunctionDecl>(node);
+                if (fd->getHasMultipleImpls()) {
+                    std::vector<std::shared_ptr<LILFunctionDecl>> impls = fd->getImpls();
+                    return this->_emitFCMultipleValues(impls, value);
+                } else {
+                    return this->_emitFunctionCall(value, value->getName(), fnTy.get(), nullptr);
+                }
+
             } else {
                 std::cerr << "UNKOWN NODE FAIL !!!!!!!!!!!!!!!!\n\n";
                 return nullptr;
-            }
-            auto fnTy = fd->getFnType();
-            if (!fnTy) {
-                std::cerr << "!!!!!!!FUNCTION DECL HAD NO FN TYPE FAIL!!!\n\n";
-                return nullptr;
-            }
-
-            if (fd->getHasMultipleImpls()) {
-                std::vector<std::shared_ptr<LILFunctionDecl>> impls = fd->getImpls();
-                return this->_emitFCMultipleValues(impls, value);
-            } else {
-                return this->_emitFunctionCall(value, value->getName(), fnTy.get(), nullptr);
             }
             break;
         }
@@ -2406,6 +2459,83 @@ llvm::Value * LILIREmitter::_emitFunctionCallMT(LILFunctionCall *value, LILStrin
         }
     }
     return nullptr;
+}
+llvm::Value * LILIREmitter::_emitFunctionCallPointer(llvm::Value * fun, LILFunctionCall * value, LILFunctionType * fnTy, llvm::Value * instance, bool useProvidedArg, llvm::Value * providedArg, size_t providedIndex)
+{
+    bool isMethod = instance != nullptr;
+    auto fcArgs = value->getArguments();
+    
+    std::vector<llvm::Value *> argsvect;
+    
+    auto declArgs = fnTy->getArguments();
+    auto fcArgsSize = fcArgs.size();
+    auto declArgsSize = declArgs.size();
+    
+    
+    if (isMethod){
+        argsvect.push_back(instance);
+        declArgsSize -= 1;
+    }
+
+    size_t j = fcArgsSize > declArgsSize ? fcArgsSize : declArgsSize;
+    for (size_t i = 0; i<j; ++i) {
+        size_t declIndex = i;
+        if (isMethod) {
+            declIndex += 1;
+        }
+        if (useProvidedArg && declIndex == providedIndex) {
+            if (providedArg != nullptr) {
+                argsvect.push_back(providedArg);
+            }
+            continue;
+        }
+        std::shared_ptr<LILNode> fcArg;
+        if (fcArgsSize <= i) {
+            auto vdNode = declArgs[declIndex];
+            if (!vdNode->isA(NodeTypeVarDecl)) {
+                std::cerr << "DECL ARG IS NOT VAR DECL FAIL!!!!!!!!\n\n";
+                return nullptr;
+            }
+            auto vd = std::static_pointer_cast<LILVarDecl>(vdNode);
+            fcArg = vd->getInitVal();
+        } else {
+            fcArg = fcArgs[i];
+        }
+        
+        llvm::Value * fcArgIr;
+        std::shared_ptr<LILNode> fcValue;
+        if (fcArg->isA(NodeTypeAssignment)) {
+            auto asgmt = std::static_pointer_cast<LILAssignment>(fcArg);
+            fcValue = asgmt->getValue();
+        } else {
+            fcValue = fcArg;
+        }
+        
+        if (declArgsSize <= i)
+        {
+            fcArgIr = this->_emitFCArg(fcValue.get(), fcArg->getType().get());
+        }
+        else
+        {
+            auto declArg = declArgs[declIndex];
+            auto declArgTy = declArg->getType();
+            fcArgIr = this->_emitFCArg(fcValue.get(), declArgTy.get());
+        }
+        
+        if (!fcArgIr) {
+            std::cerr << "!!!!!!!!!!ARG CODEGEN FAIL!!!!!!!!!!!!!!!\n";
+            return nullptr;
+        } else {
+            argsvect.push_back(fcArgIr);
+        }
+    }
+    
+    auto llvmTy = this->llvmTypeFromLILType(fnTy);
+    if (llvmTy->getTypeID() != llvm::Type::FunctionTyID) {
+        std::cerr << "TYPE OF CALL WAS NOT FUNCTION TYPE FAIL!!!!!!!!!!!!!!!\n";
+        return nullptr;
+    }
+    return d->irBuilder.CreateCall(static_cast<llvm::FunctionType *>(llvmTy), fun, argsvect);
 }
 
 llvm::Value * LILIREmitter::_emit(LILFlowControl * value)
@@ -3139,11 +3269,11 @@ llvm::Value * LILIREmitter::_emitPointer(LILValuePath * value)
             {
                 auto vn = std::static_pointer_cast<LILVarName>(firstNode);
                 LILString name = vn->getName();
-                llvm::Value * val = d->namedValues[name.data()];
-                if (!val) {
+                if (!d->namedValues.count(name.data())) {
                     std::cerr << "!!!!!!!!!!UNKNOWN VARIABLE FAIL!!!!!!!!!!!!!!!!\n";
                     return nullptr;
                 }
+                llvm::Value * val = d->namedValues[name.data()];
                 return val;
             }
 
@@ -3375,6 +3505,11 @@ llvm::Type * LILIREmitter::llvmTypeFromLILType(LILType * type)
         auto num = std::static_pointer_cast<LILNumberLiteral>(arg);
         auto numElements = this->extractSizeFromNumberLiteral(num.get());
         return llvm::ArrayType::get(arrType, numElements);
+    }
+    else if (type->isA(TypeTypeFunction))
+    {
+        auto fnTy = static_cast<LILFunctionType *>(type);
+        return this->_emitLlvmFnType(fnTy);
     }
 
     LILString typestr = type->getName();

@@ -445,7 +445,10 @@ void LILStructureLowerer::_process(std::shared_ptr<LILFunctionDecl> value)
                             newChildFd->setIsExported(value->getIsExported());
 
                             auto newChildFnType = std::make_shared<LILFunctionType>();
-                            newChildFnType->setReturnType(fnTy->getReturnType());
+                            auto returnTy = fnTy->getReturnType();
+                            if (returnTy) {
+                                newChildFnType->setReturnType(returnTy);
+                            }
                             newChildFd->setHasOwnType(true);
                             newChildFd->setType(newChildFnType);
                             

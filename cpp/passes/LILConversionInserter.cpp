@@ -85,6 +85,10 @@ void LILConversionInserter::process(std::shared_ptr<LILFunctionCall> fc)
         }
 
         auto ty = localNode->getType();
+        if (ty->isA(TypeTypePointer)) {
+            auto ptrTy = std::static_pointer_cast<LILPointerType>(ty);
+            ty = ptrTy->getArgument();
+        }
         if (
             !(localNode->isA(NodeTypeVarDecl) || localNode->isA(NodeTypeFunctionDecl))
             || !ty || !ty->isA(TypeTypeFunction)

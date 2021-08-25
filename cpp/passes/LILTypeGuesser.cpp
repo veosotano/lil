@@ -1016,7 +1016,12 @@ std::shared_ptr<LILType> LILTypeGuesser::recursiveFindTypeFromAncestors(std::sha
                             for (size_t i=0, j=callArgs.size(); i<j; ++i) {
                                 if (callArgs[i].get() == value.get()) {
                                     if (args.size() > i) {
-                                        return args[i]->getType();
+                                        const auto & arg = args[i];
+                                        if (arg->isA(NodeTypeType)) {
+                                            return std::static_pointer_cast<LILType>(arg);
+                                        } else {
+                                            return args[i]->getType();
+                                        }
                                     } else {
                                         return nullptr;
                                     }
@@ -1159,6 +1164,10 @@ std::shared_ptr<LILFunctionType> LILTypeGuesser::findFnTypeForFunctionCall(std::
                 return nullptr;
             }
             auto ty = localNode->getType();
+            if (ty->isA(TypeTypePointer)) {
+                auto ptrTy = std::static_pointer_cast<LILPointerType>(ty);
+                ty = ptrTy->getArgument();
+            }
             if (!ty->isA(TypeTypeFunction)) {
                 std::cerr << "LOCAL VAR WAS NOT FUNCTION FAIL!!!!\n\n";
                 return nullptr;
@@ -1665,6 +1674,10 @@ std::shared_ptr<LILType> LILTypeGuesser::findReturnTypeForFunctionCall(std::shar
                 && (localNode->isA(NodeTypeVarDecl) || localNode->isA(NodeTypeFunctionDecl))
             ) {
                 auto ty = localNode->getType();
+                if (ty && ty->isA(TypeTypePointer)) {
+                    auto fnPtr = std::static_pointer_cast<LILPointerType>(ty);
+                    ty = fnPtr->getArgument();
+                }
                 if (!ty || !ty->isA(TypeTypeFunction)) {
                     break;
                 }

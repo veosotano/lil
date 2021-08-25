@@ -214,9 +214,25 @@ void LILTypeValidator::_validate(std::shared_ptr<LILFunctionCall> fc)
         }
         
         auto ty = localNode->getType();
-        if (
-            ! (localNode->isA(NodeTypeVarDecl) || localNode->isA(NodeTypeFunctionDecl))
-            || !ty || !ty->isA(TypeTypeFunction)) {
+        bool pass = true;
+        if (! (localNode->isA(NodeTypeVarDecl) || localNode->isA(NodeTypeFunctionDecl) )) {
+            pass = false;
+        }
+        if (!ty) {
+            pass = false;
+        } else if (ty->isA(TypeTypePointer)) {
+            auto pTy = std::static_pointer_cast<LILPointerType>(ty);
+            const auto & arg = pTy->getArgument();
+            if (!arg) {
+                pass = false;
+            } else if (!arg->isA(TypeTypeFunction)){
+                pass = false;
+            }
+        } else if (!ty->isA(TypeTypeFunction)) {
+            pass = false;
+        }
+        
+        if ( !pass ) {
             LILErrorMessage ei;
             ei.message =  fc->getName()+" is not a function.";
             LILNode::SourceLocation sl = fc->getSourceLocation();
@@ -225,7 +241,25 @@ void LILTypeValidator::_validate(std::shared_ptr<LILFunctionCall> fc)
             ei.column = sl.column;
             this->errors.push_back(ei);
         }
-        auto fnTy = std::static_pointer_cast<LILFunctionType>(ty);
+        std::shared_ptr<LILFunctionType> fnTy;
+        if (ty->isA(TypeTypeFunction)) {
+                fnTy = std::static_pointer_cast<LILFunctionType>(ty);
+        } else if (ty->isA(TypeTypePointer)){
+            auto ptrTy = std::static_pointer_cast<LILPointerType>(ty);
+            auto argTy = ptrTy->getArgument();
+            fnTy = std::static_pointer_cast<LILFunctionType>(argTy);
+        }
+        if (!fnTy) {
+            LILErrorMessage ei;
+            ei.message =  "Unknown type of function call "+fc->getName();
+            LILNode::SourceLocation sl = fc->getSourceLocation();
+            ei.file = sl.file;
+            ei.line = sl.line;
+            ei.column = sl.column;
+            this->errors.push_back(ei);
+            return;
+        }
+        
         auto fnTyArgs = fnTy->getArguments();
         auto fcArgTys = fc->getArgumentTypes();
         auto fcArgs = fc->getArguments();
