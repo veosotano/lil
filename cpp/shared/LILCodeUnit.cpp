@@ -197,7 +197,6 @@ void LILCodeUnit::run()
     this->buildAST();
 
     if (d->astBuilder->hasErrors()) {
-        d->astBuilder->printErrors(d->source);
         return;
     }
 

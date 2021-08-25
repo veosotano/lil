@@ -12,6 +12,8 @@
 
 using namespace LIL;
 
+extern void LILPrintErrors(const std::vector<LILErrorMessage> & errors, const LILString & code);
+
 LILPassManager::LILPassManager()
 : _verbose(false)
 , _hasErrors(false)
@@ -33,7 +35,7 @@ void LILPassManager::execute(const std::vector<LILVisitor *> & visitors, std::sh
         visitor->performVisit(rootNode);
         if (visitor->hasErrors())
         {
-            visitor->printErrors(code);
+            LILPrintErrors(visitor->errors, code);
             this->_hasErrors = true;
             break;
         }

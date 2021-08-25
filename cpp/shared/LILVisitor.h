@@ -36,8 +36,6 @@ namespace LIL
         virtual void performVisit(std::shared_ptr<LILRootNode> rootNode);
         virtual void visit(LILNode * node);
         bool hasErrors() const;
-        void printErrors(const LILString & code) const;
-        std::vector<std::string> splitString(std::string code, std::string delimiter) const;
         
         std::vector<LILErrorMessage> errors;
 
