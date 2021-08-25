@@ -239,6 +239,15 @@ void LILRootNode::add(std::shared_ptr<LILNode> node, bool addToNodeTree)
 void LILRootNode::clearNodes()
 {
     this->clearChildNodes();
+    this->_classes.clear();
+    this->_rules.clear();
+    this->_docs.clear();
+    this->_types.clear();
+    this->_aliases.clear();
+    this->_snippets.clear();
+    this->_config.clear();
+    this->_constants.clear();
+    this->_mainMenu.clear();
 }
 
 void LILRootNode::appendNodes(const std::vector<std::shared_ptr<LILNode>> & nodes)
