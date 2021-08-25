@@ -1556,9 +1556,26 @@ bool LILPreprocessor::_processIfInstrIfInstr(std::shared_ptr<LILIfInstruction> v
 {
     bool ret = false;
     auto arg = value->getArgument();
+    bool isExported = value->getIsExported();
     if (arg) {
         auto remoteNode = this->recursiveFindNode(arg);
-        if (remoteNode && remoteNode->isA(NodeTypeVarDecl)) {
+        if (!remoteNode)
+        {
+            //not found
+            auto els = value->getElse();
+            if (els.size() > 0) {
+                auto & nbb = this->_nodeBuffer.back();
+                for (auto child : value->getElse()) {
+                    if (isExported) {
+                        child->setIsExported(true);
+                    }
+                    nbb.push_back(child);
+                }
+            }
+            return true;
+        }
+        else if (remoteNode->isA(NodeTypeVarDecl))
+        {
             auto vd = std::static_pointer_cast<LILVarDecl>(remoteNode);
             if (!vd->getIsConst()) {
                 LILErrorMessage ei;
@@ -1586,6 +1603,9 @@ bool LILPreprocessor::_processIfInstrIfInstr(std::shared_ptr<LILIfInstruction> v
                 auto then = value->getThen();
                 if (then.size() > 0) {
                     for (auto child : then) {
+                        if (isExported) {
+                            child->setIsExported(true);
+                        }
                         nbb.push_back(child);
                     }
                 } else {
@@ -1596,6 +1616,39 @@ bool LILPreprocessor::_processIfInstrIfInstr(std::shared_ptr<LILIfInstruction> v
                 auto els = value->getElse();
                 if (els.size() > 0) {
                     for (auto child : value->getElse()) {
+                        if (isExported) {
+                            child->setIsExported(true);
+                        }
+                        nbb.push_back(child);
+                    }
+                } else {
+                    ret = true;
+                }
+            }
+        }
+        else if (remoteNode->isA(NodeTypeBoolLiteral))
+        {
+            auto & nbb = this->_nodeBuffer.back();
+            if (this->_evaluate(remoteNode)) {
+                auto then = value->getThen();
+                if (then.size() > 0) {
+                    for (auto child : then) {
+                        if (isExported) {
+                            child->setIsExported(true);
+                        }
+                        nbb.push_back(child);
+                    }
+                } else {
+                    ret = true;
+                }
+                
+            } else {
+                auto els = value->getElse();
+                if (els.size() > 0) {
+                    for (auto child : value->getElse()) {
+                        if (isExported) {
+                            child->setIsExported(true);
+                        }
                         nbb.push_back(child);
                     }
                 } else {
