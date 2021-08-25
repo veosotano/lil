@@ -152,7 +152,7 @@ std::shared_ptr<LILType> LILTypeResolver::_process(std::shared_ptr<LILType> valu
                 }
             }
             if (changed) {
-                multiTy->setTypes(tys);
+                multiTy->setTypes(std::move(tys));
                 ret = multiTy;
             }
             break;

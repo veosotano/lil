@@ -30,7 +30,7 @@ namespace LIL
         virtual void receiveNodeData(const LILString & data);
 
         void addType(std::shared_ptr<LILType> ty);
-        void setTypes(std::vector<std::shared_ptr<LILType>> tys);
+        void setTypes(std::vector<std::shared_ptr<LILType>> && tys);
         std::vector<std::shared_ptr<LILType>> getTypes() const;
 
         bool getIsWeakType() const;

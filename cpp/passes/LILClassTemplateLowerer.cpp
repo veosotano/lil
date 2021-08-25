@@ -483,7 +483,7 @@ std::shared_ptr<LILType> LILClassTemplateLowerer::replaceType(std::shared_ptr<LI
                 }
             }
             if (hasChanges) {
-                mTy->setTypes(newChildren);
+                mTy->setTypes(std::move(newChildren));
                 ret = mTy;
             }
             break;

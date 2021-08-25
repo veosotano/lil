@@ -2056,11 +2056,11 @@ std::shared_ptr<LILType> LILTypeGuesser::nullsToNullableTypes(std::shared_ptr<LI
                     ty = theType;
                 } else {
                     multiTy->setIsNullable(true);
-                    multiTy->setTypes(newTypes);
+                    multiTy->setTypes(std::move(newTypes));
                 }
             } else {
                 multiTy->setIsNullable(true);
-                multiTy->setTypes(newTypes);
+                multiTy->setTypes(std::move(newTypes));
             }
         }
     }

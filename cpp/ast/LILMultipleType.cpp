@@ -72,9 +72,9 @@ void LILMultipleType::addType(std::shared_ptr<LILType> ty)
     ty->setParentNode(this->shared_from_this());
 }
 
-void LILMultipleType::setTypes(std::vector<std::shared_ptr<LILType>> tys)
+void LILMultipleType::setTypes(std::vector<std::shared_ptr<LILType>> && tys)
 {
-    this->_types = tys;
+    this->_types = std::move(tys);
     for (auto ty : this->_types) {
         ty->setParentNode(this->shared_from_this());
     }
