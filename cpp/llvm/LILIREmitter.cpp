@@ -3243,11 +3243,11 @@ llvm::Value * LILIREmitter::emitPointer(LILNode * node)
         {
             auto vn = static_cast<LILVarName *>(node);
             LILString name = vn->getName();
-            llvm::Value * val = d->namedValues[name.data()];
-            if (!val) {
+            if (!d->namedValues.count(name.data())) {
                 std::cerr << "!!!!!!!!!!UNKNOWN VARIABLE FAIL!!!!!!!!!!!!!!!!\n";
                 return nullptr;
             }
+            llvm::Value * val = d->namedValues[name.data()];
             return val;
         }
         default:
