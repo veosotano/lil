@@ -90,8 +90,7 @@ namespace LIL
 
         std::shared_ptr<LILRootNode> getRootNode() const;
         bool hasErrors() const;
-        
-        void setIsMain(bool value);
+
         void setVerbose(bool value);
         void setDebugAST(bool value);
         void setBuildFlatList(bool value);
@@ -102,7 +101,6 @@ namespace LIL
         std::shared_ptr<LILNode> currentNode;
         std::vector<BuilderState> state;
         std::shared_ptr<LILRootNode> rootNode;
-        bool _isMain;
         bool _verbose;
         bool _debugAST;
         bool _buildFlatList;

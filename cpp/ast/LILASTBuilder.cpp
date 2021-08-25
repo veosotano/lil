@@ -61,8 +61,7 @@
 using namespace LIL;
 
 LILASTBuilder::LILASTBuilder()
-: _isMain(false)
-, _verbose(false)
+: _verbose(false)
 , _buildFlatList(false)
 {
     this->rootNode = std::make_shared<LILRootNode>();
@@ -1493,12 +1492,6 @@ void LILASTBuilder::receiveForeignLang(const LILString & language, const LILStri
 bool LILASTBuilder::hasErrors() const
 {
     return this->errors.size() > 0;
-}
-
-
-void LILASTBuilder::setIsMain(bool value)
-{
-    this->_isMain = value;
 }
 
 void LILASTBuilder::setVerbose(bool value)

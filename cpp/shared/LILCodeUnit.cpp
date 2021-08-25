@@ -604,7 +604,6 @@ void LILCodeUnit::runPassesForImport()
 void LILCodeUnit::setIsMain(bool value)
 {
     d->isMain = value;
-    d->astBuilder->setIsMain(value);
 }
 
 void LILCodeUnit::setVerbose(bool value)
