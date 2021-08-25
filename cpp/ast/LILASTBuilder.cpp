@@ -1246,6 +1246,10 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
                 std::shared_ptr<LILFunctionType> ty = std::static_pointer_cast<LILFunctionType>(this->currentContainer.back());
                 ty->setIsVariadic(true);
             }
+            else if (eventType == ParserEventFunctionTypeFn)
+            {
+                this->currentContainer.back()->receiveNodeData("fn");
+            }
             else
             {
                 //sets the name

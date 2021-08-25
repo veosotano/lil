@@ -1532,6 +1532,8 @@ bool LILCodeParser::readFunctionType(bool readFnKw)
         d->receiver->receiveNodeData(ParserEventType, d->currentToken->getString());
         this->readNextToken();
         LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+    } else {
+        d->receiver->receiveNodeData(ParserEventFunctionTypeFn, "");
     }
 
     //open parenthesis
