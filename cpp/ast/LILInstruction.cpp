@@ -65,7 +65,7 @@ LILString LILInstruction::instructionTypeToString(InstructionType instrType)
 }
 
 LILInstruction::LILInstruction(NodeType nodeTy)
-: LILNode(nodeTy)
+: LILTypedNode(nodeTy)
 , _instructionType(InstructionTypeNone)
 , _isColorInstruction(false)
 , _verbose(true)
@@ -74,7 +74,7 @@ LILInstruction::LILInstruction(NodeType nodeTy)
 }
 
 LILInstruction::LILInstruction(const LILInstruction &other)
-: LILNode(other)
+: LILTypedNode(other)
 {
     this->_instructionType = other._instructionType;
     this->_name = other._name;
@@ -95,6 +95,10 @@ std::shared_ptr<LILClonable> LILInstruction::cloneImpl() const
     clone->clearChildNodes();
     if (this->_argument) {
         clone->setArgument(this->_argument->clone());
+    }
+    //clone LILTypedNode
+    if (this->_type) {
+        clone->setType(this->_type->clone());
     }
     return clone;
 }

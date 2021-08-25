@@ -1367,6 +1367,13 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
                     }
                     break;
                 }
+                case ParserEventType:
+                {
+                    std::shared_ptr<LILInstruction> instr = std::static_pointer_cast<LILInstruction>(this->currentContainer.back());
+                    auto ty = LILObjectType::make(data);
+                    instr->setType(ty);
+                    break;
+                }
                 case ParserEventArgument:
                 {
                     std::shared_ptr<LILInstruction> instr = std::static_pointer_cast<LILInstruction>(this->currentContainer.back());

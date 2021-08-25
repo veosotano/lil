@@ -17,11 +17,11 @@
 #define LILINSTRUCTION_H
 
 
-#include "LILNode.h"
+#include "LILTypedNode.h"
 
 namespace LIL
 {
-    class LILInstruction : public LILNode
+    class LILInstruction : public LILTypedNode
     {
     public:
         static LILString instructionTypeToString(InstructionType instrType);
