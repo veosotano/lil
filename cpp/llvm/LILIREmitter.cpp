@@ -764,19 +764,29 @@ llvm::Value * LILIREmitter::_emit(LILVarDecl * value)
         }
         
         if (!ty->isA(TypeTypeFunction)) {
-            //backup if needed
-            llvm::Value * namedValue = nullptr;
-            if (d->namedValues.count(name)) {
-                namedValue = d->namedValues[name];
+            if (value->getParentNode()->isA(NodeTypeRoot)) {
+                auto llvmTy = this->llvmTypeFromLILType(ty.get());
+                d->llvmModule->getOrInsertGlobal(name, llvmTy);
+                auto globalVar = d->llvmModule->getNamedGlobal(name);
+                globalVar->setLinkage(llvm::GlobalValue::ExternalLinkage);
+                d->namedValues[name] = globalVar;
+                d->currentAlloca = globalVar;
+                globalVar->setInitializer(llvm::Constant::getNullValue(llvmTy));
+            } else {
+                //backup if needed
+                llvm::Value * namedValue = nullptr;
+                if (d->namedValues.count(name)) {
+                    namedValue = d->namedValues[name];
+                }
+                if (namedValue) {
+                    d->hiddenLocals.back()[name] = namedValue;
+                }
+                
+                llvm::Function * fun = d->irBuilder.GetInsertBlock()->getParent();
+                d->hiddenLocals.back()[name] = d->namedValues[name];
+                d->currentAlloca = this->createEntryBlockAlloca(fun, name, this->llvmTypeFromLILType(ty.get()));
+                d->namedValues[name] = d->currentAlloca;
             }
-            if (namedValue) {
-                d->hiddenLocals.back()[name] = namedValue;
-            }
-
-            llvm::Function * fun = d->irBuilder.GetInsertBlock()->getParent();
-            d->hiddenLocals.back()[name] = d->namedValues[name];
-            d->currentAlloca = this->createEntryBlockAlloca(fun, name, this->llvmTypeFromLILType(ty.get()));
-            d->namedValues[name] = d->currentAlloca;
         }
 
         auto initVal = value->getInitVal();
