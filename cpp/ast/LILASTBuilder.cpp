@@ -1363,6 +1363,19 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
                     }
                     break;
                 }
+                case ParserEventArgument:
+                {
+                    std::shared_ptr<LILInstruction> instr = std::static_pointer_cast<LILInstruction>(this->currentContainer.back());
+                    instr->setReceivesBody(false);
+                    break;
+                }
+                    
+                case ParserEventBody:
+                {
+                    std::shared_ptr<LILInstruction> instr = std::static_pointer_cast<LILInstruction>(this->currentContainer.back());
+                    instr->setReceivesBody(true);
+                    break;
+                }
                 default:
                     break;
             }

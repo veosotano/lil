@@ -69,6 +69,7 @@ LILInstruction::LILInstruction(NodeType nodeTy)
 , _instructionType(InstructionTypeNone)
 , _isColorInstruction(false)
 , _verbose(true)
+, _receivesBody(true)
 {
 }
 
@@ -80,6 +81,7 @@ LILInstruction::LILInstruction(const LILInstruction &other)
     this->_isColorInstruction = other._isColorInstruction;
     this->_argument = other._argument;
     this->_verbose = other._verbose;
+    this->_receivesBody = other._receivesBody;
 }
 
 std::shared_ptr<LILInstruction> LILInstruction::clone() const
@@ -164,4 +166,14 @@ void LILInstruction::setVerbose(bool value)
 bool LILInstruction::getVerbose() const
 {
     return this->_verbose;
+}
+
+bool LILInstruction::getReceivesBody() const
+{
+    return this->_receivesBody;
+}
+
+void LILInstruction::setReceivesBody(bool value)
+{
+    this->_receivesBody = value;
 }

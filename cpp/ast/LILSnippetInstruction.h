@@ -33,15 +33,11 @@ namespace LIL
         const std::vector<std::shared_ptr<LILNode>> & getBody() const;
         void setBody(const std::vector<std::shared_ptr<LILNode>> && newBody);
         
-        void setReceivesBody(bool newValue);
-        bool getReceivesBody() const;
-        
     protected:
         std::shared_ptr<LILClonable> cloneImpl() const  override;
         
     private:
         std::vector<std::shared_ptr<LILNode>> _body;
-        bool _receivesBody;
     };
 }
 

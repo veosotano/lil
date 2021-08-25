@@ -44,6 +44,9 @@ namespace LIL
         
         void setVerbose(bool value);
         bool getVerbose() const;
+
+        bool getReceivesBody() const;
+        void setReceivesBody(bool value);
         
     protected:
         std::shared_ptr<LILClonable> cloneImpl() const  override;
@@ -54,6 +57,7 @@ namespace LIL
         InstructionType _instructionType;
         bool _isColorInstruction;
         bool _verbose;
+        bool _receivesBody;
     };
 }
 

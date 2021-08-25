@@ -18,7 +18,6 @@ using namespace LIL;
 
 LILSnippetInstruction::LILSnippetInstruction()
 : LILInstruction(NodeTypeSnippetInstruction)
-, _receivesBody(false)
 {
     this->setInstructionType(InstructionTypeSnippet);
 }
@@ -26,7 +25,6 @@ LILSnippetInstruction::LILSnippetInstruction()
 LILSnippetInstruction::LILSnippetInstruction(const LILSnippetInstruction & other)
 : LILInstruction(other)
 , _body(other._body)
-, _receivesBody(other._receivesBody)
 {
 }
 
@@ -75,12 +73,3 @@ void LILSnippetInstruction::setBody(const std::vector<std::shared_ptr<LILNode>> 
     }
 }
 
-void LILSnippetInstruction::setReceivesBody(bool newValue)
-{
-    this->_receivesBody = newValue;
-}
-
-bool LILSnippetInstruction::getReceivesBody() const
-{
-    return this->_receivesBody;
-}

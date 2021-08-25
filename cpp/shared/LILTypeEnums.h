@@ -418,6 +418,7 @@ namespace LIL
         ParserEventClassDecl,
         ParserEventInherits,
         ParserEventBody,
+        ParserEventArgument,
         ParserEventParamType,
         ParserEventType,
         ParserEventReturnType,
