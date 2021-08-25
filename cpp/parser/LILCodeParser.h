@@ -67,6 +67,7 @@ namespace LIL
         bool isIfCast() const;
         bool isFlag() const;
         bool isPunctuation(std::shared_ptr<LILToken> token) const;
+        bool canHaveExpression(NodeType nodeType) const;
 
         bool readClassDecl();
         bool readType();

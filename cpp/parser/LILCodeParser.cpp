@@ -1319,6 +1319,62 @@ bool LILCodeParser::isPunctuation(std::shared_ptr<LILToken> token) const
     return false;
 }
 
+bool LILCodeParser::canHaveExpression(NodeType nodeType) const
+{
+    switch (nodeType) {
+        case NodeTypeNumberLiteral:
+        case NodeTypeExpression:
+        case NodeTypeVarName:
+        case NodeTypePercentage:
+        case NodeTypeBoolLiteral:
+        case NodeTypeFunctionCall:
+        case NodeTypeValuePath:
+            return true;
+        case NodeTypeStringLiteral:
+        case NodeTypeCStringLiteral:
+        case NodeTypeStringFunction:
+        case NodeTypeUnaryExpression:
+        case NodeTypeFlag:
+        case NodeTypeFilter:
+        case NodeTypeRoot:
+        case NodeTypeNull:
+        case NodeTypeRule:
+        case NodeTypeComment:
+        case NodeTypeVarDecl:
+        case NodeTypeInstruction:
+        case NodeTypeNegation:
+        case NodeTypeSelector:
+        case NodeTypeTypeDecl:
+        case NodeTypeAliasDecl:
+        case NodeTypeClassDecl:
+        case NodeTypeConstDecl:
+        case NodeTypeValueList:
+        case NodeTypeAssignment:
+        case NodeTypeCombinator:
+        case NodeTypeObjectType:
+        case NodeTypePointerType:
+        case NodeTypeFlowControl:
+        case NodeTypeForeignLang:
+        case NodeTypeFunctionDecl:
+        case NodeTypeFunctionType:
+        case NodeTypeMultipleType:
+        case NodeTypePropertyName:
+        case NodeTypeDocumentation:
+        case NodeTypeIfInstruction:
+        case NodeTypeIndexAccessor:
+        case NodeTypeSelectorChain:
+        case NodeTypeConversionDecl:
+        case NodeTypeSimpleSelector:
+        case NodeTypeFlowControlCall:
+        case NodeTypeStaticArrayType:
+        case NodeTypeObjectDefinition:
+        case NodeTypeSnippetInstruction:
+        case NodeTypeType:
+        case NodeTypeInvalid:
+            return false;
+    }
+}
+
 bool LILCodeParser::readClassDecl()
 {
     LIL_START_NODE(NodeTypeClassDecl)
@@ -2113,7 +2169,7 @@ bool LILCodeParser::readAssignment(bool allowValuePath, bool firstIsVar, bool fi
 
     if (!valuesValid) valid = false;
 
-    if (!valid || atEndOfSource())
+    if (!valid)
     {
         LIL_CANCEL_NODE
     }
@@ -2139,13 +2195,15 @@ bool LILCodeParser::readVals(bool useComma, bool strict)
         valid = false;
     
     if (svIsValid){
-        if (
-            (useComma &&  d->currentToken->isA(TokenTypeComma))
-            || (!useComma &&  d->currentToken->isA(TokenTypeSemicolon))
-        ) {
-            bool vlValid = this->readValueList(useComma);
-            if (!vlValid) {
-                return false;
+        if (!this->atEndOfSource()) {
+            if (
+                (useComma &&  d->currentToken->isA(TokenTypeComma))
+                || (!useComma &&  d->currentToken->isA(TokenTypeSemicolon))
+                ) {
+                bool vlValid = this->readValueList(useComma);
+                if (!vlValid) {
+                    return false;
+                }
             }
         }
         d->receiver->receiveNodeCommit();
@@ -2216,8 +2274,14 @@ bool LILCodeParser::readExpression(bool &outIsSingleValue, NodeType & outType)
             return valid;
     }
 
-    if (this->atEndOfSource())
+    if (
+        this->atEndOfSource()
+        || !this->canHaveExpression(svNodeType)
+    ) {
+        outIsSingleValue = true;
+        outType = svNodeType;
         return valid;
+    }
 
     while (!done && valid)
     {
@@ -2229,6 +2293,7 @@ bool LILCodeParser::readExpression(bool &outIsSingleValue, NodeType & outType)
             if (expValid)
             {
                 isSingleValue = false;
+                outType = NodeTypeExpression;
             }
             else
             {
@@ -4159,6 +4224,9 @@ bool LILCodeParser::readFnFunction()
             this->readNextToken();
             LIL_END_NODE_SKIP(false);
         }
+        if (d->currentToken && d->currentToken->isA(TokenTypeSemicolon)) {
+            LIL_END_NODE_SKIP(false);
+        }
     }
 
     LIL_EXPECT(TokenTypeBlockOpen, "block open")
@@ -4308,7 +4376,7 @@ bool LILCodeParser::readEvaluables()
                     d->receiver->receiveNodeCommit();
                 } else {
                     d->receiver->receiveError(LILString::format("Error while reading var declaration on line %d and column %d", d->line, d->column), d->file, d->line, d->column);
-                    return ret;
+                    return false;
                 }
                 if (this->atEndOfSource())
                     return ret;
