@@ -23,6 +23,8 @@
 #include "LILNodeToString.h"
 #include "LILRule.h"
 #include "LILSelector.h"
+#include "LILSelectorChain.h"
+#include "LILSimpleSelector.h"
 #include "LILSnippetInstruction.h"
 #include "LILTypeDecl.h"
 #include "LILVarDecl.h"
@@ -176,6 +178,7 @@ void LILRootNode::add(std::shared_ptr<LILNode> node, bool addToNodeTree)
                 case InstructionTypeNeeds:
                 case InstructionTypeImport:
                 case InstructionTypePaste:
+                case InstructionTypeGetConfig:
                 {
                     if (addToNodeTree) {
                         this->addNode(instr);
@@ -184,6 +187,9 @@ void LILRootNode::add(std::shared_ptr<LILNode> node, bool addToNodeTree)
                 }
                 case InstructionTypeConfigure:
                 {
+                    if (addToNodeTree) {
+                        this->addNode(instr);
+                    }
                     this->addConfigureInstr(instr);
                     break;
                 }
@@ -364,6 +370,11 @@ const std::vector<std::shared_ptr<LILNode>> & LILRootNode::getInitializers() con
     return this->_initializers;
 }
 
+void LILRootNode::clearInitializers()
+{
+    this->_initializers.clear();
+}
+
 void LILRootNode::addDoc(std::shared_ptr<LILDocumentation> value)
 {
     this->addNode(value);
@@ -377,6 +388,25 @@ const std::vector<std::shared_ptr<LILDocumentation>> & LILRootNode::getDocs() co
 
 void LILRootNode::addRule(std::shared_ptr<LILRule> value)
 {
+    const auto & selChs = value->getSelectorChains();
+    if (selChs.size() == 1) {
+        const auto & selCh = std::static_pointer_cast<LILSelectorChain>(selChs.front());
+        const auto & selChNodes = selCh->getNodes();
+        if (selChNodes.size() == 1) {
+            const auto & simpleSel = std::static_pointer_cast<LILSimpleSelector>(selChNodes.front());
+            const auto & simpleSelNodes = simpleSel->getNodes();
+            if (simpleSelNodes.size() == 1) {
+                const auto & sel = std::static_pointer_cast<LILSelector>(simpleSelNodes.front());
+                if (sel->isA(SelectorTypeMainMenu)) {
+                    this->addNode(value);
+                    for (auto childRule : value->getChildRules()) {
+                        this->_mainMenu.push_back(childRule);
+                    }
+                    return;
+                }
+            }
+        }
+    }
     this->addNode(value);
     this->_rules.push_back(value);
 }
@@ -386,63 +416,27 @@ const std::vector<std::shared_ptr<LILRule>> & LILRootNode::getRules() const
     return this->_rules;
 }
 
+bool LILRootNode::hasMainMenu() const
+{
+    return this->_mainMenu.size() > 0;
+}
+
+const std::vector<std::shared_ptr<LILNode>> & LILRootNode::getMainMenuItems() const
+{
+    return this->_mainMenu;
+}
+
+void LILRootNode::clearMainMenuItems()
+{
+    this->_mainMenu.clear();
+}
+
 void LILRootNode::addConfigureInstr(const std::shared_ptr<LILInstruction> & instr)
 {
-    for (auto node : instr->getChildNodes()) {
-        switch (node->getNodeType()) {
-            case NodeTypeAssignment:
-            {
-                auto as = std::static_pointer_cast<LILAssignment>(node);
-                const auto & subj = as->getSubject();
-                const auto & value = as->getValue();
-                LILString name;
-                if (subj->getNodeType() == NodeTypeVarName) {
-                    auto vn = std::static_pointer_cast<LILVarName>(subj);
-                    name = vn->getName();
-                }
-                if (name.length() > 0) {
-                    this->_config[name] = value;
-                }
-                break;
-            }
-                
-            case NodeTypeRule:
-            {
-                auto rule = std::static_pointer_cast<LILRule>(node);
-                const auto & selChains = rule->getSelectorChains();
-                LILString name;
-                bool found = false;
-                for (auto schNode : selChains) {
-                    if (schNode->isA(NodeTypeSelectorChain)) {
-                        for (auto ssNode : schNode->getChildNodes()) {
-                            if (ssNode->isA(NodeTypeSimpleSelector)) {
-                                const auto & ssNodes = ssNode->getChildNodes();
-                                for (auto sNode : ssNodes) {
-                                    if (sNode->isA(NodeTypeSelector)) {
-                                        auto selector = std::static_pointer_cast<LILSelector>(sNode);
-                                        name = selector->getName();
-                                        found = true;
-                                        break;
-                                    }
-                                }
-                            }
-                            if (found) {
-                                break;
-                            }
-                        }
-                    }
-                }
-                if (!found) {
-                    std::cerr << "NAME NOT FOUND FAIL !!!!!!!\n\n";
-                } else {
-                    this->_config[name] = rule;
-                }
-                break;
-            }
-                
-            default:
-                std::cerr << "UNEXPECTED NODE TYPE IN CONFIGURE INSTRUCTION FAIL !!!!!!!\n\n";
-                break;
-        }
-    }
+    this->_config.push_back(instr);
+}
+
+const std::vector<std::shared_ptr<LILNode>> & LILRootNode::getConfigure() const
+{
+    return this->_config;
 }

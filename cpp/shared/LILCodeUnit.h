@@ -25,6 +25,7 @@ namespace llvm
 namespace LIL
 {
     class LILCodeUnitPrivate;
+    class LILConfiguration;
     class LILNode;
     class LILRootNode;
     class LILCodeUnit
@@ -43,12 +44,18 @@ namespace LIL
         LILString getSource() const;
         void setNeedsConfigureDefaults(bool value);
         bool getNeedsConfigureDefaults() const;
+        void setDebugConfigureDefaults(bool value);
+        bool getDebugConfigureDefaults() const;
         void setIsBeingImportedWithNeeds(bool value);
         bool getIsBeingImportedWithNeeds() const;
         void setIsBeingImportedWithImport(bool value);
         bool getIsBeingImportedWithImport() const;
         const std::vector<LILString> & getArguments() const;
         void setArguments(const std::vector<LILString> & args);
+        void setSuffix(const LILString & value);
+        void setConstants(const std::vector<LILString> & values);
+        void setImports(const std::vector<LILString> & values);
+        void setConfiguration(LILConfiguration * value);
 
         void run();
         void buildAST();
@@ -60,24 +67,17 @@ namespace LIL
         void printToOutput();
         void setIsMain(bool value);
         void setVerbose(bool value);
-        void setDebugAST(bool value);
-        void setDebugLilStd(bool value);
-        void setDebugPreprocessor(bool value);
-        void setDebugASTValidator(bool value);
-        void setDebugTypeResolver(bool value);
-        void setDebugClassTemplateLowerer(bool value);
-        void setDebugTypeGuesser(bool value);
-        void setDebugStructureLowerer(bool value);
-        void setDebugConstantFolder(bool value);
-        void setDebugMethodInserter(bool value);
-        void setDebugNameLowerer(bool value);
-        void setDebugFieldSorter(bool value);
-        void setDebugParameterSorter(bool value);
-        void setDebugTypeValidator(bool value);
-        void setDebugConversionInserter(bool value);
+        bool getDebugStdLil() const;
+        void setDebugStdLil(bool value);
+        bool getImportStdLil() const;
+        void setImportStdLil(bool value);
+        const LILString & getStdLilPath() const;
+        void setStdLilPath(const LILString & value);
         bool hasErrors() const;
         void addAlreadyImportedFile(const LILString & path, const std::vector<std::shared_ptr<LILNode>> & nodes, bool isNeeds);
         bool isAlreadyImported(const LILString & path, bool isNeeds);
+        void addNeededFileForBuild(const LILString & path, bool verbose);
+        const std::vector<std::pair<LILString, bool>> & getNeededFilesForBuild() const;
 
     private:
         LILCodeUnitPrivate * d;

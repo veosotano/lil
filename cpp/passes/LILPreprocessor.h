@@ -45,6 +45,7 @@
 
 namespace LIL
 {
+    class LILConfiguration;
     class LILRootNode;
     class LILPreprocessor : public LILVisitor
     {
@@ -65,18 +66,31 @@ namespace LIL
         void _removeSnippets(std::shared_ptr<LILNode> node);
         void setDir(LILString dir);
         LILString getDir() const;
+        void setSuffix(const LILString & value);
+        const LILString & getSuffix() const;
         bool getDebugAST() const;
         void setDebugAST(bool value);
         void addAlreadyImportedFile(LILString path, std::vector<std::shared_ptr<LILNode>> nodes, bool isNeeds);
         bool isAlreadyImported(const LILString & path, bool isNeeds);
         std::vector<std::shared_ptr<LILNode>> getNodesForAlreadyImportedFile(const LILString & path, bool isNeeds);
 
+        void addNeededFileForBuild(const LILString & path, bool verbose);
+        const std::vector<std::pair<LILString, bool>> & getNeededFilesForBuild() const;
+
+        void setConstants(std::vector<LILString> & values);
+        const std::vector<LILString> & getConstants() const;
+
+        void setConfiguration(LILConfiguration * value);
 
     private:
         std::map<LILString, std::vector<std::shared_ptr<LILNode>>> _alreadyImportedFilesNeeds;
         std::map<LILString, std::vector<std::shared_ptr<LILNode>>> _alreadyImportedFilesImport;
+        std::vector<LILString> _constants;
+        std::vector<std::pair<LILString, bool>> _buildFiles;
         std::vector<std::vector<std::shared_ptr<LILNode>>> _nodeBuffer;
         LILString _dir;
+        LILString _suffix;
+        LILConfiguration * _config;
         bool _debugAST;
         bool _needsAnotherPass;
 
@@ -136,6 +150,8 @@ namespace LIL
         bool _processPasteInstr(std::shared_ptr<LILIndexAccessor> value);
         bool _processPasteInstr(std::shared_ptr<LILConversionDecl> value);
 
+        void _processMainMenuRule(std::shared_ptr<LILSnippetInstruction> snippet, std::shared_ptr<LILRule> rule);
+        void _processAppMenuRule(std::shared_ptr<LILSnippetInstruction> snippet, std::shared_ptr<LILRule> rule);
     };
 }
 

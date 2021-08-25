@@ -24,7 +24,7 @@ namespace llvm
 
 namespace LIL
 {
-    class LILCodeUnit;
+    class LILRootNode;
     class LILOutputEmitterPrivate;
     class LILOutputEmitter
     {
@@ -34,18 +34,19 @@ namespace LIL
         
         llvm::Module * getLLVMModule() const;
         
-        void setFile(LILString file);
-        LILString getFile() const;
-        void setDir(LILString dir);
-        LILString getDir() const;
-        void setSource(LILString source);
-        LILString getSource() const;
-        bool hasErrors() const;
+        void setInFile(const LILString & file);
+        const LILString & getInFile() const;
+        void setOutFile(const LILString & file);
+        const LILString & getOutFile() const;
+        void setDir(const LILString & dir);
+        const LILString & getDir() const;
+        void setSource(const LILString & source);
+        const LILString & getSource() const;
         
-        void run(LILCodeUnit * cu);
-        void compileToO(std::string name, LILCodeUnit * cu);
-        void compileToS(std::string name, LILCodeUnit * cu);
-        void printToOutput(LILCodeUnit * cu);
+        void run(std::shared_ptr<LILRootNode> rootNode);
+        void compileToO(std::shared_ptr<LILRootNode> rootNode);
+        void compileToS(std::shared_ptr<LILRootNode> rootNode);
+        void printToOutput(std::shared_ptr<LILRootNode> rootNode);
         void setVerbose(bool value);
         void setDebugIREmitter(bool value);
         

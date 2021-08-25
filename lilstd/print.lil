@@ -1,5 +1,4 @@
-fn printf (ptr(i8)...)=>i32 extern;
-fn puts (ptr(i8))=>i32 extern;
+#needs "cstd.lil";
 #needs "string.lil";
 
 #export fn print(var.bool|i64|f64|ptr(i8)|@string|null value) {

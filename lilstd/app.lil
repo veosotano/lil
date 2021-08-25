@@ -1,0 +1,54 @@
+#needs "cstd.lil";
+
+#export {
+    class @selectable {
+        var.cstr name;
+        var.i64 parentId;
+    };
+    class @drawable {
+        var.f64 x;
+        var.f64 y;
+        var.f64 red;
+        var.f64 green;
+        var.f64 blue;
+    }
+    
+    class @app {
+        var.@selectable[2048] selectables: [];
+        var.@drawable[2048] drawables: [];
+        var.i64 entityCount: 0;
+        
+        fn newEntity => i64 {
+            puts `Creating new entity`;
+            var currentCount: @self.entityCount;
+            @self.entityCount +: 1;
+            return currentCount;
+        };
+        fn setSelectable(var.i64 id; var.@selectable value) {
+            printf(`Setting selectable with name %s for id %li\n`, value.name, id);
+            @self.selectables[id]: value;
+        };
+        fn setDrawable(var.i64 id; var.@drawable value) {
+            printf(`Setting drawable with x: %lf, y: %lf, red: %lf, green: %lf, blue: %lf\n`, value.x, value.y, value.red, value.green, value.blue);
+            @self.drawables[id]: value;
+        };
+        // fn newElement(var.cstr name; var.i64 parentId: 0)=>ptr(@selectable) {
+        //     puts `Creating new element`;
+        //     var.i64 id: @self.newEntity();
+        //     @self.setSelectable(id, @selectable {
+        //         name: name;
+        //         parentId: parentId;
+        //     });
+        //     @self.setDrawable(id, @drawable {
+        //         x: 0.0;
+        //         y: 0.0;
+        //         red: 0.0;
+        //         green: 0.0;
+        //         blue: 0.0;
+        //     });
+        //     return @self.selectables[id];
+        // };
+    };
+    
+    var.@app app;
+}

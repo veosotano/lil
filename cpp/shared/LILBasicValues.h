@@ -19,6 +19,7 @@
 #include <cstdio>
 #include <vector>
 #include <map>
+#include <unordered_map>
 #include <memory>
 #include <deque>
 #include <limits>

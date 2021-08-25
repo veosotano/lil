@@ -226,6 +226,7 @@ namespace LIL
         InstructionTypeRRGGBBA,
         InstructionTypeRRGGBBAA,
         InstructionTypeConfigure,
+        InstructionTypeGetConfig,
         InstructionTypeNeeds,
         InstructionTypeImport,
         InstructionTypeExport,
@@ -248,6 +249,7 @@ namespace LIL
         SelectorTypeSelfSelector,
         SelectorTypeCombinator,
         SelectorTypeSimpleSelector,
+        SelectorTypeMainMenu,
     };
 
     enum CombinatorType

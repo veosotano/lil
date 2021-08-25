@@ -1,4 +1,8 @@
 #export {
-	fn printf (ptr(i8)...)=>i32 extern;
-	fn puts (ptr(i8))=>i32 extern;
+    alias cstr => ptr(i8);
+    fn printf (cstr...)=>i32 extern;
+    fn puts (cstr)=>i32 extern;
+    fn malloc (i64)=>cstr extern;
+    fn realloc (cstr,i64)=>cstr extern;
+    fn free (cstr) extern;
 }

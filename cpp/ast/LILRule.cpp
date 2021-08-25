@@ -126,3 +126,20 @@ const std::vector<std::shared_ptr<LILNode>> & LILRule::getNodes() const
 {
     return this->getChildNodes();
 }
+
+std::shared_ptr<LILNode> LILRule::getFirstSelector() const
+{
+    if (this->_selectorChains.size() > 0) {
+        const auto & firstChain = this->_selectorChains.front();
+        const auto & firstChainNodes = firstChain->getChildNodes();
+        if (firstChainNodes.size() > 0) {
+            const auto & firstSimpleSel = firstChainNodes.front();
+            const auto & firstSimpleSelNodes = firstSimpleSel->getChildNodes();
+            if (firstSimpleSelNodes.size() > 0) {
+                const auto & firstSel = firstSimpleSelNodes.front();
+                return firstSel;
+            }
+        }
+    }
+    return nullptr;
+}

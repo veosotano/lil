@@ -21,6 +21,7 @@
 #include "LILClassDecl.h"
 #include "LILCodeParser.h"
 #include "LILCodeUnit.h"
+#include "LILConfiguration.h"
 #include "LILErrorMessage.h"
 #include "LILFunctionDecl.h"
 #include "LILInstruction.h"
@@ -39,6 +40,7 @@ using namespace LIL;
 LILPreprocessor::LILPreprocessor()
 : _debugAST(false)
 , _needsAnotherPass(false)
+, _config(nullptr)
 {
 }
 
@@ -131,6 +133,8 @@ void LILPreprocessor::processImportingInstr(const std::shared_ptr<LILRootNode> &
                 
                 std::unique_ptr<LILCodeUnit> codeUnit = std::make_unique<LILCodeUnit>();
                 codeUnit->setNeedsConfigureDefaults(false);
+                codeUnit->setConstants(this->getConstants());
+                codeUnit->setConfiguration(this->_config);
                 if (isNeeds) {
                     codeUnit->setIsBeingImportedWithNeeds(true);
                     for (auto it = this->_alreadyImportedFilesNeeds.begin(); it != this->_alreadyImportedFilesNeeds.end(); ++it) {
@@ -148,7 +152,21 @@ void LILPreprocessor::processImportingInstr(const std::shared_ptr<LILRootNode> &
                 codeUnit->setFile(path);
                 LILString dir = this->_getDir(path);
                 codeUnit->setDir(dir);
-                std::ifstream file(path.data(), std::ios::in);
+                codeUnit->setSuffix(this->_suffix);
+                
+                std::string fpath = path.data();
+                if (this->_suffix.length() > 0) {
+                    size_t extensionIndex = path.data().find_last_of(".");
+                    
+                    if (extensionIndex != std::string::npos) {
+                        std::string spath = fpath.substr(0, extensionIndex) + "@" + this->_suffix.data() + fpath.substr(extensionIndex, fpath.length() - extensionIndex);
+                        fpath = spath;
+                    }
+                }
+                std::ifstream file(fpath, std::ios::in);
+                if (file.fail()) {
+                    file = std::ifstream(path.data(), std::ios::in);
+                }
                 if (file.fail()) {
                     std::cerr << "\nERROR: Failed to read the file "+path.data()+"\n\n";
                     continue;
@@ -174,6 +192,9 @@ void LILPreprocessor::processImportingInstr(const std::shared_ptr<LILRootNode> &
                                 newNodes.push_back(node);
                             }
                         }
+                        for (const auto & path : codeUnit->getNeededFilesForBuild()) {
+                            this->addNeededFileForBuild(path.first, path.second);
+                        }
                     }
                 }
                 if (this->getVerbose() && instr->getVerbose()) {
@@ -196,6 +217,9 @@ void LILPreprocessor::processImportingInstr(const std::shared_ptr<LILRootNode> &
                     }
                 }
                 this->addAlreadyImportedFile(path, newNodes, isNeeds);
+                if (isNeeds) {
+                    this->addNeededFileForBuild(path, this->getVerbose() && instr->getVerbose());
+                }
                 resultNodes.insert(resultNodes.end(), newNodes.begin(), newNodes.end());
             }
         }
@@ -418,6 +442,29 @@ bool LILPreprocessor::processIfInstr(std::shared_ptr<LILNode> node)
 
 void LILPreprocessor::processSnippets(const std::shared_ptr<LILRootNode> & rootNode)
 {
+    if (rootNode->hasMainMenu()) {
+        auto appMenuSnippet = std::make_shared<LILSnippetInstruction>();
+        appMenuSnippet->setName("LIL_ADD_APP_MENU_ITEMS");
+        auto mainMenuSnippet = std::make_shared<LILSnippetInstruction>();
+        mainMenuSnippet->setName("LIL_ADD_MAIN_MENU_ITEMS");
+        for (auto node : rootNode->getMainMenuItems()) {
+            if (node->isA(NodeTypeRule)) {
+                const auto & rule = std::static_pointer_cast<LILRule>(node);
+                const auto & instr = rule->getInstruction();
+                if (instr) {
+                    this->_processMainMenuRule(mainMenuSnippet, rule);
+                } else {
+                    this->_processAppMenuRule(appMenuSnippet, rule);
+                }
+            }
+        }
+        if (appMenuSnippet->getChildNodes().size() > 0) {
+            rootNode->add(appMenuSnippet);
+        }
+        if (mainMenuSnippet->getChildNodes().size() > 0) {
+            rootNode->add(mainMenuSnippet);
+        }
+        rootNode->clearMainMenuItems();
     }
     if (rootNode->hasInitializers()) {
         auto snippet = std::make_shared<LILSnippetInstruction>();
@@ -429,6 +476,129 @@ void LILPreprocessor::processSnippets(const std::shared_ptr<LILRootNode> & rootN
         rootNode->clearInitializers();
     }
 }
+
+void LILPreprocessor::_processMainMenuRule(std::shared_ptr<LILSnippetInstruction> snippet, std::shared_ptr<LILRule> rule)
+{
+    const auto & instrNode = rule->getInstruction();
+    if (instrNode) {
+        const auto & instr = std::static_pointer_cast<LILInstruction>(instrNode);
+        if (instr && instr->isA(InstructionTypeNew)) {
+            const auto & instrTy = instr->getType();
+            if (instrTy && instrTy->isA(TypeTypeObject)) {
+                if (instrTy->getName() == "menu") {
+                    const auto & vals = rule->getValues();
+                    for (auto val : vals) {
+                        if (val->isA(NodeTypeAssignment)) {
+                            const auto & as = std::static_pointer_cast<LILAssignment>(val);
+                            const auto & asSubj = as->getSubject();
+                            if (asSubj && asSubj->isA(NodeTypeVarName)) {
+                                const auto & vn = std::static_pointer_cast<LILVarName>(asSubj);
+                                if (vn->getName() == "label") {
+                                    const auto & value = as->getValue();
+                                    if (value->isA(NodeTypeStringLiteral)) {
+                                        auto strLit = std::static_pointer_cast<LILStringLiteral>(value);
+                                        strLit->setIsCString(true);
+                                        auto fc = std::make_shared<LILFunctionCall>();
+                                        fc->setName("LIL__addMenu");
+                                        fc->addArgument(strLit);
+                                        snippet->add(fc);
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    for (const auto & childRule : rule->getChildRules()) {
+                        this->_processMainMenuRule(snippet, childRule);
+                    }
+                    
+                    auto doneFc = std::make_shared<LILFunctionCall>();
+                    doneFc->setName("LIL__exitMenu");
+                    snippet->add(doneFc);
+
+                }
+                else if (instrTy->getName() == "menuItem")
+                {
+                    std::shared_ptr<LILStringLiteral> label;
+                    std::shared_ptr<LILStringLiteral> shortcut;
+                    std::shared_ptr<LILNode> action;
+                    
+                    const auto & vals = rule->getValues();
+                    for (auto val : vals) {
+                        if (val->isA(NodeTypeAssignment)) {
+                            const auto & as = std::static_pointer_cast<LILAssignment>(val);
+                            const auto & asSubj = as->getSubject();
+                            if (asSubj && asSubj->isA(NodeTypeVarName)) {
+                                const auto & vn = std::static_pointer_cast<LILVarName>(asSubj);
+                                const auto & vnName = vn->getName();
+                                if (vnName == "label") {
+                                    const auto & value = as->getValue();
+                                    if (value->isA(NodeTypeStringLiteral)) {
+                                        label = std::static_pointer_cast<LILStringLiteral>(value);
+                                        label->setIsCString(true);
+                                    }
+                                } else if (vnName == "shortcut") {
+                                    const auto & value = as->getValue();
+                                    if (value->isA(NodeTypeStringLiteral)) {
+                                        shortcut = std::static_pointer_cast<LILStringLiteral>(value);
+                                        shortcut->setIsCString(true);
+                                    }
+                                } else if (vnName == "action") {
+                                    action = as->getValue();
+                                }
+                            }
+                        }
+                    }
+                    
+                    if (!shortcut) {
+                        shortcut = std::make_shared<LILStringLiteral>();
+                        shortcut->setIsCString(true);
+                    }
+                    if (label && action) {
+                        auto fc = std::make_shared<LILFunctionCall>();
+                        fc->setName("LIL__addMenuItem");
+                        fc->addArgument(label);
+                        fc->addArgument(shortcut);
+                        fc->addArgument(action);
+                        snippet->add(fc);
+                    }
+                }
+                else if (instrTy->getName() == "menuSeparator")
+                {
+                    auto fc = std::make_shared<LILFunctionCall>();
+                    fc->setName("LIL__addMenuSeparator");
+                    snippet->add(fc);
+                }
+            }
+        }
+    }
+}
+
+void LILPreprocessor::_processAppMenuRule(std::shared_ptr<LILSnippetInstruction> snippet, std::shared_ptr<LILRule> rule)
+{
+    const auto & selChs = rule->getSelectorChains();
+    if (selChs.size() > 0) {
+        const auto & selCh = std::static_pointer_cast<LILSelectorChain>(selChs.front());
+        const auto & selChNodes = selCh->getNodes();
+        if (selChNodes.size() > 0) {
+            const auto & simpleSel = std::static_pointer_cast<LILSimpleSelector>(selChNodes.front());
+            const auto & simpleSelNodes = simpleSel->getNodes();
+            if (simpleSelNodes.size() > 0) {
+                const auto & selNode = simpleSelNodes.front();
+                if (selNode->isA(NodeTypeSelector)) {
+                    const auto & sel = std::static_pointer_cast<LILSelector>(selNode);
+                    if (sel->getName() == "app") {
+                        for (auto child : rule->getChildRules()) {
+                            this->_processMainMenuRule(snippet, child);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 void LILPreprocessor::processPasteInstr(const std::shared_ptr<LILRootNode> & rootNode)
 {
     std::vector<std::shared_ptr<LILNode>> nodes = rootNode->getNodes();
@@ -655,6 +825,16 @@ LILString LILPreprocessor::getDir() const
     return this->_dir;
 }
 
+void LILPreprocessor::setSuffix(const LILString & value)
+{
+    this->_suffix = value;
+}
+
+const LILString & LILPreprocessor::getSuffix() const
+{
+    return this->_suffix;
+}
+
 bool LILPreprocessor::getDebugAST() const
 {
     return this->_debugAST;
@@ -672,6 +852,16 @@ void LILPreprocessor::addAlreadyImportedFile(LILString path, std::vector<std::sh
     } else {
         this->_alreadyImportedFilesImport[path] = nodes;
     }
+}
+
+void LILPreprocessor::addNeededFileForBuild(const LILString & path, bool verbose)
+{
+    this->_buildFiles.push_back( { path, verbose } );
+}
+
+const std::vector<std::pair<LILString, bool>> & LILPreprocessor::getNeededFilesForBuild() const
+{
+    return this->_buildFiles;
 }
 
 bool LILPreprocessor::isAlreadyImported(const LILString & path, bool isNeeds)
@@ -692,6 +882,21 @@ std::vector<std::shared_ptr<LILNode>> LILPreprocessor::getNodesForAlreadyImporte
     }
     std::vector<std::shared_ptr<LILNode>> emptyVect;
     return emptyVect;
+}
+
+void LILPreprocessor::setConstants(std::vector<LILString> & values)
+{
+    this->_constants = values;
+}
+
+const std::vector<LILString> & LILPreprocessor::getConstants() const
+{
+    return this->_constants;
+}
+
+void LILPreprocessor::setConfiguration(LILConfiguration * value)
+{
+    this->_config = value;
 }
 
 std::vector<LILString> LILPreprocessor::_resolveFilePaths(LILString argStr) const

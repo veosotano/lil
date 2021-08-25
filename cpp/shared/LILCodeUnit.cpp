@@ -15,11 +15,12 @@
 #include "LILCodeUnit.h"
 #include "LILASTBuilder.h"
 #include "LILCodeParser.h"
-
+#include "LILConfiguration.h"
 #include "LILPreprocessor.h"
 #include "LILArgResolver.h"
 #include "LILASTValidator.h"
 #include "LILClassTemplateLowerer.h"
+#include "LILConfigGetter.h"
 #include "LILConversionInserter.h"
 #include "LILConstantFolder.h"
 #include "LILFieldSorter.h"
@@ -47,23 +48,12 @@ namespace LIL
         , parser(std::make_unique<LILCodeParser>(astBuilder.get()))
         , pm(std::make_unique<LILPassManager>())
         , isMain(false)
+        , config(nullptr)
         , verbose(false)
-        , debugLilStd(false)
-        , debugPreprocessor(false)
-        , debugAST(false)
-        , debugASTValidator(false)
-        , debugTypeResolver(false)
-        , debugClassTemplateLowerer(false)
-        , debugTypeGuesser(false)
-        , debugStructureLowerer(false)
-        , debugConstantFolder(false)
-        , debugMethodInserter(false)
-        , debugNameLowerer(false)
-        , debugFieldSorter(false)
-        , debugParameterSorter(false)
-        , debugTypeValidator(false)
-        , debugConversionInserter(false)
+        , debugStdLil(false)
+        , importStdLil(false)
         , needsConfigureDefaults(true)
+        , debugConfigureDefaults(false)
         , isBeingImportedWithNeeds(false)
         , isBeingImportedWithImport(false)
         {
@@ -71,30 +61,25 @@ namespace LIL
         LILString file;
         LILString dir;
         LILString source;
+        LILString suffix;
+        LILString stdLilPath;
         std::unique_ptr<LILASTBuilder> astBuilder;
         std::unique_ptr<LILCodeParser> parser;
         std::unique_ptr<LILPassManager> pm;
         std::map<LILString, std::vector<std::shared_ptr<LILNode>>> _alreadyImportedFilesNeeds;
         std::map<LILString, std::vector<std::shared_ptr<LILNode>>> _alreadyImportedFilesImport;
         bool isMain;
+        std::vector<LILString> arguments;
+        std::vector<std::pair<LILString, bool>> neededFiles;
+        std::vector<LILString> constants;
+        std::vector<LILString> imports;
 
+        LILConfiguration * config;
         bool verbose;
-        bool debugLilStd;
-        bool debugPreprocessor;
-        bool debugAST;
-        bool debugASTValidator;
-        bool debugTypeResolver;
-        bool debugClassTemplateLowerer;
-        bool debugTypeGuesser;
-        bool debugStructureLowerer;
-        bool debugConstantFolder;
-        bool debugMethodInserter;
-        bool debugNameLowerer;
-        bool debugFieldSorter;
-        bool debugParameterSorter;
-        bool debugTypeValidator;
-        bool debugConversionInserter;
+        bool debugStdLil;
+        bool importStdLil;
         bool needsConfigureDefaults;
+        bool debugConfigureDefaults;
         bool isBeingImportedWithNeeds;
         bool isBeingImportedWithImport;
     };
@@ -157,6 +142,16 @@ bool LILCodeUnit::getNeedsConfigureDefaults() const
     return d->needsConfigureDefaults;
 }
 
+void LILCodeUnit::setDebugConfigureDefaults(bool value)
+{
+    d->debugConfigureDefaults = value;
+}
+
+bool LILCodeUnit::getDebugConfigureDefaults() const
+{
+    return d->debugConfigureDefaults;
+}
+
 void LILCodeUnit::setIsBeingImportedWithNeeds(bool value)
 {
     d->isBeingImportedWithNeeds = value;
@@ -175,6 +170,36 @@ void LILCodeUnit::setIsBeingImportedWithImport(bool value)
 bool LILCodeUnit::getIsBeingImportedWithImport() const
 {
     return d->isBeingImportedWithImport;
+}
+
+const std::vector<LILString> & LILCodeUnit::getArguments() const
+{
+    return d->arguments;
+}
+
+void LILCodeUnit::setArguments(const std::vector<LILString> & args)
+{
+    d->arguments = args;
+}
+
+void LILCodeUnit::setSuffix(const LILString & value)
+{
+    d->suffix = value;
+}
+
+void LILCodeUnit::setConstants(const std::vector<LILString> & values)
+{
+    d->constants = values;
+}
+
+void LILCodeUnit::setImports(const std::vector<LILString> & values)
+{
+    d->imports = values;
+}
+
+void LILCodeUnit::setConfiguration(LILConfiguration * value)
+{
+    d->config = value;
 }
 
 void LILCodeUnit::run()
@@ -202,7 +227,9 @@ void LILCodeUnit::buildAST()
 {
     auto rootNode = this->getRootNode();
     if (d->needsConfigureDefaults) {
-        if (d->verbose) {
+        bool previousVerboseValue = d->verbose;
+        this->setVerbose(d->debugConfigureDefaults);
+        if (d->debugConfigureDefaults) {
             std::cerr << "============================\n";
             std::cerr << "==== CONFIGURE DEFAULTS ====\n";
             std::cerr << "============================\n\n";
@@ -217,9 +244,63 @@ void LILCodeUnit::buildAST()
             const LILString & lilStr(buffer.str());
             d->parser->parseString(lilStr);
         }
-        if (d->verbose) {
+        if (d->debugConfigureDefaults) {
             std::cerr << "\n\n";
+        } else {
+            for (const auto & conf : rootNode->getConfigure()) {
+                conf->hidden = true;
+            }
         }
+        this->setVerbose(previousVerboseValue);
+    }
+    
+    if (d->importStdLil) {
+        auto importInstr = std::make_shared<LILInstruction>();
+        LILNode::SourceLocation loc;
+        loc.line = 0;
+        loc.column = 0;
+        importInstr->setSourceLocation(loc);
+        importInstr->setInstructionType(InstructionTypeImport);
+        importInstr->setName("import");
+        auto strConst = std::make_shared<LILStringLiteral>();
+        strConst->setValue(d->stdLilPath);
+        importInstr->setArgument(strConst);
+        importInstr->setVerbose(d->debugStdLil);
+        rootNode->add(importInstr);
+    }
+    
+    for (auto importFile : d->imports) {
+        auto importInstr = std::make_shared<LILInstruction>();
+        LILNode::SourceLocation loc;
+        loc.line = 0;
+        loc.column = 0;
+        importInstr->setSourceLocation(loc);
+        importInstr->setInstructionType(InstructionTypeImport);
+        importInstr->setName("import");
+        auto strConst = std::make_shared<LILStringLiteral>();
+        strConst->setValue(importFile);
+        importInstr->setArgument(strConst);
+        rootNode->add(importInstr);
+    }
+    
+    for (auto constant : d->constants) {
+        auto vd = std::make_shared<LILVarDecl>();
+        LILNode::SourceLocation loc;
+        loc.line = 0;
+        loc.column = 0;
+        vd->setSourceLocation(loc);
+        vd->setName(constant);
+        vd->setIsConst(true);
+        auto boolVal = std::make_shared<LILBoolLiteral>();
+        boolVal->setSourceLocation(loc);
+        boolVal->setValue(true);
+        
+        auto boolTy = LILType::make("bool");
+        boolVal->setType(boolTy);
+
+        vd->setInitVal(boolVal);
+
+        rootNode->add(vd);
     }
 
     if (d->verbose) {
@@ -228,24 +309,6 @@ void LILCodeUnit::buildAST()
         std::cerr << "============================\n\n";
     }
     d->parser->parseString(d->source);
-
-    if (d->isMain) {
-        if (rootNode->hasInitializers()) {
-            auto snippet = std::make_shared<LILSnippetInstruction>();
-            snippet->setName("LIL_INITIALIZERS");
-            for (auto initializer : rootNode->getInitializers()) {
-                snippet->add(initializer);
-            }
-            rootNode->add(snippet);
-        }
-        auto importInstr = std::make_shared<LILInstruction>();
-        importInstr->setInstructionType(InstructionTypeImport);
-        importInstr->setName("import");
-        auto pathToMain = std::make_shared<LILStringLiteral>();
-        pathToMain->setValue("\"std/main.lil\"");
-        importInstr->setArgument(pathToMain);
-        rootNode->add(importInstr);
-    }
 }
 
 void LILCodeUnit::runPasses()
@@ -269,8 +332,17 @@ void LILCodeUnit::runPasses()
         passes.push_back(stringVisitor);
     }
     
+    //handle #getConfig instructions
+    auto configGetter = new LILConfigGetter();
+    configGetter->setConfiguration(d->config);
+    passes.push_back(configGetter);
+    if (verbose) {
+        auto stringVisitor = new LILToStringVisitor();
+        stringVisitor->setPrintHeadline(false);
+        passes.push_back(stringVisitor);
+    }
 
-    //handle #needs, #if and #snippet instructions
+    //handle #needs/#import, #if and #snippet/#paste instructions
     auto preprocessor = new LILPreprocessor();
     for (auto it = d->_alreadyImportedFilesNeeds.begin(); it != d->_alreadyImportedFilesNeeds.end(); ++it) {
         auto pair = *it;
@@ -280,9 +352,10 @@ void LILCodeUnit::runPasses()
         auto pair = *it;
         preprocessor->addAlreadyImportedFile(pair.first, pair.second, false);
     }
-    preprocessor->setDebug(d->debugPreprocessor);
     preprocessor->setDir(d->dir);
-    preprocessor->setDebugAST(d->debugAST);
+    preprocessor->setSuffix(d->suffix);
+    preprocessor->setConstants(d->constants);
+    preprocessor->setConfiguration(d->config);
     passes.push_back(preprocessor);
     if (verbose) {
         auto stringVisitor = new LILToStringVisitor();
@@ -292,12 +365,10 @@ void LILCodeUnit::runPasses()
 
     //ast validation
     auto astValidator = new LILASTValidator();
-    astValidator->setDebug(d->debugASTValidator);
     passes.push_back(astValidator);
 
     //method inserter
     auto methodInserter = new LILMethodInserter();
-    methodInserter->setDebug(d->debugMethodInserter);
     passes.push_back(methodInserter);
     if (verbose) {
         auto stringVisitor = new LILToStringVisitor();
@@ -307,7 +378,6 @@ void LILCodeUnit::runPasses()
 
     //type resolving
     auto typeResolver = new LILTypeResolver();
-    typeResolver->setDebug(d->debugTypeResolver);
     passes.push_back(typeResolver);
     if (verbose) {
         auto stringVisitor = new LILToStringVisitor();
@@ -317,7 +387,6 @@ void LILCodeUnit::runPasses()
 
     //class template lowerer
     auto classTemplateLowerer = new LILClassTemplateLowerer();
-    classTemplateLowerer->setDebug(d->debugClassTemplateLowerer);
     passes.push_back(classTemplateLowerer);
     if (verbose) {
         auto stringVisitor = new LILToStringVisitor();
@@ -327,7 +396,6 @@ void LILCodeUnit::runPasses()
 
     //type guessing
     auto typeGuesser = new LILTypeGuesser();
-    typeGuesser->setDebug(d->debugTypeGuesser);
     passes.push_back(typeGuesser);
     if (verbose) {
         auto stringVisitor = new LILToStringVisitor();
@@ -337,7 +405,6 @@ void LILCodeUnit::runPasses()
 
     //field sorting
     auto fieldSorter = new LILFieldSorter();
-    fieldSorter->setDebug(d->debugFieldSorter);
     passes.push_back(fieldSorter);
     if (verbose) {
         auto stringVisitor = new LILToStringVisitor();
@@ -347,7 +414,6 @@ void LILCodeUnit::runPasses()
 
     //parameter sorting
     auto parameterSorter = new LILParameterSorter();
-    parameterSorter->setDebug(d->debugParameterSorter);
     passes.push_back(parameterSorter);
     if (verbose) {
         auto stringVisitor = new LILToStringVisitor();
@@ -357,7 +423,6 @@ void LILCodeUnit::runPasses()
 
     //conversion inserting
     auto convInserter = new LILConversionInserter();
-    convInserter->setDebug(d->debugConversionInserter);
     passes.push_back(convInserter);
     if (verbose) {
         auto stringVisitor = new LILToStringVisitor();
@@ -367,7 +432,6 @@ void LILCodeUnit::runPasses()
 
     //constant folding
     auto constantFolder = new LILConstantFolder();
-    constantFolder->setDebug(d->debugConstantFolder);
     passes.push_back(constantFolder);
     if (verbose) {
         auto stringVisitor = new LILToStringVisitor();
@@ -377,7 +441,6 @@ void LILCodeUnit::runPasses()
 
     //structure lowering
     auto structureLowerer = new LILStructureLowerer();
-    structureLowerer->setDebug(d->debugStructureLowerer);
     passes.push_back(structureLowerer);
     if (verbose) {
         auto stringVisitor = new LILToStringVisitor();
@@ -387,7 +450,6 @@ void LILCodeUnit::runPasses()
 
     //name lowering
     auto nameLowerer = new LILNameLowerer();
-    nameLowerer->setDebug(d->debugNameLowerer);
     passes.push_back(nameLowerer);
     if (d->verbose) {
         auto stringVisitor = new LILToStringVisitor();
@@ -397,7 +459,6 @@ void LILCodeUnit::runPasses()
 
     //type validation
     auto tyValidator = new LILTypeValidator();
-    tyValidator->setDebug(d->debugTypeValidator);
     passes.push_back(tyValidator);
     if (verbose) {
         auto stringVisitor = new LILToStringVisitor();
@@ -407,6 +468,11 @@ void LILCodeUnit::runPasses()
 
     //execute the passes
     d->pm->execute(passes, d->astBuilder->getRootNode(), d->source);
+
+    const auto & neededFiles = preprocessor->getNeededFilesForBuild();
+    for (const auto & neededFile : neededFiles) {
+        this->addNeededFileForBuild(neededFile.first, neededFile.second);
+    }
 
     if (d->pm->hasErrors()) {
         std::cerr << "Errors encountered. Exiting.\n\n";
@@ -437,6 +503,16 @@ void LILCodeUnit::runPassesForNeeds()
         passes.push_back(stringVisitor);
     }
 
+    //handle #getConfig instructions
+    auto configGetter = new LILConfigGetter();
+    configGetter->setConfiguration(d->config);
+    passes.push_back(configGetter);
+    if (verbose) {
+        auto stringVisitor = new LILToStringVisitor();
+        stringVisitor->setPrintHeadline(false);
+        passes.push_back(stringVisitor);
+    }
+
     //handle #needs/#import, #if and #snippet/#paste instructions
     auto preprocessor = new LILPreprocessor();
     for (auto it = d->_alreadyImportedFilesNeeds.begin(); it != d->_alreadyImportedFilesNeeds.end(); ++it) {
@@ -447,9 +523,8 @@ void LILCodeUnit::runPassesForNeeds()
         auto pair = *it;
         preprocessor->addAlreadyImportedFile(pair.first, pair.second, false);
     }
-    preprocessor->setDebug(d->debugPreprocessor);
     preprocessor->setDir(d->dir);
-    preprocessor->setDebugAST(d->debugAST);
+    preprocessor->setSuffix(d->suffix);
     passes.push_back(preprocessor);
     if (verbose) {
         auto stringVisitor = new LILToStringVisitor();
@@ -459,12 +534,10 @@ void LILCodeUnit::runPassesForNeeds()
 
     //ast validation
     auto astValidator = new LILASTValidator();
-    astValidator->setDebug(d->debugASTValidator);
     passes.push_back(astValidator);
 
     //method inserter
     auto methodInserter = new LILMethodInserter();
-    methodInserter->setDebug(d->debugMethodInserter);
     passes.push_back(methodInserter);
     if (verbose) {
         auto stringVisitor = new LILToStringVisitor();
@@ -474,7 +547,6 @@ void LILCodeUnit::runPassesForNeeds()
 
     //type resolving
     auto typeResolver = new LILTypeResolver();
-    typeResolver->setDebug(d->debugTypeResolver);
     passes.push_back(typeResolver);
     if (verbose) {
         auto stringVisitor = new LILToStringVisitor();
@@ -484,7 +556,6 @@ void LILCodeUnit::runPassesForNeeds()
 
     //class template lowerer
     auto classTemplateLowerer = new LILClassTemplateLowerer();
-    classTemplateLowerer->setDebug(d->debugClassTemplateLowerer);
     passes.push_back(classTemplateLowerer);
     if (verbose) {
         auto stringVisitor = new LILToStringVisitor();
@@ -494,7 +565,6 @@ void LILCodeUnit::runPassesForNeeds()
 
     //type guessing
     auto typeGuesser = new LILTypeGuesser();
-    typeGuesser->setDebug(d->debugTypeGuesser);
     passes.push_back(typeGuesser);
     if (verbose) {
         auto stringVisitor = new LILToStringVisitor();
@@ -504,7 +574,6 @@ void LILCodeUnit::runPassesForNeeds()
 
     //field sorting
     auto fieldSorter = new LILFieldSorter();
-    fieldSorter->setDebug(d->debugFieldSorter);
     passes.push_back(fieldSorter);
     if (verbose) {
         auto stringVisitor = new LILToStringVisitor();
@@ -514,7 +583,6 @@ void LILCodeUnit::runPassesForNeeds()
 
     //parameter sorting
     auto parameterSorter = new LILParameterSorter();
-    parameterSorter->setDebug(d->debugParameterSorter);
     passes.push_back(parameterSorter);
     if (verbose) {
         auto stringVisitor = new LILToStringVisitor();
@@ -524,7 +592,6 @@ void LILCodeUnit::runPassesForNeeds()
 
     //structure lowering
     auto structureLowerer = new LILStructureLowerer();
-    structureLowerer->setDebug(d->debugStructureLowerer);
     passes.push_back(structureLowerer);
     if (verbose) {
         auto stringVisitor = new LILToStringVisitor();
@@ -534,7 +601,6 @@ void LILCodeUnit::runPassesForNeeds()
 
     //name lowering
     auto nameLowerer = new LILNameLowerer();
-    nameLowerer->setDebug(d->debugNameLowerer);
     passes.push_back(nameLowerer);
     if (d->verbose) {
         auto stringVisitor = new LILToStringVisitor();
@@ -544,7 +610,6 @@ void LILCodeUnit::runPassesForNeeds()
     
     //type validation
     auto tyValidator = new LILTypeValidator();
-    tyValidator->setDebug(d->debugTypeValidator);
     passes.push_back(tyValidator);
     if (verbose) {
         auto stringVisitor = new LILToStringVisitor();
@@ -554,6 +619,11 @@ void LILCodeUnit::runPassesForNeeds()
 
     //execute the passes
     d->pm->execute(passes, d->astBuilder->getRootNode(), d->source);
+
+    const auto & neededFiles = preprocessor->getNeededFilesForBuild();
+    for (const auto & neededFile : neededFiles) {
+        this->addNeededFileForBuild(neededFile.first, neededFile.second);
+    }
 
     if (d->pm->hasErrors()) {
         std::cerr << "Errors encountered. Exiting.\n\n";
@@ -584,6 +654,16 @@ void LILCodeUnit::runPassesForImport()
         passes.push_back(stringVisitor);
     }
 
+    //handle #getConfig instructions
+    auto configGetter = new LILConfigGetter();
+    configGetter->setConfiguration(d->config);
+    passes.push_back(configGetter);
+    if (verbose) {
+        auto stringVisitor = new LILToStringVisitor();
+        stringVisitor->setPrintHeadline(false);
+        passes.push_back(stringVisitor);
+    }
+
     //handle #needs/#import, #if and #snippet/#paste instructions
     auto preprocessor = new LILPreprocessor();
     for (auto it = d->_alreadyImportedFilesNeeds.begin(); it != d->_alreadyImportedFilesNeeds.end(); ++it) {
@@ -594,9 +674,8 @@ void LILCodeUnit::runPassesForImport()
         auto pair = *it;
         preprocessor->addAlreadyImportedFile(pair.first, pair.second, false);
     }
-    preprocessor->setDebug(d->debugPreprocessor);
     preprocessor->setDir(d->dir);
-    preprocessor->setDebugAST(d->debugAST);
+    preprocessor->setSuffix(d->suffix);
     passes.push_back(preprocessor);
     if (verbose) {
         auto stringVisitor = new LILToStringVisitor();
@@ -606,11 +685,15 @@ void LILCodeUnit::runPassesForImport()
 
     //ast validation
     auto astValidator = new LILASTValidator();
-    astValidator->setDebug(d->debugASTValidator);
     passes.push_back(astValidator);
 
     //execute the passes
     d->pm->execute(passes, d->astBuilder->getRootNode(), d->source);
+
+    const auto & neededFiles = preprocessor->getNeededFilesForBuild();
+    for (const auto & neededFile : neededFiles) {
+        this->addNeededFileForBuild(neededFile.first, neededFile.second);
+    }
 
     if (d->pm->hasErrors()) {
         std::cerr << "Errors encountered. Exiting.\n\n";
@@ -633,82 +716,34 @@ void LILCodeUnit::setVerbose(bool value)
     }
 }
 
-void LILCodeUnit::setDebugAST(bool value)
+bool LILCodeUnit::getDebugStdLil() const
 {
-    d->debugAST = value;
-    if(d->astBuilder){
-        d->astBuilder->setDebugAST(value);
-    }
+    return d->debugStdLil;
 }
 
-void LILCodeUnit::setDebugLilStd(bool value)
+void LILCodeUnit::setDebugStdLil(bool value)
 {
-    d->debugLilStd = value;
+    d->debugStdLil = value;
 }
 
-void LILCodeUnit::setDebugPreprocessor(bool value)
+bool LILCodeUnit::getImportStdLil() const
 {
-    d->debugPreprocessor = value;
+    return d->importStdLil;
 }
 
-void LILCodeUnit::setDebugASTValidator(bool value)
+void LILCodeUnit::setImportStdLil(bool value)
 {
-    d->debugASTValidator = value;
+    d->importStdLil = value;
 }
 
-void LILCodeUnit::setDebugTypeResolver(bool value)
+const LILString & LILCodeUnit::getStdLilPath() const
 {
-    d->debugTypeResolver = value;
+    return d->stdLilPath;
 }
 
-void LILCodeUnit::setDebugClassTemplateLowerer(bool value)
+void LILCodeUnit::setStdLilPath(const LILString & value)
 {
-    d->debugClassTemplateLowerer = value;
-}
-
-void LILCodeUnit::setDebugTypeGuesser(bool value)
-{
-    d->debugTypeGuesser = value;
-}
-
-void LILCodeUnit::setDebugStructureLowerer(bool value)
-{
-    d->debugStructureLowerer = value;
-}
-
-void LILCodeUnit::setDebugConstantFolder(bool value)
-{
-    d->debugConstantFolder = value;
-}
-
-void LILCodeUnit::setDebugFieldSorter(bool value)
-{
-    d->debugFieldSorter = value;
-}
-
-void LILCodeUnit::setDebugParameterSorter(bool value)
-{
-    d->debugParameterSorter = value;
-}
-
-void LILCodeUnit::setDebugMethodInserter(bool value)
-{
-    d->debugMethodInserter = value;
-}
-
-void LILCodeUnit::setDebugNameLowerer(bool value)
-{
-    d->debugNameLowerer = value;
-}
-
-void LILCodeUnit::setDebugTypeValidator(bool value)
-{
-    d->debugTypeValidator = value;
-}
-
-void LILCodeUnit::setDebugConversionInserter(bool value)
-{
-    d->debugConversionInserter = value;
+    d->stdLilPath = value;
 }
 
 bool LILCodeUnit::hasErrors() const
@@ -738,4 +773,13 @@ bool LILCodeUnit::isAlreadyImported(const LILString & path, bool isNeeds)
     } else {
         return d->_alreadyImportedFilesImport.count(path) > 0;
     }
+}
+
+void LILCodeUnit::addNeededFileForBuild(const LILString & path, bool verbose)
+{
+    d->neededFiles.push_back( { path, verbose } );
+}
+const std::vector<std::pair<LILString, bool>> & LILCodeUnit::getNeededFilesForBuild() const
+{
+    return d->neededFiles;
 }

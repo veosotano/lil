@@ -1,9 +1,9 @@
 #export {
-	#needs "array.lil";
-	#needs "string.lil";
-	#needs "print.lil";
-	
-	alias arr => @array;
-	alias cstr => ptr(i8);
-	alias str => @string;
+    #import "cstd.lil";
+    #needs "string.lil";
+    #needs "print.lil";
+    #if #getConfig(isApp) {
+        #needs "os.lil";
+        #needs "app.lil";
+    }
 };

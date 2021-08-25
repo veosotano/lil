@@ -39,7 +39,8 @@ namespace LIL
         void setInstruction(std::shared_ptr<LILNode> instruction);
         const std::shared_ptr<LILNode> getInstruction() const;
         const std::vector<std::shared_ptr<LILNode>> & getNodes() const;
-        
+        std::shared_ptr<LILNode> getFirstSelector() const;
+
     protected:
         virtual std::shared_ptr<LILClonable> cloneImpl() const;
         std::vector<std::shared_ptr<LILNode>> _selectorChains;

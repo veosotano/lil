@@ -1,0 +1,59 @@
+#export {
+    fn LIL__init()
+    {
+        #paste LIL_INITIALIZERS;
+    }
+
+    #if IS_APP {
+        class @objc_class {};
+        alias Class => ptr(@objc_class);
+        class @objc_object {
+            var.Class isa;
+        };
+        alias id => ptr(@objc_object);
+        class @objc_selector { };
+        alias SEL => ptr(@objc_selector);
+        
+        fn sel_getName(SEL)=>cstr extern;
+        fn sel_registerName(cstr)=>SEL extern;
+        fn objc_lookUpClass(cstr)=>Class extern;
+        fn objc_msgSend(id,SEL...)=>id extern;
+
+        fn LIL__startup extern;
+        fn LIL__run extern;
+
+        var.id LIL__applicationDelegate extern;
+
+        fn main {
+            LIL__startup();
+            LIL__run();
+            return 0;
+        }
+
+        fn LIL__addAppMenu {
+            #paste LIL_ADD_APP_MENU_ITEMS;
+        }
+        
+        fn LIL__addMenus() {
+            #paste LIL_ADD_MAIN_MENU_ITEMS;
+            // LIL__addMenu(`File`);
+            // LIL__addMenuItem(`Test`, `t`, pointerTo(testMenuItemHandler));
+        }
+        
+        fn LIL__addMenu(var.cstr label) {
+            var.SEL addMenuSel: sel_registerName(`addMenu:`);
+            objc_msgSend(LIL__applicationDelegate, addMenuSel, `File`);
+        }
+        
+        fn LIL__addMenuItem(var.cstr label; var.cstr shortcut; var.ptr(fn) fnPtr) {
+            var.SEL addItemSel: sel_registerName(`addMenuItem:key:fnPtr:`);
+            objc_msgSend(LIL__applicationDelegate, addItemSel, label, shortcut, fnPtr);
+        }
+
+    } else {
+        #export fn main {
+            LIL__init();
+            return 0;
+        }
+    }
+}

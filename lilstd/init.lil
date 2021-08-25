@@ -1,0 +1,37 @@
+#export {
+    #if #getConfig(isApp) {
+        fn LIL__startup extern;
+        fn LIL__run extern;
+        var.@app app extern;
+
+        fn LIL__init()
+        {
+            #paste LIL_INITIALIZERS;
+        }
+
+        fn main {
+            app: @app { selectables: []; entityCount: 0 };
+            //app.newElement(`root`);
+
+            LIL__startup();
+            LIL__run();
+            return 0;
+        }
+        
+        fn LIL__addAppMenu {
+            #paste LIL_ADD_APP_MENU_ITEMS;
+        }
+
+        fn LIL__addMenus() {
+            #paste LIL_ADD_MAIN_MENU_ITEMS;
+            // LIL__addMenu(`File`);
+            // LIL__addMenuItem(`Test`, `t`, pointerTo(testMenuItemHandler));
+        }
+
+    } else {
+        fn main {
+            #paste LIL_INITIALIZERS;
+            return 0;
+        }
+    }
+}

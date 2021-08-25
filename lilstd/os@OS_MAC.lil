@@ -1,0 +1,44 @@
+alias cstr => ptr(i8);
+var.id LIL__applicationDelegate extern;
+
+#export {
+    class @objc_class {};
+    alias Class => ptr(@objc_class);
+    class @objc_object {
+        var.Class isa;
+    };
+    alias id => ptr(@objc_object);
+    class @objc_selector { };
+    alias SEL => ptr(@objc_selector);
+
+    fn sel_getName(SEL)=>cstr extern;
+    fn sel_registerName(cstr)=>SEL extern;
+    fn objc_lookUpClass(cstr)=>Class extern;
+    fn objc_msgSend(id,SEL...)=>id extern;
+
+    fn LIL__addMenu(var.cstr label) {
+        var.SEL addMenuSel: sel_registerName(`addMenu:`);
+        objc_msgSend(LIL__applicationDelegate, addMenuSel, label);
+    }
+
+    fn LIL__addMenuItem(var.cstr label; var.cstr shortcut; var.ptr(fn) fnPtr) {
+        var.SEL addItemSel: sel_registerName(`addMenuItem:key:fnPtr:`);
+        objc_msgSend(LIL__applicationDelegate, addItemSel, label, shortcut, fnPtr);
+    }
+
+    fn LIL__addMenuSeparator {
+        var.SEL addSeparatorSel: sel_registerName(`addMenuSeparator`);
+        objc_msgSend(LIL__applicationDelegate, addSeparatorSel);
+    }
+
+    fn LIL__exitMenu {
+        var.SEL exitSel: sel_registerName(`exitMenu`);
+        objc_msgSend(LIL__applicationDelegate, exitSel);
+    }
+    
+    fn LIL__setWindowBgColor(var.f64 red; var.f64 green; var.f64 blue; var.f64 alpha) {
+        var.SEL selector: sel_registerName(`setWindowBackgroundRed:green:blue:alpha:`);
+        var.ptr(fn(id,SEL,f64,f64,f64,f64)=>id) castedPtr: (pointerTo(objc_msgSend) => ptr(fn(id,SEL,f64,f64,f64,f64)=>id));
+        castedPtr(LIL__applicationDelegate, selector, red, green, blue, alpha);
+    }
+}

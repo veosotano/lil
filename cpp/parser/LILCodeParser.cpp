@@ -579,6 +579,7 @@ bool LILCodeParser::isObjectSelector() const
                 || objtype == "event"
                 || objtype == "key"
                 || objtype == "value"
+                || objtype == "mainMenu"
                 )
             {
                 d->lexer->resetPeek();
@@ -3029,6 +3030,9 @@ bool LILCodeParser::readObjectSelector()
                     || objtype == "event"
                     || objtype == "key"
                     || objtype == "value"
+                    || objtype == "mainMenu"
+                    || objtype == "menu"
+                    || objtype == "menuItem"
                 )
                 {
                     d->receiver->receiveNodeData(ParserEventType, "@"+objtype);
@@ -3279,6 +3283,10 @@ bool LILCodeParser::readInstruction()
         else if (currentval == "configure")
         {
             return this->readConfigureInstr();
+        }
+        else if (currentval == "getConfig")
+        {
+            return this->readGetConfigInstr();
         }
         else if (currentval == "bug")
         {
@@ -3675,6 +3683,53 @@ bool LILCodeParser::readConfigureInstr()
         this->readNextToken();
     }
 
+    LIL_END_NODE
+}
+
+bool LILCodeParser::readGetConfigInstr()
+{
+    LIL_START_NODE(NodeTypeInstruction)
+    
+    //skip the instruction sign
+    d->receiver->receiveNodeData(ParserEventInstruction, d->currentToken->getString());
+    this->readNextToken();
+    if (atEndOfSource())
+        return false;
+    
+    d->receiver->receiveNodeData(ParserEventInstruction, d->currentToken->getString());
+    
+    this->readNextToken();
+    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+    
+    //open parenthesis
+    bool needsParenthesisClose  = false;
+    if (d->currentToken->isA(TokenTypeParenthesisOpen)){
+        needsParenthesisClose = true;
+        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+        this->readNextToken();
+        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+    }
+    
+    bool outIsSV = false;
+    NodeType svExpTy = NodeTypeInvalid;
+    bool argValid = this->readExpression(outIsSV, svExpTy);
+    if (argValid)
+    {
+        d->receiver->receiveNodeCommit();
+    }
+    else
+    {
+        LIL_CANCEL_NODE
+    }
+    
+    //close parenthesis
+    if (needsParenthesisClose){
+        LIL_EXPECT(TokenTypeParenthesisClose, "closing parenthesis")
+        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+        this->readNextToken();
+        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+    }
+    
     LIL_END_NODE
 }
 

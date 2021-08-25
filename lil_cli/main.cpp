@@ -27,8 +27,9 @@
 #endif
 
 #include "LILShared.h"
+#include "LILBuildManager.h"
 #include "LILCodeUnit.h"
-#include "LILOutputEmitter.h"
+#include "LILRootNode.h"
 
 using namespace LIL;
 
@@ -36,61 +37,19 @@ int main(int argc, const char * argv[]) {
     if (argc == 1) {
         return 0;
     }
-    
-    bool isMain = true;
-    bool isMainFlag = false;
-    bool printOnly = false;
-    bool compileToO = false;
-    bool compileToS = false;
+
     bool verbose = false;
     bool noConfigureDefaults = false;
-    bool debugLilStd = false;
-    bool debugPreprocessor = false;
-    bool debugAST = false;
-    bool debugFieldSorter = false;
-    bool debugParameterSorter = false;
-    bool debugASTValidator = false;
-    bool debugTypeResolver = false;
-    bool debugClassTemplateLowerer = false;
-    bool debugTypeGuesser = false;
-    bool debugStructureLowerer = false;
-    bool debugConstantFolder = false;
-    bool debugMethodInserter = false;
-    bool debugNameLowerer = false;
-    bool debugTypeValidator = false;
-    bool debugConversionInserter = false;
-    bool debugIREmitter = false;
+    bool debugConfigureDefaults = false;
+
     int warningLevel = 0;
-    std::string outName;
     std::string inName;
-    std::string fileName;
     std::string localDir;
-    std::vector<LILString> customArgs;
+    std::vector<LILString> arguments;
     
     for (int i=1, j=argc; i<j; /*intentionally left blank*/) {
         std::string command = argv[i];
-        if (command == "-c" || command == "--just-compile") {
-            //compile to .o file
-            compileToO = true;
-            if (!isMainFlag) {
-                isMain = false;
-            }
-            if (compileToS) {
-                compileToS = false;
-            }
-            ++i;
-            
-        } else if (command == "-s" || command == "--assembly"){
-            //compile to assembly
-            if (compileToO) {
-                std::cerr << "Error: cannot use -c and -s at the same time.\n";
-                exit(-1);
-            } else {
-                compileToS = true;
-            }
-            ++i;
-            
-        } else if (command == "-w"){
+        if (command == "-w"){
             //set warning levels
             if (argc<i+1) {
                 std::cerr << "Error: no warning level given after -w argument\n";
@@ -101,104 +60,27 @@ int main(int argc, const char * argv[]) {
             std::cerr << "Using warning level "+warningLevelStr;
             warningLevel = std::stoi(warningLevelStr);
             ++i;
-            
-        } else if (command == "-o" || command == "--output"){
-            //output to given filename
-            if (argc<i+1) {
-                std::cerr << "Error: no filename given after -o argument\n";
-                exit(-1);
-            }
-            ++i;
-            outName = argv[i];
-            ++i;
+
         } else if (command == "-v" || command == "--verbose") {
             //verbose output
             verbose = true;
+            arguments.push_back(command);
             ++i;
-            
-        } else if (command == "--print-only") {
-            //output to std out instead of writing file
-            printOnly = true;
-            ++i;
-            
-        
-        } else if (command == "--is-main") {
-            //force is main to be true
-            isMain = true;
-            isMainFlag = true;
-            ++i;
-            
-            
+
         } else if (command == "--no-configure-defaults") {
             noConfigureDefaults = true;
+            arguments.push_back(command);
             ++i;
 
-        } else if (command == "--debug-lil-std") {
-            debugLilStd = true;
-            ++i;
-
-        } else if (command == "--debug-preprocessor") {
-            debugPreprocessor = true;
+        } else if (command == "--debug-configure-defaults") {
+            debugConfigureDefaults = true;
+            arguments.push_back(command);
             ++i;
             
-        } else if (command == "--debug-ast") {
-            debugAST = true;
-            ++i;
-            
-        } else if (command == "--debug-type-resolver") {
-            debugTypeResolver = true;
-            ++i;
-            
-        } else if (command == "--debug-class-template-lowerer") {
-            debugClassTemplateLowerer = true;
-            ++i;
-            
-        } else if (command == "--debug-field-sorter") {
-            debugFieldSorter = true;
-            ++i;
-            
-        } else if (command == "--debug-parameter-sorter") {
-            debugParameterSorter = true;
-            ++i;
-            
-        } else if (command == "--debug-ast-validator") {
-            debugASTValidator = true;
-            ++i;
-            
-        } else if (command == "--debug-type-guesser") {
-            debugTypeGuesser = true;
-            ++i;
-            
-        } else if (command == "--debug-method-inserter") {
-            debugMethodInserter = true;
-            ++i;
-            
-        } else if (command == "--debug-name-lowerer") {
-            debugNameLowerer = true;
-            ++i;
-            
-        } else if (command == "--debug-structure-lowerer") {
-            debugStructureLowerer = true;
-            ++i;
-            
-        } else if (command == "--debug-constant-folder") {
-            debugConstantFolder = true;
-            ++i;
-            
-        } else if (command == "--debug-type-validator") {
-            debugTypeValidator = true;
-            ++i;
-            
-        } else if (command == "--debug-conversion-inserter") {
-            debugConversionInserter = true;
-            ++i;
-
-        } else if (command == "--debug-ir-emitter") {
-            debugIREmitter = true;
-            ++i;
         } else if (command.substr(0, 2) == "--") {
-            customArgs.push_back(command);
+            arguments.push_back(command);
             ++i;
+
         } else {
             //anything else is interpreted as the input filename
             inName = command;
@@ -207,115 +89,49 @@ int main(int argc, const char * argv[]) {
     }
     
     size_t slashIndex = inName.find_last_of("/");
-    if (slashIndex == std::string::npos) {
-        slashIndex = 0;
-    } else {
+    if (slashIndex != std::string::npos) {
         localDir = inName.substr(0, slashIndex);
-        slashIndex += 1;
-    }
-    size_t dotIndex = inName.find_last_of(".");
-    if (dotIndex != std::string::npos && dotIndex > slashIndex) {
-        fileName = inName.substr(slashIndex, dotIndex - slashIndex);
     } else {
-        fileName = inName;
-    }
-    if (outName.length() == 0) {
-        if (compileToS) {
-            outName = fileName + ".s";
-        } else if (compileToO) {
-            outName = fileName + ".o";
-        } else {
-            outName = fileName + ".out";
-        }
-    }
-    
-    if (verbose) {
-        std::cerr << "Initializing...\n\n";
-        if (!printOnly) {
-            if (compileToO) {
-                std::cerr << "Compile to .o file\n";
-            } else if (compileToS){
-                std::cerr << "Compile to assembly\n";
-            }
-            std::cerr << "Compile "+inName+" to produce "+outName+"\n";
-        }
+        localDir = "";
     }
 
-    
-    std::ifstream file(inName, std::ios::in);
-    if (file.fail()) {
-        std::cerr << "\nERROR: Failed to read the file "+inName+"\n\n";
-        return 1;
+    if (verbose) {
+        std::cerr << "Initializing...\n\n";
+        std::cerr << "Input file was: \n";
+        std::cerr << inName << "\n\n";
+        std::cerr << "Arguments:\n";
+        for (auto arg : arguments) {
+            std::cerr << arg.data() << "\n";
+        }
+        std::cerr << "\n\n";
     }
-    
-    std::stringstream buffer;
-    buffer << file.rdbuf();
-    
-    LILString lilStr(buffer.str());
     
     char cwdBuf[FILENAME_MAX];
     current_dir(cwdBuf, FILENAME_MAX);
     std::string directory(cwdBuf);
-    
-    std::unique_ptr<LILCodeUnit> codeUnit = std::make_unique<LILCodeUnit>();
-    codeUnit->setIsMain(isMain);
-    codeUnit->setVerbose(verbose);
-    if (noConfigureDefaults) {
-        codeUnit->setNeedsConfigureDefaults(false);
-    }
-    codeUnit->setDebugLilStd(debugLilStd);
-    codeUnit->setDebugPreprocessor(debugPreprocessor);
-    codeUnit->setDebugAST(debugAST);
-    codeUnit->setDebugASTValidator(debugASTValidator);
-    codeUnit->setDebugTypeResolver(debugTypeResolver);
-    codeUnit->setDebugClassTemplateLowerer(debugClassTemplateLowerer);
-    codeUnit->setDebugFieldSorter(debugFieldSorter);
-    codeUnit->setDebugParameterSorter(debugParameterSorter);
-    codeUnit->setDebugTypeGuesser(debugTypeGuesser);
-    codeUnit->setDebugStructureLowerer(debugStructureLowerer);
-    codeUnit->setDebugConstantFolder(debugConstantFolder);
-    codeUnit->setDebugMethodInserter(debugMethodInserter);
-    codeUnit->setDebugNameLowerer(debugNameLowerer);
-    codeUnit->setDebugTypeValidator(debugTypeValidator);
-    codeUnit->setDebugConversionInserter(debugConversionInserter);
-    codeUnit->setCustomArgs(customArgs);
-    
-    codeUnit->setFile(fileName);
-    std::vector<std::shared_ptr<LILNode>> emptyVect;
-    auto fullPath = directory+"/"+inName;
-    codeUnit->addAlreadyImportedFile(fullPath, emptyVect, true);
-    codeUnit->addAlreadyImportedFile(fullPath, emptyVect, false);
-    if (localDir.length() > 0) {
-        codeUnit->setDir(directory+"/"+localDir);
-    } else {
-        codeUnit->setDir(directory);
-    }
-    codeUnit->setSource(lilStr);
-    
-    codeUnit->run();
-    
-    if (codeUnit->hasErrors()) {
+
+    std::unique_ptr<LILBuildManager> buildMgr = std::make_unique<LILBuildManager>();
+
+    buildMgr->setArguments(std::move(arguments));
+
+    buildMgr->setDirectory(directory);
+    buildMgr->setFile(inName);
+
+    buildMgr->setNoConfigureDefaults(noConfigureDefaults);
+    buildMgr->setDebugConfigureDefaults(debugConfigureDefaults);
+    buildMgr->setVerbose(verbose);
+    buildMgr->setWarningLevel(warningLevel);
+
+    buildMgr->read();
+    if (buildMgr->hasErrors()) {
         return -1;
     }
-    
-    std::unique_ptr<LILOutputEmitter> outEmitter = std::make_unique<LILOutputEmitter>();
-    outEmitter->setVerbose(verbose);
-    outEmitter->setDebugIREmitter(debugIREmitter);
-    outEmitter->setFile(inName);
-    outEmitter->setDir(directory);
-    outEmitter->setSource(lilStr);
-    
-    if (printOnly) {
-        outEmitter->printToOutput(codeUnit.get());
-    } else {
-        if (compileToS) {
-            outEmitter->compileToS(outName, codeUnit.get());
-        } else {
-            outEmitter->compileToO(outName, codeUnit.get());
-        }
+    buildMgr->configure();
+    if (buildMgr->hasErrors()) {
+        return -1;
     }
-    
-    if (outEmitter->hasErrors()) {
+    buildMgr->build();
+    if (buildMgr->hasErrors()) {
         return -1;
     }
     return 0;

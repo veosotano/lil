@@ -72,6 +72,10 @@ void LILSelector::receiveNodeData(const LIL::LILString &data)
     {
         this->setSelectorType(SelectorTypeSuperSelector);
     }
+    else if (data == "@mainMenu")
+    {
+        this->setSelectorType(SelectorTypeMainMenu);
+    }
     else
     {
         this->setSelectorType(SelectorTypeNameSelector);

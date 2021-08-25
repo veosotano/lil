@@ -43,6 +43,8 @@ LILString LILInstruction::instructionTypeToString(InstructionType instrType)
             return "rrggbbaa";
         case InstructionTypeConfigure:
             return "configure";
+        case InstructionTypeGetConfig:
+            return "getConfig";
         case InstructionTypeNeeds:
             return "needs";
         case InstructionTypeImport:

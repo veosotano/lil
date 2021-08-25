@@ -15,9 +15,8 @@
 #include <unistd.h>
 
 #include "LILOutputEmitter.h"
-#include "LILCodeUnit.h"
+#include "LILRootNode.h"
 #include "LILIREmitter.h"
-#include "LILPassManager.h"
 
 #include "llvm/IR/LegacyPassManager.h"
 #include "llvm/IR/Module.h"
@@ -41,18 +40,17 @@ namespace LIL
         friend class LILOutputEmitter;
         
         LILOutputEmitterPrivate()
-        : pm(std::make_unique<LILPassManager>())
-        , irEmitter(nullptr)
+        : irEmitter(nullptr)
         , targetMachine(nullptr)
         , verbose(false)
         , debugIREmitter(false)
         {
         }
-        LILString file;
+        LILString inFile;
+        LILString outFile;
         LILString dir;
         LILString source;
 
-        std::unique_ptr<LILPassManager> pm;
         LILIREmitter * irEmitter;
         llvm::TargetMachine * targetMachine;
         
@@ -81,11 +79,9 @@ llvm::Module * LILOutputEmitter::getLLVMModule() const
     return d->irEmitter->getLLVMModule();
 }
 
-void LILOutputEmitter::run(LILCodeUnit * cu)
+void LILOutputEmitter::run(std::shared_ptr<LILRootNode> rootNode)
 {
-    d->pm->setVerbose(d->verbose);
-    
-    d->irEmitter = new LILIREmitter(this->getFile());
+    d->irEmitter = new LILIREmitter(this->getInFile());
     
     std::error_code error_code;
     
@@ -114,12 +110,10 @@ void LILOutputEmitter::run(LILCodeUnit * cu)
     theModule->setTargetTriple(targetTriple);
     
     //emit IR
-    d->irEmitter->setDebug(d->debugIREmitter);
-    std::vector<LILVisitor *> passes;
-    passes.push_back(d->irEmitter);
-    d->pm->execute(passes, cu->getRootNode(), d->source);
-    
-    if (d->pm->hasErrors()) {
+    d->irEmitter->setVerbose(d->verbose);
+    d->irEmitter->initializeVisit();
+    d->irEmitter->performVisit(rootNode);
+    if (d->irEmitter->hasErrors()) {
         std::cerr << "Errors encountered. Exiting.\n";
         return;
     }
@@ -132,20 +126,16 @@ void LILOutputEmitter::run(LILCodeUnit * cu)
     }
 }
 
-void LILOutputEmitter::compileToO(std::string name, LILCodeUnit * cu)
+void LILOutputEmitter::compileToO(std::shared_ptr<LILRootNode> rootNode)
 {
     std::error_code error_code;
-    llvm::raw_fd_ostream dest(name.data(), error_code, llvm::sys::fs::OF_None);
+    llvm::raw_fd_ostream dest(this->getDir().data() + "/" + this->getOutFile().data(), error_code, llvm::sys::fs::OF_None);
     if (error_code) {
         std::cerr << "Error: could not open destination file.\n";
         return;
     }
-    this->run(cu);
-    
-    if (d->pm->hasErrors()) {
-        return;
-    }
-    
+    this->run(rootNode);
+
     if (d->verbose) {
         d->irEmitter->printIR(llvm::errs());
     }
@@ -163,20 +153,16 @@ void LILOutputEmitter::compileToO(std::string name, LILCodeUnit * cu)
     dest.flush();
 }
 
-void LILOutputEmitter::compileToS(std::string name, LILCodeUnit * cu)
+void LILOutputEmitter::compileToS(std::shared_ptr<LILRootNode> rootNode)
 {
     std::error_code error_code;
-    this->run(cu);
-    
-    if (d->pm->hasErrors()) {
-        return;
-    }
-    
+    this->run(rootNode);
+
     if (d->verbose) {
         d->irEmitter->printIR(llvm::errs());
     }
     
-    llvm::raw_fd_ostream dest(name.data(), error_code, llvm::sys::fs::OF_None);
+    llvm::raw_fd_ostream dest(this->getDir().data() + "/" + this->getOutFile().data(), error_code, llvm::sys::fs::OF_None);
     if (error_code) {
         std::cerr << "Error: could not open destination file.\n";
         return;
@@ -185,12 +171,10 @@ void LILOutputEmitter::compileToS(std::string name, LILCodeUnit * cu)
     dest.flush();
 }
 
-void LILOutputEmitter::printToOutput(LILCodeUnit * cu)
+void LILOutputEmitter::printToOutput(std::shared_ptr<LILRootNode> rootNode)
 {
-    this->run(cu);
-    if (d->pm->hasErrors()) {
-        return;
-    }
+    this->run(rootNode);
+
     if (d->irEmitter){
         //avoid showing IR twice when outputting
         //isatty(1) checks stdout and isatty(2) checks stderr, they say
@@ -220,37 +204,42 @@ void LILOutputEmitter::setDebugIREmitter(bool value)
     d->debugIREmitter = value;
 }
 
-void LILOutputEmitter::setFile(LILString file)
+void LILOutputEmitter::setInFile(const LILString & file)
 {
-    d->file = file;
+    d->inFile = file;
 }
 
-LILString LILOutputEmitter::getFile() const
+const LILString & LILOutputEmitter::getInFile() const
 {
-    return d->file;
+    return d->inFile;
 }
 
-void LILOutputEmitter::setDir(LILString dir)
+void LILOutputEmitter::setOutFile(const LILString & file)
+{
+    d->outFile = file;
+}
+
+const LILString & LILOutputEmitter::getOutFile() const
+{
+    return d->outFile;
+}
+
+void LILOutputEmitter::setDir(const LILString & dir)
 {
     d->dir = dir;
 }
 
-LILString LILOutputEmitter::getDir() const
+const LILString & LILOutputEmitter::getDir() const
 {
     return d->dir;
 }
 
-void LILOutputEmitter::setSource(LILString source)
+void LILOutputEmitter::setSource(const LILString & source)
 {
     d->source = source;
 }
 
-LILString LILOutputEmitter::getSource() const
+const LILString & LILOutputEmitter::getSource() const
 {
     return d->source;
-}
-
-bool LILOutputEmitter::hasErrors() const
-{
-    return d->pm->hasErrors();
 }

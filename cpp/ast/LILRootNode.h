@@ -66,14 +66,20 @@ namespace LIL {
 
         bool hasInitializers() const;
         const std::vector<std::shared_ptr<LILNode>> & getInitializers() const;
+        void clearInitializers();
 
         void addDoc(std::shared_ptr<LILDocumentation> value);
         const std::vector<std::shared_ptr<LILDocumentation>> & getDocs() const;
         
         void addRule(std::shared_ptr<LILRule> value);
         const std::vector<std::shared_ptr<LILRule>> & getRules() const;
+
+        bool hasMainMenu() const;
+        const std::vector<std::shared_ptr<LILNode>> & getMainMenuItems() const;
+        void clearMainMenuItems();
         
         void addConfigureInstr(const std::shared_ptr<LILInstruction> & instr);
+        const std::vector<std::shared_ptr<LILNode>> & getConfigure() const;
 
     private:
         std::map<LILString, std::shared_ptr<LILNode>> _localVars;
@@ -86,7 +92,8 @@ namespace LIL {
         std::vector<std::shared_ptr<LILNode>> _initializers;
         std::vector<std::shared_ptr<LILDocumentation>> _docs;
         std::vector<std::shared_ptr<LILRule>> _rules;
-        std::map<LILString, std::shared_ptr<LILNode>> _config;
+        std::vector<std::shared_ptr<LILNode>> _mainMenu;
+        std::vector<std::shared_ptr<LILNode>> _config;
     };
 }
 
