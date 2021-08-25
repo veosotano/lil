@@ -435,6 +435,9 @@ bool LILCodeParser::isBool() const
 
 bool LILCodeParser::isValuePath() const
 {
+    if (d->isReadingStringArgument) {
+        return false;
+    }
     std::shared_ptr<LILToken> peekToken;
     if (d->currentToken->isA(TokenTypeIdentifier))
     {
