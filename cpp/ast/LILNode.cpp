@@ -377,6 +377,16 @@ ExpressionType LILNode::getExpressionType() const
     return ExpressionTypeNone;
 }
 
+bool LILNode::isA(UnaryExpressionType otherType) const
+{
+    return false;
+}
+
+UnaryExpressionType LILNode::getUnaryExpressionType() const
+{
+    return UnaryExpressionTypeNone;
+}
+
 bool LILNode::isA(InstructionType otherType) const
 {
     return false;

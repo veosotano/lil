@@ -75,6 +75,8 @@ namespace LIL {
 
         virtual bool isA(ExpressionType otherType) const;
         virtual ExpressionType getExpressionType() const;
+        virtual bool isA(UnaryExpressionType otherType) const;
+        virtual UnaryExpressionType getUnaryExpressionType() const;
         virtual bool isA(InstructionType otherType) const;
         virtual InstructionType getInstructionType() const;
         virtual bool isA(SelectorType otherType) const;
