@@ -1191,7 +1191,7 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
             else if (eventType == ParserEventFunctionName) {
                 fd->setName(data);
             }
-            else if (eventType == ParserEventFunctionBody) {
+            else if (eventType == ParserEventBody) {
                 fd->setReceivesFunctionBody(true);
             }
             else if (eventType == ParserEventExtern) {
@@ -1208,7 +1208,7 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
             std::shared_ptr<LILFlowControl> fc = std::static_pointer_cast<LILFlowControl>(this->currentContainer.back());
             if (eventType == ParserEventFlowControlIfCast) {
                 fc->setFlowControlType(FlowControlTypeIfCast);
-            } else if (eventType == ParserEventFunctionBody) {
+            } else if (eventType == ParserEventBody) {
                 fc->setReceivesFunctionBody(true);
             } else if (eventType == ParserEventFlowControlElse) {
                 fc->setReceivesElse(true);
@@ -1227,7 +1227,7 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
                 std::shared_ptr<LILClassDecl> cd = std::static_pointer_cast<LILClassDecl>(this->currentContainer.back());
                 cd->setReceivesInherits(true);
             }
-            else if (eventType == ParserEventFunctionBody)
+            else if (eventType == ParserEventBody)
             {
                 std::shared_ptr<LILClassDecl> cd = std::static_pointer_cast<LILClassDecl>(this->currentContainer.back());
                 cd->setReceivesBody(true);
@@ -1371,7 +1371,7 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
         case BuilderStateIfInstruction:
         {
             auto instr = std::static_pointer_cast<LILIfInstruction>(this->currentContainer.back());
-            if (eventType == ParserEventFunctionBody) {
+            if (eventType == ParserEventBody) {
                 instr->setReceivesThen(true);
             } else if (eventType == ParserEventIfInstructionElse) {
                 instr->setReceivesThen(false);
@@ -1383,7 +1383,7 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
         case BuilderStateSnippetInstruction:
         {
             auto snInstr = std::static_pointer_cast<LILSnippetInstruction>(this->currentContainer.back());
-            if (eventType == ParserEventFunctionBody) {
+            if (eventType == ParserEventBody) {
                 snInstr->setReceivesBody(true);
             } else if (eventType == ParserEventConstName) {
                 snInstr->setName(data);

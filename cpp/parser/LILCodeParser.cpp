@@ -1319,7 +1319,7 @@ bool LILCodeParser::readClassDecl()
 
     LIL_EXPECT(TokenTypeBlockOpen, "block open");
     d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
-    d->receiver->receiveNodeData(ParserEventFunctionBody, "");
+    d->receiver->receiveNodeData(ParserEventBody, "");
     this->readNextToken();
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
 
@@ -1924,7 +1924,7 @@ bool LILCodeParser::readConversionDecl()
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
 
     LIL_EXPECT(TokenTypeBlockOpen, "block open")
-    d->receiver->receiveNodeData(ParserEventFunctionBody, "");
+    d->receiver->receiveNodeData(ParserEventBody, "");
     d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
     this->readNextToken();
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
@@ -3392,14 +3392,14 @@ bool LILCodeParser::readIfInstr()
     }
     
     //block open
-    d->receiver->receiveNodeData(ParserEventFunctionBody, "");
+    d->receiver->receiveNodeData(ParserEventBody, "");
     if (d->currentToken->isA(TokenTypeBlockOpen)){
         d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
         this->readNextToken();
         LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
         
         //read the inner part of the block
-        d->receiver->receiveNodeData(ParserEventFunctionBody, "");
+        d->receiver->receiveNodeData(ParserEventBody, "");
 
         while (!this->atEndOfSource() && !d->currentToken->isA(TokenTypeBlockClose)) {
             this->parseNext();
@@ -3477,14 +3477,14 @@ bool LILCodeParser::readSnippetInstr()
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
 
     //block open
-    d->receiver->receiveNodeData(ParserEventFunctionBody, "");
+    d->receiver->receiveNodeData(ParserEventBody, "");
     if (d->currentToken->isA(TokenTypeBlockOpen)){
         d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
         this->readNextToken();
         LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
         
         //read the inner part of the block
-        d->receiver->receiveNodeData(ParserEventFunctionBody, "");
+        d->receiver->receiveNodeData(ParserEventBody, "");
         
         while (!this->atEndOfSource() && !d->currentToken->isA(TokenTypeBlockClose)) {
             this->parseNext();
@@ -4039,7 +4039,7 @@ bool LILCodeParser::readFnFunction()
     }
 
     LIL_EXPECT(TokenTypeBlockOpen, "block open")
-    d->receiver->receiveNodeData(ParserEventFunctionBody, "");
+    d->receiver->receiveNodeData(ParserEventBody, "");
     d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
     this->readNextToken();
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
@@ -5184,14 +5184,14 @@ bool LILCodeParser::readIfFlowControl()
     }
 
     //block open
-    d->receiver->receiveNodeData(ParserEventFunctionBody, "");
+    d->receiver->receiveNodeData(ParserEventBody, "");
     if (d->currentToken->isA(TokenTypeBlockOpen)){
         d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
         this->readNextToken();
         LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
 
         //read the inner part of the block
-        d->receiver->receiveNodeData(ParserEventFunctionBody, "");
+        d->receiver->receiveNodeData(ParserEventBody, "");
         this->readEvaluables();
 
         if (!this->atEndOfSource())
@@ -5282,7 +5282,7 @@ bool LILCodeParser::readSwitchFlowControl()
     }
 
     LIL_EXPECT(TokenTypeBlockOpen, "block open")
-    d->receiver->receiveNodeData(ParserEventFunctionBody, "");
+    d->receiver->receiveNodeData(ParserEventBody, "");
     d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
     this->readNextToken();
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
@@ -5351,7 +5351,7 @@ bool LILCodeParser::readSwitchDefault()
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
 
     LIL_EXPECT(TokenTypeBlockOpen, "block open")
-    d->receiver->receiveNodeData(ParserEventFunctionBody, "");
+    d->receiver->receiveNodeData(ParserEventBody, "");
     d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
     this->readNextToken();
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
@@ -5415,7 +5415,7 @@ bool LILCodeParser::readSwitchCase()
     }
 
     LIL_EXPECT(TokenTypeBlockOpen, "block open")
-    d->receiver->receiveNodeData(ParserEventFunctionBody, "");
+    d->receiver->receiveNodeData(ParserEventBody, "");
     d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
     this->readNextToken();
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
@@ -5448,7 +5448,7 @@ bool LILCodeParser::readLoopFlowControl()
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
 
     LIL_EXPECT(TokenTypeBlockOpen, "block open")
-    d->receiver->receiveNodeData(ParserEventFunctionBody, "");
+    d->receiver->receiveNodeData(ParserEventBody, "");
     d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
     this->readNextToken();
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
@@ -5569,7 +5569,7 @@ bool LILCodeParser::readForFlowControl()
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
 
     LIL_EXPECT(TokenTypeBlockOpen, "block open")
-    d->receiver->receiveNodeData(ParserEventFunctionBody, "");
+    d->receiver->receiveNodeData(ParserEventBody, "");
     d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
     this->readNextToken();
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
@@ -5597,7 +5597,7 @@ bool LILCodeParser::readFinallyFlowControl()
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
 
     LIL_EXPECT(TokenTypeBlockOpen, "block open")
-    d->receiver->receiveNodeData(ParserEventFunctionBody, "");
+    d->receiver->receiveNodeData(ParserEventBody, "");
     d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
     this->readNextToken();
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
