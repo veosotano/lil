@@ -128,6 +128,41 @@ void LILIREmitter::initializeVisit()
     }
 }
 
+void LILIREmitter::performVisit(std::shared_ptr<LILRootNode> rootNode)
+{
+    this->setRootNode(rootNode);
+    this->hoistDeclarations(rootNode);
+    std::vector<std::shared_ptr<LILNode>> nodes = rootNode->getNodes();
+    for (const auto & node : nodes) {
+        this->visit(node.get());
+    }
+}
+
+void LILIREmitter::hoistDeclarations(std::shared_ptr<LILRootNode> rootNode)
+{
+    std::vector<std::shared_ptr<LILNode>> nodes = rootNode->getNodes();
+    for (const auto & node : nodes) {
+        if (this->_debug) {
+            std::cerr << "## hoisting " + LILNode::nodeTypeToString(node->getNodeType()).data() + " " + LILNodeToString::stringify(node.get()).data() + " to the top ##\n";
+        }
+        
+        switch (node->getNodeType()) {
+            case NodeTypeFunctionDecl:
+            {
+                auto fd = std::static_pointer_cast<LILFunctionDecl>(node);
+                auto name = fd->getName().data();
+                auto fun = this->_emitFnSignature(name, fd->getFnType().get());
+                d->namedValues[name] = fun;
+                break;
+            }
+            default:
+            {
+                break;
+            }
+        }
+    }
+}
+
 void LILIREmitter::visit(LILNode *node)
 {
     this->emit(node);

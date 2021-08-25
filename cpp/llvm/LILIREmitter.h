@@ -80,7 +80,9 @@ namespace LIL
         void reset();
         llvm::Module * getLLVMModule() const;
         void initializeVisit() override;
+        void performVisit(std::shared_ptr<LILRootNode> rootNode) override;
         virtual void visit(LILNode * node) override;
+        void hoistDeclarations(std::shared_ptr<LILRootNode> rootNode);
 
         llvm::Value * emit(LILNode * node);
         llvm::Value * _emit(LILBoolLiteral * value);
