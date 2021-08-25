@@ -659,6 +659,8 @@ bool LILCodeParser::isAssignment() const
             if (peekToken && peekToken->isA(TokenTypeBlockOpen))
             {
                 ret = false;
+            } else {
+                ret = true;
             }
         }
         //either property grouping or a rule
