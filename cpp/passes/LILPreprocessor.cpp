@@ -175,7 +175,6 @@ void LILPreprocessor::processImportingInstr(const std::shared_ptr<LILRootNode> &
                 buffer << file.rdbuf();
                 LILString lilStr(buffer.str());
                 codeUnit->setSource(lilStr);
-                codeUnit->setDebugAST(this->getDebugAST());
                 codeUnit->setVerbose(this->getVerbose() && instr->getVerbose());
                 codeUnit->run();
                 bool hasErrs = codeUnit->hasErrors();
