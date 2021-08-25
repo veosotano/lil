@@ -1515,10 +1515,6 @@ std::shared_ptr<LILType> LILTypeGuesser::getFnReturnType(const std::vector<std::
         }
     } else if (returnTypes.size() == 1){
         returnType = returnTypes.back();
-    } else {
-        std::shared_ptr<LILType> nullTy = std::make_shared<LILType>();
-        nullTy->setName("null");
-        returnType = nullTy;
     }
     
     if (returnType->getIsWeakType()) {
