@@ -290,6 +290,11 @@ llvm::Value * LILIREmitter::emit(LILNode * node)
             LILInstruction * value = static_cast<LILInstruction *>(node);
             return this->_emit(value);
         }
+        case NodeTypeIfInstruction:
+        {
+            //ignore
+            return nullptr;
+        }
         case NodeTypeForeignLang:
         {
             LILForeignLang * value = static_cast<LILForeignLang *>(node);

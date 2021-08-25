@@ -458,6 +458,12 @@ void LILTypeGuesser::process(LILNode * node)
             this->_process(value);
             break;
         }
+        case NodeTypeIfInstruction:
+        {
+            LILIfInstruction * value = static_cast<LILIfInstruction *>(node);
+            this->_process(value);
+            break;
+        }
         case NodeTypeValueList:
         {
             LILValueList * value = static_cast<LILValueList *>(node);
@@ -845,6 +851,16 @@ void LILTypeGuesser::_process(LILFlowControlCall * value)
 
 void LILTypeGuesser::_process(LILInstruction * value)
 {
+}
+
+void LILTypeGuesser::_process(LILIfInstruction * value)
+{
+    for (auto thenNode : value->getThen()) {
+        this->process(thenNode.get());
+    }
+    for (auto elseNode : value->getElse()) {
+        this->process(elseNode.get());
+    }
 }
 
 void LILTypeGuesser::_process(LILValueList * value)

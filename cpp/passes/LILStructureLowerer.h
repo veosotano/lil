@@ -31,6 +31,7 @@
 #include "LILFunctionCall.h"
 #include "LILFunctionDecl.h"
 #include "LILFunctionType.h"
+#include "LILIfInstruction.h"
 #include "LILIndexAccessor.h"
 #include "LILInstruction.h"
 #include "LILNullLiteral.h"
@@ -93,6 +94,7 @@ namespace LIL
         void _process(std::shared_ptr<LILFlowControl> value);
         void _process(std::shared_ptr<LILFlowControlCall> value);
         void _process(std::shared_ptr<LILInstruction> value);
+        void _process(std::shared_ptr<LILIfInstruction> value);
         void _process(std::shared_ptr<LILValueList> value);
         void _process(std::shared_ptr<LILDocumentation> value);
         void _process(std::shared_ptr<LILIndexAccessor> value);

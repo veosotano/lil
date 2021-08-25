@@ -206,6 +206,13 @@ void LILRootNode::add(std::shared_ptr<LILNode> node, bool addToNodeTree)
             }
             break;
         }
+        case NodeTypeIfInstruction:
+        {
+            if (addToNodeTree) {
+                this->addNode(node);
+            }
+            break;
+        }
         case NodeTypeForeignLang:
         {
             if (addToNodeTree) {

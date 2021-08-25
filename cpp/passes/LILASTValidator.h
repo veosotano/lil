@@ -33,6 +33,7 @@
 #include "LILForeignLang.h"
 #include "LILFunctionCall.h"
 #include "LILFunctionDecl.h"
+#include "LILIfInstruction.h"
 #include "LILIndexAccessor.h"
 #include "LILInstruction.h"
 #include "LILNullLiteral.h"
@@ -102,6 +103,7 @@ namespace LIL
         void _validate(const std::shared_ptr<LILFlowControl> & value);
         void _validate(const std::shared_ptr<LILFlowControlCall> & value);
         void _validate(const std::shared_ptr<LILInstruction> & value);
+        void _validate(const std::shared_ptr<LILIfInstruction> & value);
         void _validate(const std::shared_ptr<LILForeignLang> & value);
         void _validate(const std::shared_ptr<LILDocumentation> & value);
         void _validate(const std::shared_ptr<LILValueList> & value);

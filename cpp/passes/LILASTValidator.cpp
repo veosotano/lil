@@ -254,6 +254,12 @@ void LILASTValidator::validate(const std::shared_ptr<LILNode> & node)
             this->_validate(value);
             break;
         }
+        case NodeTypeIfInstruction:
+        {
+            std::shared_ptr<LILIfInstruction> value = std::static_pointer_cast<LILIfInstruction>(node);
+            this->_validate(value);
+            break;
+        }
         case NodeTypeForeignLang:
         {
             std::shared_ptr<LILForeignLang> value = std::static_pointer_cast<LILForeignLang>(node);
@@ -782,17 +788,6 @@ void LILASTValidator::_validateFunctionDeclChild(LILFunctionDecl * value, LILNod
         {
             auto instr = static_cast<LILInstruction *>(node);
             switch (instr->getInstructionType()) {
-                case InstructionTypeIf:
-                {
-                    auto ifInstr = static_cast<LILIfInstruction *>(instr);
-                    for (auto thenNode : ifInstr->getThen()) {
-                        this->_validateFunctionDeclChild(value, thenNode.get());
-                    }
-                    for (auto elseNode : ifInstr->getElse()) {
-                        this->_validateFunctionDeclChild(value, elseNode.get());
-                    }
-                    break;
-                }
                 case InstructionTypePaste:
                 {
                     break;
@@ -803,7 +798,18 @@ void LILASTValidator::_validateFunctionDeclChild(LILFunctionDecl * value, LILNod
             }
             break;
         }
-            
+        case NodeTypeIfInstruction:
+        {
+            auto ifInstr = static_cast<LILIfInstruction *>(node);
+            for (auto thenNode : ifInstr->getThen()) {
+                this->_validateFunctionDeclChild(value, thenNode.get());
+            }
+            for (auto elseNode : ifInstr->getElse()) {
+                this->_validateFunctionDeclChild(value, elseNode.get());
+            }
+            break;
+        }
+   
         default:
         {
             this->illegalNodeType(node, value);
@@ -932,6 +938,16 @@ void LILASTValidator::_validate(const std::shared_ptr<LILInstruction> & value)
 {
     if (this->getDebug()) {
         std::cerr << "Nothing to do. OK\n";
+    }
+}
+
+void LILASTValidator::_validate(const std::shared_ptr<LILIfInstruction> & value)
+{
+    for (auto thenNode : value->getThen()) {
+        this->validate(thenNode);
+    }
+    for (auto elseNode : value->getElse()) {
+        this->validate(elseNode);
     }
 }
 

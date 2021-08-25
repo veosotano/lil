@@ -94,6 +94,8 @@ LILString LILNode::nodeTypeToString(NodeType nodeType)
             return "comment";
         case NodeTypeInstruction:
             return "instruction";
+        case NodeTypeIfInstruction:
+            return "if instruction";
         case NodeTypeFunctionDecl:
             return "function declaration";
         case NodeTypeFunctionCall:
