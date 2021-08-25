@@ -63,6 +63,7 @@ using namespace LIL;
 LILASTBuilder::LILASTBuilder()
 : _verbose(false)
 , _buildFlatList(false)
+, _debugAST(false)
 {
     this->rootNode = std::make_shared<LILRootNode>();
     this->state.push_back(BuilderStateRoot);
