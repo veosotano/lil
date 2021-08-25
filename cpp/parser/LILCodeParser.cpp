@@ -385,9 +385,14 @@ void LILCodeParser::parseNext()
 
         default:
         {
-            bool outIsSV = false;
-            NodeType svExpTy = NodeTypeInvalid;
-            isValid = this->readExpression(outIsSV, svExpTy);
+            if (this->isRule()) {
+                isValid = this->readRule();
+            } else {
+                bool outIsSV = false;
+                NodeType svExpTy = NodeTypeInvalid;
+                isValid = this->readExpression(outIsSV, svExpTy);
+            }
+
             if (!atEndOfSource())
                 this->skip(TokenTypeWhitespace);
             break;
@@ -741,6 +746,49 @@ bool LILCodeParser::isRule() const
 {
 
     bool ret = false;
+    
+    if (d->currentToken->isA(TokenTypeIdentifier)) {
+        auto tokenStr = d->currentToken->getString();
+        if (tokenStr == "class")
+        {
+            return false;
+        }
+        if (tokenStr == "var")
+        {
+            return false;
+        }
+        if (tokenStr == "const")
+        {
+            return false;
+        }
+        if (tokenStr == "alias") {
+            return false;
+        }
+        if (tokenStr == "type") {
+            return false;
+        }
+        if (tokenStr == "conversion") {
+            return false;
+        }
+        if (this->isFunctionDecl())
+        {
+            return false;
+        }
+        else if (this->isFlowControl())
+        {
+            return false;
+        }
+        else if (this->isFlowControlCall())
+        {
+            return false;
+        }
+        else if (this->isFunctionCall(false))
+        {
+            return false;
+        } else if (this->isAssignment()) {
+            return false;
+        }
+    }
 
     std::shared_ptr<LILToken> peekToken;
     if (d->currentToken->isA(TokenTypeInstructionSign))
@@ -749,7 +797,14 @@ bool LILCodeParser::isRule() const
     }
     else
     {
-        peekToken = d->lexer->peekNextToken();
+        if (d->currentToken->isA(TokenTypeObjectSign))
+        {
+            peekToken = d->currentToken;
+        }
+        else
+        {
+            peekToken = d->lexer->peekNextToken();
+        }
         bool done = false;
         while (peekToken && !done) {
             //we assume we are done
@@ -835,7 +890,7 @@ bool LILCodeParser::isRule() const
                         {
                             case TokenTypeObjectSign:
                             {
-                                ret = this->isObjectSelector();;
+                                ret = this->isObjectSelector();
                                 done = true;
                                 break;
                             }
@@ -2283,8 +2338,6 @@ bool LILCodeParser::readSingleValue(NodeType &nodeType)
     }
     if (this->isAssignment()) {
         return this->readAssignment(true, d->readVarNameOverPropertyName);
-    } else if (this->isRule()) {
-        return this->readRule();
     }
     return this->readBasicValue(nodeType);
  }
@@ -2799,6 +2852,14 @@ bool LILCodeParser::readRule()
     }
 
     LIL_START_NODE(NodeTypeRule)
+    
+    if (d->currentToken->isA(TokenTypeInstructionSign)) {
+        bool instrValid = this->readInstruction();
+        if (!instrValid) {
+            return false;
+        }
+        d->receiver->receiveNodeCommit();
+    }
 
     //read selector chains
     //readSelectorChains auto commits

@@ -29,8 +29,15 @@ namespace LIL
 
         void addSelectorChain(std::shared_ptr<LILNode> newSc);
         const std::vector<std::shared_ptr<LILNode>> & getSelectorChains() const;
+        void setSelectorChains(std::vector<std::shared_ptr<LILNode>> && nodes);
         void addValue(std::shared_ptr<LILNode> newVal);
+        const std::vector<std::shared_ptr<LILNode>> & getValues() const;
+        void setValues(std::vector<std::shared_ptr<LILNode>> && nodes);
         void addChildRule(std::shared_ptr<LILRule> rule);
+        const std::vector<std::shared_ptr<LILRule>> & getChildRules() const;
+        void setChildRules(std::vector<std::shared_ptr<LILRule>> && nodes);
+        void setInstruction(std::shared_ptr<LILNode> instruction);
+        const std::shared_ptr<LILNode> getInstruction() const;
         const std::vector<std::shared_ptr<LILNode>> & getNodes() const;
         
     protected:
@@ -38,6 +45,7 @@ namespace LIL
         std::vector<std::shared_ptr<LILNode>> _selectorChains;
         std::vector<std::shared_ptr<LILNode>> _values;
         std::vector<std::shared_ptr<LILRule>> _childRules;
+        std::shared_ptr<LILNode> _instruction;
     };
 }
 

@@ -632,17 +632,31 @@ void LILASTBuilder::receiveNodeCommit()
         case BuilderStateRule:
         {
             std::shared_ptr<LILRule> rule = std::static_pointer_cast<LILRule>(this->currentContainer.back());
-            if (this->currentNode->isA(NodeTypeSelectorChain))
-            {
-                rule->addSelectorChain(this->currentNode);
-            }
-            else if (this->currentNode->isA(NodeTypeAssignment))
-            {
-                rule->addValue(this->currentNode);
-            }
-            else if (this->currentNode->isA(NodeTypeRule))
-            {
-                rule->addChildRule(std::static_pointer_cast<LILRule>(this->currentNode));
+            switch (this->currentNode->getNodeType()) {
+                case NodeTypeSelectorChain:
+                {
+                    rule->addSelectorChain(this->currentNode);
+                    break;
+                }
+                case NodeTypeAssignment:
+                case NodeTypeUnaryExpression:
+                {
+                    rule->addValue(this->currentNode);
+                    break;
+                }
+                case NodeTypeRule:
+                {
+                    rule->addChildRule(std::static_pointer_cast<LILRule>(this->currentNode));
+                    break;
+                }
+                case NodeTypeInstruction:
+                {
+                    rule->setInstruction(this->currentNode);
+                    break;
+                }
+                default:
+                    std::cerr << "UNKONWN NODE TYPE TO ADD TO RULE FAIL !!!!!!\n\n";
+                    break;
             }
             break;
         }
