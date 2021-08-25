@@ -13,6 +13,7 @@
  ********************************************************************/
 
 #include "LILStringFunction.h"
+#include "LILObjectType.h"
 
 using namespace LIL;
 
@@ -112,9 +113,10 @@ void LILStringFunction::setNodes(const std::vector<std::shared_ptr<LILNode>> && 
 
 std::shared_ptr<LILType> LILStringFunction::getType() const
 {
-    auto parentNode = this->getParentNode();
-    if (parentNode) {
-        return parentNode->getType();
+    static std::shared_ptr<LILObjectType> strTy;
+    if (!strTy) {
+        strTy = std::make_shared<LILObjectType>();
+        strTy->setName("string");
     }
-    return nullptr;
+    return strTy;
 }
