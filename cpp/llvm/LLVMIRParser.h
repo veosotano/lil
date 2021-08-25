@@ -10,6 +10,8 @@
  *
  *      This file takes parsed llvm IR and adds it to the IREmitter
  *
+ *      WARNING: this file is just a stub and is not yet in use
+ *
  ********************************************************************/
 
 #ifndef LLVMIRPARSER_H
