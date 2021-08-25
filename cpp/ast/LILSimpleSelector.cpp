@@ -49,3 +49,8 @@ const std::vector<std::shared_ptr<LILNode>> & LILSimpleSelector::getNodes() cons
 {
     return this->getChildNodes();
 }
+
+void LILSimpleSelector::setNodes(std::vector<std::shared_ptr<LILNode>> && nodes)
+{
+    this->setChildNodes(std::move(nodes));
+}

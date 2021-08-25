@@ -48,3 +48,8 @@ const std::vector<std::shared_ptr<LILNode>> & LILSelectorChain::getNodes() const
 {
     return this->getChildNodes();
 }
+
+void LILSelectorChain::setNodes(std::vector<std::shared_ptr<LILNode>> && nodes)
+{
+    this->setChildNodes(std::move(nodes));
+}

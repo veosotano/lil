@@ -27,6 +27,8 @@
 #include "LILNodeToString.h"
 #include "LILObjectType.h"
 #include "LILRootNode.h"
+#include "LILSelector.h"
+#include "LILSelectorChain.h"
 #include "LILStringLiteral.h"
 #include "LILTypeDecl.h"
 #include "LILVarDecl.h"
@@ -1095,19 +1097,93 @@ bool LILPreprocessor::_processIfInstr(std::shared_ptr<LILValuePath> value)
 
 bool LILPreprocessor::_processIfInstr(std::shared_ptr<LILRule> value)
 {
-    std::cerr << "UNIMPLEMENTED FAIL!!!!!!!!\n\n";
+    bool hasChangesSCh = false;
+    std::vector<std::shared_ptr<LILNode>> resultNodesSCh;
+    for (auto node : value->getSelectorChains()) {
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processIfInstr(node);
+        if (!remove && this->_nodeBuffer.back().size() == 0) {
+            resultNodesSCh.push_back(node);
+        } else {
+            hasChangesSCh = true;
+            for (auto newNode : this->_nodeBuffer.back()) {
+                resultNodesSCh.push_back(newNode);
+            }
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    if (hasChangesSCh) {
+        value->setSelectorChains(std::move(resultNodesSCh));
+    }
+    
+    for (auto rule : value->getChildRules()) {
+        this->processIfInstr(rule);
+    }
+    
+    bool hasChangesVal = false;
+    std::vector<std::shared_ptr<LILNode>> resultNodesVal;
+    for (auto node : value->getValues()) {
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processIfInstr(node);
+        if (!remove && this->_nodeBuffer.back().size() == 0) {
+            resultNodesVal.push_back(node);
+        } else {
+            hasChangesVal = true;
+            for (auto newNode : this->_nodeBuffer.back()) {
+                resultNodesVal.push_back(newNode);
+            }
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    if (hasChangesVal) {
+        value->setValues(std::move(resultNodesVal));
+    }
     return false;
 }
 
 bool LILPreprocessor::_processIfInstr(std::shared_ptr<LILSelectorChain> value)
 {
-    std::cerr << "UNIMPLEMENTED FAIL!!!!!!!!\n\n";
+    bool hasChanges = false;
+    std::vector<std::shared_ptr<LILNode>> resultNodes;
+    for (auto node : value->getNodes()) {
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processIfInstr(node);
+        if (!remove && this->_nodeBuffer.back().size() == 0) {
+            resultNodes.push_back(node);
+        } else {
+            hasChanges = true;
+            for (auto newNode : this->_nodeBuffer.back()) {
+                resultNodes.push_back(newNode);
+            }
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    if (hasChanges) {
+        value->setNodes(std::move(resultNodes));
+    }
     return false;
 }
 
 bool LILPreprocessor::_processIfInstr(std::shared_ptr<LILSimpleSelector> value)
 {
-    std::cerr << "UNIMPLEMENTED FAIL!!!!!!!!\n\n";
+    bool hasChanges = false;
+    std::vector<std::shared_ptr<LILNode>> resultNodes;
+    for (auto node : value->getNodes()) {
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processIfInstr(node);
+        if (!remove && this->_nodeBuffer.back().size() == 0) {
+            resultNodes.push_back(node);
+        } else {
+            hasChanges = true;
+            for (auto newNode : this->_nodeBuffer.back()) {
+                resultNodes.push_back(newNode);
+            }
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    if (hasChanges) {
+        value->setNodes(std::move(resultNodes));
+    }
     return false;
 }
 

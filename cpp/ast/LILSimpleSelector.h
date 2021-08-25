@@ -28,6 +28,7 @@ namespace LIL
         std::shared_ptr<LILSimpleSelector> clone() const;
         virtual ~LILSimpleSelector();
         const std::vector<std::shared_ptr<LILNode>> & getNodes() const;
+        void setNodes(std::vector<std::shared_ptr<LILNode>> && nodes);
 
     protected:
         virtual std::shared_ptr<LILClonable> cloneImpl() const;
