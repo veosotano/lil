@@ -1517,13 +1517,14 @@ std::shared_ptr<LILType> LILTypeGuesser::getFnReturnType(const std::vector<std::
         returnType = returnTypes.back();
     }
     
-    if (returnType->getIsWeakType()) {
-        auto intType = returnType->getDefaultType();
-        returnType = intType;
+    if (returnType) {
+        if (returnType->getIsWeakType()) {
+            auto intType = returnType->getDefaultType();
+            returnType = intType;
+        }
+        
+        returnType = this->nullsToNullableTypes(returnType);
     }
-
-    returnType = this->nullsToNullableTypes(returnType);
-
     return returnType;
 }
 
