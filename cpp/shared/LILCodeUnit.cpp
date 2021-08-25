@@ -17,6 +17,7 @@
 #include "LILCodeParser.h"
 
 #include "LILPreprocessor.h"
+#include "LILArgResolver.h"
 #include "LILASTValidator.h"
 #include "LILClassTemplateLowerer.h"
 #include "LILConversionInserter.h"
@@ -75,8 +76,6 @@ namespace LIL
         std::unique_ptr<LILPassManager> pm;
         std::map<LILString, std::vector<std::shared_ptr<LILNode>>> _alreadyImportedFilesNeeds;
         std::map<LILString, std::vector<std::shared_ptr<LILNode>>> _alreadyImportedFilesImport;
-        std::vector<LILString> customArgs;
-
         bool isMain;
 
         bool verbose;
@@ -178,16 +177,6 @@ bool LILCodeUnit::getIsBeingImportedWithImport() const
     return d->isBeingImportedWithImport;
 }
 
-const std::vector<LILString> & LILCodeUnit::getCustomArgs() const
-{
-    return d->customArgs;
-}
-
-void LILCodeUnit::setCustomArgs(std::vector<LILString> & args)
-{
-    d->customArgs = args;
-}
-
 void LILCodeUnit::run()
 {
     bool verbose = d->verbose;
@@ -269,6 +258,17 @@ void LILCodeUnit::runPasses()
         auto stringVisitor = new LILToStringVisitor();
         passes.push_back(stringVisitor);
     }
+    
+    //handle #arg instructions
+    auto argResolver = new LILArgResolver();
+    argResolver->setCustomArgs(d->arguments);
+    passes.push_back(argResolver);
+    if (verbose) {
+        auto stringVisitor = new LILToStringVisitor();
+        stringVisitor->setPrintHeadline(false);
+        passes.push_back(stringVisitor);
+    }
+    
 
     //handle #needs, #if and #snippet instructions
     auto preprocessor = new LILPreprocessor();
@@ -283,7 +283,6 @@ void LILCodeUnit::runPasses()
     preprocessor->setDebug(d->debugPreprocessor);
     preprocessor->setDir(d->dir);
     preprocessor->setDebugAST(d->debugAST);
-    preprocessor->setCustomArgs(d->customArgs);
     passes.push_back(preprocessor);
     if (verbose) {
         auto stringVisitor = new LILToStringVisitor();
@@ -428,7 +427,17 @@ void LILCodeUnit::runPassesForNeeds()
         passes.push_back(stringVisitor);
     }
 
-    //handle #needs, #if and #snippet instructions
+    //handle #arg instructions
+    auto argResolver = new LILArgResolver();
+    argResolver->setCustomArgs(d->arguments);
+    passes.push_back(argResolver);
+    if (verbose) {
+        auto stringVisitor = new LILToStringVisitor();
+        stringVisitor->setPrintHeadline(false);
+        passes.push_back(stringVisitor);
+    }
+
+    //handle #needs/#import, #if and #snippet/#paste instructions
     auto preprocessor = new LILPreprocessor();
     for (auto it = d->_alreadyImportedFilesNeeds.begin(); it != d->_alreadyImportedFilesNeeds.end(); ++it) {
         auto pair = *it;
@@ -565,7 +574,17 @@ void LILCodeUnit::runPassesForImport()
         passes.push_back(stringVisitor);
     }
 
-    //handle #needs, #if and #snippet instructions
+    //handle #arg instructions
+    auto argResolver = new LILArgResolver();
+    argResolver->setCustomArgs(d->arguments);
+    passes.push_back(argResolver);
+    if (verbose) {
+        auto stringVisitor = new LILToStringVisitor();
+        stringVisitor->setPrintHeadline(false);
+        passes.push_back(stringVisitor);
+    }
+
+    //handle #needs/#import, #if and #snippet/#paste instructions
     auto preprocessor = new LILPreprocessor();
     for (auto it = d->_alreadyImportedFilesNeeds.begin(); it != d->_alreadyImportedFilesNeeds.end(); ++it) {
         auto pair = *it;
