@@ -3595,6 +3595,10 @@ void LILIREmitter::setDebug(bool value)
 
 llvm::StructType * LILIREmitter::extractStructFromClass(LILClassDecl * value)
 {
+    auto name = value->getName().data();
+    if (d->classTypes.count(name)) {
+        return d->classTypes[name];
+    }
     std::vector<llvm::Type*> types;
     for (auto & fld : value->getFields()) {
         auto vd = std::static_pointer_cast<LILVarDecl>(fld);
@@ -3605,7 +3609,7 @@ llvm::StructType * LILIREmitter::extractStructFromClass(LILClassDecl * value)
             }
         }
     }
-    return llvm::StructType::create(d->llvmContext, types, value->getName().data());
+    return llvm::StructType::create(d->llvmContext, types, name);
 }
 
 size_t LILIREmitter::extractSizeFromNumberLiteral(LILNumberLiteral * value) const
