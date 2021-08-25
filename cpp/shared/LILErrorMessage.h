@@ -8,7 +8,7 @@
  *
  *      LICENSE: see LICENSE file
  *
- *      This file defines the base class for classes that can be visited
+ *      This file defines the structure for error messages
  *
  ********************************************************************/
 
