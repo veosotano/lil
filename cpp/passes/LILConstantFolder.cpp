@@ -95,7 +95,7 @@ void LILConstantFolder::process(std::shared_ptr<LILNode> node)
             for (size_t i=0, j=childNodes.size(); i<j; i+=1) {
                 auto childNode = childNodes[i];
                 std::shared_ptr<LILNode> remoteNode = this->recursiveFindNode(childNode);
-                if (!remoteNode->isA(NodeTypeVarDecl)) {
+                if (!remoteNode || !remoteNode->isA(NodeTypeVarDecl)) {
                     continue;
                 }
                 auto vd = std::static_pointer_cast<LILVarDecl>(remoteNode);
