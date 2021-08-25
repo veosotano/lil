@@ -78,6 +78,10 @@ void LILPreprocessor::performVisit(std::shared_ptr<LILRootNode> rootNode)
         if (this->hasErrors()) {
             return;
         }
+        this->processSnippets(rootNode);
+        if (this->hasErrors()) {
+            return;
+        }
         this->processPasteInstr(rootNode);
         if (this->hasErrors()) {
             return;
@@ -412,6 +416,19 @@ bool LILPreprocessor::processIfInstr(std::shared_ptr<LILNode> node)
     return false;
 }
 
+void LILPreprocessor::processSnippets(const std::shared_ptr<LILRootNode> & rootNode)
+{
+    }
+    if (rootNode->hasInitializers()) {
+        auto snippet = std::make_shared<LILSnippetInstruction>();
+        snippet->setName("LIL_INITIALIZERS");
+        for (auto initializer : rootNode->getInitializers()) {
+            snippet->add(initializer);
+        }
+        rootNode->add(snippet);
+        rootNode->clearInitializers();
+    }
+}
 void LILPreprocessor::processPasteInstr(const std::shared_ptr<LILRootNode> & rootNode)
 {
     std::vector<std::shared_ptr<LILNode>> nodes = rootNode->getNodes();

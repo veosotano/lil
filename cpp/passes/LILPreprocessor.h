@@ -58,6 +58,7 @@ namespace LIL
         void processImportingInstr(const std::shared_ptr<LILRootNode> & rootNode);
         void processIfInstr(const std::shared_ptr<LILRootNode> & rootNode);
         bool processIfInstr(std::shared_ptr<LILNode> node);
+        void processSnippets(const std::shared_ptr<LILRootNode> & rootNode);
         void processPasteInstr(const std::shared_ptr<LILRootNode> & rootNode);
         bool processPasteInstr(std::shared_ptr<LILNode> node);
         void removeSnippets(std::shared_ptr<LILRootNode> rootNode);
