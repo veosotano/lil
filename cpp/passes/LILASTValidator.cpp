@@ -608,16 +608,6 @@ void LILASTValidator::_validate(const std::shared_ptr<LILObjectDefinition> & val
         this->illegalNodeType(ty.get(), value.get());
         return;
     }
-    auto classValue = this->findClassWithName(ty->getName());
-    if (!classValue) {
-        LILErrorMessage ei;
-        ei.message =  "Class "+ty->getName()+" not found";
-        LILNode::SourceLocation sl = value->getSourceLocation();
-        ei.file = sl.file;
-        ei.line = sl.line;
-        ei.column = sl.column;
-        this->errors.push_back(ei);
-    }
 }
 
 void LILASTValidator::_validate(const std::shared_ptr<LILAssignment> & value)

@@ -392,6 +392,17 @@ void LILTypeValidator::_validate(std::shared_ptr<LILObjectDefinition> od)
 {
     auto ty = od->getType();
     auto classValue = this->findClassWithName(ty->getName());
+    if (!classValue) {
+        LILErrorMessage ei;
+        ei.message =  "Class "+ty->getName()+" not found";
+        LILNode::SourceLocation sl = od->getSourceLocation();
+        ei.file = sl.file;
+        ei.line = sl.line;
+        ei.column = sl.column;
+        this->errors.push_back(ei);
+        return;
+    }
+
     auto clFields = classValue->getFields();
     auto odFields = od->getNodes();
     for (auto odField : odFields) {
