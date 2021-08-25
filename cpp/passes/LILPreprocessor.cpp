@@ -51,7 +51,7 @@ void LILPreprocessor::initializeVisit()
     if (this->getVerbose()) {
         std::cerr << "\n\n";
         std::cerr << "============================\n";
-        std::cerr << "=====  #PREPROCESSING  =====\n";
+        std::cerr << "=====  PREPROCESSING   =====\n";
         std::cerr << "============================\n\n";
     }
 }
@@ -126,7 +126,7 @@ void LILPreprocessor::processImportingInstr(const std::shared_ptr<LILRootNode> &
                     continue;
                 }
                 if (this->getVerbose() && instr->getVerbose()) {
-                    std::cerr << "Start of file " << path.data() << "\n\n========================================\n\n";
+                    std::cerr << (isNeeds ? "Extracting header of file " : "Importing ") << path.data() << "\n\n========================================\n\n";
                 }
                 
                 std::unique_ptr<LILCodeUnit> codeUnit = std::make_unique<LILCodeUnit>();
@@ -888,7 +888,6 @@ LILString LILPreprocessor::_getDir(LILString path) const
         return "";
     }
 }
-
 
 bool LILPreprocessor::_processIfInstr(std::shared_ptr<LILExpression> value)
 {
