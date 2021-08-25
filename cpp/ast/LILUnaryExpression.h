@@ -29,8 +29,8 @@ namespace LIL
         std::shared_ptr<LILUnaryExpression> clone() const;
         virtual ~LILUnaryExpression();
 
-        bool isA(UnaryExpressionType otherType) const;
-        UnaryExpressionType getUnaryExpressionType() const;
+        bool isA(UnaryExpressionType otherType) const override;
+        UnaryExpressionType getUnaryExpressionType() const override;
         void setUnaryExpressionType(UnaryExpressionType newType);
 
         void setValue(std::shared_ptr<LILNode> newValue);
