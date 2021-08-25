@@ -85,6 +85,13 @@ bool LILStringFunction::equalTo(std::shared_ptr<LILNode> otherNode)
     for (size_t i = 0, j = this->_midChunks.size(); i<j; ++i) {
         if ( this->_midChunks[i] != castedNode->_midChunks[i] ) return false;
     }
+    //compare the child nodes
+    size_t nodesSize = this->_childNodes.size();
+    const auto otherChildNodes = otherNode->getChildNodes();
+    for (size_t i = 0; i<nodesSize; ++i)
+    {
+        if ( ! this->_childNodes[i]->equalTo(otherChildNodes[i])) return false;
+    }
     return true;
 }
 

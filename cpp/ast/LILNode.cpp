@@ -286,11 +286,6 @@ bool LILNode::equalTo(std::shared_ptr<LILNode> otherNode)
     if (otherNode->hidden != this->hidden) return false;
     //compare isExported flag
     if (otherNode->_isExported != this->_isExported) return false;
-    //compare the child nodes
-    for (size_t i = 0; i<nodesSize; ++i)
-    {
-        if ( ! this->_childNodes[i]->equalTo(otherNode->_childNodes[i])) return false;
-    }
     return true;
 }
 
