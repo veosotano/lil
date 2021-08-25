@@ -28,7 +28,6 @@ LILPassManager::~LILPassManager()
 
 void LILPassManager::execute(const std::vector<LILVisitor *> & visitors, std::shared_ptr<LILRootNode> rootNode, const LILString & code)
 {
-    std::vector<std::shared_ptr<LILNode>> nodes = rootNode->getNodes();
     for (const auto & visitor : visitors) {
         visitor->setVerbose(this->getVerbose());
         visitor->initializeVisit();
