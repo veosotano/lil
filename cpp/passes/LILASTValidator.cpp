@@ -372,19 +372,22 @@ void LILASTValidator::_validate(const std::shared_ptr<LILExpression> & value)
 
 void LILASTValidator::_validate(const std::shared_ptr<LILUnaryExpression> & value)
 {
-    auto val = value->getValue();
-    switch (val->getNodeType()) {
-        case NodeTypeNumberLiteral:
-        case NodeTypeExpression:
-        case NodeTypeValuePath:
-        case NodeTypeVarName:
-        case NodeTypeFunctionCall:
-            break;
-            
-        default:
-        {
-            this->illegalNodeType(val.get(), value.get());
-            break;
+    auto parent = value->getParentNode();
+    if (!parent->isA(NodeTypeRule)) {
+        auto val = value->getValue();
+        switch (val->getNodeType()) {
+            case NodeTypeNumberLiteral:
+            case NodeTypeExpression:
+            case NodeTypeValuePath:
+            case NodeTypeVarName:
+            case NodeTypeFunctionCall:
+                break;
+                
+            default:
+            {
+                this->illegalNodeType(val.get(), value.get());
+                break;
+            }
         }
     }
 }
