@@ -3013,7 +3013,7 @@ bool LILCodeParser::readObjectSelector()
     {
         case TokenTypeObjectSign:
         {
-            d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+            //skip the @
             this->readNextToken();
             LIL_CHECK_FOR_END
 
@@ -3031,7 +3031,7 @@ bool LILCodeParser::readObjectSelector()
                     || objtype == "value"
                 )
                 {
-                    d->receiver->receiveNodeData(ParserEventType, objtype);
+                    d->receiver->receiveNodeData(ParserEventType, "@"+objtype);
                     this->readNextToken();
                     break;
                 }

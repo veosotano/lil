@@ -48,43 +48,35 @@ LILSelector::~LILSelector()
 
 void LILSelector::receiveNodeData(const LIL::LILString &data)
 {
-    if (data == "@") return;
-
     if (data == "*")
     {
         this->setSelectorType(SelectorTypeUniversalSelector);
-        this->_name = "*";
     }
-    else if (data == "this")
+    else if (data == "@this")
     {
         this->setSelectorType(SelectorTypeThisSelector);
-        this->_name = "@this";
     }
-    else if (data == "root")
+    else if (data == "@root")
     {
         this->setSelectorType(SelectorTypeRootSelector);
-        this->_name = "@root";
     }
-    else if (data == "parent")
+    else if (data == "@parent")
     {
         this->setSelectorType(SelectorTypeParentSelector);
-        this->_name = "@parent";
     }
-    else if (data == "self")
+    else if (data == "@self")
     {
         this->setSelectorType(SelectorTypeSelfSelector);
-        this->_name = "@self";
     }
-    else if (data == "super")
+    else if (data == "@super")
     {
         this->setSelectorType(SelectorTypeSuperSelector);
-        this->_name = "@super";
     }
     else
     {
         this->setSelectorType(SelectorTypeNameSelector);
-        this->_name = data;
     }
+    this->_name = data;
 }
 
 bool LILSelector::equalTo(std::shared_ptr<LILNode> otherNode)
