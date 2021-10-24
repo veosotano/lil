@@ -176,13 +176,7 @@ void LILASTBuilder::receiveNodeStart(NodeType nodeType)
         case NodeTypeStaticArrayType:
         {
             this->state.push_back(BuilderStateStaticArrayType);
-            if (this->currentNode && this->currentNode->isA(NodeTypeType))
-            {
-                std::shared_ptr<LILStaticArrayType> sat = std::make_shared<LILStaticArrayType>();
-                sat->setType(std::static_pointer_cast<LILType>(this->currentNode));
-                this->currentContainer.push_back(sat);
-                this->currentNode.reset();
-            }
+            this->currentContainer.push_back(std::make_shared<LILStaticArrayType>());
             break;
         }
         case NodeTypeObjectType:
@@ -521,7 +515,13 @@ void LILASTBuilder::receiveNodeCommit()
         {
             if (this->currentNode) {
                 std::shared_ptr<LILStaticArrayType> ty = std::static_pointer_cast<LILStaticArrayType>(this->currentContainer.back());
-                ty->setArgument(this->currentNode);
+                if (ty->getReceivesType()) {
+                    if (this->currentNode->isA(NodeTypeType)) {
+                        ty->setType(std::static_pointer_cast<LILType>(this->currentNode));
+                    }
+                } else {
+                    ty->setArgument(this->currentNode);
+                }
             }
             break;
         }
@@ -1451,6 +1451,13 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
                 } else {
                     this->currentContainer.back()->receiveNodeData(data);
                 }
+        }
+            
+        case BuilderStateStaticArrayType:
+        {
+            auto saTy = std::static_pointer_cast<LILStaticArrayType>(this->currentContainer.back());
+            if (eventType == ParserEventType) {
+                saTy->setReceivesType(true);
             }
             break;
         }

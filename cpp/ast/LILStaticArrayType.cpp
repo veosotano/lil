@@ -13,11 +13,13 @@
  ********************************************************************/
 
 #include "LILStaticArrayType.h"
+#include "LILTypedNode.h"
 
 using namespace LIL;
 
 LILStaticArrayType::LILStaticArrayType()
 : LILType(TypeTypeStaticArray)
+, _receivesType(false)
 {
     
 }
@@ -27,6 +29,7 @@ LILStaticArrayType::LILStaticArrayType(const LILStaticArrayType &other)
 {
     this->_argument = other._argument;
     this->_type = other._type;
+    this->_receivesType = other._receivesType;
 }
 
 std::shared_ptr<LILStaticArrayType> LILStaticArrayType::clone() const
@@ -61,6 +64,7 @@ bool LILStaticArrayType::equalTo(std::shared_ptr<LILNode> otherNode)
     if (this->_type && !castedNode->_type) return false;
     if (!this->_type && castedNode->_type) return false;
     if ( this->_type && ! this->_type->equalTo(castedNode->_type) ) return false;
+    if (this->_receivesType != castedNode->_receivesType) return false;
     return true;
 }
 
@@ -89,4 +93,14 @@ void LILStaticArrayType::setType(std::shared_ptr<LILType> type)
 std::shared_ptr<LILType> LILStaticArrayType::getType() const
 {
     return this->_type;
+}
+
+void LILStaticArrayType::setReceivesType(bool value)
+{
+    this->_receivesType = value;
+}
+
+bool LILStaticArrayType::getReceivesType() const
+{
+    return this->_receivesType;
 }

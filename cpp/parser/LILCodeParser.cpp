@@ -1476,9 +1476,6 @@ bool LILCodeParser::readClassDecl()
 
 bool LILCodeParser::readType()
 {
-    bool done = false;
-    bool valid = true;
-
     bool isMultiple = false;
     auto peekToken = d->lexer->peekNextToken();
     if (peekToken) {
@@ -1526,25 +1523,7 @@ bool LILCodeParser::readType()
     d->lexer->resetPeek();
 
     if (!isMultiple) {
-        bool tyValid = this->readTypeSimple();
-        if (tyValid) {
-            if (d->currentToken->isA(TokenTypeSquareBracketOpen)) {
-                tyValid = this->readStaticArrayType();
-
-                if (this->atEndOfSource()) {
-                    return false;
-                }
-                this->skip(TokenTypeWhitespace);
-
-                if (tyValid) {
-                    return true;
-                }
-            } else {
-                //simple type
-                return true;
-            }
-        }
-        return false;
+        return this->readTypeSimple();
     }
 
     LIL_START_NODE(NodeTypeMultipleType);
@@ -1554,17 +1533,15 @@ bool LILCodeParser::readType()
         this->readNextToken();
         LIL_CHECK_FOR_END
     }
+    bool done = false;
     while (!done) {
         done = true;
 
         bool tyValid = this->readTypeSimple();
         if (tyValid) {
-            if (d->currentToken->isA(TokenTypeSquareBracketOpen)) {
-                this->readStaticArrayType();
-            }
             d->receiver->receiveNodeCommit();
         } else {
-            valid = false;
+            LIL_CANCEL_NODE
         }
         LIL_CHECK_FOR_END
         if (d->currentToken->isA(TokenTypeVerticalBar)) {
@@ -1628,6 +1605,10 @@ bool LILCodeParser::readTypeSimple()
         d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
         this->readNextToken();
         return this->readObjectType(true);
+    }
+    else if (d->currentToken->isA(TokenTypeSquareBracketOpen))
+    {
+        return this->readStaticArrayType();
     }
     else
     {
@@ -1756,13 +1737,27 @@ bool LILCodeParser::readStaticArrayType()
     LIL_START_NODE(NodeTypeStaticArrayType)
     d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
     this->readNextToken();
-    LIL_CHECK_FOR_END
+    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
 
     bool outIsSingleValue;
     NodeType outType;
     bool expValid = this->readExpression(outIsSingleValue, outType);
     if (expValid) {
         d->receiver->receiveNodeCommit();
+    }
+    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+
+    LIL_EXPECT(TokenTypeIdentifier, "x")
+    d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+    this->readNextToken();
+    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+
+    d->receiver->receiveNodeData(ParserEventType, "");
+    bool tyValid = this->readType();
+    if (tyValid) {
+        d->receiver->receiveNodeCommit();
+    } else {
+        LIL_CANCEL_NODE
     }
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
 

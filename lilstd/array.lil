@@ -7,7 +7,7 @@
     #====== class @array ===========
     #= A dynamic array which automatically grows or shrinks as needed
     class @array (type @subtype) {
-        alias sbuf => @subtype[SMALL_BUFFER_SIZE];
+        alias sbuf => [#paste SMALL_BUFFER_SIZE x @subtype];
         
         #======== var buffer ===========
         #= The space for some values or a pointer to the first value

@@ -35,12 +35,16 @@ namespace LIL
         void setType(std::shared_ptr<LILType> type);
         std::shared_ptr<LILType> getType() const;
 
+        void setReceivesType(bool value);
+        bool getReceivesType() const;
+
     protected:
         virtual std::shared_ptr<LILClonable> cloneImpl() const;
         
     private:
         std::shared_ptr<LILNode> _argument;
         std::shared_ptr<LILType> _type;
+        bool _receivesType;
     };
 }
 
