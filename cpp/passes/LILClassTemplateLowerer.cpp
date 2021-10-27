@@ -448,11 +448,15 @@ std::shared_ptr<LILType> LILClassTemplateLowerer::replaceType(std::shared_ptr<LI
                 }
             }
             auto retTy = fnTy->getReturnType();
-            auto replacementRetTy = this->replaceType(retTy, templateTy, specializedTy);
-            if (replacementRetTy) {
-                hasChanges = true;
-                hasChangesRet = true;
+            std::shared_ptr<LILType> replacementRetTy;
+            if (retTy) {
+                replacementRetTy = this->replaceType(retTy, templateTy, specializedTy);
+                if (replacementRetTy) {
+                    hasChanges = true;
+                    hasChangesRet = true;
+                }
             }
+            
             if (hasChanges) {
                 auto newFnTy = std::make_shared<LILFunctionType>();
                 if (hasChangesArgs) {
