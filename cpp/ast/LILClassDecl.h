@@ -42,6 +42,7 @@ namespace LIL
         
         void addField(std::shared_ptr<LILNode> value);
         const std::vector<std::shared_ptr<LILNode>> & getFields() const;
+        size_t getIndexOfField(std::shared_ptr<LILNode> field, bool & found) const;
         void addMethod(std::string name, std::shared_ptr<LILNode> value);
         const std::unordered_map<std::string, std::shared_ptr<LILNode>> & getMethods() const;
         LILString getName() const;

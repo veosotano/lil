@@ -136,6 +136,27 @@ const std::vector<std::shared_ptr<LILNode>> & LILClassDecl::getFields() const
     return this->_fields;
 }
 
+size_t LILClassDecl::getIndexOfField(std::shared_ptr<LILNode> field, bool & found) const
+{
+    auto fields = this->getFields();
+    size_t theIndex = 0;
+    for (const auto & fld : fields) {
+        if (fld->isA(NodeTypeVarDecl)) {
+            auto vd = std::static_pointer_cast<LILVarDecl>(fld);
+            if (vd->getIsVVar()) {
+                continue;
+            }
+            if (field->equalTo(fld)) {
+                found = true;
+                return theIndex;
+            }
+            theIndex += 1;
+        }
+    }
+    found = false;
+    return theIndex;
+}
+
 void LILClassDecl::addMethod(std::string name, std::shared_ptr<LILNode> value)
 {
     this->addNode(value);

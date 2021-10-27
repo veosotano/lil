@@ -1223,10 +1223,12 @@ llvm::Value * LILIREmitter::_emit(LILAssignment * value)
                         std::string name = pn->getName().data();
                         auto vdTy = vd->getType();
 
-                        //get index of field into struct
-                        auto fields = classDecl->getFields();
-                        auto posIt = std::find(fields.begin(), fields.end(), field);
-                        size_t theIndex = posIt - fields.begin();
+                        bool fieldFound = false;
+                        size_t theIndex = classDecl->getIndexOfField(field, fieldFound);
+                        if (!fieldFound) {
+                            std::cerr << "FIELD NOT FOUND FAIL !!!!!!!!!!!!!!!!\n\n";
+                            return nullptr;
+                        }
                         d->currentAlloca = this->_emitGEP(d->currentAlloca, currentTy->getName(), theIndex, stringRep, true);
                         currentTy = vdTy;
 
@@ -1513,11 +1515,12 @@ llvm::Value * LILIREmitter::_emit(LILValuePath * value)
                             llvmSubject = this->emitUnwrappedPointerFromMT(llvmSubject, ifCastTy.get());
                             currentTy = ifCastTy;
                         } else {
-                            //get index of field into struct
-                            auto fields = classDecl->getFields();
-                            auto posIt = std::find(fields.begin(), fields.end(), field);
-                            size_t theIndex = posIt - fields.begin();
-                            
+                            bool fieldFound = false;
+                            size_t theIndex = classDecl->getIndexOfField(field, fieldFound);
+                            if (!fieldFound) {
+                                std::cerr << "FIELD NOT FOUND FAIL !!!!!!!!!!!!!!!!\n\n";
+                                return nullptr;
+                            }
                             llvmSubject = this->_emitGEP(llvmSubject, currentTy->getName(), theIndex, stringRep, true);
                             currentTy = vdTy;
                         }
@@ -3375,9 +3378,12 @@ llvm::Value * LILIREmitter::_emitPointer(LILValuePath * value)
                     }
                     
                     if (!useIfCastTy) {
-                        const auto & fields = classDecl->getFields();
-                        auto posIt = std::find(fields.begin(), fields.end(), field);
-                        size_t theIndex = posIt - fields.begin();
+                        bool fieldFound = false;
+                        size_t theIndex = classDecl->getIndexOfField(field, fieldFound);
+                        if (!fieldFound) {
+                            std::cerr << "FIELD NOT FOUND FAIL !!!!!!!!!!!!!!!!\n\n";
+                            return nullptr;
+                        }
                         
                         std::string name = pn->getName().data();
                         llvmSubject = this->_emitGEP(llvmSubject, classDecl->getName(), theIndex, stringRep, true);
