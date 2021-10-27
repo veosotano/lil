@@ -473,6 +473,15 @@ llvm::Value * LILIREmitter::_emit(LILExpression * value)
         auto result = this->_emitExpression(value->getExpressionType(), leftV, rightV);
         return d->irBuilder.CreateIntToPtr(result, this->llvmTypeFromLILType(ty.get()));
     }
+    auto tyName = ty->getName();
+    if (tyName == "f32" || tyName == "f64") {
+        if (leftV->getType()->getTypeID() == llvm::Type::IntegerTyID) {
+            leftV = d->irBuilder.CreateSIToFP(leftV, this->llvmTypeFromLILType(ty.get()));
+        }
+        if (rightV->getType()->getTypeID() == llvm::Type::IntegerTyID) {
+            rightV = d->irBuilder.CreateSIToFP(rightV, this->llvmTypeFromLILType(ty.get()));
+        }
+    }
     if (leftV->getType() != rightV->getType()) {
         std::cerr << "!!!!!!!!!!LEFT AND RIGHT TYPE DONT MATCH FAIL!!!!!!!!!!!!!!!!\n";
         return nullptr;
