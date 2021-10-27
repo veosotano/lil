@@ -924,7 +924,11 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
         case BuilderStateNumber:
         {
             auto num = std::static_pointer_cast<LILNumberLiteral>(this->currentContainer.back());
-            if (eventType == ParserEventNumberInt)
+            if (eventType != ParserEventNumberInt && eventType != ParserEventNumberFP) {
+                num->receiveNodeData(data);
+                break;
+            }
+            else
             {
                 std::shared_ptr<LILType> parentTy;
                 std::shared_ptr<LILType> type;
@@ -940,30 +944,22 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
                     if (parentTy->isA(TypeTypeMultiple)) {
                         auto multiTy = std::static_pointer_cast<LILMultipleType>(parentTy);
                         bool intFound = false;
+                        std::shared_ptr<LILType> intTy;
                         for (auto ty : multiTy->getTypes()) {
-                            auto name = ty->getName();
-                            if (name == "i64") {
+                            if (LILType::isNumberType(ty.get())) {
+                                intTy = ty;
                                 intFound = true;
                                 break;
                             }
                         }
                         if (intFound) {
-                            std::shared_ptr<LILType> intTy = std::make_shared<LILType>();
-                            intTy->setName("i64");
                             type = intTy;
                         } else {
-                            bool floatFound = false;
                             for (auto ty : multiTy->getTypes()) {
-                                auto name = ty->getName();
-                                if (name == "f64") {
-                                    floatFound = true;
+                                if (LILType::isNumberType(ty.get())) {
+                                    type = ty;
                                     break;
                                 }
-                            }
-                            if (floatFound) {
-                                std::shared_ptr<LILType> floatTy = std::make_shared<LILType>();
-                                floatTy->setName("f64");
-                                type = floatTy;
                             }
                         }
                     } else {
@@ -978,7 +974,9 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
                 
                 if (type) {
                     num->setType(type);
-                } else {
+                }
+                else if (eventType == ParserEventNumberInt)
+                {
                     std::shared_ptr<LILMultipleType> weakType = std::make_shared<LILMultipleType>();
                     std::shared_ptr<LILType> type1 = std::make_shared<LILType>();
                     type1->setName("i64");
@@ -989,14 +987,12 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
                     weakType->setIsWeakType(true);
                     num->setType(weakType);
                 }
-            }
-            else if (eventType == ParserEventNumberFP)
-            {
-                auto ty = std::make_shared<LILType>();
-                ty->setName("f64");
-                num->setType(ty);
-            } else {
-                num->receiveNodeData(data);
+                else if (eventType == ParserEventNumberFP)
+                {
+                    auto ty = std::make_shared<LILType>();
+                    ty->setName("f64");
+                    num->setType(ty);
+                }
             }
             break;
         }
