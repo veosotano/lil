@@ -853,8 +853,7 @@ llvm::Value * LILIREmitter::_emit(LILConversionDecl * value)
     fnTy->setName("fn");
     fnTy->addArgument(vd);
     fnTy->setReturnType(ty);
-    
-    fd->setHasOwnType(true);
+
     fd->setType(fnTy);
     
     LILString fnName = "_lil_conversion_"+encodedName;

@@ -767,9 +767,7 @@ void LILASTBuilder::receiveNodeCommit()
             if (this->currentNode->isA(FlowControlTypeFinally)) {
                 fd->setFinally(this->currentNode);
             } else if (this->currentNode->isA(NodeTypeType)) {
-                if (fd->getHasOwnType()) {
-                    fd->setType(std::static_pointer_cast<LILType>(this->currentNode));
-                }
+                fd->setType(std::static_pointer_cast<LILType>(this->currentNode));
             } else {
                 fd->addEvaluable(this->currentNode);
             }
@@ -1186,9 +1184,6 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
             std::shared_ptr<LILFunctionDecl> fd = std::static_pointer_cast<LILFunctionDecl>(this->currentContainer.back());
             if (eventType == ParserEventFunctionTypeFn) {
                 fd->setFunctionDeclType(FunctionDeclTypeFn);
-            }
-            else if (eventType == ParserEventType) {
-                fd->setHasOwnType(true);
             }
             else if (eventType == ParserEventFunctionName) {
                 fd->setName(data);

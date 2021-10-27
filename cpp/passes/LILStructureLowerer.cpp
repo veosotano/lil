@@ -415,7 +415,6 @@ void LILStructureLowerer::_process(std::shared_ptr<LILFunctionDecl> value)
                         newFd->setIsExported(value->getIsExported());
 
                         auto newFnType = fnTy->clone();
-                        newFd->setHasOwnType(true);
                         newFd->setType(newFnType);
                         
                         newFd->setHasMultipleImpls(true);
@@ -437,7 +436,6 @@ void LILStructureLowerer::_process(std::shared_ptr<LILFunctionDecl> value)
                             if (returnTy) {
                                 newChildFnType->setReturnType(returnTy);
                             }
-                            newChildFd->setHasOwnType(true);
                             newChildFd->setType(newChildFnType);
                             
                             std::vector<std::shared_ptr<LILNode>> newArgs;

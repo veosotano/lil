@@ -1061,7 +1061,6 @@ void LILPreprocessor::_importNodeIfNeeded(std::vector<std::shared_ptr<LILNode>> 
             newFd->setName(fd->getName());
             newFd->setIsExtern(true);
             newFd->setIsExported(isExported);
-            newFd->setHasOwnType(true);
             newFd->setType(fd->getType()->clone());
             
             if (fd->getHasMultipleImpls()) {
@@ -1071,7 +1070,6 @@ void LILPreprocessor::_importNodeIfNeeded(std::vector<std::shared_ptr<LILNode>> 
                     newImpl->setFunctionDeclType(FunctionDeclTypeFn);
                     newImpl->setName(impl->getName());
                     newImpl->setIsExtern(true);
-                    newImpl->setHasOwnType(true);
                     newImpl->setType(impl->getType()->clone());
                     newFd->addImpl(newImpl);
                 }

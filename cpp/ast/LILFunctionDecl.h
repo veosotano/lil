@@ -61,9 +61,6 @@ namespace LIL
         std::shared_ptr<LILNode> getFinally() const;
         void setFinally(std::shared_ptr<LILNode> value);
 
-        bool getHasOwnType() const;
-        void setHasOwnType(bool value);
-
         bool getIsExtern() const;
         void setIsExtern(bool value);
 
@@ -92,7 +89,6 @@ namespace LIL
         LILString _name;
         bool _hasReturn;
         bool _isConstructor;
-        bool _hasOwnType;
         bool _isExtern;
         bool _hasMultipleImpls;
     };

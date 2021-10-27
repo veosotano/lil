@@ -24,7 +24,6 @@ LILFunctionDecl::LILFunctionDecl()
 , _name("")
 , _hasReturn(false)
 , _isConstructor(false)
-, _hasOwnType(false)
 , _isExtern(false)
 , _hasMultipleImpls(false)
 {
@@ -44,7 +43,6 @@ LILFunctionDecl::LILFunctionDecl(const LILFunctionDecl &other)
 , _name(other._name)
 , _hasReturn(other._hasReturn)
 , _isConstructor(other._isConstructor)
-, _hasOwnType(other._hasOwnType)
 , _isExtern(other._isExtern)
 , _hasMultipleImpls(other._hasMultipleImpls)
 {
@@ -52,35 +50,14 @@ LILFunctionDecl::LILFunctionDecl(const LILFunctionDecl &other)
 
 std::shared_ptr<LILType> LILFunctionDecl::getType() const
 {
-    if (this->_hasOwnType) {
-        return this->_fnType;
-    } else {
-        auto parent = this->getParentNode();
-        if (parent && parent->isA(NodeTypeVarDecl)) {
-            auto vd = std::static_pointer_cast<LILVarDecl>(parent);
-            if (vd) {
-                return vd->getType();
-            }
-        }
-    }
-    return nullptr;
+    return this->_fnType;
 }
 
 void LILFunctionDecl::setType(std::shared_ptr<LILType> value)
 {
-    if (this->_hasOwnType) {
-        if (value->isA(TypeTypeFunction)) {
-            this->_fnType = std::static_pointer_cast<LILFunctionType>(value);
-            this->_fnType->setParentNode(this->shared_from_this());
-        }
-    } else {
-        auto parent = this->getParentNode();
-        if (parent && parent->isA(NodeTypeVarDecl)) {
-            auto vd = std::static_pointer_cast<LILVarDecl>(parent);
-            if (vd) {
-                vd->setType(value);
-            }
-        }
+    if (value->isA(TypeTypeFunction)) {
+        this->_fnType = std::static_pointer_cast<LILFunctionType>(value);
+        this->_fnType->setParentNode(this->shared_from_this());
     }
 }
 
@@ -296,16 +273,6 @@ void LILFunctionDecl::setFinally(std::shared_ptr<LILNode> value)
     }
     this->addNode(value);
     this->_finally = value;
-}
-
-bool LILFunctionDecl::getHasOwnType() const
-{
-    return this->_hasOwnType;
-}
-
-void LILFunctionDecl::setHasOwnType(bool value)
-{
-    this->_hasOwnType = value;
 }
 
 bool LILFunctionDecl::getIsExtern() const
