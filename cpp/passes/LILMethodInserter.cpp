@@ -167,12 +167,9 @@ void LILMethodInserter::process(LILNode * node)
 std::shared_ptr<LILNode> LILMethodInserter::_findMethod(bool getter, LILClassDecl * value, LILString name)
 {
     LILString compareName = (getter ? "get" : "set") + name.toUpperFirstCase();
-    for (auto method : value->getMethods()) {
-        if (method->isA(NodeTypeVarDecl)) {
-            auto vd = std::static_pointer_cast<LILVarDecl>(method);
-            if (vd->getName() == compareName) {
-                return method;
-            }
+    for (const auto & methodPair : value->getMethods()) {
+        if (methodPair.first == compareName.data()) {
+            return methodPair.second;
         }
     }
     return nullptr;

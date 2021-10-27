@@ -68,8 +68,8 @@ std::shared_ptr<LILClonable> LILClassDecl::cloneImpl() const
         clone->addField(field->clone());
     }
     clone->_methods.clear();
-    for (auto method : this->_methods) {
-        clone->addMethod(method->clone());
+    for (auto methodPair : this->_methods) {
+        clone->addMethod(methodPair.first, methodPair.second->clone());
     }
     clone->_aliases.clear();
     for (auto alias : this->_aliases) {
@@ -136,13 +136,13 @@ const std::vector<std::shared_ptr<LILNode>> & LILClassDecl::getFields() const
     return this->_fields;
 }
 
-void LILClassDecl::addMethod(std::shared_ptr<LILNode> value)
+void LILClassDecl::addMethod(std::string name, std::shared_ptr<LILNode> value)
 {
     this->addNode(value);
-    this->_methods.push_back(value);
+    this->_methods[name] = value;
 }
 
-const std::vector<std::shared_ptr<LILNode>> & LILClassDecl::getMethods() const
+const std::unordered_map<std::string, std::shared_ptr<LILNode>> & LILClassDecl::getMethods() const
 {
     return this->_methods;
 }
@@ -168,14 +168,9 @@ std::shared_ptr<LILNode> LILClassDecl::getFieldNamed(const LILString & name) con
 
 std::shared_ptr<LILNode> LILClassDecl::getMethodNamed(const LILString & name) const
 {
-    for (auto method : this->_methods) {
-        if (!method->isA(NodeTypeVarDecl)) {
-            continue;
-        }
-        auto vd = std::static_pointer_cast<LILVarDecl>(method);
-        if (vd->getName() == name) {
-            return vd;
-        }
+    auto namestr = name.data();
+    if (_methods.count(namestr)) {
+        return this->_methods.at(namestr);
     }
     return nullptr;
 }

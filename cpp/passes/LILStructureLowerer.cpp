@@ -327,27 +327,15 @@ void LILStructureLowerer::_process(std::shared_ptr<LILClassDecl> value)
         return;
     }
 
-    std::vector<std::shared_ptr<LILNode>> newNodes;
-
-    std::vector<std::shared_ptr<LILNode>> nodes = value->getMethods();
-    
-    std::vector<std::shared_ptr<LILNode>> resultNodes;
-    for (auto node : nodes) {
-        resultNodes.push_back(node);
-        std::vector<std::shared_ptr<LILNode>> buf;
-        this->_nodeBuffer.push_back(buf);
-        this->process(node);
-        for (auto newNode : this->_nodeBuffer.back()) {
-            resultNodes.push_back(newNode);
-            newNodes.push_back(newNode);
+    for (const auto & methodPair : value->getMethods()) {
+        auto methodName = methodPair.first;
+        this->_nodeBuffer.emplace_back();
+        this->process(methodPair.second);
+        if (this->_nodeBuffer.back().size() > 0) {
+            auto newMethod = this->_nodeBuffer.back().back();
+            value->addMethod(methodName, newMethod);
         }
         this->_nodeBuffer.pop_back();
-    }
-    if (newNodes.size() > 0) {
-        
-        for (auto newNode : newNodes) {
-            value->addMethod(newNode);
-        }
     }
 }
 

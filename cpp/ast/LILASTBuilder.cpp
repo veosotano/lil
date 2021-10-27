@@ -693,40 +693,16 @@ void LILASTBuilder::receiveNodeCommit()
                 }
                 case NodeTypeVarDecl:
                 {
-                    bool hasBeenAdded = false;
-                    auto ty = this->currentNode->getType();
-                    if (ty) {
-                        if (ty->isA(TypeTypeFunction)) {
-                            cd->addMethod(this->currentNode);
-                            hasBeenAdded = true;
-                        } else {
-                            cd->addField(this->currentNode);
-                            hasBeenAdded = true;
-                        }
-                    } else {
-                        auto initVal = std::static_pointer_cast<LILVarDecl>(this->currentNode)->getInitVal();
-                        if (initVal->isA(NodeTypeFunctionDecl)) {
-                            cd->addMethod(this->currentNode);
-                            hasBeenAdded = true;
-                        } else {
-                            cd->addField(this->currentNode);
-                            hasBeenAdded = true;
-                        }
-                    }
-                    if (!hasBeenAdded) {
-                        cd->addField(this->currentNode);
-                    }
+                    cd->addField(this->currentNode);
                     break;
                 }
                 case NodeTypeFunctionDecl:
                 {
                     auto fd = std::static_pointer_cast<LILFunctionDecl>(this->currentNode);
-                    auto newVd = std::make_shared<LILVarDecl>();
-                    newVd->setName(fd->getName());
-                    newVd->setInitVal(fd);
-                    cd->addMethod(newVd);
-                    auto fnTy = std::static_pointer_cast<LILFunctionType>(fd->getType());
-                    for ( auto arg : fnTy->getArguments()) {
+                    auto fnName = fd->getName();
+                    cd->addMethod(fnName.data(), fd);
+                    //install arguments as local variables
+                    for ( auto arg : fd->getFnType()->getArguments()) {
                         if (arg->isA(NodeTypeVarDecl)) {
                             auto argVd = std::static_pointer_cast<LILVarDecl>(arg);
                             fd->setLocalVariable(argVd->getName(), argVd);
@@ -758,7 +734,10 @@ void LILASTBuilder::receiveNodeCommit()
                     break;
                 }
                 default:
+                {
+                    cd->addOther(this->currentNode);
                     break;
+                }
             }
             break;
         }

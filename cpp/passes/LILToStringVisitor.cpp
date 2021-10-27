@@ -556,12 +556,14 @@ LILToStrInfo LILToStringVisitor::_stringify(LILClassDecl * value)
         this->stringifyChildren(fields, fieldsInfo);
         ret.children.push_back(fieldsInfo);
     }
-    std::vector<std::shared_ptr<LILNode>> methods = value->getMethods();
+    auto methods = value->getMethods();
     if (methods.size() > 0) {
         LILToStrInfo methodsInfo;
         methodsInfo.isExported = false;
         methodsInfo.value = "Methods:";
-        this->stringifyChildren(methods, methodsInfo);
+        for (const auto & methodPair : methods) {
+            methodsInfo.children.push_back(this->stringify(methodPair.second.get()));
+        }
         ret.children.push_back(methodsInfo);
     }
     std::vector<std::shared_ptr<LILDocumentation>> docs = value->getDocs();

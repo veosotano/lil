@@ -42,8 +42,8 @@ namespace LIL
         
         void addField(std::shared_ptr<LILNode> value);
         const std::vector<std::shared_ptr<LILNode>> & getFields() const;
-        void addMethod(std::shared_ptr<LILNode> value);
-        const std::vector<std::shared_ptr<LILNode>> & getMethods() const;
+        void addMethod(std::string name, std::shared_ptr<LILNode> value);
+        const std::unordered_map<std::string, std::shared_ptr<LILNode>> & getMethods() const;
         LILString getName() const;
         
         std::shared_ptr<LILNode> getFieldNamed(const LILString & name) const;
@@ -79,7 +79,7 @@ namespace LIL
         bool _receivesInherits;
         bool _receivesBody;
         std::vector<std::shared_ptr<LILNode>> _fields;
-        std::vector<std::shared_ptr<LILNode>> _methods;
+        std::unordered_map<std::string, std::shared_ptr<LILNode>> _methods;
         std::vector<std::shared_ptr<LILAliasDecl>> _aliases;
         std::vector<std::shared_ptr<LILDocumentation>> _docs;
         std::vector<std::shared_ptr<LILNode>> _other;

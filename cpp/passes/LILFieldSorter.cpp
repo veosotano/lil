@@ -266,7 +266,10 @@ void LILFieldSorter::_process(LILClassDecl * value)
 {
     if (!value->getIsExtern()) {
         this->processChildren(value->getFields());
-        this->processChildren(value->getMethods());
+        for (const auto & methodPair : value->getMethods())
+        {
+            this->process(methodPair.second.get());
+        };
     }
 }
 

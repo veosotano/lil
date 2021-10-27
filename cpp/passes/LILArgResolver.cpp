@@ -354,27 +354,10 @@ bool LILArgResolver::_processArgInstr(std::shared_ptr<LILClassDecl> value)
     if (value->getIsExtern()) {
         return false;
     }
-    
-    std::vector<std::shared_ptr<LILNode>> newNodes;
-    
-    std::vector<std::shared_ptr<LILNode>> nodes = value->getMethods();
-    
-    std::vector<std::shared_ptr<LILNode>> resultNodes;
-    for (auto node : nodes) {
-        resultNodes.push_back(node);
-        std::vector<std::shared_ptr<LILNode>> buf;
-        this->_nodeBuffer.push_back(buf);
-        this->processArgInstr(node);
-        for (auto newNode : this->_nodeBuffer.back()) {
-            resultNodes.push_back(newNode);
-            newNodes.push_back(newNode);
-        }
-        this->_nodeBuffer.pop_back();
-    }
-    if (newNodes.size() > 0) {
-        for (auto newNode : newNodes) {
-            value->addMethod(newNode);
-        }
+
+    auto methods = value->getMethods();
+    for (const auto & methodPair : methods) {
+        this->processArgInstr(methodPair.second);
     }
     return false;
 }

@@ -362,25 +362,9 @@ bool LILConfigGetter::_processGetConfigInstr(std::shared_ptr<LILClassDecl> value
     }
     
     std::vector<std::shared_ptr<LILNode>> newNodes;
-    
-    std::vector<std::shared_ptr<LILNode>> nodes = value->getMethods();
-    
-    std::vector<std::shared_ptr<LILNode>> resultNodes;
-    for (auto node : nodes) {
-        resultNodes.push_back(node);
-        std::vector<std::shared_ptr<LILNode>> buf;
-        this->_nodeBuffer.push_back(buf);
-        this->processGetConfigInstr(node);
-        for (auto newNode : this->_nodeBuffer.back()) {
-            resultNodes.push_back(newNode);
-            newNodes.push_back(newNode);
-        }
-        this->_nodeBuffer.pop_back();
-    }
-    if (newNodes.size() > 0) {
-        for (auto newNode : newNodes) {
-            value->addMethod(newNode);
-        }
+
+    for (const auto & methodPair : value->getMethods()) {
+        this->processGetConfigInstr(methodPair.second);
     }
     return false;
 }

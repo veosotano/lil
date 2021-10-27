@@ -1013,21 +1013,32 @@ void LILPreprocessor::_importNodeIfNeeded(std::vector<std::shared_ptr<LILNode>> 
                 }
                 
                 auto methods = cd->getMethods();
-                for (auto method : methods) {
-                    if (!method->isA(NodeTypeVarDecl)) {
+                for (auto methodPair : methods) {
+                    auto method = methodPair.second;
+                    if (!method->isA(NodeTypeFunctionDecl)) {
                         continue;
                     }
-                    auto metVd = std::static_pointer_cast<LILVarDecl>(method);
-                    auto newVd = std::make_shared<LILVarDecl>();
-                    auto metTy = method->getType();
-                    if (!metTy) {
-                        continue;
+                    auto fd = std::static_pointer_cast<LILFunctionDecl>(method);
+                    auto newFd = std::make_shared<LILFunctionDecl>();
+                    newFd->setFunctionDeclType(FunctionDeclTypeFn);
+                    newFd->setType(fd->getFnType()->clone());
+                    newFd->setName(fd->getName());
+                    newFd->setIsExtern(true);
+
+                    if (fd->getHasMultipleImpls()) {
+                        newFd->setHasMultipleImpls(true);
+                        for (auto impl : fd->getImpls()) {
+                            auto newImpl = std::make_shared<LILFunctionDecl>();
+                            newImpl->setFunctionDeclType(FunctionDeclTypeFn);
+                            newImpl->setName(impl->getName());
+                            newImpl->setIsExtern(true);
+                            newImpl->setType(impl->getType()->clone());
+                            newFd->addImpl(newImpl);
+                        }
                     }
-                    newVd->setType(metTy->clone());
-                    newVd->setName(metVd->getName());
-                    newCd->addMethod(newVd);
+
+                    newCd->addMethod(methodPair.first, newFd);
                 }
-                
                 newNodes->push_back(newCd);
             }
             break;
@@ -1234,29 +1245,59 @@ bool LILPreprocessor::_processIfInstr(std::shared_ptr<LILClassDecl> value)
     if (value->getIsExtern()) {
         return false;
     }
-    
-    std::vector<std::shared_ptr<LILNode>> newNodes;
-    
-    std::vector<std::shared_ptr<LILNode>> nodes = value->getMethods();
-    
-    std::vector<std::shared_ptr<LILNode>> resultNodes;
-    for (auto node : nodes) {
-        resultNodes.push_back(node);
-        std::vector<std::shared_ptr<LILNode>> buf;
-        this->_nodeBuffer.push_back(buf);
-        this->processIfInstr(node);
-        for (auto newNode : this->_nodeBuffer.back()) {
-            resultNodes.push_back(newNode);
-            newNodes.push_back(newNode);
+    bool needsUpdateOther = false;
+    std::vector<std::shared_ptr<LILNode>> resultNodesOther;
+    std::vector<std::shared_ptr<LILNode>> newNodesOther;
+    for (const auto & other : value->getOther()) {
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processIfInstr(other);
+        if (!remove) {
+            resultNodesOther.push_back(other);
+        } else {
+            needsUpdateOther = true;
+        }
+        for (const auto & newNode : this->_nodeBuffer.back()) {
+            newNodesOther.push_back(newNode);
         }
         this->_nodeBuffer.pop_back();
     }
-    if (newNodes.size() > 0) {
-        this->_needsAnotherPass = true;
-        for (auto newNode : newNodes) {
-            value->addMethod(newNode);
+    if (newNodesOther.size() > 0) {
+        needsUpdateOther = true;
+        for (auto newNode : newNodesOther) {
+            switch (newNode->getNodeType()) {
+                case NodeTypeFunctionDecl:
+                {
+                    auto fd = std::static_pointer_cast<LILFunctionDecl>(newNode);
+                    value->addMethod(fd->getName().data(), fd);
+                    break;
+                }
+                case NodeTypeVarDecl:
+                {
+                    value->addField(newNode);
+                    break;
+                }
+                default:
+                    resultNodesOther.push_back(newNode);
+                    break;
+            }
         }
     }
+    if (needsUpdateOther) {
+        value->clearOther();
+        value->setOther(std::move(resultNodesOther));
+        this->_needsAnotherPass = true;
+    }
+
+    for (const auto & field : value->getFields()) {
+        this->processIfInstr(field);
+    }
+    for (const auto & methodPair : value->getMethods()) {
+        this->processIfInstr(methodPair.second);
+    }
+    for (const auto & alias : value->getAliases()) {
+        this->processIfInstr(alias);
+    }
+
     return false;
 }
 
@@ -1956,28 +1997,57 @@ bool LILPreprocessor::_processPasteInstr(std::shared_ptr<LILClassDecl> value)
     if (value->getIsExtern()) {
         return false;
     }
-    
-    std::vector<std::shared_ptr<LILNode>> newNodes;
-    
-    std::vector<std::shared_ptr<LILNode>> nodes = value->getMethods();
-    
-    std::vector<std::shared_ptr<LILNode>> resultNodes;
-    for (auto node : nodes) {
-        resultNodes.push_back(node);
-        std::vector<std::shared_ptr<LILNode>> buf;
-        this->_nodeBuffer.push_back(buf);
-        this->processPasteInstr(node);
-        for (auto newNode : this->_nodeBuffer.back()) {
-            resultNodes.push_back(newNode);
-            newNodes.push_back(newNode);
+    bool needsUpdateOther = false;
+    std::vector<std::shared_ptr<LILNode>> resultNodesOther;
+    std::vector<std::shared_ptr<LILNode>> newNodesOther;
+    for (const auto & other : value->getOther()) {
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processPasteInstr(other);
+        if (!remove) {
+            resultNodesOther.push_back(other);
+        } else {
+            needsUpdateOther = true;
+        }
+        for (const auto & newNode : this->_nodeBuffer.back()) {
+            newNodesOther.push_back(newNode);
         }
         this->_nodeBuffer.pop_back();
     }
-    if (newNodes.size() > 0) {
-        this->_needsAnotherPass = true;
-        for (auto newNode : newNodes) {
-            value->addMethod(newNode);
+    if (newNodesOther.size() > 0) {
+        needsUpdateOther = true;
+        for (auto newNode : newNodesOther) {
+            switch (newNode->getNodeType()) {
+                case NodeTypeFunctionDecl:
+                {
+                    auto fd = std::static_pointer_cast<LILFunctionDecl>(newNode);
+                    value->addMethod(fd->getName().data(), fd);
+                    break;
+                }
+                case NodeTypeVarDecl:
+                {
+                    value->addField(newNode);
+                    break;
+                }
+                default:
+                    resultNodesOther.push_back(newNode);
+                    break;
+            }
         }
+    }
+    if (needsUpdateOther) {
+        value->clearOther();
+        value->setOther(std::move(resultNodesOther));
+        this->_needsAnotherPass = true;
+    }
+    
+    for (const auto & field : value->getFields()) {
+        this->processPasteInstr(field);
+    }
+    for (const auto & methodPair : value->getMethods()) {
+        this->processPasteInstr(methodPair.second);
+    }
+    for (const auto & alias : value->getAliases()) {
+        this->processPasteInstr(alias);
     }
     return false;
 }

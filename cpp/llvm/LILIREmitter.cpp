@@ -877,11 +877,14 @@ llvm::Value * LILIREmitter::_emit(LILClassDecl * value)
 
     d->classTypes[name] = this->extractStructFromClass(value);
 
-    for (auto methodVar : value->getMethods()) {
-        auto vd = std::static_pointer_cast<LILVarDecl>(methodVar);
-        auto initVal = vd->getInitVal();
-        if (initVal) {
-            std::shared_ptr<LILFunctionDecl> fd = std::static_pointer_cast<LILFunctionDecl>(initVal);
+    for (auto methodPair : value->getMethods()) {
+        auto methodNode = methodPair.second;
+        auto fd = std::static_pointer_cast<LILFunctionDecl>(methodNode);
+        if (fd->getHasMultipleImpls()) {
+            for (const auto & impl: fd->getImpls()) {
+                this->_emitFn(impl.get());
+            }
+        } else {
             this->_emitFn(fd.get());
         }
     }
