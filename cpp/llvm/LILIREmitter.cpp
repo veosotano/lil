@@ -901,17 +901,13 @@ llvm::Value * LILIREmitter::_emit(LILObjectDefinition * value)
 
     auto classValue = this->findClassWithName(classNameStr);
     size_t theIndex = 0;
-    std::vector<std::shared_ptr<LILVarDecl>> callVars;
-    std::vector<llvm::Value *> callValues;
+    std::vector<std::shared_ptr<LILNode>> callValues;
     llvm::Value * alloca = d->currentAlloca;
-    for (auto field : classValue->getFields()) {
+    for (const auto & field : classValue->getFields()) {
         auto vd = std::static_pointer_cast<LILVarDecl>(field);
         
-        bool needsCall = vd->getIsIVar() || vd->getIsVVar();
-        if (needsCall) {
-            callVars.push_back(vd);
-        }
-        
+        bool needsStore = !vd->getIsVVar();
+
         auto varName = vd->getName();
         
         std::shared_ptr<LILNode> theVal = nullptr;
@@ -930,6 +926,9 @@ llvm::Value * LILIREmitter::_emit(LILObjectDefinition * value)
                         if (firstNode->isA(NodeTypePropertyName)) {
                             pn = std::static_pointer_cast<LILPropertyName>(firstNode);
                         }
+                    } else {
+                        std::cerr << "SUBJECT WAS NOT PROPERTY NAME OR VALUE PATH FAIL !!!!!!!!\n\n";
+                        return nullptr;
                     }
 
                     if (pn && pn->getName() == varName) {
@@ -945,9 +944,7 @@ llvm::Value * LILIREmitter::_emit(LILObjectDefinition * value)
         }
 
         if (theVal) {
-            if (needsCall) {
-                callValues.push_back(this->emit(theVal.get()));
-            } else {
+            if (needsStore) {
                 auto gep = this->_emitGEP(alloca, classValue->getName(), theIndex, varName, true);
                 auto allocaBackup = d->currentAlloca;
                 d->currentAlloca = gep;
@@ -965,26 +962,46 @@ llvm::Value * LILIREmitter::_emit(LILObjectDefinition * value)
                 }
                 d->currentAlloca = allocaBackup;
             }
+            else
+            {
+                callValues.push_back(theVal);
+            }
         }
-        ++theIndex;
+        if (!vd->getIsVVar()) {
+            ++theIndex;
+        }
     }
-    
+
     theIndex = 0;
-    for (auto vd : callVars) {
-        LILString name = vd->getName();
-        LILString methodName = "set" + name.toUpperFirstCase();
-        auto methodVd = classValue->getMethodNamed(methodName);
-        
-        LILString newName = this->decorate("", classValue->getName(), methodName, methodVd->getType());
-        llvm::Function* fun = d->llvmModule->getFunction(newName.data());
-        std::vector<llvm::Value *> argsvect;
-        
-        argsvect.push_back(d->currentAlloca);
-        argsvect.push_back(callValues[theIndex]);
-        
-        d->irBuilder.CreateCall(fun, argsvect);
-        
-        ++theIndex;
+    for (const auto & field : classValue->getFields()) {
+        auto vd = std::static_pointer_cast<LILVarDecl>(field);
+        if (vd->getIsIVar() || vd->getIsVVar()) {
+            std::shared_ptr<LILNode> callVal;
+            if (callValues.size() > theIndex) {
+                callVal = callValues[theIndex];
+            }
+            if (!callVal) {
+                continue;
+            }
+            LILString name = vd->getName();
+            LILString methodName = "set" + name.toUpperFirstCase();
+            auto methodNode = classValue->getMethodNamed(methodName);
+            if (methodNode && methodNode->isA(NodeTypeFunctionDecl)) {
+                auto methodFd = std::static_pointer_cast<LILFunctionDecl>(methodNode);
+                auto fc = std::make_shared<LILFunctionCall>();
+                fc->setName(methodName);
+
+                fc->addArgument(callVal);
+                fc->addArgumentType(callVal->getType());
+                if (methodFd->getHasMultipleImpls()) {
+                    this->_emitFCMultipleValues(methodFd->getImpls(), fc.get(), d->currentAlloca, value->getType());
+                } else {
+                    LILString newName = this->decorate("", classValue->getName(), methodName, methodFd->getType());
+                    this->_emitFunctionCall(fc.get(), newName, methodFd->getFnType().get(), d->currentAlloca);
+                }
+            }
+            theIndex += 1;
+        }
     }
 
     //call the constructor

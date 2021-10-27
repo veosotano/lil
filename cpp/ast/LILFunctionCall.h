@@ -43,6 +43,7 @@ namespace LIL
         void clearArguments();
 
         void setArgumentTypes(std::vector<std::shared_ptr<LILType>> types);
+        void addArgumentType(std::shared_ptr<LILType> argTy);
         std::vector<std::shared_ptr<LILType>> getArgumentTypes() const;
 
         void setReturnType(std::shared_ptr<LILType> retTy);

@@ -152,6 +152,11 @@ void LILFunctionCall::setArgumentTypes(std::vector<std::shared_ptr<LILType>> typ
     this->_argumentTypes = types;
 }
 
+void LILFunctionCall::addArgumentType(std::shared_ptr<LILType> argTy)
+{
+    this->_argumentTypes.push_back(argTy);
+}
+
 std::vector<std::shared_ptr<LILType>> LILFunctionCall::getArgumentTypes() const
 {
     return this->_argumentTypes;
