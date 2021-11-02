@@ -75,7 +75,15 @@ void LILStaticArrayType::receiveNodeData(const LIL::LILString &data)
 
 void LILStaticArrayType::setArgument(std::shared_ptr<LILNode> node)
 {
+    if (node->isTypedNode()) {
+        auto tyNode = std::static_pointer_cast<LILTypedNode>(node);
+        auto ty = tyNode->getType();
+        if (ty && ty->getIsWeakType()) {
+            tyNode->setType(LILType::getDefaultType());
+        }
+    }
     this->_argument = node;
+    
     this->_argument->setParentNode(this->shared_from_this());
 }
 
