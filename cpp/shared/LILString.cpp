@@ -87,9 +87,9 @@ LILString LILString::number(LILUnitF64 num)
 unsigned int LILString::_count_decimals(LILUnitF64 num)
 {
     unsigned int count = 0;
-    num = std::abs((long long)num);
+    num = std::abs(num);
     num = num - int(num);
-    while (std::abs((long long)num) >= 0.0000001)
+    while (std::abs(num) >= 0.0000001)
     {
         num = num * 10;
         if (std::isinf(num))
