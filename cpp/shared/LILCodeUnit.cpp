@@ -277,6 +277,7 @@ void LILCodeUnit::buildAST()
         strConst->setValue(d->stdLilPath);
         importInstr->setArgument(strConst);
         importInstr->setVerbose(d->debugStdLil);
+        importInstr->hidden = !d->debugStdLil;
         rootNode->add(importInstr);
     }
     
