@@ -538,11 +538,28 @@ void LILBuildManager::build()
                     if (this->_verbose) {
                         std::cerr << "\n============================" << "\n";
                         std::cerr << "======== RUNNING =========" << "\n";
-                        std::cerr << "============================" << "\n\n";
+                        std::cerr << "============================" << "\n";
                     }
-
-                    std::string runCommand = buildPath + "/" + out + exeExt;
-                    system(runCommand.c_str());
+                    std::string runCommand = "";
+                    if (isApp) {
+                        runCommand = this->_config->getConfigString("runCommandApp");
+                    } else {
+                        runCommand = this->_config->getConfigString("runCommand");
+                    }
+                    if (this->_verbose) {
+                        std::cerr << runCommand << "\n\n";
+                    }
+                    std::array<char, 128> runBuffer;
+                    runCommand.append(" 2>&1");
+                    
+                    std::unique_ptr<FILE, decltype(&pclose)> runPipe(popen(runCommand.c_str(), "r"), pclose);
+                    if (!runPipe) {
+                        std::cerr << "popen() to the executable failed!";
+                        return;
+                    }
+                    while (fgets(runBuffer.data(), runBuffer.size(), runPipe.get()) != nullptr) {
+                        std::cerr << runBuffer.data();
+                    }
                 }
             }
         }
