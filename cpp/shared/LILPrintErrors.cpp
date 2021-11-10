@@ -49,7 +49,7 @@ void LILPrintErrors(const std::vector<LILErrorMessage> & errors, const LILString
             std::cerr << ei.column;
             std::cerr << "\n\n";
 
-            if (ei.line > 2)
+            if ((ei.line > 2) && (lines.size() > (ei.line-2)))
             {
                 std::cerr << ei.line - 1;
                 std::cerr << ": ";
@@ -57,31 +57,35 @@ void LILPrintErrors(const std::vector<LILErrorMessage> & errors, const LILString
                 std::cerr << "\n";
             }
 
-            std::cerr << ei.line;
-            std::cerr << ": ";
-            std::cerr << lines[ei.line-1];
-            std::cerr << "\n";
-            std::string indicator = "   ";
-            if (ei.column > 2) {
-                for (unsigned i=0; i<ei.column-3; ++i) {
-                    indicator += " ";
-                }
-            }
-            if (ei.column == 0) {
-                indicator+= "^__\n";
-            } else if (ei.column == 1) {
-                indicator+= "_^__\n";
-            } else {
-                indicator+= "__^__\n";
-            }
-            std::cerr << indicator;
-
-            if (ei.line < lines.size()-1)
-            {
-                std::cerr << ei.line+1;
+            if (lines.size() > (ei.line-1)) {
+                std::cerr << ei.line;
                 std::cerr << ": ";
-                std::cerr << lines[ei.line];
+                std::cerr << lines[ei.line-1];
                 std::cerr << "\n";
+                std::string indicator = "   ";
+                if (ei.column > 2) {
+                    for (unsigned i=0; i<ei.column-3; ++i) {
+                        indicator += " ";
+                    }
+                }
+                if (ei.column == 0) {
+                    indicator+= "^__\n";
+                } else if (ei.column == 1) {
+                    indicator+= "_^__\n";
+                } else {
+                    indicator+= "__^__\n";
+                }
+                std::cerr << indicator;
+                
+                if (ei.line < lines.size()-1)
+                {
+                    std::cerr << ei.line+1;
+                    std::cerr << ": ";
+                    std::cerr << lines[ei.line];
+                    std::cerr << "\n";
+                }
+            } else {
+                std::cerr << ei.file.data() << "\n";
             }
         } else {
             std::cerr << "\n";
