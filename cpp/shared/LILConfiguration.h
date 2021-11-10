@@ -25,7 +25,7 @@ namespace LIL {
         LILConfiguration();
         ~LILConfiguration();
         bool hasConfig(const std::string & name) const;
-        bool getConfigBool(const std::string & name) const;
+        bool getConfigBool(const std::string & name, bool defaultValue = false) const;
         const std::string getConfigString(const std::string & name) const;
         long int getConfigInt(const std::string & name) const;
         std::vector<std::shared_ptr<LILNode>> & getConfigItems(const std::string & name);

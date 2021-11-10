@@ -234,7 +234,7 @@ void LILBuildManager::build()
         
     }
 
-    if (this->_config->getConfigBool("compile")) {
+    if (this->_config->getConfigBool("compile", true)) {
         std::string filePath = this->_directory.data() + "/" + this->_file.data();
         std::ifstream file(filePath, std::ios::in);
         if (file.fail()) {

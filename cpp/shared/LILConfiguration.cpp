@@ -40,7 +40,7 @@ bool LILConfiguration::hasConfig(const std::string &name) const
     return this->_values.count(name);
 }
 
-bool LILConfiguration::getConfigBool(const std::string &name) const
+bool LILConfiguration::getConfigBool(const std::string &name, bool defaultValue) const
 {
     if (this->_values.count(name)) {
         auto & vals = this->_values.at(name);
@@ -56,6 +56,8 @@ bool LILConfiguration::getConfigBool(const std::string &name) const
                     break;
             }
         }
+    } else {
+        return defaultValue;
     }
     return false;
 }
