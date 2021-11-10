@@ -39,6 +39,7 @@ extern void LILPrintErrors(const std::vector<LILErrorMessage> & errors, const LI
 LILBuildManager::LILBuildManager()
 : _codeUnit(nullptr)
 , _config(std::make_unique<LILConfiguration>())
+, _hasErrors(false)
 , _debug(false)
 , _verbose(false)
 , _noConfigureDefaults(false)
