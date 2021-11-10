@@ -18,6 +18,7 @@
 #include "LILStringLiteral.h"
 #include "LILNumberLiteral.h"
 #include "LILNodeToString.h"
+#include "LILPropertyName.h"
 #include "LILUnaryExpression.h"
 #include "LILStringFunction.h"
 #include "LILValueList.h"
@@ -93,9 +94,9 @@ void LILConfiguration::applyConfig(const std::shared_ptr<LILNode> & node)
     if (node->isA(NodeTypeAssignment)) {
         auto as = std::static_pointer_cast<LILAssignment>(node);
         const auto & subj = as->getSubject();
-        if (subj->isA(NodeTypeVarName)) {
-            auto vn = std::static_pointer_cast<LILVarName>(subj);
-            auto name = vn->getName();
+        if (subj->isA(NodeTypePropertyName)) {
+            auto pn = std::static_pointer_cast<LILPropertyName>(subj);
+            auto name = pn->getName();
             auto val = as->getValue();
             if (val->isA(NodeTypeValueList)) {
                 this->clearConfig(name.data());
@@ -112,18 +113,22 @@ void LILConfiguration::applyConfig(const std::shared_ptr<LILNode> & node)
     {
         auto ue = std::static_pointer_cast<LILUnaryExpression>(node);
         const auto & subj = ue->getSubject();
-        if (subj->isA(NodeTypeVarName)) {
+        LILString name;
+        if (subj->isA(NodeTypePropertyName)) {
+            auto pn = std::static_pointer_cast<LILPropertyName>(subj);
+            name = pn->getName();
+        } else if (subj->isA(NodeTypeVarName)){
             auto vn = std::static_pointer_cast<LILVarName>(subj);
-            auto name = vn->getName();
-            auto val = ue->getValue();
-            if (val->isA(NodeTypeValueList)) {
-                auto vl = std::static_pointer_cast<LILValueList>(val);
-                for (const auto & listVal : vl->getValues()) {
-                    this->addConfig(name.data(), listVal);
-                }
-            } else {
-                this->addConfig(name.data(), ue->getValue());
+            name = vn->getName();
+        }
+        auto val = ue->getValue();
+        if (val->isA(NodeTypeValueList)) {
+            auto vl = std::static_pointer_cast<LILValueList>(val);
+            for (const auto & listVal : vl->getValues()) {
+                this->addConfig(name.data(), listVal);
             }
+        } else {
+            this->addConfig(name.data(), ue->getValue());
         }
     }
 }
@@ -167,7 +172,12 @@ void LILConfiguration::printConfig() const
                 }
             }
         } else {
-            std::cerr << LILNodeToString::stringify(vals.back().get()).data() << "\n";
+            const auto & val = vals.back();
+            if (val->isA(NodeTypeStringFunction)) {
+                std::cerr << this->extractString(val) << "\n";
+            } else {
+                std::cerr << LILNodeToString::stringify(val.get()).data() << "\n";
+            }
         }
     }
 }
@@ -180,6 +190,15 @@ std::string LILConfiguration::extractString(std::shared_ptr<LILNode> val) const
             auto stringLiteral = std::static_pointer_cast<LILStringLiteral>(val);
             const auto & strvalQuotes = stringLiteral->getValue();
             return strvalQuotes.stripQuotes().data();
+        }
+        case NodeTypePropertyName:
+        {
+            auto pn = std::static_pointer_cast<LILPropertyName>(val);
+            auto name = pn->getName().data();
+            if (this->_values.count(name)) {
+                return this->getConfigString(name);
+            }
+            break;
         }
         case NodeTypeVarName:
         {
