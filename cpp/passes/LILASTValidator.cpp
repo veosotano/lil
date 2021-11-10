@@ -814,28 +814,6 @@ void LILASTValidator::_validateFunctionDeclChild(LILFunctionDecl * value, LILNod
 void LILASTValidator::_validate(const std::shared_ptr<LILFunctionCall> & value)
 {
     switch (value->getFunctionCallType()) {
-        case FunctionCallTypeValuePath:
-        {
-            auto grandpa = value->getParentNode();
-            if (grandpa && grandpa->isA(NodeTypeValuePath)) {
-                auto vp = std::static_pointer_cast<LILValuePath>(grandpa);
-                auto firstNode = vp->getNodes().front();
-                if (firstNode->isA(NodeTypeVarName)) {
-                    auto varName = std::static_pointer_cast<LILVarName>(firstNode);
-                    auto fn = this->findNodeForVarName(varName.get());
-                    if (!fn) {
-                        LILErrorMessage ei;
-                        ei.message =  "Function "+varName->getName()+" not found";
-                        LILNode::SourceLocation sl = vp->getSourceLocation();
-                        ei.file = sl.file;
-                        ei.line = sl.line;
-                        ei.column = sl.column;
-                        this->errors.push_back(ei);
-                    }
-                }
-            }
-            break;
-        }
         case FunctionCallTypePointerTo:
         {
             if (value->getArguments().size() != 1) {
