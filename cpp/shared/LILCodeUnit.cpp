@@ -537,6 +537,8 @@ void LILCodeUnit::runPassesForNeeds()
     }
     preprocessor->setDir(d->dir);
     preprocessor->setSuffix(d->suffix);
+    preprocessor->setConstants(d->constants);
+    preprocessor->setConfiguration(d->config);
     passes.push_back(preprocessor);
     if (verbose) {
         auto stringVisitor = new LILToStringVisitor();
@@ -688,6 +690,8 @@ void LILCodeUnit::runPassesForImport()
     }
     preprocessor->setDir(d->dir);
     preprocessor->setSuffix(d->suffix);
+    preprocessor->setConstants(d->constants);
+    preprocessor->setConfiguration(d->config);
     passes.push_back(preprocessor);
     if (verbose) {
         auto stringVisitor = new LILToStringVisitor();
