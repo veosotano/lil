@@ -36,6 +36,7 @@
 
 using namespace LIL;
 
+extern void LILPrintErrors(const std::vector<LILErrorMessage> & errors, const LILString & code);
 
 namespace LIL
 {
@@ -321,6 +322,10 @@ void LILCodeUnit::buildAST()
         std::cerr << "============================\n\n";
     }
     d->parser->parseString(d->source);
+
+    if (d->astBuilder->hasErrors()) {
+        LILPrintErrors(d->astBuilder->errors, d->source);
+    }
 }
 
 void LILCodeUnit::runPasses()
