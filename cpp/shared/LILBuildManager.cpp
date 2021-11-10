@@ -20,6 +20,7 @@
 #include "LILErrorMessage.h"
 #include "LILNumberLiteral.h"
 #include "LILOutputEmitter.h"
+#include "LILPlatformSupport.h"
 #include "LILRule.h"
 #include "LILRootNode.h"
 #include "LILSelector.h"
@@ -94,6 +95,7 @@ void LILBuildManager::read()
     this->_codeUnit->addAlreadyImportedFile(fullPath, emptyVect, true);
     this->_codeUnit->addAlreadyImportedFile(fullPath, emptyVect, false);
     this->_codeUnit->setDir(this->_directory);
+    this->_codeUnit->setCompilerDir(this->_compilerDir);
 
     this->_codeUnit->setSource(lilStr);
 
@@ -168,31 +170,8 @@ void LILBuildManager::configure()
     }
     
     auto target = this->_config->getConfigString("target");
-    if (target == "auto") {
-#ifdef _WIN64
-        target = "windows";
-#elif _WIN32
-        target = "windows";
-#elif __APPLE__
-    #include "TargetConditionals.h"
-    #if TARGET_OS_IPHONE && TARGET_OS_SIMULATOR
-        target = "ios";
-    #elif TARGET_OS_IPHONE && TARGET_OS_MACCATALYST
-        target = "ios";
-    #elif TARGET_OS_IPHONE
-        target = "ios";
-    #elif TARGET_OS_MAC
-        target = "mac";
-    #endif
-#elif __ANDROID__
-        target = "android";
-#elif __linux
-        target = "linux";
-#elif __unix // all unices not caught above
-        target = "unix";
-#elif __posix
-        target = "posix";
-#endif
+    if (target == "auto" || target == "") {
+        target = LIL_getAutoTargetString();
     }
     std::shared_ptr<LILStringLiteral> targetStr = std::make_shared<LILStringLiteral>();
     targetStr->setValue(target);
@@ -248,8 +227,8 @@ void LILBuildManager::build()
     if (buildPath.substr(0, 1) != "/") {
         buildPath = this->_directory.data() + "/" + buildPath;
     }
-    
-    this->makeDir(buildPath);
+
+    LIL_makeDir(buildPath);
 
     if (this->_config->getConfigBool("documentation")) {
         
@@ -309,6 +288,7 @@ void LILBuildManager::build()
         mainCodeUnit->addAlreadyImportedFile(fullPath, emptyVect, true);
         mainCodeUnit->addAlreadyImportedFile(fullPath, emptyVect, false);
         mainCodeUnit->setDir(this->_directory);
+        mainCodeUnit->setCompilerDir(this->_compilerDir);
         mainCodeUnit->setSuffix(suffix);
         
         mainCodeUnit->setSource(lilStr);
@@ -418,7 +398,12 @@ void LILBuildManager::build()
                 std::vector<std::shared_ptr<LILNode>> emptyVect;
                 codeUnit->addAlreadyImportedFile(fileStr, emptyVect, true);
                 codeUnit->addAlreadyImportedFile(fileStr, emptyVect, false);
-                codeUnit->setDir(this->_directory + (fileDir.length() > 0 ? "/" : "") + fileDir);
+                if (fileDir.length() > 0) {
+                    codeUnit->setDir(fileDir);
+                } else {
+                    codeUnit->setDir(this->_directory);
+                }
+                codeUnit->setCompilerDir(this->_compilerDir);
                 
                 codeUnit->setSource(lilStr);
                 
@@ -433,7 +418,7 @@ void LILBuildManager::build()
                 outEmitter->setOutFile(oFile);
                 outEmitter->setDir(oDir);
                 
-                this->makeDir(oDir);
+                LIL_makeDir(oDir);
                 
                 if (this->_config->getConfigBool("printOnly")) {
                     outEmitter->printToOutput(codeUnit->getRootNode());
@@ -563,16 +548,6 @@ void LILBuildManager::build()
     }
 }
 
-void LILBuildManager::makeDir(const std::string & path)
-{
-#if defined(_WIN32)
-    _mkdir(path.c_str());
-#else
-    std::string commandStr = "mkdir -p "+path;
-    system(commandStr.c_str());
-#endif
-}
-
 bool LILBuildManager::hasErrors() const
 {
     return this->_hasErrors;
@@ -586,6 +561,14 @@ void LILBuildManager::setDirectory(LILString value)
 void LILBuildManager::setFile(LILString value)
 {
     this->_file = value;
+}
+
+void LILBuildManager::setCompilerDir(LILString value)
+{
+    this->_compilerDir = value;
+    auto strLit = std::make_shared<LILStringLiteral>();
+    strLit->setValue(value);
+    this->_config->setConfig("compilerDir", strLit);
 }
 
 void LILBuildManager::setVerbose(bool value)

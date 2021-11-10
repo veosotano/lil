@@ -40,6 +40,8 @@ namespace LIL
         LILString getFile() const;
         void setDir(LILString dir);
         LILString getDir() const;
+        void setCompilerDir(LILString dir);
+        LILString getCompilerDir() const;
         void setSource(LILString source);
         LILString getSource() const;
         void setNeedsConfigureDefaults(bool value);

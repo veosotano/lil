@@ -60,6 +60,7 @@ namespace LIL
         }
         LILString file;
         LILString dir;
+        LILString compilerDir;
         LILString source;
         LILString suffix;
         LILString stdLilPath;
@@ -120,6 +121,16 @@ void LILCodeUnit::setDir(LILString dir)
 LILString LILCodeUnit::getDir() const
 {
     return d->dir;
+}
+
+void LILCodeUnit::setCompilerDir(LILString dir)
+{
+    d->compilerDir = dir;
+}
+
+LILString LILCodeUnit::getCompilerDir() const
+{
+    return d->compilerDir;
 }
 
 void LILCodeUnit::setSource(LILString source)
@@ -234,7 +245,7 @@ void LILCodeUnit::buildAST()
             std::cerr << "==== CONFIGURE DEFAULTS ====\n";
             std::cerr << "============================\n\n";
         }
-        LILString path = this->getDir()+"/configure_defaults.lil";
+        LILString path = this->getCompilerDir()+"/configure_defaults.lil";
         std::ifstream file(path.data(), std::ios::in);
         if (file.fail()) {
             std::cerr << "\nERROR: Failed to read the file "+path.data()+"\n\n";

@@ -31,10 +31,10 @@ namespace LIL {
         void read();
         void configure();
         void build();
-        void makeDir(const std::string & path);
         bool hasErrors() const;
         void setDirectory(LILString value);
         void setFile(LILString value);
+        void setCompilerDir(LILString value);
         void setVerbose(bool value);
         void setNoConfigureDefaults(bool value);
         void setDebugConfigureDefaults(bool value);
@@ -49,6 +49,7 @@ namespace LIL {
         std::vector<LILString> _arguments;
         LILString _directory;
         LILString _file;
+        LILString _compilerDir;
         LILString _minOSVersion;
         bool _hasErrors;
         bool _debug;

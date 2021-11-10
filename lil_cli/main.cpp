@@ -11,24 +11,11 @@
  *      This file is the main compiler driver, used through the CLI
  *
  ********************************************************************/
-#include <iostream>
-#include <fstream>
-
-#if defined(_WIN32) || defined(_WIN64)
-
-#include <direct.h>
-#define current_dir _getcwd
-
-#else
-
-#include <unistd.h>
-#define current_dir getcwd
-
-#endif
 
 #include "LILShared.h"
 #include "LILBuildManager.h"
 #include "LILCodeUnit.h"
+#include "LILPlatformSupport.h"
 #include "LILRootNode.h"
 
 using namespace LIL;
@@ -47,6 +34,8 @@ int main(int argc, const char * argv[]) {
     std::string localDir;
     std::vector<LILString> arguments;
     
+    std::string compilerDir = LIL_getExecutableDir();
+
     for (int i=1, j=argc; i<j; /*intentionally left blank*/) {
         std::string command = argv[i];
         if (command == "-w"){
@@ -106,16 +95,19 @@ int main(int argc, const char * argv[]) {
         std::cerr << "\n\n";
     }
     
-    char cwdBuf[FILENAME_MAX];
-    current_dir(cwdBuf, FILENAME_MAX);
-    std::string directory(cwdBuf);
+    std::string directory = LIL_getCurrentDir();
 
     std::unique_ptr<LILBuildManager> buildMgr = std::make_unique<LILBuildManager>();
 
     buildMgr->setArguments(std::move(arguments));
 
-    buildMgr->setDirectory(directory);
+    if (localDir == "") {
+        buildMgr->setDirectory(directory);
+    } else {
+        buildMgr->setDirectory(directory+"/"+localDir);
+    }
     buildMgr->setFile(inName);
+    buildMgr->setCompilerDir(compilerDir);
 
     buildMgr->setNoConfigureDefaults(noConfigureDefaults);
     buildMgr->setDebugConfigureDefaults(debugConfigureDefaults);
