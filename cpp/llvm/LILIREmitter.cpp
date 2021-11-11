@@ -1641,6 +1641,9 @@ llvm::Value * LILIREmitter::_emit(LILValuePath * value)
                         fnTyWithoutSelf->removeFirstArgument();
                         LILString newName = this->decorate("", classDecl->getName(), methodName, fnTyWithoutSelf);
                         llvm::Function* fun = d->llvmModule->getFunction(newName.data());
+                        if (!fun) {
+                            fun = this->_emitFnSignature(newName.data(), fnTy.get());
+                        }
                         std::vector<llvm::Value *> argsvect;
                         argsvect.push_back(llvmSubject);
                         if (fun) {
