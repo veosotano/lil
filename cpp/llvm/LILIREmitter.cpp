@@ -466,12 +466,35 @@ llvm::Value * LILIREmitter::_emitCast(LILExpression * value)
     if (leftTy && leftTy->equalTo(rightTy)) {
         return leftV;
     }
+
     auto llvmType = this->llvmTypeFromLILType(rightTy.get());
+    //pointer to integer
     if (leftTy->isA(TypeTypePointer) && LILType::isNumberType(rightTy.get())) {
         return d->irBuilder.CreatePtrToInt(leftV, llvmType);
+    //integer to pointer
     } else if (LILType::isNumberType(leftTy.get()) && rightTy->isA(TypeTypePointer)) {
         return d->irBuilder.CreateIntToPtr(leftV, llvmType);
     } else {
+        auto leftLlvmTy = this->llvmTypeFromLILType(leftTy.get());
+        //integer to floating point
+        if (leftLlvmTy->isIntegerTy() && llvmType->isFloatingPointTy()) {
+            return d->irBuilder.CreateSIToFP(leftV, llvmType);
+        //floating point to integer
+        } else if (leftLlvmTy->isFloatingPointTy() && llvmType->isIntegerTy()) {
+            return d->irBuilder.CreateFPToSI(leftV, llvmType);
+        //integers, either to bigger or to smaller type
+        } else if (leftLlvmTy->isIntegerTy() && llvmType->isIntegerTy()) {
+            return d->irBuilder.CreateZExtOrTrunc(leftV, llvmType);
+        } else if (leftLlvmTy->isFloatingPointTy() && llvmType->isFloatingPointTy()) {
+            //floating point, to bigger type
+            if (leftLlvmTy->getPrimitiveSizeInBits() < llvmType->getPrimitiveSizeInBits()) {
+                return d->irBuilder.CreateFPExt(leftV, llvmType);
+            //floating point, to smaller type
+            } else {
+                return d->irBuilder.CreateFPTrunc(leftV, llvmType);
+            }
+        }
+        //last resort, just cast the bits
         return d->irBuilder.CreateBitCast(leftV, llvmType);
     }
 }
