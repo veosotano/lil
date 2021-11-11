@@ -803,6 +803,36 @@ llvm::Value * LILIREmitter::_emit(LILStringLiteral * value)
         auto castedBuffer = d->irBuilder.CreatePointerCast(bufferGep, i8PtrTy);
         //length is +1 because we want the \0 too
         d->irBuilder.CreateMemCpy(castedBuffer, 1, castedGlobal, 1, strLength+1);
+
+        auto cd = this->findClassWithName("string");
+        if (!cd) {
+            std::cerr << "STRING CLASS NOT FOUND FAIL!!!!\n\n";
+            return nullptr;
+        }
+        
+        auto ctor = cd->getMethodNamed("construct");
+        if (ctor) {
+            if (!ctor->isA(NodeTypeFunctionDecl)) {
+                std::cerr << "CONSTRUCTOR NODE WAS NOT FUNCTION DECL FAIL!!!\n\n";
+                return nullptr;
+            }
+            auto ctorFd = std::static_pointer_cast<LILFunctionDecl>(ctor);
+            auto fnTy = ctorFd->getFnType();
+            LILString fnName = ctorFd->getName();
+            llvm::Function* fun = d->llvmModule->getFunction(fnName.data());
+            if (!fun) {
+                fun = this->_emitFnSignature(fnName.data(), fnTy.get());
+            }
+            if (fun) {
+                std::vector<llvm::Value *> argsvect;
+                argsvect.push_back(d->currentAlloca);
+                d->irBuilder.CreateCall(fun, argsvect);
+            } else {
+                std::cerr << "COULD NOT CALL DESTRUCTOR FAIL!!!!\n\n";
+                return nullptr;
+            }
+        }
+        
         return nullptr;
         
     }
