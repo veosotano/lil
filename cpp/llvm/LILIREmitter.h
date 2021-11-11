@@ -121,11 +121,11 @@ namespace LIL
         llvm::Function * _emitFnBody(llvm::Function * fun, LILFunctionDecl * value);
         llvm::Value * _emitEvaluables(const std::vector<std::shared_ptr<LILNode>> & nodes);
         llvm::Value * _emit(LILFunctionCall * value);
-        llvm::Value * _emitFCMultipleValues(std::vector<std::shared_ptr<LILFunctionDecl>> funcDecls, LILFunctionCall * value);
-        llvm::Value * _emitFunctionCall(LILFunctionCall * value, LILString name, LILFunctionType * fnTy, llvm::Value * instance, bool useProvidedArg = false, llvm::Value * providedArg = nullptr, size_t providedIndex = 0);
+        llvm::Value * _emitFCMultipleValues(std::vector<std::shared_ptr<LILFunctionDecl>> funcDecls, LILFunctionCall * value, llvm::Value * instance = nullptr, std::shared_ptr<LILType> instanceTy = nullptr);
+        llvm::Value * _emitFunctionCall(LILFunctionCall * value, LILString name, LILFunctionType * fnTy, llvm::Value * instance, bool skipArgument = false, size_t skipArgIndex = 0);
         llvm::Value * _emitFCArg(LILNode * value, LILType * ty);
         llvm::Value * _emitFunctionCallMT(LILFunctionCall * value, LILString name, std::vector<std::shared_ptr<LILType>> types, LILFunctionType * fnTy, llvm::Value * instance);
-        llvm::Value * _emitFunctionCallPointer(llvm::Value * fun, LILFunctionCall * value, LILFunctionType * fnTy, llvm::Value * instance, bool useProvidedArg = false, llvm::Value * providedArg = nullptr, size_t providedIndex = 0);
+        llvm::Value * _emitFunctionCallPointer(llvm::Value * fun, LILFunctionCall * value, LILFunctionType * fnTy, llvm::Value * instance);
         llvm::Value * _emit(LILFlowControl * value);
         llvm::Value * _emitIf(LILFlowControl * value);
         llvm::Value * _emitIfCast(LILFlowControl * value);

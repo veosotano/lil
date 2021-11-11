@@ -2303,10 +2303,17 @@ llvm::Value * LILIREmitter::_emitEvaluables(const std::vector<std::shared_ptr<LI
     return nullptr;
 }
 
-llvm::Value * LILIREmitter::_emitFCMultipleValues(std::vector<std::shared_ptr<LILFunctionDecl>> funcDecls, LILFunctionCall * value)
+llvm::Value * LILIREmitter::_emitFCMultipleValues(std::vector<std::shared_ptr<LILFunctionDecl>> funcDecls, LILFunctionCall * value, llvm::Value * instance, std::shared_ptr<LILType> instanceTy)
 {
     auto arguments = value->getArguments();
-    auto fcTypes = value->getArgumentTypes();
+    std::vector<std::shared_ptr<LILType>> fcTypes;
+    if (instance == nullptr) {
+        fcTypes = value->getArgumentTypes();
+    } else {
+        fcTypes.push_back(instanceTy);
+        const auto & argTys = value->getArgumentTypes();
+        fcTypes.insert(fcTypes.end(), argTys.begin(), argTys.end());
+    }
     llvm::Function * fun = d->irBuilder.GetInsertBlock()->getParent();
     size_t i = 0;
     bool needsRuntimeSelect = false;
@@ -2369,7 +2376,7 @@ llvm::Value * LILIREmitter::_emitFCMultipleValues(std::vector<std::shared_ptr<LI
                 }
                 auto fd = this->chooseFnByType(funcDecls, types);
                 d->irBuilder.SetInsertPoint(bb);
-                this->_emitFunctionCallMT(value, fd->getName(), types, fd->getFnType().get(), nullptr);
+                this->_emitFunctionCallMT(value, fd->getName(), types, fd->getFnType().get(), instance);
                 d->irBuilder.CreateBr(mergeBB);
                 j += 1;
             }
@@ -2418,7 +2425,7 @@ llvm::Value * LILIREmitter::_emitFCMultipleValues(std::vector<std::shared_ptr<LI
             }
             auto fd = this->chooseFnByType(funcDecls, types);
             currentTy->setIsNullable(true);
-            this->_emitFunctionCall(value, fd->getName(), fd->getFnType().get(), nullptr, true, ir, i);
+            this->_emitFunctionCall(value, fd->getName(), fd->getFnType().get(), instance);
             d->irBuilder.CreateBr(mergeBB);
 
             fun->getBasicBlockList().push_back(isNullBB);
@@ -2435,7 +2442,7 @@ llvm::Value * LILIREmitter::_emitFCMultipleValues(std::vector<std::shared_ptr<LI
                 }
             }
             auto fd2 = this->chooseFnByType(funcDecls, types2);
-            this->_emitFunctionCall(value, fd2->getName(), fd2->getFnType().get(), nullptr, true, nullptr, i);
+            this->_emitFunctionCall(value, fd2->getName(), fd2->getFnType().get(), instance, true, i);
             d->irBuilder.CreateBr(mergeBB);
             
             fun->getBasicBlockList().push_back(mergeBB);
@@ -2443,7 +2450,11 @@ llvm::Value * LILIREmitter::_emitFCMultipleValues(std::vector<std::shared_ptr<LI
         }
     } else {
         auto fd = this->chooseFnByType(funcDecls, fcTypes);
-        return this->_emitFunctionCall(value, fd->getName(), fd->getFnType().get(), nullptr);
+        if (!fd) {
+            std::cerr << "COULD NOT CHOOSE FN BY TYPE FAIL\n\n";
+            return nullptr;
+        }
+        return this->_emitFunctionCall(value, fd->getName(), fd->getFnType().get(), instance);
     }
     return nullptr;
 }
@@ -2614,7 +2625,7 @@ llvm::Value * LILIREmitter::_emit(LILFunctionCall * value)
 
 }
 
-llvm::Value * LILIREmitter::_emitFunctionCall(LILFunctionCall * value, LILString name, LILFunctionType * fnTy, llvm::Value * instance, bool useProvidedArg, llvm::Value * providedArg, size_t providedIndex)
+llvm::Value * LILIREmitter::_emitFunctionCall(LILFunctionCall * value, LILString name, LILFunctionType * fnTy, llvm::Value * instance, bool skipArgument, size_t skipArgIndex)
 {
     bool isMethod = instance != nullptr;
     llvm::Function* fun = d->llvmModule->getFunction(name.data());
@@ -2641,10 +2652,7 @@ llvm::Value * LILIREmitter::_emitFunctionCall(LILFunctionCall * value, LILString
             if (isMethod) {
                 declIndex += 1;
             }
-            if (useProvidedArg && declIndex == providedIndex) {
-                if (providedArg != nullptr) {
-                    argsvect.push_back(providedArg);
-                }
+            if (skipArgument && declIndex == skipArgIndex) {
                 continue;
             }
             std::shared_ptr<LILNode> fcArg;
@@ -2838,7 +2846,7 @@ llvm::Value * LILIREmitter::_emitFunctionCallMT(LILFunctionCall *value, LILStrin
     }
     return nullptr;
 }
-llvm::Value * LILIREmitter::_emitFunctionCallPointer(llvm::Value * fun, LILFunctionCall * value, LILFunctionType * fnTy, llvm::Value * instance, bool useProvidedArg, llvm::Value * providedArg, size_t providedIndex)
+llvm::Value * LILIREmitter::_emitFunctionCallPointer(llvm::Value * fun, LILFunctionCall * value, LILFunctionType * fnTy, llvm::Value * instance)
 {
     bool isMethod = instance != nullptr;
     auto fcArgs = value->getArguments();
@@ -2860,12 +2868,6 @@ llvm::Value * LILIREmitter::_emitFunctionCallPointer(llvm::Value * fun, LILFunct
         size_t declIndex = i;
         if (isMethod) {
             declIndex += 1;
-        }
-        if (useProvidedArg && declIndex == providedIndex) {
-            if (providedArg != nullptr) {
-                argsvect.push_back(providedArg);
-            }
-            continue;
         }
         std::shared_ptr<LILNode> fcArg;
         if (fcArgsSize <= i) {
