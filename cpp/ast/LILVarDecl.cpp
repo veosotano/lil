@@ -71,6 +71,21 @@ void LILVarDecl::receiveNodeData(const LIL::LILString &data)
     this->setName(data);
 }
 
+bool LILVarDecl::equalTo(std::shared_ptr<LILNode> otherNode)
+{
+    if ( ! LILNode::equalTo(otherNode)) return false;
+    auto castedNode = std::static_pointer_cast<LILVarDecl>(otherNode);
+    if ( this->_name != castedNode->_name) return false;
+    if ( this->_isExtern != castedNode->_isExtern) return false;
+    if ( this->_isIVar != castedNode->_isIVar) return false;
+    if ( this->_isVVar != castedNode->_isVVar) return false;
+    if ( this->_isConst != castedNode->_isConst) return false;
+    if ( this->_receivesReturnType != castedNode->_receivesReturnType) return false;
+    if ( this->_returnType && !castedNode->_returnType) return false;
+    if ( this->_returnType && (!this->_returnType->equalTo(castedNode->_returnType))) return false;
+    return true;
+}
+
 const LILString LILVarDecl::getName() const
 {
     return this->_name;
