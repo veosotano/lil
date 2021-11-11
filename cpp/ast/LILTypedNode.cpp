@@ -42,7 +42,7 @@ bool LILTypedNode::equalTo(std::shared_ptr<LILNode> otherNode)
 {
     if ( ! LILNode::equalTo(otherNode)) return false;
     std::shared_ptr<LILTypedNode> castedNode = std::static_pointer_cast<LILTypedNode>(otherNode);
-    if ( ! this->_type->equalTo(castedNode->_type) ) return false;
+    if ( (this->_type && castedNode->_type) && ( ! this->_type->equalTo(castedNode->_type) ) ) return false;
     return true;
 }
 

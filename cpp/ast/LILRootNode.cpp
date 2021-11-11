@@ -108,6 +108,10 @@ void LILRootNode::add(std::shared_ptr<LILNode> node, bool addToNodeTree)
             auto fd = std::static_pointer_cast<LILFunctionDecl>(node);
             
             auto fnTy = std::static_pointer_cast<LILFunctionType>(fd->getType());
+            if (!fnTy) {
+                std::cerr << "FN DECL HAD NO TY FAIL!!!!!!!!!!\n";
+                break;
+            }
             for ( auto arg : fnTy->getArguments()) {
                 if (arg->isA(NodeTypeVarDecl)) {
                     auto argVd = std::static_pointer_cast<LILVarDecl>(arg);
