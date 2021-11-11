@@ -1313,6 +1313,11 @@ llvm::Value * LILIREmitter::_emit(LILAssignment * value)
                     const auto & pnName = pn->getName();
                     stringRep += "." + pnName;
 
+                    if (currentTy->isA(TypeTypePointer)) {
+                        auto ptrTy = std::static_pointer_cast<LILPointerType>(currentTy);
+                        currentTy = ptrTy->getArgument();
+                        d->currentAlloca = d->irBuilder.CreateLoad(d->currentAlloca);
+                    }
                     auto classDecl = this->findClassWithName(currentTy->getName());
                     if (!classDecl) {
                         std::cerr << "!!!!!!!!!!CLASS NOT FOUND FAIL !!!!!!!!!!!!!!!!\n";
@@ -1548,6 +1553,11 @@ llvm::Value * LILIREmitter::_emit(LILValuePath * value)
                 case NodeTypeFunctionCall:
                 {
                     auto fc = std::static_pointer_cast<LILFunctionCall>(currentNode);
+                    if (currentTy->isA(TypeTypePointer)) {
+                        auto ptrTy = std::static_pointer_cast<LILPointerType>(currentTy);
+                        currentTy = ptrTy->getArgument();
+                        llvmSubject = d->irBuilder.CreateLoad(llvmSubject);
+                    }
                     auto classDecl = this->findClassWithName(currentTy->getName());
                     if (!classDecl) {
                         std::cerr << "!!!!!!!!!!CLASS NOT FOUND FAIL !!!!!!!!!!!!!!!!\n";
@@ -1592,6 +1602,11 @@ llvm::Value * LILIREmitter::_emit(LILValuePath * value)
                     const auto & pnName = pn->getName();
                     stringRep += "." + pnName;
 
+                    if (currentTy->isA(TypeTypePointer)) {
+                        auto ptrTy = std::static_pointer_cast<LILPointerType>(currentTy);
+                        currentTy = ptrTy->getArgument();
+                        llvmSubject = d->irBuilder.CreateLoad(llvmSubject);
+                    }
                     if (!currentTy->isA(TypeTypeObject)) {
                         std::cerr << "CURRENT TYPE WAS NOT OBJECT TYPE FAIL !!!!!!!!!!!!!!!!\n";
                         return nullptr;
@@ -3740,6 +3755,11 @@ llvm::Value * LILIREmitter::_emitPointer(LILValuePath * value)
                     stringRep += "." + pn->getName();
                     
                     //get index of field into struct
+                    if (currentTy->isA(TypeTypePointer)) {
+                        auto ptrTy = std::static_pointer_cast<LILPointerType>(currentTy);
+                        currentTy = ptrTy->getArgument();
+                        llvmSubject = d->irBuilder.CreateLoad(llvmSubject);
+                    }
                     if (!currentTy->isA(TypeTypeObject)) {
                         std::cerr << "CURRENT TYPE WAS NOT OBJECT TYPE FAIL !!!!!!!!!!!!!!!!\n";
                         return nullptr;
