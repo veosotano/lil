@@ -3288,10 +3288,19 @@ llvm::Value * LILIREmitter::_emitFor(LILFlowControl * value)
         auto initial = arguments.front();
         this->emit(initial.get());
         
+        auto condNode = arguments[1];
+        if (!condNode) {
+            return nullptr;
+        }
+        
         auto currentBB = d->irBuilder.GetInsertBlock();
         auto fun = currentBB->getParent();
         auto loopBB = llvm::BasicBlock::Create(d->llvmContext, "loop", fun);
-        d->irBuilder.CreateBr(loopBB);
+        auto afterBB = llvm::BasicBlock::Create(d->llvmContext, "for.after");
+        
+        auto condition = this->emit(condNode.get());
+        d->irBuilder.CreateCondBr(condition, loopBB, afterBB);
+        
         d->irBuilder.SetInsertPoint(loopBB);
         this->_emitEvaluables(value->getThen());
         
@@ -3300,34 +3309,30 @@ llvm::Value * LILIREmitter::_emitFor(LILFlowControl * value)
             this->emit(stepNode.get());
         }
 
-        auto condNode = arguments[1];
-        if (!condNode) {
-            return nullptr;
-        }
-        auto condition = this->emit(condNode.get());
+        auto condition2 = this->emit(condNode.get());
         if (!condNode->isA(NodeTypeExpression)) {
-            switch (condition->getType()->getTypeID()) {
+            switch (condition2->getType()->getTypeID()) {
                 case llvm::Type::IntegerTyID:
                 {
-                    auto bitWidth = condition->getType()->getIntegerBitWidth();
+                    auto bitWidth = condition2->getType()->getIntegerBitWidth();
                     if (bitWidth == 1){
-                        condition = d->irBuilder.CreateICmpNE(condition, llvm::ConstantInt::get(d->llvmContext, llvm::APInt(bitWidth, 0, true)), "for.cond");
+                        condition2 = d->irBuilder.CreateICmpNE(condition2, llvm::ConstantInt::get(d->llvmContext, llvm::APInt(bitWidth, 0, true)), "for.cond");
                     } else {
-                        condition = d->irBuilder.CreateICmpSGT(condition, llvm::ConstantInt::get(d->llvmContext, llvm::APInt(bitWidth, 0, true)), "for.cond");
+                        condition2 = d->irBuilder.CreateICmpSGT(condition2, llvm::ConstantInt::get(d->llvmContext, llvm::APInt(bitWidth, 0, true)), "for.cond");
                     }
                 }
                     break;
                 case llvm::Type::FloatTyID:
-                    condition = d->irBuilder.CreateFCmpONE(condition, llvm::ConstantFP::get(d->llvmContext, llvm::APFloat(0.0)), "for.cond");
+                    condition2 = d->irBuilder.CreateFCmpONE(condition2, llvm::ConstantFP::get(d->llvmContext, llvm::APFloat(0.0)), "for.cond");
                     break;
                     
                 default:
                     break;
             }
         }
-        
-        auto afterBB = llvm::BasicBlock::Create(d->llvmContext, "for.after", fun);
-        d->irBuilder.CreateCondBr(condition, loopBB, afterBB);
+
+        fun->getBasicBlockList().push_back(afterBB);
+        d->irBuilder.CreateCondBr(condition2, loopBB, afterBB);
         
         d->irBuilder.SetInsertPoint(afterBB);
         
