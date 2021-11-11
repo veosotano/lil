@@ -17,13 +17,13 @@
 using namespace LIL;
 
 LILRule::LILRule()
-: LIL::LILNode(NodeTypeRule)
+: LILTypedNode(NodeTypeRule)
 {
     
 }
 
 LILRule::LILRule(const LILRule &other)
-: LILNode(other)
+: LILTypedNode(other)
 {
     this->_selectorChain = other._selectorChain;
     this->_values = other._values;
@@ -55,7 +55,10 @@ std::shared_ptr<LILClonable> LILRule::cloneImpl() const
     if (this->_instruction) {
         clone->setInstruction(this->_instruction->clone());
     }
-
+    //clone LILTypedNode
+    if (this->_type) {
+        clone->setType(this->_type->clone());
+    }
     return clone;
 }
 

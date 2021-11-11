@@ -70,7 +70,8 @@ namespace LIL {
 
         void addDoc(std::shared_ptr<LILDocumentation> value);
         const std::vector<std::shared_ptr<LILDocumentation>> & getDocs() const;
-        
+
+        bool hasRules() const;
         void addRule(std::shared_ptr<LILRule> value);
         const std::vector<std::shared_ptr<LILRule>> & getRules() const;
 

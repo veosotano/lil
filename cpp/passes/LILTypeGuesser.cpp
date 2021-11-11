@@ -390,6 +390,9 @@ void LILTypeGuesser::process(LILNode * node)
         {
             LILRule * value = static_cast<LILRule *>(node);
             this->_process(value);
+            for (auto child : value->getChildRules()) {
+                this->process(child.get());
+            }
             break;
         }
         case NodeTypeSimpleSelector:
@@ -717,7 +720,24 @@ void LILTypeGuesser::_process(LILPropertyName * value)
 
 void LILTypeGuesser::_process(LILRule * value)
 {
-
+    if (!value->getType()) {
+        const auto & instrNode = value->getInstruction();
+        if (instrNode && instrNode->getNodeType() == NodeTypeInstruction) {
+            auto instr = std::static_pointer_cast<LILInstruction>(instrNode);
+            if (instr->getInstructionType() == InstructionTypeNew) {
+                auto instrTy = instr->getType();
+                if (instrTy) {
+                    value->setType(instrTy);
+                }
+            }
+        }
+    }
+    if (!value->getType()) {
+        auto ty = this->findTypeForSelectorChain(std::static_pointer_cast<LILSelectorChain>(value->getSelectorChain()));
+        if (ty) {
+            value->setType(ty);
+        }
+    }
 }
 
 void LILTypeGuesser::_process(LILSimpleSelector * value)
@@ -1920,6 +1940,34 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(std::shared_ptr<LI
         }
     }
     
+    return nullptr;
+}
+
+std::shared_ptr<LILType> LILTypeGuesser::findTypeForSelectorChain(std::shared_ptr<LILSelectorChain> selCh) const
+{
+    const auto & selNodes = selCh->getNodes();
+    if (selNodes.size() == 1) {
+        const auto & sSelNode = selNodes.front();
+        if (sSelNode->getNodeType() != NodeTypeSimpleSelector) {
+            std::cerr << "NODE IN SELECTOR CHAIN WAS NOT SIMPLE SELECTOR FAIL!!!!!!!!!!!!!!!!!!!!\n\n";
+            return nullptr;
+        }
+        
+        auto simpleSel = std::static_pointer_cast<LILSimpleSelector>(sSelNode);
+        const auto & firstSimpleSel = simpleSel->getNodes().front();
+        switch (firstSimpleSel->getSelectorType()) {
+            case SelectorTypeRootSelector:
+            {
+                auto objTy = std::make_shared<LILObjectType>();
+                objTy->setName("container");
+                return objTy;
+            }
+                
+            default:
+                //std::cerr << "UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n";
+                break;
+        }
+    }
     return nullptr;
 }
 

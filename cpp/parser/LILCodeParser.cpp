@@ -2980,10 +2980,12 @@ bool LILCodeParser::readRule()
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
 
     //read the inner part of the block
+    d->readVarNameOverPropertyName = false;
     while (!this->atEndOfSource() && valid && !d->currentToken->isA(TokenTypeBlockClose))
     {
         this->parseNext();
     }
+    d->readVarNameOverPropertyName = true;
     if (!this->atEndOfSource())
     {
         //we expect a block to close
@@ -3756,9 +3758,11 @@ bool LILCodeParser::readConfigureInstr()
     this->readNextToken();
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
     
+    d->readVarNameOverPropertyName = false;
     while (d->currentToken && !d->currentToken->isA(TokenTypeBlockClose)) {
         this->parseNext();
     }
+    d->readVarNameOverPropertyName = true;
     //block close
     if (d->currentToken) {
         d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());

@@ -24,6 +24,7 @@ namespace LIL
     class LILValuePath;
     class LILVarName;
     class LILRootNode;
+    class LILRule;
 
     class LILVisitor
     {
@@ -58,6 +59,7 @@ namespace LIL
 
         std::shared_ptr<LILClassDecl> findClassWithName(const LILString & name) const;
         std::shared_ptr<LILClassDecl> findAncestorClass(std::shared_ptr<LILNode> node) const;
+        std::shared_ptr<LILRule> findAncestorRule(std::shared_ptr<LILNode> node) const;
         std::shared_ptr<LILType> findIfCastType(LILValuePath * vp, size_t & outStartIndex) const;
 
     private:

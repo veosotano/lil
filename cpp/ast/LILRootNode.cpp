@@ -386,6 +386,11 @@ const std::vector<std::shared_ptr<LILDocumentation>> & LILRootNode::getDocs() co
     return this->_docs;
 }
 
+bool LILRootNode::hasRules() const
+{
+    return this->_rules.size() > 0;
+}
+
 void LILRootNode::addRule(std::shared_ptr<LILRule> value)
 {
     const auto & selChNode = value->getSelectorChain();

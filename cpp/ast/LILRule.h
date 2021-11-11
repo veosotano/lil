@@ -15,11 +15,11 @@
 #ifndef LILRULE_H
 #define LILRULE_H
 
-#include "LILNode.h"
+#include "LILTypedNode.h"
 
 namespace LIL
 {
-    class LILRule : public LILNode
+    class LILRule : public LILTypedNode
     {
     public:
         LILRule();

@@ -26,6 +26,7 @@
 #include "LILObjectType.h"
 #include "LILPointerType.h"
 #include "LILPropertyName.h"
+#include "LILRule.h"
 #include "LILStaticArrayType.h"
 #include "LILStringLiteral.h"
 #include "LILValuePath.h"
@@ -388,6 +389,20 @@ std::shared_ptr<LILClassDecl> LILVisitor::findAncestorClass(std::shared_ptr<LILN
             return std::static_pointer_cast<LILClassDecl>(parent);
         } else {
             return this->findAncestorClass(parent);
+        }
+    } else {
+        return nullptr;
+    }
+}
+
+std::shared_ptr<LILRule> LILVisitor::findAncestorRule(std::shared_ptr<LILNode> node) const
+{
+    auto parent = node->getParentNode();
+    if (parent) {
+        if (parent->isA(NodeTypeRule)) {
+            return std::static_pointer_cast<LILRule>(parent);
+        } else {
+            return this->findAncestorRule(parent);
         }
     } else {
         return nullptr;

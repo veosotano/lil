@@ -108,8 +108,9 @@ namespace LIL
         llvm::Value * _emit(LILPropertyName * value);
         llvm::Value * _emit(LILVarName * value);
         llvm::Value * _emit(LILRule * value);
+        LILString _newRuleFnName();
         llvm::Value * _emit(LILSimpleSelector * value);
-        llvm::Value * _emit(LILSelectorChain * value);
+        llvm::Value * _emit(LILSelectorChain * value, bool & outIsId);
         llvm::Value * _emit(LILSelector * value);
         llvm::Value * _emit(LILCombinator * value);
         llvm::Value * _emit(LILFilter * value);
