@@ -28,7 +28,7 @@ namespace LIL
         std::shared_ptr<LILVarDecl> clone() const;
         virtual ~LILVarDecl();
 
-        void receiveNodeData(const LIL::LILString &data);
+        void receiveNodeData(const LIL::LILString &data) override;
         bool equalTo(std::shared_ptr<LILNode> otherNode) override;
 
         const LILString getName() const;
@@ -54,7 +54,7 @@ namespace LIL
         void setReturnType(std::shared_ptr<LILType> value);
 
     private:
-        virtual std::shared_ptr<LILClonable> cloneImpl() const;
+        virtual std::shared_ptr<LILClonable> cloneImpl() const override;
         std::shared_ptr<LILType> _returnType;
         LILString _name;
         bool _isExtern;
