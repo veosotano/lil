@@ -907,9 +907,7 @@ llvm::Value * LILIREmitter::_emit(LILVarDecl * value)
                 llvmValue = this->emit(initVal.get());
             }
             if (llvmValue) {
-                if (this->_isAnyPtrTy(ty) || this->_isAnyPtrTy(initVal->getType())) {
-                    llvmValue = d->irBuilder.CreatePointerCast(llvmValue, this->llvmTypeFromLILType(ty.get()));
-                }
+                this->_convertLlvmValueIfNeeded(&llvmValue, ty.get(), initVal->getType().get());
                 if (
                     !ty->isA(TypeTypePointer)
                     && initVal->getType()->isA(TypeTypePointer)
@@ -924,17 +922,47 @@ llvm::Value * LILIREmitter::_emit(LILVarDecl * value)
     return nullptr;
 }
 
-bool LILIREmitter::_isAnyPtrTy(std::shared_ptr<LILType> ty)
+bool LILIREmitter::_isAnyPtrTy(LILType * ty) const
 {
     if (!ty->isA(TypeTypePointer)) {
         return false;
     }
-    auto ptrTy = std::static_pointer_cast<LILPointerType>(ty);
+    auto ptrTy = static_cast<LILPointerType *>(ty);
     auto arg = ptrTy->getArgument();
     if (!arg) {
         return false;
     }
     return arg->getName() == "any";
+}
+
+void LILIREmitter::_convertLlvmValueIfNeeded(llvm::Value ** llvmValue, LILType * dstTy, LILType * srcTy)
+{
+    if (this->_isAnyPtrTy(dstTy) || this->_isAnyPtrTy(srcTy)) {
+        *llvmValue = d->irBuilder.CreatePointerCast(*llvmValue, this->llvmTypeFromLILType(dstTy));
+    }
+    const auto & dstName = dstTy->getName();
+    const auto & srcName = srcTy->getName();
+    if (dstName == "i8") {
+        if (srcName == "bool") {
+            *llvmValue = d->irBuilder.CreateZExt(*llvmValue, this->llvmTypeFromLILType(dstTy));
+        }
+    } else if (dstName == "i16") {
+        if (srcName == "bool" || srcName == "i8") {
+            *llvmValue = d->irBuilder.CreateZExt(*llvmValue, this->llvmTypeFromLILType(dstTy));
+        }
+    } else if (dstName == "i32") {
+        if (srcName == "bool" || srcName == "i8" || srcName == "i16" ) {
+            *llvmValue = d->irBuilder.CreateZExt(*llvmValue, this->llvmTypeFromLILType(dstTy));
+        }
+    } else if (dstName == "i64") {
+        if (srcName == "bool" || srcName == "i8" || srcName == "i16" || srcName == "i32" ) {
+            *llvmValue = d->irBuilder.CreateZExt(*llvmValue, this->llvmTypeFromLILType(dstTy));
+        }
+    } else if (dstName == "i128") {
+        if (srcName == "bool" || srcName == "i8" || srcName == "i16" || srcName == "i32" || srcName == "i64" ) {
+            *llvmValue = d->irBuilder.CreateZExt(*llvmValue, this->llvmTypeFromLILType(dstTy));
+        }
+    }
 }
 
 llvm::Value * LILIREmitter::_emit(LILConversionDecl * value)
@@ -1059,6 +1087,10 @@ llvm::Value * LILIREmitter::_emit(LILObjectDefinition * value)
                     llvmValue = this->emit(theVal.get());
                 }
                 if (llvmValue) {
+                    auto ty2 = theVal->getType();
+                    if (vdTy && ty2) {
+                        this->_convertLlvmValueIfNeeded(&llvmValue, vdTy.get(), ty2.get());
+                    }
                     d->irBuilder.CreateStore(llvmValue, gep);
                 }
                 d->currentAlloca = allocaBackup;
@@ -1139,10 +1171,8 @@ llvm::Value * LILIREmitter::_emit(LILAssignment * value)
             }
 
             if (llvmValue) {
-                if (this->_isAnyPtrTy(ty) || this->_isAnyPtrTy(theValue->getType())) {
-                    llvmValue = d->irBuilder.CreatePointerCast(llvmValue, this->llvmTypeFromLILType(ty.get()));
-                }
-                
+                this->_convertLlvmValueIfNeeded(&llvmValue, ty.get(), theValue->getType().get());
+
                 if (
                     ty->isA(TypeTypePointer)
                     && llvmValue->getType()->getTypeID() != llvm::Type::PointerTyID
@@ -1416,7 +1446,7 @@ llvm::Value * LILIREmitter::_emit(LILAssignment * value)
                             idList.push_back(argIr);
                             d->currentAlloca = llvm::GetElementPtrInst::Create(this->llvmTypeFromLILType(currentTy.get()), d->currentAlloca, idList, "", d->irBuilder.GetInsertBlock());
                             if (isLastNode) {
-                                llvm::Value * llvmValue;
+                                llvm::Value * llvmValue = nullptr;
                                 auto saChildTy = saTy->getType();
                                 if (saChildTy->isA(TypeTypeMultiple))
                                 {
@@ -1425,7 +1455,11 @@ llvm::Value * LILIREmitter::_emit(LILAssignment * value)
                                 } else {
                                     llvmValue = this->emit(theValue.get());
                                 }
-                                d->irBuilder.CreateStore(llvmValue, d->currentAlloca);
+                                this->_convertLlvmValueIfNeeded(&llvmValue, ty.get(), theValue->getType().get());
+
+                                if (llvmValue) {
+                                    d->irBuilder.CreateStore(llvmValue, d->currentAlloca);
+                                }
                                 d->currentAlloca = allocaBackup;
                                 return nullptr;
                             } else {
@@ -2679,7 +2713,17 @@ llvm::Value * LILIREmitter::_emitFunctionCall(LILFunctionCall * value, LILString
 
             if (declArgsSize <= i)
             {
-                fcArgIr = this->_emitFCArg(fcValue.get(), fcArg->getType().get());
+                auto fcArgTy = fcArg->getType().get();
+                fcArgIr = this->_emitFCArg(fcValue.get(), fcArgTy);
+                if (fnTy->getIsVariadic()) {
+                    auto fcArgTyName = fcArgTy->getName();
+                    //type promotions for var args
+                    if (fcArgTyName == "f32") {
+                        fcArgIr = d->irBuilder.CreateFPExt(fcArgIr, llvm::Type::getDoubleTy(d->llvmContext));
+                    } else if (fcArgTyName == "i8" || fcArgTyName == "i16") {
+                        fcArgIr = d->irBuilder.CreateZExt(fcArgIr, llvm::Type::getInt32Ty(d->llvmContext));
+                    }
+                }
             }
             else
             {
@@ -2729,6 +2773,12 @@ llvm::Value * LILIREmitter::_emitFCArg(LILNode * value, LILType * ty)
             ret = this->emitPointer(value);
         } else {
             ret = this->emit(value);
+        }
+    }
+    if (ret) {
+        auto ty2 = value->getType();
+        if (ty && ty2) {
+            this->_convertLlvmValueIfNeeded(&ret, ty, ty2.get());
         }
     }
     if (needsTempVar) {
