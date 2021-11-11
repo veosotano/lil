@@ -1636,7 +1636,10 @@ llvm::Value * LILIREmitter::_emit(LILValuePath * value)
                         LILString methodName = "get" + pnName.toUpperFirstCase();
                         auto methodVd = classDecl->getMethodNamed(methodName);
 
-                        LILString newName = this->decorate("", classDecl->getName(), methodName, methodVd->getType());
+                        auto fnTy = std::static_pointer_cast<LILFunctionType>(methodVd->getType());
+                        auto fnTyWithoutSelf = fnTy->clone();
+                        fnTyWithoutSelf->removeFirstArgument();
+                        LILString newName = this->decorate("", classDecl->getName(), methodName, fnTyWithoutSelf);
                         llvm::Function* fun = d->llvmModule->getFunction(newName.data());
                         std::vector<llvm::Value *> argsvect;
                         argsvect.push_back(llvmSubject);
