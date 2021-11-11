@@ -370,6 +370,7 @@ llvm::Value * LILIREmitter::emit(LILNode * node)
             return this->_emit(value);
         }
         case NodeTypeIfInstruction:
+        case NodeTypeDocumentation:
         {
             //ignore
             return nullptr;
