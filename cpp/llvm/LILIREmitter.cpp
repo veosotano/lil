@@ -1206,8 +1206,12 @@ llvm::Value * LILIREmitter::_emit(LILAssignment * value)
             std::shared_ptr<LILNode> subjectNode = this->findNodeForVarName(vn.get());
             if (subjectNode && subjectNode->isA(NodeTypeVarDecl)) {
                 auto vd = std::static_pointer_cast<LILVarDecl>(subjectNode);
-                instanceName = vd->getName();
-                d->currentAlloca = d->namedValues[instanceName.data()];
+                auto instanceName = vd->getName().data();
+                if (!d->namedValues.count(instanceName)) {
+                    std::cerr << instanceName + " NOT FOUND FAIL !!!!!!!!!!!!!!!!\n";
+                    return nullptr;
+                }
+                d->currentAlloca = d->namedValues[instanceName];
                 stringRep = vn->getName();
                 auto vdTy = vd->getType();
                 if (!vdTy) {
