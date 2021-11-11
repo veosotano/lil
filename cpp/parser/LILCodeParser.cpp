@@ -4050,6 +4050,7 @@ bool LILCodeParser::readValuePath(bool allowFunctionCall)
             if (iaValid)
             {
                 d->receiver->receiveNodeCommit();
+                done = false;
             } else {
                 d->receiver->receiveError("Failed to read index accessor in value path", d->file, d->line, d->column);
                 this->skipInvalidToken();
