@@ -3664,7 +3664,14 @@ llvm::Value * LILIREmitter::emitPointer(LILNode * node)
             //create global variable with the constant as initial value
             //mark variable as being constant
             //set linkage to private
-            break;
+            auto globalDeclaration = new llvm::GlobalVariable(*(d->llvmModule.get()), this->llvmTypeFromLILType(node->getType().get()), true, llvm::GlobalVariable::PrivateLinkage, nullptr, "num");
+            
+            auto constValue = this->_emit(static_cast<LILNumberLiteral *>(node));
+            globalDeclaration->setInitializer(llvm::cast<llvm::Constant>(constValue));
+            globalDeclaration->setConstant(true);
+            globalDeclaration->setLinkage(llvm::GlobalValue::LinkageTypes::PrivateLinkage);
+            globalDeclaration->setUnnamedAddr (llvm::GlobalValue::UnnamedAddr::Global);
+            return globalDeclaration;
         }
         case NodeTypeVarName:
         {
