@@ -1842,6 +1842,7 @@ bool LILCodeParser::readVarDecl()
         || d->currentToken->isA(TokenTypeParenthesisClose)
         || d->currentToken->isA(TokenTypeBlockClose)
         || d->currentToken->isA(TokenTypeFatArrow)
+        || d->currentToken->isA(TokenTypeEllipsis)
     ) {
         LIL_END_NODE_SKIP(false)
     }
