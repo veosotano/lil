@@ -1333,6 +1333,7 @@ bool LILCodeParser::canHaveExpression(NodeType nodeType) const
         case NodeTypeBoolLiteral:
         case NodeTypeFunctionCall:
         case NodeTypeValuePath:
+        case NodeTypeInstruction:
             return true;
         case NodeTypeStringLiteral:
         case NodeTypeCStringLiteral:
@@ -1345,7 +1346,6 @@ bool LILCodeParser::canHaveExpression(NodeType nodeType) const
         case NodeTypeRule:
         case NodeTypeComment:
         case NodeTypeVarDecl:
-        case NodeTypeInstruction:
         case NodeTypeNegation:
         case NodeTypeSelector:
         case NodeTypeTypeDecl:
