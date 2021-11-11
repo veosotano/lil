@@ -3390,7 +3390,9 @@ bool LILCodeParser::readColor()
 
     //skip the instruction sign
     d->receiver->receiveNodeData(ParserEventInstruction, d->currentToken->getString());
+    d->lexer->setHexPreferred(true);
     this->readNextToken();
+    d->lexer->setHexPreferred(false);
     if (atEndOfSource())
         return false;
 

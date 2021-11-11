@@ -15,6 +15,7 @@
 #include "LILCodeUnit.h"
 #include "LILASTBuilder.h"
 #include "LILCodeParser.h"
+#include "LILColorMaker.h"
 #include "LILConfiguration.h"
 #include "LILPreprocessor.h"
 #include "LILArgResolver.h"
@@ -353,6 +354,15 @@ void LILCodeUnit::runPasses()
     auto configGetter = new LILConfigGetter();
     configGetter->setConfiguration(d->config);
     passes.push_back(configGetter);
+    if (verbose) {
+        auto stringVisitor = new LILToStringVisitor();
+        stringVisitor->setPrintHeadline(false);
+        passes.push_back(stringVisitor);
+    }
+
+    //handle color instructions
+    auto colorMaker = new LILColorMaker();
+    passes.push_back(colorMaker);
     if (verbose) {
         auto stringVisitor = new LILToStringVisitor();
         stringVisitor->setPrintHeadline(false);
