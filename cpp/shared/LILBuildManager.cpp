@@ -214,6 +214,7 @@ void LILBuildManager::configure()
         std::cerr << "============================\n\n";
 
         this->_config->printConfig();
+        std::cerr << "\n\n";
     }
 }
 

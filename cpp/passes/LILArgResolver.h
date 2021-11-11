@@ -8,7 +8,7 @@
  *
  *      LICENSE: see LICENSE file
  *
- *      This file handles the preprocessing of the AST
+ *      This file handles #arg instructions
  *
  ********************************************************************/
 
