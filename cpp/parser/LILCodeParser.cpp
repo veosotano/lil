@@ -1456,6 +1456,9 @@ bool LILCodeParser::readClassDecl()
         bool isValid = this->readExpression(outIsSV, svExpTy);
         if (isValid) {
             d->receiver->receiveNodeCommit();
+        } else {
+            this->skipUntilEndOfExpression();
+            continue;
         }
         LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
 
