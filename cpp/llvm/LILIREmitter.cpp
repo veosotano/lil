@@ -4443,6 +4443,9 @@ size_t LILIREmitter::getSizeOfType(std::shared_ptr<LILType> ty) const
             auto classDecl = this->findClassWithName(objTy->getName());
             size_t total = 0;
             for (auto field : classDecl->getFields()) {
+                if (field->isA(NodeTypeVarDecl) && std::static_pointer_cast<LILVarDecl>(field)->getIsVVar()) {
+                    continue;
+                }
                 total += this->getSizeOfType(field->getType());
             }
             ret = total;
