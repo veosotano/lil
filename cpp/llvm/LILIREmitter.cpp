@@ -168,6 +168,42 @@ void LILIREmitter::hoistDeclarations(std::shared_ptr<LILRootNode> rootNode)
                 d->namedValues[name] = fun;
                 break;
             }
+            case NodeTypeVarDecl:
+            {
+                auto value = std::static_pointer_cast<LILVarDecl>(node);
+                auto ty = value->getType();
+                auto name = value->getName().data();
+                if (value->getIsExtern()) {
+                    if (ty->isA(TypeTypeFunction)) {
+                        auto fun = this->_emitFnSignature(name, static_cast<LILFunctionType *>(ty.get()));
+                        d->namedValues[name] = fun;
+                    } else {
+                        d->llvmModule->getOrInsertGlobal(name, this->llvmTypeFromLILType(ty.get()));
+                        auto globalVar = d->llvmModule->getNamedGlobal(name);
+                        globalVar->setLinkage(llvm::GlobalValue::ExternalLinkage);
+                        d->namedValues[name] = globalVar;
+                    }
+                } else {
+                    if (value->getIsConst()) {
+                        break;
+                    }
+                    auto llvmTy = this->llvmTypeFromLILType(ty.get());
+                    d->llvmModule->getOrInsertGlobal(name, llvmTy);
+                    auto globalVar = d->llvmModule->getNamedGlobal(name);
+                    globalVar->setLinkage(llvm::GlobalValue::ExternalLinkage);
+                    d->namedValues[name] = globalVar;
+                    auto initVal = value->getInitVal();
+                    if (initVal) {
+                        auto iv = this->emit(initVal.get());
+                        if (llvm::isa<llvm::Constant>(iv)) {
+                            globalVar->setInitializer(llvm::cast<llvm::Constant>(iv));
+                        }
+                    } else {
+                        globalVar->setInitializer(llvm::Constant::getNullValue(llvmTy));
+                    }
+                }
+                break;
+            }
             default:
             {
                 break;
@@ -787,13 +823,7 @@ llvm::Value * LILIREmitter::_emit(LILVarDecl * value)
         
         if (!ty->isA(TypeTypeFunction)) {
             if (value->getParentNode()->isA(NodeTypeRoot)) {
-                auto llvmTy = this->llvmTypeFromLILType(ty.get());
-                d->llvmModule->getOrInsertGlobal(name, llvmTy);
-                auto globalVar = d->llvmModule->getNamedGlobal(name);
-                globalVar->setLinkage(llvm::GlobalValue::ExternalLinkage);
-                d->namedValues[name] = globalVar;
-                d->currentAlloca = globalVar;
-                globalVar->setInitializer(llvm::Constant::getNullValue(llvmTy));
+                return d->namedValues[name];
             } else {
                 //backup if needed
                 llvm::Value * namedValue = nullptr;
