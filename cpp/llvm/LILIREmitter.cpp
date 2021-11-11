@@ -212,11 +212,6 @@ void LILIREmitter::hoistDeclarations(std::shared_ptr<LILRootNode> rootNode)
     }
 }
 
-void LILIREmitter::visit(LILNode *node)
-{
-    this->emit(node);
-}
-
 llvm::Value * LILIREmitter::emit(LILNode * node)
 {
     if (this->_debug) {
