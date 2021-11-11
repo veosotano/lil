@@ -820,6 +820,10 @@ bool LILCodeParser::isRule() const
             {
                 peekToken = d->lexer->peekNextToken();
             }
+            if (!peekToken) {
+                d->lexer->resetPeek();
+                return false;
+            }
             //if the next token is a colon, it is either a property definition or a filter
             if (peekToken->isA(TokenTypeColon))
             {
