@@ -2460,8 +2460,20 @@ bool LILCodeParser::readBasicValue(NodeType &nodeType)
             LIL_START_NODE(NodeTypeNumberLiteral)
             d->receiver->receiveNodeData(ParserEventNumberLiteral, d->currentToken->getString());
             this->readNextToken();
-            d->receiver->receiveNodeData(ParserEventNumberFP, "");
+
             nodeType = __nodeType;
+            
+            bool hasType = false;
+            if (d->currentToken->isA(TokenTypeIdentifier)) {
+                bool tyValid = this->readType();
+                if (tyValid) {
+                    d->receiver->receiveNodeCommit();
+                    hasType = true;
+                }
+            }
+            if (!hasType) {
+                d->receiver->receiveNodeData(ParserEventNumberFP, "");
+            }
             LIL_END_NODE_SKIP(false)
         }
 
@@ -2470,8 +2482,19 @@ bool LILCodeParser::readBasicValue(NodeType &nodeType)
             LIL_START_NODE(NodeTypePercentage)
             d->receiver->receiveNodeData(ParserEventPercentageLiteral, d->currentToken->getString());
             this->readNextToken();
-            d->receiver->receiveNodeData(ParserEventNumberInt, "");
             nodeType = __nodeType;
+            
+            bool hasType = false;
+            if (d->currentToken->isA(TokenTypeIdentifier)) {
+                bool tyValid = this->readType();
+                if (tyValid) {
+                    d->receiver->receiveNodeCommit();
+                    hasType = true;
+                }
+            }
+            if (!hasType) {
+                d->receiver->receiveNodeData(ParserEventNumberInt, "");
+            }
             LIL_END_NODE_SKIP(false)
         }
         case TokenTypePercentageNumberFP:
@@ -2479,8 +2502,19 @@ bool LILCodeParser::readBasicValue(NodeType &nodeType)
             LIL_START_NODE(NodeTypePercentage)
             d->receiver->receiveNodeData(ParserEventPercentageLiteral, d->currentToken->getString());
             this->readNextToken();
-            d->receiver->receiveNodeData(ParserEventNumberFP, "");
             nodeType = __nodeType;
+            
+            bool hasType = false;
+            if (d->currentToken->isA(TokenTypeIdentifier)) {
+                bool tyValid = this->readType();
+                if (tyValid) {
+                    d->receiver->receiveNodeCommit();
+                    hasType = true;
+                }
+            }
+            if (!hasType) {
+                d->receiver->receiveNodeData(ParserEventNumberFP, "");
+            }
             LIL_END_NODE_SKIP(false)
         }
 
@@ -2560,8 +2594,19 @@ bool LILCodeParser::readBasicValue(NodeType &nodeType)
                     LIL_START_NODE(NodeTypeNumberLiteral)
                     d->receiver->receiveNodeData(ParserEventNumberLiteral, sign + d->currentToken->getString());
                     this->readNextToken();
-                    d->receiver->receiveNodeData(ParserEventNumberInt, "");
                     nodeType = __nodeType;
+                    
+                    bool hasType = false;
+                    if (d->currentToken->isA(TokenTypeIdentifier)) {
+                        bool tyValid = this->readType();
+                        if (tyValid) {
+                            d->receiver->receiveNodeCommit();
+                            hasType = true;
+                        }
+                    }
+                    if (!hasType) {
+                        d->receiver->receiveNodeData(ParserEventNumberInt, "");
+                    }
                     LIL_END_NODE_SKIP(false)
                 }
                 else if (d->currentToken->isA(TokenTypeNumberFP))
@@ -2569,8 +2614,19 @@ bool LILCodeParser::readBasicValue(NodeType &nodeType)
                     LIL_START_NODE(NodeTypeNumberLiteral)
                     d->receiver->receiveNodeData(ParserEventNumberLiteral, sign + d->currentToken->getString());
                     this->readNextToken();
-                    d->receiver->receiveNodeData(ParserEventNumberFP, "");
                     nodeType = __nodeType;
+                    
+                    bool hasType = false;
+                    if (d->currentToken->isA(TokenTypeIdentifier)) {
+                        bool tyValid = this->readType();
+                        if (tyValid) {
+                            d->receiver->receiveNodeCommit();
+                            hasType = true;
+                        }
+                    }
+                    if (!hasType) {
+                        d->receiver->receiveNodeData(ParserEventNumberFP, "");
+                    }
                     LIL_END_NODE_SKIP(false)
                 }
                 else if (d->currentToken->isA(TokenTypePercentageNumberInt))
@@ -2578,8 +2634,19 @@ bool LILCodeParser::readBasicValue(NodeType &nodeType)
                     LIL_START_NODE(NodeTypePercentage)
                     d->receiver->receiveNodeData(ParserEventPercentageLiteral, sign + d->currentToken->getString());
                     this->readNextToken();
-                    d->receiver->receiveNodeData(ParserEventNumberInt, "");
                     nodeType = __nodeType;
+
+                    bool hasType = false;
+                    if (d->currentToken->isA(TokenTypeIdentifier)) {
+                        bool tyValid = this->readType();
+                        if (tyValid) {
+                            d->receiver->receiveNodeCommit();
+                            hasType = true;
+                        }
+                    }
+                    if (!hasType) {
+                        d->receiver->receiveNodeData(ParserEventNumberInt, "");
+                    }
                     LIL_END_NODE_SKIP(false)
                 }
                 else if (d->currentToken->isA(TokenTypePercentageNumberFP))
@@ -2587,8 +2654,19 @@ bool LILCodeParser::readBasicValue(NodeType &nodeType)
                     LIL_START_NODE(NodeTypePercentage)
                     d->receiver->receiveNodeData(ParserEventPercentageLiteral, sign + d->currentToken->getString());
                     this->readNextToken();
-                    d->receiver->receiveNodeData(ParserEventNumberFP, "");
                     nodeType = __nodeType;
+
+                    bool hasType = false;
+                    if (d->currentToken->isA(TokenTypeIdentifier)) {
+                        bool tyValid = this->readType();
+                        if (tyValid) {
+                            d->receiver->receiveNodeCommit();
+                            hasType = true;
+                        }
+                    }
+                    if (!hasType) {
+                        d->receiver->receiveNodeData(ParserEventNumberFP, "");
+                    }
                     LIL_END_NODE_SKIP(false)
                 }
                 else
