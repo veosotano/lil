@@ -1047,8 +1047,8 @@ std::shared_ptr<LILType> LILTypeGuesser::recursiveFindTypeFromAncestors(std::sha
             case NodeTypeFunctionCall:
             {
                 std::shared_ptr<LILFunctionCall> fc = std::static_pointer_cast<LILFunctionCall>(parent);
-                
-                switch (fc->getFunctionCallType()) {
+                auto fcType = fc->getFunctionCallType();
+                switch (fcType) {
                     case FunctionCallTypeNone:
                     case FunctionCallTypeValuePath:
                     {
@@ -1076,12 +1076,22 @@ std::shared_ptr<LILType> LILTypeGuesser::recursiveFindTypeFromAncestors(std::sha
                             auto callArgs = fc->getArguments();
                             for (size_t i=0, j=callArgs.size(); i<j; ++i) {
                                 if (callArgs[i].get() == value.get()) {
-                                    if (args.size() > i) {
-                                        const auto & arg = args[i];
+                                    auto argsIndex = i;
+                                    if (fcType == FunctionCallTypeValuePath) {
+                                        auto firstArg = args[0];
+                                        if (firstArg->isA(NodeTypeVarDecl)) {
+                                            auto vd = std::static_pointer_cast<LILVarDecl>(firstArg);
+                                            if (vd->getName() == "@self") {
+                                                argsIndex += 1;
+                                            }
+                                        }
+                                    }
+                                    if (args.size() > argsIndex) {
+                                        const auto & arg = args[argsIndex];
                                         if (arg->isA(NodeTypeType)) {
                                             return std::static_pointer_cast<LILType>(arg);
                                         } else {
-                                            return args[i]->getType();
+                                            return arg->getType();
                                         }
                                     } else {
                                         return nullptr;
