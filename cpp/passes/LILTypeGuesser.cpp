@@ -1888,7 +1888,12 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(std::shared_ptr<LI
                         std::cerr << "CURRENT TY WAS NOT OBJECT TY FAIL!!!!\n";
                         return nullptr;
                     }
-                    auto classDecl = this->findClassWithName(currentTy->getName().data());
+                    auto className = currentTy->getName().data();
+                    auto classDecl = this->findClassWithName(className);
+                    if (!classDecl) {
+                        std::cerr << "CLASS "+className+" NOT FOUND FAIL!!!!\n";
+                        return nullptr;
+                    }
                     auto field = classDecl->getFieldNamed(pnName);
                     if (!field) {
                         std::cerr << "FIELD WAS NULL FAIL!!!!\n";
