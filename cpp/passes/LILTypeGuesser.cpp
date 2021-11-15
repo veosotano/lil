@@ -1946,8 +1946,16 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(std::shared_ptr<LI
                     if (retTy) {
                         currentTy = retTy;
                     } else {
-                        std::cerr << "RET TY WAS NULL FAIL!!!!\n";
-                        return nullptr;
+                        retTy = this->getFnReturnType(method->getBody());
+                        if (retTy) {
+                            fnTy->setReturnType(retTy);
+                            currentTy = retTy;
+                        } else {
+                            currentTy = nullptr;
+                            if (!isLast) {
+                                std::cerr << "Trying to traverse through function "+methodName.data()+"() which does not return any value\n";
+                            }
+                        }
                     }
                     break;
                 }
