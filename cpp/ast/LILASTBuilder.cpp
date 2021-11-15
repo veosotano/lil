@@ -532,7 +532,11 @@ void LILASTBuilder::receiveNodeCommit()
             {
                 std::shared_ptr<LILVarDecl> varDecl = std::static_pointer_cast<LILVarDecl>(this->currentContainer.back());
                 if (this->currentNode->isA(NodeTypeType)) {
-                    varDecl->setType(std::static_pointer_cast<LILType>(this->currentNode));
+                    if (varDecl->getReceivesReturnType()) {
+                        varDecl->setReturnType(std::static_pointer_cast<LILType>(this->currentNode));
+                    } else {
+                        varDecl->setType(std::static_pointer_cast<LILType>(this->currentNode));
+                    }
                 } else {
                     varDecl->setInitVal(this->currentNode);
                     if (this->currentNode->isA(NodeTypeFunctionDecl)) {
@@ -1439,18 +1443,26 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
         case BuilderStateVarDecl:
         {
             auto vd = std::static_pointer_cast<LILVarDecl>(this->currentContainer.back());
-            if (eventType == ParserEventExtern) {
-                vd->setIsExtern(true);
-            } else {
-                if (eventType == ParserEventVarDecl) {
+            switch (eventType) {
+                case ParserEventExtern:
+                    vd->setIsExtern(true);
+                    break;
+                case ParserEventVarDecl:
                     if (data == "ivar") {
                         vd->setIsIVar(true);
                     } else if (data == "vvar") {
                         vd->setIsVVar(true);
                     }
-                } else {
+                    break;
+                case ParserEventReturnType:
+                    vd->setReceivesReturnType(true);
+                    break;
+                    
+                default:
                     this->currentContainer.back()->receiveNodeData(data);
-                }
+                    break;
+            }
+            break;
         }
             
         case BuilderStateStaticArrayType:

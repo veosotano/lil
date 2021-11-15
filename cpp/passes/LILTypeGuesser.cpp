@@ -1820,6 +1820,16 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(std::shared_ptr<LI
                         std::cerr << "FIELD WAS NULL FAIL!!!!\n";
                         return nullptr;
                     }
+                    if (field->getNodeType() == NodeTypeVarDecl) {
+                        auto vd = std::static_pointer_cast<LILVarDecl>(field);
+                        if (vd->getIsVVar()) {
+                            auto retTy = vd->getReturnType();
+                            if (retTy) {
+                                currentTy = retTy;
+                                break;
+                            }
+                        }
+                    }
                     auto fieldTy = this->getNodeType(field);
                     currentTy = fieldTy;
                     break;

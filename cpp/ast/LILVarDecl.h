@@ -46,14 +46,21 @@ namespace LIL
         bool getIsConst() const;
         void setIsConst(bool value);
 
+        bool getReceivesReturnType() const;
+        void setReceivesReturnType(bool value);
+
+        std::shared_ptr<LILType> getReturnType() const;
+        void setReturnType(std::shared_ptr<LILType> value);
+
     private:
         virtual std::shared_ptr<LILClonable> cloneImpl() const;
-
+        std::shared_ptr<LILType> _returnType;
         LILString _name;
         bool _isExtern;
         bool _isIVar;
         bool _isVVar;
         bool _isConst;
+        bool _receivesReturnType;
     };
 }
 

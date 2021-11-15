@@ -999,6 +999,16 @@ void LILPreprocessor::_importNodeIfNeeded(std::vector<std::shared_ptr<LILNode>> 
                     }
                     newVd->setType(fldTy->clone());
                     newVd->setName(fldVd->getName());
+                    newVd->setIsIVar(fldVd->getIsIVar());
+                    newVd->setIsVVar(fldVd->getIsVVar());
+                    auto initVal = fldVd->getInitVal();
+                    if (initVal) {
+                        newVd->setInitVal(fldVd->getInitVal()->clone());
+                    }
+                    auto retTy = fldVd->getReturnType();
+                    if (retTy) {
+                        newVd->setReturnType(retTy->clone());
+                    }
                     newCd->addField(newVd);
                 }
                 

@@ -25,17 +25,20 @@ LILVarDecl::LILVarDecl()
 , _isIVar(false)
 , _isVVar(false)
 , _isConst(false)
+, _receivesReturnType(false)
 {
     
 }
 
 LILVarDecl::LILVarDecl(const LILVarDecl & orig)
 : LILTypedNode(orig)
+, _returnType(orig._returnType)
 , _name(orig._name)
 , _isExtern(orig._isExtern)
 , _isIVar(orig._isIVar)
 , _isVVar(orig._isVVar)
 , _isConst(orig._isConst)
+, _receivesReturnType(orig._receivesReturnType)
 {
 
 }
@@ -139,4 +142,23 @@ bool LILVarDecl::getIsConst() const
 void LILVarDecl::setIsConst(bool value)
 {
     this->_isConst = value;
+}
+bool LILVarDecl::getReceivesReturnType() const
+{
+    return this->_receivesReturnType;
+}
+
+void LILVarDecl::setReceivesReturnType(bool value)
+{
+    this->_receivesReturnType = value;
+}
+
+std::shared_ptr<LILType> LILVarDecl::getReturnType() const
+{
+    return this->_returnType;
+}
+
+void LILVarDecl::setReturnType(std::shared_ptr<LILType> value)
+{
+    this->_returnType = value;
 }

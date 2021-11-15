@@ -427,10 +427,15 @@ LILToStrInfo LILToStringVisitor::_stringify(LILVarDecl * value)
 
     LILString vdType = "";
     LILString firstWord;
+    LILString returnType = "";
     if (value->getIsIVar()) {
         vdType = "(ivar) ";
     } else if (value->getIsVVar()) {
         vdType = "(vvar) ";
+        auto retTy = value->getReturnType();
+        if (retTy) {
+            returnType = "=>"+LILNodeToString::stringify(retTy.get());
+        }
     }
     if (value->getIsConst()) {
         firstWord = "Const";
@@ -438,7 +443,7 @@ LILToStrInfo LILToStringVisitor::_stringify(LILVarDecl * value)
         firstWord = "Var";
     }
     if (type) {
-        ret.value = firstWord + " declaration " + vdType + "(" + LILNodeToString::stringify(type) + "): " + value->getName() + externStr;
+        ret.value = firstWord + " declaration " + vdType + "(" + LILNodeToString::stringify(type) + ")"+returnType+": " + value->getName() + externStr;
     } else {
         ret.value = firstWord + " declaration: " + vdType + value->getName() + externStr;
     }

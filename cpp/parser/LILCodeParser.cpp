@@ -1770,17 +1770,19 @@ bool LILCodeParser::readStaticArrayType()
 
 bool LILCodeParser::readVarDecl()
 {
+    auto kwStr = d->currentToken->getString();
     //skip the var decl keyword
     if (
-        d->currentToken->getString() != "var"
-        && d->currentToken->getString() != "ivar"
-        && d->currentToken->getString() != "vvar"
+        kwStr != "var"
+        && kwStr != "ivar"
+        && kwStr != "vvar"
     ) {
         return false;
     }
+    bool isVVar = (kwStr == "vvar");
 
     LIL_START_NODE(NodeTypeVarDecl)
-    d->receiver->receiveNodeData(ParserEventVarDecl, d->currentToken->getString());
+    d->receiver->receiveNodeData(ParserEventVarDecl, kwStr);
 
     this->readNextToken();
     LIL_CHECK_FOR_END
@@ -1793,6 +1795,19 @@ bool LILCodeParser::readVarDecl()
         bool tyValid = this->readType();
         if (tyValid) {
             d->receiver->receiveNodeCommit();
+        }
+        if (isVVar) {
+            LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+            if (d->currentToken->isA(TokenTypeFatArrow)) {
+                d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+                d->receiver->receiveNodeData(ParserEventReturnType, "");
+                this->readNextToken();
+                LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+                bool retTyValid = this->readType();
+                if (retTyValid) {
+                    d->receiver->receiveNodeCommit();
+                }
+            }
         }
     }
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
@@ -2364,7 +2379,7 @@ bool LILCodeParser::readSingleValue(NodeType &nodeType)
         {
             return this->readClassDecl();
         }
-        if (tokenStr == "var")
+        if (tokenStr == "var" || tokenStr == "vvar" || tokenStr == "ivar")
         {
             return this->readVarDecl();
         }
