@@ -471,7 +471,7 @@ void LILStructureLowerer::_process(std::shared_ptr<LILFunctionDecl> value)
                                 
                             }
 
-                            newChildFd->setName(this->decorate("", "", value->getName(), newChildFnType));
+                            newChildFd->setName(value->getName());
                             
                             newFd->addImpl(newChildFd);
                         } //end for
