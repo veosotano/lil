@@ -490,9 +490,9 @@ void LILPreprocessor::_processMainMenuRule(std::shared_ptr<LILSnippetInstruction
                         if (val->isA(NodeTypeAssignment)) {
                             const auto & as = std::static_pointer_cast<LILAssignment>(val);
                             const auto & asSubj = as->getSubject();
-                            if (asSubj && asSubj->isA(NodeTypeVarName)) {
-                                const auto & vn = std::static_pointer_cast<LILVarName>(asSubj);
-                                if (vn->getName() == "label") {
+                            if (asSubj && asSubj->isA(NodeTypePropertyName)) {
+                                const auto & pn = std::static_pointer_cast<LILPropertyName>(asSubj);
+                                if (pn->getName() == "label") {
                                     const auto & value = as->getValue();
                                     if (value->isA(NodeTypeStringLiteral)) {
                                         auto strLit = std::static_pointer_cast<LILStringLiteral>(value);
@@ -528,22 +528,22 @@ void LILPreprocessor::_processMainMenuRule(std::shared_ptr<LILSnippetInstruction
                         if (val->isA(NodeTypeAssignment)) {
                             const auto & as = std::static_pointer_cast<LILAssignment>(val);
                             const auto & asSubj = as->getSubject();
-                            if (asSubj && asSubj->isA(NodeTypeVarName)) {
-                                const auto & vn = std::static_pointer_cast<LILVarName>(asSubj);
-                                const auto & vnName = vn->getName();
-                                if (vnName == "label") {
+                            if (asSubj && asSubj->isA(NodeTypePropertyName)) {
+                                const auto & pn = std::static_pointer_cast<LILPropertyName>(asSubj);
+                                const auto & pnName = pn->getName();
+                                if (pnName == "label") {
                                     const auto & value = as->getValue();
                                     if (value->isA(NodeTypeStringLiteral)) {
                                         label = std::static_pointer_cast<LILStringLiteral>(value);
                                         label->setIsCString(true);
                                     }
-                                } else if (vnName == "shortcut") {
+                                } else if (pnName == "shortcut") {
                                     const auto & value = as->getValue();
                                     if (value->isA(NodeTypeStringLiteral)) {
                                         shortcut = std::static_pointer_cast<LILStringLiteral>(value);
                                         shortcut->setIsCString(true);
                                     }
-                                } else if (vnName == "action") {
+                                } else if (pnName == "action") {
                                     action = as->getValue();
                                 }
                             }
