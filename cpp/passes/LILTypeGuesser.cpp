@@ -900,7 +900,43 @@ void LILTypeGuesser::_process(LILValueList * value)
                     switch (vlParent->getNodeType()) {
                         case NodeTypeVarDecl:
                         {
-                            std::cerr << "UNIMPLEMENTED FAIL !!!!!!!!! \n\n";
+                            if (!vlParent->getType()) {
+                                value->setType(vlTy);
+                            } else {
+                                auto parentTy = vlParent->getType();
+                                if (parentTy->isA(TypeTypeMultiple)) {
+                                    auto parentTyMtTys = std::static_pointer_cast<LILMultipleType>(parentTy)->getTypes();
+                                    for (auto parentTyMtTy : parentTyMtTys) {
+                                        if (parentTyMtTy->isA(TypeTypeStaticArray)) {
+                                            auto staticArrayTy = std::static_pointer_cast<LILStaticArrayType>(parentTyMtTy);
+                                            if (staticArrayTy->getType()->equalTo(vlTy)) {
+                                                value->setType(staticArrayTy);
+                                                return;
+                                            }
+                                        } else if (parentTyMtTy->isA(TypeTypeObject) && parentTyMtTy->getName() == "array"){
+                                            auto objTy = std::static_pointer_cast<LILObjectType>(parentTyMtTy);
+                                            auto paramTy = objTy->getTmplParams().front();
+                                            if (paramTy && paramTy->equalTo(vlTy)) {
+                                                value->setType(parentTyMtTy);
+                                                return;
+                                            }
+                                        }
+                                    }
+                                } else if (parentTy->isA(TypeTypeStaticArray)) {
+                                    auto staticArrayTy = std::static_pointer_cast<LILStaticArrayType>(parentTy);
+                                    if (staticArrayTy->getType()->equalTo(vlTy)) {
+                                        value->setType(staticArrayTy);
+                                        return;
+                                    }
+                                } else if (parentTy->isA(TypeTypeObject) && parentTy->getName() == "array"){
+                                    auto objTy = std::static_pointer_cast<LILObjectType>(parentTy);
+                                    auto paramTy = objTy->getTmplParams().front();
+                                    if (paramTy && paramTy->equalTo(vlTy)) {
+                                        value->setType(parentTy);
+                                        return;
+                                    }
+                                }
+                            }
                             break;
                         }
                         case NodeTypeAssignment:
