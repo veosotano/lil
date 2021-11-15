@@ -2067,7 +2067,7 @@ bool LILPreprocessor::_processPasteInstr(std::shared_ptr<LILObjectDefinition> va
 bool LILPreprocessor::_processPasteInstr(std::shared_ptr<LILAssignment> value)
 {
     auto val = value->getValue();
-    if (val && val->isA(InstructionTypeIf)) {
+    if (val) {
         this->_nodeBuffer.emplace_back();
         bool remove = this->processPasteInstr(val);
         if (remove) {
