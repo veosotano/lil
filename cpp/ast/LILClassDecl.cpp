@@ -37,6 +37,7 @@ LILClassDecl::LILClassDecl(const LILClassDecl &other)
 , _methods(other._methods)
 , _aliases(other._aliases)
 , _docs(other._docs)
+, _other(other._other)
 , _tmplParams(other._tmplParams)
 {
 }
@@ -78,7 +79,10 @@ std::shared_ptr<LILClonable> LILClassDecl::cloneImpl() const
     for (auto doc : this->_docs) {
         clone->addDoc(doc->clone());
     }
-    
+    clone->_other.clear();
+    for (auto other : this->_other) {
+        clone->addOther(other->clone());
+    }
     clone->_tmplParams.clear();
     for (auto tmplParam : this->_tmplParams) {
         clone->addTmplParam(tmplParam->clone());
@@ -205,6 +209,27 @@ void LILClassDecl::addDoc(std::shared_ptr<LILDocumentation> value)
 const std::vector<std::shared_ptr<LILDocumentation>> & LILClassDecl::getDocs() const
 {
     return this->_docs;
+}
+
+void LILClassDecl::addOther(std::shared_ptr<LILNode> value)
+{
+    this->addNode(value);
+    this->_other.push_back(value);
+}
+
+const std::vector<std::shared_ptr<LILNode>> & LILClassDecl::getOther() const
+{
+    return this->_other;
+}
+
+void LILClassDecl::clearOther()
+{
+    this->_other.clear();
+}
+
+void LILClassDecl::setOther(const std::vector<std::shared_ptr<LILNode>> && other)
+{
+    this->_other = std::move(other);
 }
 
 bool LILClassDecl::isTemplate() const

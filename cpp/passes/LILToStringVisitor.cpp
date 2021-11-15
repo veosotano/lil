@@ -566,6 +566,14 @@ LILToStrInfo LILToStringVisitor::_stringify(LILClassDecl * value)
             ret.children.push_back(this->stringify((*it).get()));
         };
     }
+    const auto & other = value->getOther();
+    if (other.size() > 0) {
+        LILToStrInfo otherInfo;
+        otherInfo.isExported = false;
+        otherInfo.value = "Other:";
+        this->stringifyChildren(other, otherInfo);
+        ret.children.push_back(otherInfo);
+    }
     return ret;
 }
 

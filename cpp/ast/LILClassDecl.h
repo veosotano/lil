@@ -57,7 +57,12 @@ namespace LIL
 
         void addDoc(std::shared_ptr<LILDocumentation> value);
         const std::vector<std::shared_ptr<LILDocumentation>> & getDocs() const;
-        
+
+        void addOther(std::shared_ptr<LILNode> value);
+        const std::vector<std::shared_ptr<LILNode>> & getOther() const;
+        void clearOther();
+        void setOther(const std::vector<std::shared_ptr<LILNode>> && other);
+
         bool isTemplate() const;
 
         const std::vector<std::shared_ptr<LILNode>> & getTmplParams() const;
@@ -77,6 +82,7 @@ namespace LIL
         std::vector<std::shared_ptr<LILNode>> _methods;
         std::vector<std::shared_ptr<LILAliasDecl>> _aliases;
         std::vector<std::shared_ptr<LILDocumentation>> _docs;
+        std::vector<std::shared_ptr<LILNode>> _other;
         std::vector<std::shared_ptr<LILNode>> _tmplParams;
     };
 }
