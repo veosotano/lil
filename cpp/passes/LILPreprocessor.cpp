@@ -1045,8 +1045,10 @@ void LILPreprocessor::_importNodeIfNeeded(std::vector<std::shared_ptr<LILNode>> 
                 newVd->setType(ty->clone());
                 newNodes->push_back(newVd);
             } else {
-                auto clone = node->clone();
+                auto clone = vd->clone();
                 clone->setIsExported(isExported);
+                clone->setIsExtern(true);
+                clone->clearChildNodes();
                 newNodes->push_back(clone);
             }
             break;
