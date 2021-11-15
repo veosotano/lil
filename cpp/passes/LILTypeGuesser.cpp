@@ -536,6 +536,11 @@ void LILTypeGuesser::_process(LILNumberLiteral * value)
             auto intType = ty1->getDefaultType();
             value->setType(intType);
         }
+    } else if (!ty1) {
+        std::shared_ptr<LILType>ty2 = this->recursiveFindTypeFromAncestors(sharedVal);
+        if (ty2) {
+            value->setType(ty2);
+        }
     }
 }
 
