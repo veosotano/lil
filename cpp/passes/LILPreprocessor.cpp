@@ -974,12 +974,22 @@ void LILPreprocessor::setConfiguration(LILConfiguration * value)
 std::vector<LILString> LILPreprocessor::_resolveFilePaths(LILString argStr) const
 {
     std::vector<LILString> ret;
-    std::string dir = this->getDir().data() + "/";
     std::string arg = argStr.data();
+    bool isAbsPath = arg.substr(0, 1) == "/";
     if (arg.find("*") == std::string::npos) {
-        ret.push_back(dir+argStr.data());
+        if (isAbsPath) {
+            ret.push_back(argStr.data());
+        } else {
+            ret.push_back( this->getDir().data() + "/" + argStr.data());
+        }
     } else {
-        std::vector<std::string> paths = this->_glob(dir+argStr.data());
+        std::string globPath;
+        if (isAbsPath) {
+            globPath = argStr.data();
+        } else {
+            globPath = this->getDir().data() + "/" + argStr.data();
+        }
+        std::vector<std::string> paths = this->_glob(globPath);
         for (auto path : paths) {
             ret.push_back(path);
         }
