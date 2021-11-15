@@ -1880,6 +1880,10 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(std::shared_ptr<LI
                 {
                     auto pn = std::static_pointer_cast<LILPropertyName>(node);
                     auto pnName = pn->getName();
+                    if (currentTy->isA(TypeTypePointer)) {
+                        auto ptrTy = std::static_pointer_cast<LILPointerType>(currentTy);
+                        currentTy = ptrTy->getArgument();
+                    }
                     if (!currentTy->isA(TypeTypeObject)) {
                         std::cerr << "CURRENT TY WAS NOT OBJECT TY FAIL!!!!\n";
                         return nullptr;
