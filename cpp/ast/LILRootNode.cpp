@@ -388,9 +388,9 @@ const std::vector<std::shared_ptr<LILDocumentation>> & LILRootNode::getDocs() co
 
 void LILRootNode::addRule(std::shared_ptr<LILRule> value)
 {
-    const auto & selChs = value->getSelectorChains();
-    if (selChs.size() == 1) {
-        const auto & selCh = std::static_pointer_cast<LILSelectorChain>(selChs.front());
+    const auto & selChNode = value->getSelectorChain();
+    if (selChNode && selChNode->getNodeType() == NodeTypeSelectorChain) {
+        const auto & selCh = std::static_pointer_cast<LILSelectorChain>(selChNode);
         const auto & selChNodes = selCh->getNodes();
         if (selChNodes.size() == 1) {
             const auto & simpleSel = std::static_pointer_cast<LILSimpleSelector>(selChNodes.front());

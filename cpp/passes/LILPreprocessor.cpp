@@ -576,10 +576,9 @@ void LILPreprocessor::_processMainMenuRule(std::shared_ptr<LILSnippetInstruction
 
 void LILPreprocessor::_processAppMenuRule(std::shared_ptr<LILSnippetInstruction> snippet, std::shared_ptr<LILRule> rule)
 {
-    const auto & selChs = rule->getSelectorChains();
-    if (selChs.size() > 0) {
-        const auto & selCh = std::static_pointer_cast<LILSelectorChain>(selChs.front());
-        const auto & selChNodes = selCh->getNodes();
+    const auto & selCh = rule->getSelectorChain();
+    if (selCh && selCh->getNodeType() == NodeTypeSelectorChain) {
+        const auto & selChNodes = std::static_pointer_cast<LILSelectorChain>(selCh)->getNodes();
         if (selChNodes.size() > 0) {
             const auto & simpleSel = std::static_pointer_cast<LILSimpleSelector>(selChNodes.front());
             const auto & simpleSelNodes = simpleSel->getNodes();
@@ -1366,25 +1365,16 @@ bool LILPreprocessor::_processIfInstr(std::shared_ptr<LILValuePath> value)
 
 bool LILPreprocessor::_processIfInstr(std::shared_ptr<LILRule> value)
 {
-    bool hasChangesSCh = false;
-    std::vector<std::shared_ptr<LILNode>> resultNodesSCh;
-    for (auto node : value->getSelectorChains()) {
+    const auto & node = value->getSelectorChain();
+    if (node) {
         this->_nodeBuffer.emplace_back();
-        bool remove = this->processIfInstr(node);
-        if (!remove && this->_nodeBuffer.back().size() == 0) {
-            resultNodesSCh.push_back(node);
-        } else {
-            hasChangesSCh = true;
-            for (auto newNode : this->_nodeBuffer.back()) {
-                resultNodesSCh.push_back(newNode);
-            }
+        this->processIfInstr(node);
+        if (this->_nodeBuffer.back().size() > 0) {
+            value->setSelectorChain(this->_nodeBuffer.back().back());
         }
         this->_nodeBuffer.pop_back();
     }
-    if (hasChangesSCh) {
-        value->setSelectorChains(std::move(resultNodesSCh));
-    }
-    
+
     for (auto rule : value->getChildRules()) {
         this->processIfInstr(rule);
     }
@@ -2117,25 +2107,16 @@ bool LILPreprocessor::_processPasteInstr(std::shared_ptr<LILValuePath> value)
 
 bool LILPreprocessor::_processPasteInstr(std::shared_ptr<LILRule> value)
 {
-    bool hasChangesSCh = false;
-    std::vector<std::shared_ptr<LILNode>> resultNodesSCh;
-    for (auto node : value->getSelectorChains()) {
+    const auto & node = value->getSelectorChain();
+    if (node) {
         this->_nodeBuffer.emplace_back();
-        bool remove = this->processPasteInstr(node);
-        if (!remove && this->_nodeBuffer.back().size() == 0) {
-            resultNodesSCh.push_back(node);
-        } else {
-            hasChangesSCh = true;
-            for (auto newNode : this->_nodeBuffer.back()) {
-                resultNodesSCh.push_back(newNode);
-            }
+        this->processPasteInstr(node);
+        if (this->_nodeBuffer.back().size() > 0) {
+            value->setSelectorChain(this->_nodeBuffer.back().back());
         }
         this->_nodeBuffer.pop_back();
     }
-    if (hasChangesSCh) {
-        value->setSelectorChains(std::move(resultNodesSCh));
-    }
-    
+
     for (auto rule : value->getChildRules()) {
         this->processPasteInstr(rule);
     }

@@ -27,9 +27,8 @@ namespace LIL
         std::shared_ptr<LILRule> clone() const;
         virtual ~LILRule();
 
-        void addSelectorChain(std::shared_ptr<LILNode> newSc);
-        const std::vector<std::shared_ptr<LILNode>> & getSelectorChains() const;
-        void setSelectorChains(std::vector<std::shared_ptr<LILNode>> && nodes);
+        const std::shared_ptr<LILNode> & getSelectorChain() const;
+        void setSelectorChain(std::shared_ptr<LILNode> value);
         void addValue(std::shared_ptr<LILNode> newVal);
         const std::vector<std::shared_ptr<LILNode>> & getValues() const;
         void setValues(std::vector<std::shared_ptr<LILNode>> && nodes);
@@ -43,7 +42,7 @@ namespace LIL
 
     protected:
         virtual std::shared_ptr<LILClonable> cloneImpl() const;
-        std::vector<std::shared_ptr<LILNode>> _selectorChains;
+        std::shared_ptr<LILNode> _selectorChain;
         std::vector<std::shared_ptr<LILNode>> _values;
         std::vector<std::shared_ptr<LILRule>> _childRules;
         std::shared_ptr<LILNode> _instruction;

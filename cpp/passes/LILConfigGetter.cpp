@@ -441,25 +441,16 @@ bool LILConfigGetter::_processGetConfigInstr(std::shared_ptr<LILValuePath> value
 
 bool LILConfigGetter::_processGetConfigInstr(std::shared_ptr<LILRule> value)
 {
-    bool hasChangesSCh = false;
-    std::vector<std::shared_ptr<LILNode>> resultNodesSCh;
-    for (auto node : value->getSelectorChains()) {
+    const auto & node = value->getSelectorChain();
+    if (node) {
         this->_nodeBuffer.emplace_back();
-        bool remove = this->processGetConfigInstr(node);
-        if (!remove && this->_nodeBuffer.back().size() == 0) {
-            resultNodesSCh.push_back(node);
-        } else {
-            hasChangesSCh = true;
-            for (auto newNode : this->_nodeBuffer.back()) {
-                resultNodesSCh.push_back(newNode);
-            }
+        this->processGetConfigInstr(node);
+        if (this->_nodeBuffer.back().size() > 0) {
+            value->setSelectorChain(this->_nodeBuffer.back().back());
         }
         this->_nodeBuffer.pop_back();
     }
-    if (hasChangesSCh) {
-        value->setSelectorChains(std::move(resultNodesSCh));
-    }
-    
+
     for (auto rule : value->getChildRules()) {
         this->processGetConfigInstr(rule);
     }

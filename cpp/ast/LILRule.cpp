@@ -25,7 +25,7 @@ LILRule::LILRule()
 LILRule::LILRule(const LILRule &other)
 : LILNode(other)
 {
-    this->_selectorChains = other._selectorChains;
+    this->_selectorChain = other._selectorChain;
     this->_values = other._values;
     this->_childRules = other._childRules;
     this->_instruction = other._instruction;
@@ -41,9 +41,8 @@ std::shared_ptr<LILClonable> LILRule::cloneImpl() const
     std::shared_ptr<LILRule> clone(new LILRule(*this));
     clone->clearChildNodes();
 
-    for (auto it = this->_selectorChains.begin(); it!=this->_selectorChains.end(); ++it)
-    {
-        clone->addSelectorChain((*it)->clone());
+    if (this->_selectorChain) {
+        clone->setSelectorChain(this->_selectorChain->clone());
     }
     for (auto it = this->_values.begin(); it!=this->_values.end(); ++it)
     {
@@ -65,20 +64,15 @@ LILRule::~LILRule()
     
 }
 
-void LILRule::addSelectorChain(std::shared_ptr<LILNode> newSc)
+const std::shared_ptr<LILNode> & LILRule::getSelectorChain() const
 {
-    this->addNode(newSc);
-    this->_selectorChains.push_back(newSc);
+    return this->_selectorChain;
 }
 
-const std::vector<std::shared_ptr<LILNode>> & LILRule::getSelectorChains() const
+void LILRule::setSelectorChain(std::shared_ptr<LILNode> value)
 {
-    return this->_selectorChains;
-}
-
-void LILRule::setSelectorChains(std::vector<std::shared_ptr<LILNode>> && nodes)
-{
-    this->_selectorChains = std::move(nodes);
+    this->addNode(value);
+    this->_selectorChain = value;
 }
 
 void LILRule::addValue(std::shared_ptr<LILNode> newVal)
@@ -129,11 +123,10 @@ const std::vector<std::shared_ptr<LILNode>> & LILRule::getNodes() const
 
 std::shared_ptr<LILNode> LILRule::getFirstSelector() const
 {
-    if (this->_selectorChains.size() > 0) {
-        const auto & firstChain = this->_selectorChains.front();
-        const auto & firstChainNodes = firstChain->getChildNodes();
-        if (firstChainNodes.size() > 0) {
-            const auto & firstSimpleSel = firstChainNodes.front();
+    if (this->_selectorChain) {
+        const auto & sChainNodes = this->_selectorChain->getChildNodes();
+        if (sChainNodes.size() > 0) {
+            const auto & firstSimpleSel = sChainNodes.front();
             const auto & firstSimpleSelNodes = firstSimpleSel->getChildNodes();
             if (firstSimpleSelNodes.size() > 0) {
                 const auto & firstSel = firstSimpleSelNodes.front();

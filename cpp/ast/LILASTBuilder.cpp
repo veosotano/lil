@@ -639,7 +639,7 @@ void LILASTBuilder::receiveNodeCommit()
             switch (this->currentNode->getNodeType()) {
                 case NodeTypeSelectorChain:
                 {
-                    rule->addSelectorChain(this->currentNode);
+                    rule->setSelectorChain(this->currentNode);
                     break;
                 }
                 case NodeTypeAssignment:
