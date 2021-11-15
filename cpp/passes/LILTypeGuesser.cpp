@@ -952,7 +952,7 @@ void LILTypeGuesser::_process(LILValueList * value)
                                         for (auto asTyMtTy : asTyMtTys) {
                                             if (asTyMtTy->isA(TypeTypeStaticArray)) {
                                                 auto staticArrayTy = std::static_pointer_cast<LILStaticArrayType>(asTyMtTy);
-                                                if (staticArrayTy->getArgument()->equalTo(vlTy)) {
+                                                if (staticArrayTy->getType()->equalTo(vlTy)) {
                                                     value->setType(staticArrayTy);
                                                     return;
                                                 }
@@ -967,7 +967,7 @@ void LILTypeGuesser::_process(LILValueList * value)
                                         }
                                     } else if (asTy->isA(TypeTypeStaticArray)) {
                                         auto staticArrayTy = std::static_pointer_cast<LILStaticArrayType>(asTy);
-                                        if (staticArrayTy->getArgument()->equalTo(vlTy)) {
+                                        if (staticArrayTy->getType()->equalTo(vlTy)) {
                                             value->setType(staticArrayTy);
                                             return;
                                         }
