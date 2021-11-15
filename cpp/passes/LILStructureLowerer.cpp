@@ -419,6 +419,7 @@ void LILStructureLowerer::_process(std::shared_ptr<LILFunctionDecl> value)
                         
                         newFd->setHasMultipleImpls(true);
                         newFd->setName(value->getName());
+                        newFd->hidden = value->hidden;
 
                         this->_nodeBuffer.back().push_back(newFd);
                         auto tyArgTypes = std::static_pointer_cast<LILMultipleType>(tyArg)->getTypes();
