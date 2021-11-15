@@ -16,6 +16,7 @@
 #define LILPREPROCESSOR_H
 
 #include "LILVisitor.h"
+#include "LILAliasDecl.h"
 #include "LILAssignment.h"
 #include "LILClassDecl.h"
 #include "LILConversionDecl.h"
@@ -31,14 +32,17 @@
 #include "LILInstruction.h"
 #include "LILMultipleType.h"
 #include "LILObjectDefinition.h"
+#include "LILPointerType.h"
 #include "LILPropertyName.h"
 #include "LILValuePath.h"
 #include "LILRule.h"
 #include "LILSelectorChain.h"
 #include "LILSimpleSelector.h"
 #include "LILSnippetInstruction.h"
+#include "LILStaticArrayType.h"
 #include "LILStringFunction.h"
 #include "LILType.h"
+#include "LILTypeDecl.h"
 #include "LILUnaryExpression.h"
 #include "LILValueList.h"
 #include "LILVarDecl.h"
@@ -128,7 +132,6 @@ namespace LIL
         bool _processPasteInstr(std::shared_ptr<LILExpression> value);
         bool _processPasteInstr(std::shared_ptr<LILUnaryExpression> value);
         bool _processPasteInstr(std::shared_ptr<LILStringFunction> value);
-        bool _processPasteInstr(std::shared_ptr<LILType> value);
         bool _processPasteInstr(std::shared_ptr<LILVarDecl> value);
         bool _processPasteInstr(std::shared_ptr<LILClassDecl> value);
         bool _processPasteInstr(std::shared_ptr<LILObjectDefinition> value);
@@ -149,6 +152,12 @@ namespace LIL
         bool _processPasteInstr(std::shared_ptr<LILValueList> value);
         bool _processPasteInstr(std::shared_ptr<LILIndexAccessor> value);
         bool _processPasteInstr(std::shared_ptr<LILConversionDecl> value);
+        bool _processPasteInstr(std::shared_ptr<LILAliasDecl> value);
+        bool _processPasteInstr(std::shared_ptr<LILTypeDecl> value);
+        bool _processPasteInstr(std::shared_ptr<LILType> value);
+        bool _processPasteInstr(std::shared_ptr<LILFunctionType> value);
+        bool _processPasteInstr(std::shared_ptr<LILPointerType> value);
+        bool _processPasteInstr(std::shared_ptr<LILStaticArrayType> value);
 
         void _processMainMenuRule(std::shared_ptr<LILSnippetInstruction> snippet, std::shared_ptr<LILRule> rule);
         void _processAppMenuRule(std::shared_ptr<LILSnippetInstruction> snippet, std::shared_ptr<LILRule> rule);

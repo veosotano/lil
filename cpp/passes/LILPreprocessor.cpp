@@ -631,6 +631,7 @@ bool LILPreprocessor::processPasteInstr(std::shared_ptr<LILNode> node)
     if (this->getDebug()) {
         std::cerr << "##  processing #paste instructions in " + LILNode::nodeTypeToString(node->getNodeType()).data() + " " + LILNodeToString::stringify(node.get()).data() + " ##\n";
     }
+    bool ret = false;
     switch (node->getNodeType()) {
         case NodeTypeRoot:
         case NodeTypeNull:
@@ -641,14 +642,6 @@ bool LILPreprocessor::processPasteInstr(std::shared_ptr<LILNode> node)
         case NodeTypeCStringLiteral:
         case NodeTypePropertyName:
         case NodeTypeVarName:
-        case NodeTypeAliasDecl:
-        case NodeTypeTypeDecl:
-        case NodeTypeType:
-        case NodeTypeMultipleType:
-        case NodeTypeFunctionType:
-        case NodeTypeObjectType:
-        case NodeTypePointerType:
-        case NodeTypeStaticArrayType:
         case NodeTypeFlag:
         case NodeTypeFilter:
         case NodeTypeSelector:
@@ -662,116 +655,197 @@ bool LILPreprocessor::processPasteInstr(std::shared_ptr<LILNode> node)
             
         case NodeTypeNegation:
             std::cerr << "UNIMPLEMENTED FAIL !!!!!\n\n";
-            return false;
+            ret = false;
+            break;
             
         case NodeTypeExpression:
         {
             auto value = std::static_pointer_cast<LILExpression>(node);
-            return this->_processPasteInstr(value);
+            ret = this->_processPasteInstr(value);
+            break;
         }
         case NodeTypeUnaryExpression:
         {
             auto value = std::static_pointer_cast<LILUnaryExpression>(node);
-            return this->_processPasteInstr(value);
+            ret = this->_processPasteInstr(value);
+            break;
         }
         case NodeTypeStringFunction:
         {
             auto value = std::static_pointer_cast<LILStringFunction>(node);
-            return this->_processPasteInstr(value);
+            ret = this->_processPasteInstr(value);
+            break;
         }
         case NodeTypeVarDecl:
         case NodeTypeConstDecl:
         {
             auto value = std::static_pointer_cast<LILVarDecl>(node);
-            return this->_processPasteInstr(value);
+            ret = this->_processPasteInstr(value);
+            break;
         }
         case NodeTypeConversionDecl:
         {
             auto value = std::static_pointer_cast<LILConversionDecl>(node);
-            return this->_processPasteInstr(value);
+            ret = this->_processPasteInstr(value);
+            break;
         }
         case NodeTypeClassDecl:
         {
             auto value = std::static_pointer_cast<LILClassDecl>(node);
-            return this->_processPasteInstr(value);
+            ret = this->_processPasteInstr(value);
+            break;
         }
         case NodeTypeObjectDefinition:
         {
             auto value = std::static_pointer_cast<LILObjectDefinition>(node);
-            return this->_processPasteInstr(value);
+            ret = this->_processPasteInstr(value);
+            break;
         }
         case NodeTypeAssignment:
         {
             auto value = std::static_pointer_cast<LILAssignment>(node);
-            return this->_processPasteInstr(value);
+            ret = this->_processPasteInstr(value);
+            break;
         }
         case NodeTypeRule:
         {
             auto value = std::static_pointer_cast<LILRule>(node);
-            return this->_processPasteInstr(value);
+            ret = this->_processPasteInstr(value);
+            break;
         }
         case NodeTypeSelectorChain:
         {
             auto value = std::static_pointer_cast<LILSelectorChain>(node);
-            return this->_processPasteInstr(value);
+            ret = this->_processPasteInstr(value);
+            break;
         }
         case NodeTypeFunctionDecl:
         {
             auto value = std::static_pointer_cast<LILFunctionDecl>(node);
-            return this->_processPasteInstr(value);
+            ret = this->_processPasteInstr(value);
+            break;
         }
         case NodeTypeFunctionCall:
         {
             auto value = std::static_pointer_cast<LILFunctionCall>(node);
-            return this->_processPasteInstr(value);
+            ret = this->_processPasteInstr(value);
+            break;
         }
         case NodeTypeFlowControl:
         {
             auto value = std::static_pointer_cast<LILFlowControl>(node);
-            return this->_processPasteInstr(value);
+            ret = this->_processPasteInstr(value);
+            break;
         }
         case NodeTypeFlowControlCall:
         {
             auto value = std::static_pointer_cast<LILFlowControlCall>(node);
-            return this->_processPasteInstr(value);
+            ret = this->_processPasteInstr(value);
+            break;
         }
         case NodeTypeInstruction:
         {
             auto value = std::static_pointer_cast<LILInstruction>(node);
-            return this->_processPasteInstr(value);
+            ret = this->_processPasteInstr(value);
+            break;
         }
         case NodeTypeIfInstruction:
         {
             auto value = std::static_pointer_cast<LILIfInstruction>(node);
-            return this->_processPasteInstrIfInstr(value);
+            ret = this->_processPasteInstrIfInstr(value);
+            break;
         }
         case NodeTypeSnippetInstruction:
         {
             auto value = std::static_pointer_cast<LILSnippetInstruction>(node);
-            return this->_processPasteInstrSnippetInstr(value);
+            ret = this->_processPasteInstrSnippetInstr(value);
         }
         case NodeTypeValueList:
         {
             auto value = std::static_pointer_cast<LILValueList>(node);
-            return this->_processPasteInstr(value);
+            ret = this->_processPasteInstr(value);
+            break;
         }
         case NodeTypeIndexAccessor:
         {
             auto value = std::static_pointer_cast<LILIndexAccessor>(node);
-            return this->_processPasteInstr(value);
+            ret = this->_processPasteInstr(value);
+            break;
         }
         case NodeTypeValuePath:
         {
             auto value = std::static_pointer_cast<LILValuePath>(node);
-            return this->_processPasteInstr(value);
+            ret = this->_processPasteInstr(value);
+            break;
         }
         case NodeTypeSimpleSelector:
         {
             auto value = std::static_pointer_cast<LILSimpleSelector>(node);
-            return this->_processPasteInstr(value);
+            ret = this->_processPasteInstr(value);
+            break;
+        }
+        case NodeTypeAliasDecl:
+        {
+            auto value = std::static_pointer_cast<LILAliasDecl>(node);
+            ret = this->_processPasteInstr(value);
+            break;
+        }
+        case NodeTypeTypeDecl:
+        {
+            auto value = std::static_pointer_cast<LILTypeDecl>(node);
+            ret = this->_processPasteInstr(value);
+            break;
+        }
+        case NodeTypeType:
+        case NodeTypeMultipleType:
+        case NodeTypeFunctionType:
+        case NodeTypeObjectType:
+        case NodeTypePointerType:
+        case NodeTypeStaticArrayType:
+        {
+            auto ty = std::static_pointer_cast<LILType>(node);
+            this->_processPasteInstr(ty);
+            
+            switch (node->getTypeType()) {
+                case TypeTypeStaticArray:
+                {
+                    auto value = std::static_pointer_cast<LILStaticArrayType>(node);
+                    ret = this->_processPasteInstr(value);
+                    break;
+                }
+                case TypeTypeMultiple:
+                {
+                    auto value = std::static_pointer_cast<LILMultipleType>(node);
+                    ret = this->_processPasteInstr(value);
+                    break;
+                }
+                case TypeTypePointer:
+                {
+                    auto value = std::static_pointer_cast<LILPointerType>(node);
+                    ret = this->_processPasteInstr(value);
+                    break;
+                }
+                case TypeTypeFunction:
+                {
+                    auto value = std::static_pointer_cast<LILFunctionType>(node);
+                    ret = this->_processPasteInstr(value);
+                    break;
+                }
+                default:
+                    break;
+            }
+            ret = false;
+            break;
         }
     }
-    return false;
+    if (node->isTypedNode()) {
+        auto tyNode = std::static_pointer_cast<LILTypedNode>(node);
+        auto ty = tyNode->getType();
+        if (ty) {
+            this->processPasteInstr(ty);
+        }
+    }
+    return ret;
 }
 
 void LILPreprocessor::removeSnippets(std::shared_ptr<LILRootNode> rootNode)
@@ -2506,6 +2580,148 @@ bool LILPreprocessor::_processPasteInstr(std::shared_ptr<LILConversionDecl> valu
     if (hasChangesBody) {
         this->_needsAnotherPass = true;
         value->setBody(std::move(resultNodes));
+    }
+    return false;
+}
+
+bool LILPreprocessor::_processPasteInstr(std::shared_ptr<LILAliasDecl> value)
+{
+    const auto & srcTy = value->getSrcType();
+    if (srcTy) {
+        this->_nodeBuffer.emplace_back();
+        this->processPasteInstr(srcTy);
+        if (this->_nodeBuffer.back().size() > 0) {
+            const auto & newNode = this->_nodeBuffer.back().front();
+            if (newNode->isA(NodeTypeType)) {
+                value->setSrcType(std::static_pointer_cast<LILType>(this->_nodeBuffer.back().front()));
+            }
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    const auto & dstTy = value->getDstType();
+    if (dstTy) {
+        this->_nodeBuffer.emplace_back();
+        this->processPasteInstr(dstTy);
+        if (this->_nodeBuffer.back().size() > 0) {
+            const auto & newNode = this->_nodeBuffer.back().front();
+            if (newNode->isA(NodeTypeType)) {
+                value->setDstType(std::static_pointer_cast<LILType>(this->_nodeBuffer.back().front()));
+            }
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    return false;
+}
+
+bool LILPreprocessor::_processPasteInstr(std::shared_ptr<LILTypeDecl> value)
+{
+    const auto & srcTy = value->getSrcType();
+    if (srcTy) {
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processPasteInstr(srcTy);
+        if (remove && this->_nodeBuffer.back().size() > 0) {
+            const auto & newNode = this->_nodeBuffer.back().front();
+            if (newNode->isA(NodeTypeType)) {
+                value->setSrcType(std::static_pointer_cast<LILType>(this->_nodeBuffer.back().front()));
+            }
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    const auto & dstTy = value->getDstType();
+    if (dstTy) {
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processPasteInstr(dstTy);
+        if (remove && this->_nodeBuffer.back().size() > 0) {
+            const auto & newNode = this->_nodeBuffer.back().front();
+            if (newNode->isA(NodeTypeType)) {
+                value->setDstType(std::static_pointer_cast<LILType>(this->_nodeBuffer.back().front()));
+            }
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    return false;
+}
+
+bool LILPreprocessor::_processPasteInstr(std::shared_ptr<LILType> value)
+{
+    bool hasChangesTmplParams = false;
+    std::vector<std::shared_ptr<LILNode>> resultNodes;
+    for (auto node : value->getTmplParams()) {
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processPasteInstr(node);
+        if (!remove && this->_nodeBuffer.back().size() == 0) {
+            resultNodes.push_back(node);
+        } else {
+            hasChangesTmplParams = true;
+            for (auto newNode : this->_nodeBuffer.back()) {
+                resultNodes.push_back(newNode);
+            }
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    if (hasChangesTmplParams) {
+        this->_needsAnotherPass = true;
+        value->setTmplParams(std::move(resultNodes));
+    }
+    return false;
+}
+
+bool LILPreprocessor::_processPasteInstr(std::shared_ptr<LILFunctionType> value)
+{
+    bool hasChangesArgs = false;
+    std::vector<std::shared_ptr<LILNode>> resultNodes;
+    for (auto node : value->getArguments()) {
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processPasteInstr(node);
+        if (!remove && this->_nodeBuffer.back().size() == 0) {
+            resultNodes.push_back(node);
+        } else {
+            hasChangesArgs = true;
+            for (auto newNode : this->_nodeBuffer.back()) {
+                resultNodes.push_back(newNode);
+            }
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    if (hasChangesArgs) {
+        this->_needsAnotherPass = true;
+        //fixme: change to std::move?
+        value->setArguments(resultNodes);
+    }
+    return false;
+}
+
+bool LILPreprocessor::_processPasteInstr(std::shared_ptr<LILPointerType> value)
+{
+    const auto & arg = value->getArgument();
+    if (arg) {
+        this->_nodeBuffer.emplace_back();
+        this->processPasteInstr(arg);
+        if (this->_nodeBuffer.back().size() > 0) {
+            const auto & newNode = this->_nodeBuffer.back().front();
+            if (newNode->isA(NodeTypeType)) {
+                value->setArgument(std::static_pointer_cast<LILType>(newNode));
+            }
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    return false;
+}
+
+bool LILPreprocessor::_processPasteInstr(std::shared_ptr<LILStaticArrayType> value)
+{
+    const auto & arg = value->getArgument();
+    if (arg) {
+        this->_nodeBuffer.emplace_back();
+        this->processPasteInstr(arg);
+        if (this->_nodeBuffer.back().size() > 0) {
+            value->setArgument(this->_nodeBuffer.back().front());
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    const auto & type = value->getType();
+    if (type) {
+        this->processPasteInstr(type);
     }
     return false;
 }
