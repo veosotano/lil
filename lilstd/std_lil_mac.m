@@ -1,12 +1,122 @@
 #import <Cocoa/Cocoa.h>
+#import <AudioToolbox/AudioToolbox.h>
 #import <QuartzCore/CAMetalLayer.h>
 #import <Metal/Metal.h>
 #include <simd/simd.h>
+#include <math.h>
 
 extern void LIL__init();
 extern void LIL__addAppMenu();
 extern void LIL__addMenus();
 extern void LIL__nextFrame(void * vertexBuffer, long int * vertexCount);
+extern void LIL__setKeyDown(int keyCode);
+extern void LIL__setKeyUp(int keyCode);
+
+extern void LIL__audioInit();
+extern void LIL__audioFree();
+
+typedef struct LIL__audioDescriptorStruct {
+    AudioComponentInstance * audioUnit;
+    size_t bufferSize;
+    char * data;
+    UInt64 playCursor;
+    UInt32 bitsPerSample;
+    UInt32 bytesPerFrame;
+    UInt32 freq;
+    UInt32 samplesPerSecond;
+} LIL__audioDescriptorStruct;
+
+//this will be populated after calling LIL__audioInit()
+extern LIL__audioDescriptorStruct LIL__audioDescriptor;
+
+float LIL__sineValue = 0.f;
+
+OSStatus LIL__renderSineWave(void * inData, AudioUnitRenderActionFlags * flags, const AudioTimeStamp * timestamp, UInt32 busNumber, UInt32 frames, AudioBufferList *ioData)
+{
+    short int * channel = (short int * )ioData->mBuffers[0].mData;
+    UInt32 freq = LIL__audioDescriptor.freq;
+    UInt32 period = 48000 / freq;
+    float volume = 32000.0f;
+
+    for (UInt32 i = 0; i < frames; i++) {
+        float sineValue = sinf(LIL__sineValue);
+        short int sampleValue = (short int)(sineValue * volume);
+        *channel = sampleValue;
+        channel += 1;
+        *channel = sampleValue;
+        channel += 1;
+        LIL__sineValue += 2.0f * M_PI / (float)period;
+        if (LIL__sineValue > 2.0f * M_PI) {
+            LIL__sineValue -= 2.0f * M_PI;
+        }
+    }
+    
+    return noErr;
+}
+
+// OSStatus LIL__renderAudio(void * inData, AudioUnitRenderActionFlags * flags, const AudioTimeStamp * timestamp, UInt32 busNumber, UInt32 frames, AudioBufferList *ioData)
+// {
+//     short int * dstBuffer = (short int * )ioData->mBuffers[0].mData;
+//     short int * srcBuffer = (short int *)inData;
+//     UInt32 bytesPerFrame = 4;
+//     UInt32 bufferLength = frames * bytesPerFrame;
+//     memcpy(dstBuffer, srcBuffer, bufferLength);
+//     return noErr;
+// }
+
+void LIL__setupAudio()
+{
+    //this needs to be called so that the LIL__audioDescriptor
+    //global variable contains values from the config system
+    LIL__audioInit();
+
+    AudioComponentDescription acd;
+    acd.componentType = kAudioUnitType_Output;
+    acd.componentSubType = kAudioUnitSubType_DefaultOutput;
+    acd.componentManufacturer = kAudioUnitManufacturer_Apple;
+    acd.componentFlags = 0;
+    acd.componentFlagsMask = 0;
+    
+    AudioComponentInstance au;
+    LIL__audioDescriptor.audioUnit = &au;
+
+    AudioComponent out = AudioComponentFindNext(NULL, &acd);
+    OSStatus status = AudioComponentInstanceNew(out, LIL__audioDescriptor.audioUnit);
+
+    if (status != noErr) {
+        NSLog(@"Error setting up audio component");
+        return;
+    }
+    
+    AudioStreamBasicDescription asbd;
+    asbd.mSampleRate = LIL__audioDescriptor.samplesPerSecond;
+    asbd.mFormatID = kAudioFormatLinearPCM;
+    asbd.mFormatFlags = kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked;
+    asbd.mFramesPerPacket = 1;
+    asbd.mChannelsPerFrame = 2;
+    asbd.mBitsPerChannel = LIL__audioDescriptor.bitsPerSample;
+    asbd.mBytesPerFrame = LIL__audioDescriptor.bytesPerFrame;
+    asbd.mBytesPerPacket = LIL__audioDescriptor.bytesPerFrame;
+    status = AudioUnitSetProperty(*LIL__audioDescriptor.audioUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, 0, &asbd, sizeof(asbd));
+
+    if (status != noErr) {
+        NSLog(@"Error setting up audio output stream");
+        return;
+    }
+    
+    AURenderCallbackStruct callback;
+    callback.inputProc = LIL__renderSineWave;
+
+    status = AudioUnitSetProperty(*LIL__audioDescriptor.audioUnit, kAudioUnitProperty_SetRenderCallback, kAudioUnitScope_Global, 0, &callback, sizeof(callback));
+    
+    if (status != noErr) {
+        NSLog(@"Error setting up audio callback");
+        return;
+    }
+
+    AudioUnitInitialize(*LIL__audioDescriptor.audioUnit);
+    AudioOutputUnitStart(*LIL__audioDescriptor.audioUnit);
+}
 
 static const MTLPixelFormat LILDepthPixelFormat = MTLPixelFormatDepth32Float;
 
@@ -517,10 +627,14 @@ void LIL__run(float width, float height)
     
     // assign our delegate to the NSApplication
     [application setDelegate:LIL__applicationDelegate];
+    
+    LIL__setupAudio();
 
     // call the run method of our application
     [application run];
-    
+
+    LIL__audioFree();
+
     // drain the autorelease pool
     [LIL__autoreleasepool drain];
 }
