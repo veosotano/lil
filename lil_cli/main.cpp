@@ -120,14 +120,17 @@ int main(int argc, const char * argv[]) {
 
     buildMgr->read();
     if (buildMgr->hasErrors()) {
+        std::cerr << "Read errors!\n";
         return -1;
     }
     buildMgr->configure();
     if (buildMgr->hasErrors()) {
+        std::cerr << "Configure errors!\n";
         return -1;
     }
     buildMgr->build();
     if (buildMgr->hasErrors()) {
+        std::cerr << "Build errors!\n";
         return -1;
     }
     return 0;
