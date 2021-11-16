@@ -138,8 +138,6 @@ std::shared_ptr<LILType> LILTypeResolver::_process(std::shared_ptr<LILType> valu
         case TypeTypeMultiple:
         {
             auto multiTy = std::static_pointer_cast<LILMultipleType>(value);
-            multiTy->sortTypes();
-            
             std::vector<std::shared_ptr<LILType>> tys;
             bool changed = false;
             for (auto childTy : multiTy->getTypes()) {
@@ -155,6 +153,7 @@ std::shared_ptr<LILType> LILTypeResolver::_process(std::shared_ptr<LILType> valu
                 multiTy->setTypes(std::move(tys));
                 ret = multiTy;
             }
+            multiTy->sortTypes();
             break;
         }
         case TypeTypeFunction:
