@@ -6,6 +6,7 @@
 extern void LIL__init();
 extern void LIL__addAppMenu();
 extern void LIL__addMenus();
+extern void LIL__nextFrame(void * vertexBuffer, long int * vertexCount);
 
 static const MTLPixelFormat LILDepthPixelFormat = MTLPixelFormatDepth32Float;
 
@@ -17,11 +18,13 @@ typedef enum LILVertexInputIndex
 
 typedef struct
 {
-    // Positions in pixel space (i.e. a value of 100 indicates 100 pixels from the origin/center)
-    vector_float2 position;
+    float x;
+    float y;
 
-    // 2D texture coordinate
-    vector_float3 color;
+    float red;
+    float green;
+    float blue;
+    float alpha;
 } LILVertex;
 
 typedef struct
@@ -34,8 +37,10 @@ typedef struct
 
 - (nonnull id)initWithMetalDevice:(nonnull id<MTLDevice>)device_ drawablePixelFormat:(MTLPixelFormat)drawablePixelFormat;
 - (void)renderToMetalLayer:(nonnull CAMetalLayer*)metalLayer;
+- (void *)getVertexBufferPointer;
 
 @property(nonatomic, assign) MTLClearColor windowBgColor;
+@property(nonatomic, assign) long int vertexCount;
 
 @end
 
@@ -44,15 +49,17 @@ typedef struct
     id <MTLDevice> device;
     id <MTLCommandQueue> commandQueue;
     id <MTLRenderPipelineState> pipelineState;
-    id <MTLBuffer> vertices;
+    id <MTLBuffer> vertexBuffer;
     id <MTLTexture> depthTarget;
     MTLRenderPassDescriptor * drawableRenderDescriptor;
     vector_uint2 viewportSize;
     NSUInteger frameNum;
     MTLClearColor windowBgColor_;
+    long int vertexCount_;
 }
 
 @synthesize windowBgColor = windowBgColor_;
+@synthesize vertexCount = vertexCount_;
 
 - (nonnull id)initWithMetalDevice:(nonnull id<MTLDevice>)device_ drawablePixelFormat:(MTLPixelFormat)drawablePixelFormat
 {
@@ -61,6 +68,7 @@ typedef struct
     {
         device = device_;
         frameNum = 0;
+        vertexCount_ = 0;
         self.windowBgColor = MTLClearColorMake(0., 0., 0., 1.);
 
         commandQueue = [device newCommandQueue];
@@ -94,23 +102,10 @@ typedef struct
             return nil;
         }
 
-        // Set up a simple MTLBuffer with the vertices, including position and texture coordinates
-        static const LILVertex quadVertices[] =
-        {
-            // Pixel positions, Color coordinates
-            { {  250,  -250 },  { 1.f, 0.f, 0.f } },
-            { { -250,  -250 },  { 1.f, 1.f, 0.f } },
-            { { -250,   250 },  { 0.f, 1.f, 0.f } },
+        // Create a new empty vertex buffer
+        vertexBuffer = [device newBufferWithLength:(sizeof(LILVertex)*1000) options:MTLResourceStorageModeShared];
 
-            { {  250,  -250 },  { 1.f, 0.f, 0.f } },
-            { { -250,   250 },  { 0.f, 1.f, 0.f } },
-            { {  250,   250 },  { 0.f, 1.f, 1.f } },
-        };
-
-        // Create a vertex buffer, and initialize it with the vertex data.
-        vertices = [device newBufferWithBytes:quadVertices length:sizeof(quadVertices) options:MTLResourceStorageModeShared];
-
-        vertices.label = @"Quad";
+        vertexBuffer.label = @"VertexBuffer";
 
         // Create a pipeline state descriptor to create a compiled pipeline state object
         MTLRenderPipelineDescriptor *pipelineDescriptor = [[MTLRenderPipelineDescriptor alloc] init];
@@ -156,14 +151,15 @@ typedef struct
 
     [renderEncoder setRenderPipelineState:pipelineState];
 
-    [renderEncoder setVertexBuffer:vertices offset:0 atIndex:LILVertexInputIndexVertices ];
+    [renderEncoder setVertexBuffer:vertexBuffer offset:0 atIndex:LILVertexInputIndexVertices ];
 
     LILUniforms uniforms;
-    uniforms.scale = (0.7 + (0.2 * sin(frameNum * 0.1)));
+    //uniforms.scale = (0.7 + (0.2 * sin(frameNum * 0.1)));
+    uniforms.scale = 1.0;
     uniforms.viewportSize = viewportSize;
     [renderEncoder setVertexBytes:&uniforms length:sizeof(uniforms) atIndex:LILVertexInputIndexUniforms ];
 
-    [renderEncoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:6];
+    [renderEncoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:self.vertexCount];
 
     [renderEncoder endEncoding];
 
@@ -187,6 +183,11 @@ typedef struct
     depthTarget = [device newTextureWithDescriptor:depthTargetDescriptor];
 
     drawableRenderDescriptor.depthAttachment.texture = depthTarget;
+}
+
+- (void *)getVertexBufferPointer
+{
+    return vertexBuffer.contents;
 }
 
 @end
@@ -298,7 +299,7 @@ typedef struct
     CAMetalLayer * metalLayer = (CAMetalLayer*)self.layer;
     metalLayer.device = device;
 
-    metalLayer.pixelFormat = MTLPixelFormatBGRA8Unorm_sRGB;
+    metalLayer.pixelFormat = MTLPixelFormatBGRA8Unorm;
     self.renderer = [[LILMetalRenderer alloc] initWithMetalDevice:device drawablePixelFormat:metalLayer.pixelFormat];
     [self setupDisplayLink];
 
@@ -342,6 +343,10 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
     @autoreleasepool
     {
         LILMainView *theView = (__bridge LILMainView*)displayLinkContext;
+        long int vertexCount = 0;
+        LILMetalRenderer * renderer = theView.renderer;
+        LIL__nextFrame([renderer getVertexBufferPointer], &vertexCount);
+        renderer.vertexCount = vertexCount;
         [theView render];
     }
     return kCVReturnSuccess;
@@ -355,20 +360,39 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
     NSMenu * mainMenu;
     NSMutableArray * menuStack;
 }
+- (id)initWithWidth:(float) width height:(float) height;
 - (void)populateMainMenu;
 - (void)addMenu:(const char *) label;
 - (void)addMenuItem:(const char *)label key:(const char *)key fnPtr:(void(*))fnPtr;
 - (void)addMenuSeparator;
 - (void)exitMenu;
 - (void)menuItemSelected:(NSMenuItem *) menuItem;
-- (void)setWindowBackgroundRed:(double)red green:(double)green blue:(double)blue alpha:(double)alpha;
+- (void)setWindowBackgroundRed:(float)red green:(float)green blue:(float)blue alpha:(float)alpha;
 @end
 @implementation LILAppDelegate
-- (id)init {
+- (id)initWithWidth:(float) width height:(float) height {
     if ( self = [super init] ) {
-        NSRect contentSize = NSMakeRect(400.0f, 350.0f, 800.0f, 600.0f);
-        mainWindow = [[NSWindow alloc] initWithContentRect:
-            contentSize styleMask:
+        if (width < 300.0) {
+            width = 300.0;
+        }
+        if (height < 300.0) {
+            height = 300.0;
+        }
+        NSRect screenRect = [[NSScreen mainScreen] frame];
+        
+        float x = (screenRect.size.width/2) - (width/2);
+        float y = (screenRect.size.height/2) - (height/2);
+        if (x < 0.0) {
+            x = 0.0;
+        }
+        if (y < 0.0) {
+            y = 0.0;
+        }
+        NSRect contentSize = NSMakeRect(x, y, width, height);
+
+        mainWindow = [[NSWindow alloc]
+            initWithContentRect: contentSize
+            styleMask:
                 NSWindowStyleMaskTitled
                 | NSWindowStyleMaskClosable
                 | NSWindowStyleMaskMiniaturizable
@@ -468,7 +492,7 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
     fnPtr();
 }
 
-- (void)setWindowBackgroundRed:(double)red green:(double)green blue:(double)blue alpha:(double)alpha
+- (void)setWindowBackgroundRed:(float)red green:(float)green blue:(float)blue alpha:(float)alpha
 {
     mainView.renderer.windowBgColor = MTLClearColorMake(red, green, blue, alpha);
 }
@@ -478,7 +502,7 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
 NSAutoreleasePool * LIL__autoreleasepool;
 LILAppDelegate * LIL__applicationDelegate;
 
-void LIL__startup()
+void LIL__run(float width, float height)
 {
     LIL__autoreleasepool = [[NSAutoreleasePool alloc] init];
 
@@ -486,18 +510,14 @@ void LIL__startup()
     NSApplication * application = [NSApplication sharedApplication];
 
     // instantiate our application delegate
-    LIL__applicationDelegate = [[[LILAppDelegate alloc] init] autorelease];
+    LIL__applicationDelegate = [[[LILAppDelegate alloc] initWithWidth:width height: height] autorelease];
     
     [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
     [NSApp activateIgnoringOtherApps:YES];
     
     // assign our delegate to the NSApplication
     [application setDelegate:LIL__applicationDelegate];
-}
 
-void LIL__run()
-{
-    NSApplication * application = [NSApplication sharedApplication];
     // call the run method of our application
     [application run];
     

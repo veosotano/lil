@@ -1,0 +1,44 @@
+#snippet samplesPerSecond { #getConfig(audioSamplesPerSecond) };
+#snippet bitsPerSample { #getConfig(audioBitsPerSample) };
+#snippet bytesPerFrame { #getConfig(audioBytesPerFrame) };
+#snippet bufferSeconds { #getConfig(audioBufferSeconds) };
+#snippet bufferSize { (#paste samplesPerSecond * #paste bytesPerFrame * #paste bufferSeconds) };
+
+#import "cstd.lil";
+
+#export {
+    fn LIL__beep {
+        
+    };
+    
+    class @AudioComponentInstance { };
+
+    class @audioDescriptor {
+        var.ptr(@AudioComponentInstance) audioUnit;
+        var.i64 bufferSize;
+        var.ptr(i8) data;
+        var.i64 playCursor;
+        var.i32 bitsPerSample;
+        var.i32 bytesPerFrame;
+        var.i32 freq;
+        var.i32 samplesPerSecond;
+    };
+    
+    var.@audioDescriptor LIL__audioDescriptor;
+    
+    fn LIL__audioInit {
+        LIL__audioDescriptor: @audioDescriptor {
+            samplesPerSecond: #paste samplesPerSecond;
+            bitsPerSample: #paste bitsPerSample;
+            bytesPerFrame: #paste bytesPerFrame;
+            freq: 420i32;
+            bufferSize: #paste bufferSize;
+            playCursor: 0;
+            data: malloc(#paste bufferSize);
+        };
+    };
+    
+    fn LIL__audioFree {
+        free(LIL__audioDescriptor.data);
+    }
+}

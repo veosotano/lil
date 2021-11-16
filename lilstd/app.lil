@@ -1,54 +1,329 @@
 #needs "cstd.lil";
 
+const DEBUG: false;
+
+#snippet entityTypesSize { 10 };
+#snippet namesSize { 32 };
+#snippet selectionSize { 32 };
+#snippet entitiesSize { 2048 };
+#snippet componentsSize { 32 };
+
+fn onUpdate extern;
+
 #export {
-    class @selectable {
-        var.cstr name;
-        var.i64 parentId;
+    var.@app app;
+    class @rgb {
+        var.f32 red;
+        var.f32 green;
+        var.f32 blue;
+        var.f32 alpha;
     };
-    class @drawable {
-        var.f64 x;
-        var.f64 y;
-        var.f64 red;
-        var.f64 green;
-        var.f64 blue;
+    class @vertex {
+        var.f32 x;
+        var.f32 y;
+        var.@rgb color;
+    };
+    class @selectable {
+        var.i64 nameId;
+        var.i64 parentId;
+        var.i64 typeId;
+        var.i64 boxId;
+    };
+    class @box2d {
+        var.f32 x;
+        var.f32 y;
+        var.f32 z;
+        var.f32 width;
+        var.f32 height;
+        var.@rgb bgColor;
+    };
+    class @vel
+    {
+        var.f32 x: 0f32;
+        var.f32 y: 0f32;
+        var.f32 z: 0f32;
+    };
+    class @collider
+    {
+        var.f32 width;
+        var.f32 height;
+        var.f32 depth;
+        var.f32 x;
+        var.f32 y;
+        var.f32 z;
+    };
+    class @sel {
+        var.[#paste selectionSize x i64] ids: [];
+        var.i64 size: 0;
+    };
+    class @container
+    {
+        //this class MUST only be an i64
+        //do not add any more vars
+        var.i64 id: 0;
+
+        //public interface
+        vvar.i64 boxId;
+        vvar.f32 width;
+        vvar.f32 height;
+        vvar.@rgb background;
+        vvar.f32 x;
+        vvar.f32 y;
+        vvar.f32 z;
+        vvar.@vel velocity;
+
+        fn getBoxId => i64 {
+            return app.selectables[@self.id].boxId;
+        }
+
+        fn setWidth(var.f32 value) {
+            var selectable: app.selectables[@self.id];
+            var.cstr name: app.getName(selectable.nameId);
+            //printf(`set width of %s to %f\n`, name, value);
+            app.box2ds[@self.boxId].width: value;
+            app.getCollider(@self.id).width: value;
+        };
+        fn getWidth {
+            return app.box2ds[@self.boxId].width;
+        };
+        fn setHeight(var.f32 value) {
+            app.box2ds[@self.boxId].height: value;
+            app.getCollider(@self.id).height: value;
+        };
+        fn getHeight {
+            return app.box2ds[@self.boxId].height;
+        };
+        fn setBackground(var.@rgb value) {
+            app.box2ds[@self.boxId].bgColor: value;
+        };
+        fn getBackground {
+            return app.box2ds[@self.boxId].bgColor;
+        };
+        fn setX(var.f32 value) {
+            app.box2ds[@self.boxId].x: value;
+            app.colliders[@self.id].x: value;
+        }
+        fn getX() => f32 {
+            return app.box2ds[@self.boxId].x;
+        };
+        fn setY(var.f32 value) {
+            app.box2ds[@self.boxId].y: value;
+            app.colliders[@self.id].y: value;
+        };
+        fn getY() => f32 {
+            return app.box2ds[@self.boxId].y;
+        };
+        fn setZ(var.f32 value) {
+            app.box2ds[@self.boxId].z: value;
+            app.colliders[@self.id].z: value;
+        };
+        fn getZ() => f32 {
+            return app.box2ds[@self.boxId].z;
+        };
+        fn setVelocity(var.@vel value) {
+            app.velocities[@self.id]: value;
+        };
+        fn getVelocity() => @vel {
+            return app.velocities[@self.id];
+        }
     }
-    
+
     class @app {
-        var.@selectable[2048] selectables: [];
-        var.@drawable[2048] drawables: [];
+        var.[#paste entitiesSize x @selectable] selectables: [];
         var.i64 entityCount: 0;
-        
+        var.[#paste entitiesSize x @box2d] box2ds: [];
+        var.i64 boxCount: 0;
+        var.[#paste entitiesSize x i64] colliderIds: [];
+        var.[#paste componentsSize x @collider] colliders: [];
+        var.[#paste namesSize x cstr] names: [];
+        var.i64 nameCount: 0;
+        var.i64 typeCount: 0;
+        var.[#paste entitiesSize x @vel] velocities: [];
+
         fn newEntity => i64 {
-            puts `Creating new entity`;
+            #if DEBUG {
+                puts `Creating new entity`;
+            }
             var currentCount: @self.entityCount;
             @self.entityCount +: 1;
             return currentCount;
         };
+        fn newType => i64 {
+            #if DEBUG {
+                puts `Creating new type`;
+            }
+            var currentCount: @self.typeCount;
+            @self.typeCount +: 1;
+            return currentCount;
+        };
+        fn registerName(var.cstr name){
+            #if DEBUG {
+                puts `Register name`;
+            }
+            var.bool found: false;
+            var.i64 existingId: 0;
+            #if DEBUG {
+                printf(`Name count %li\n`, @self.nameCount);
+            }
+            for (var.i64 i:0; i<@self.nameCount; i+:1) {
+                #if DEBUG {
+                    printf(`Checking id %li\n`, i);
+                }
+                if(strcmp(name, @self.names[i]) = 0i32) {
+                    found: true;
+                    existingId: i;
+                    //break;
+                }
+            }
+            if found {
+                return existingId;
+            } else {
+                var currentCount: @self.nameCount;
+                @self.names[currentCount]: name;
+                @self.nameCount +: 1;
+                return currentCount;
+            }
+        };
+        fn getName(var.i64 id){
+            return @self.names[id];
+        };
+        fn selectByName(var.i64 parentId; var.i64 nameId)=>@sel {
+            var ret: @sel { };
+            for(var.i64 i: 0; i<@self.entityCount; i+:1) {
+                var item: pointerTo @self.selectables[i];
+                if item.parentId = parentId {
+                    if item.nameId = nameId {
+                        ret.ids[ret.size]: i;
+                        ret.size +: 1;
+                    }
+                }
+            }
+            return ret;
+        };
         fn setSelectable(var.i64 id; var.@selectable value) {
-            printf(`Setting selectable with name %s for id %li\n`, value.name, id);
+            #if DEBUG {
+                printf(`Setting selectable with name %s for id %li with type %li\n`, @self.getName(value.nameId), id, value.typeId);
+            }
             @self.selectables[id]: value;
         };
-        fn setDrawable(var.i64 id; var.@drawable value) {
-            printf(`Setting drawable with x: %lf, y: %lf, red: %lf, green: %lf, blue: %lf\n`, value.x, value.y, value.red, value.green, value.blue);
-            @self.drawables[id]: value;
+        fn newElement(var.cstr name; var.i64 parentId: 0; var.i64 typeId: 0; var.i64 boxId: 0)=>i64 {
+            #if DEBUG {
+                puts `Creating new element`;
+            }
+            var.i64 id: @self.newEntity();
+            var.i64 nameId: @self.registerName(name);
+            @self.setSelectable(id, @selectable {
+                nameId: nameId;
+                parentId: parentId;
+                typeId: typeId;
+                boxId: boxId;
+            });
+            return id;
         };
-        // fn newElement(var.cstr name; var.i64 parentId: 0)=>ptr(@selectable) {
-        //     puts `Creating new element`;
-        //     var.i64 id: @self.newEntity();
-        //     @self.setSelectable(id, @selectable {
-        //         name: name;
-        //         parentId: parentId;
-        //     });
-        //     @self.setDrawable(id, @drawable {
-        //         x: 0.0;
-        //         y: 0.0;
-        //         red: 0.0;
-        //         green: 0.0;
-        //         blue: 0.0;
-        //     });
-        //     return @self.selectables[id];
-        // };
+        fn newBox => i64 {
+            var currentCount: @self.boxCount;
+            @self.boxCount +: 1;
+            return currentCount;
+        };
+        fn setCollider(var.i64 id; var.@collider value) {
+            var.i64 colliderId: @self.colliderIds[id];
+            @self.colliders[colliderId]: value;
+        };
+        fn getCollider(var.i64 id) => ptr(@collider) {
+            var.i64 colliderId: @self.colliderIds[id];
+            return pointerTo @self.colliders[colliderId];
+        };
     };
     
-    var.@app app;
+    fn LIL__newElement(var.cstr name; var.i64 parentId: 0; var.i64 typeId: 0; var.i64 boxId: 0)=>i64 {
+        return app.newElement(name, parentId, typeId, boxId);
+    };
+
+    fn LIL__newContainer(var.cstr name; var.i64 parentId: 0) => i64 {
+        var boxId: app.newBox();
+        return app.newElement(name, parentId, 0, boxId);
+    }
+    
+    fn LIL__nameToNameId(var.cstr name) => i64 {
+        return app.registerName(name);
+    };
+
+    fn LIL__selectByName(var.i64 nameId; var.i64 parentId) => @sel {
+        var ret: @sel { };
+        for(var.i64 i:0; i<app.entityCount; i+:1){
+            var selectable: app.selectables[i];
+            if (selectable.parentId = parentId) {
+                if(selectable.nameId = nameId){
+                    ret.ids[ret.size]: i;
+                    ret.size +: 1;
+                }
+            }
+        }
+        return ret;
+    };
+    
+    fn LIL__movementSystem {
+        for (var.i64 i:0; i<app.entityCount; i+:1) {
+            app.box2ds[i].x +: app.velocities[i].x;
+            app.box2ds[i].y +: app.velocities[i].y;
+            app.box2ds[i].z +: app.velocities[i].z;
+        }
+    };
+
+    fn LIL__runSystems {
+        LIL__movementSystem();
+    };
+
+    fn LIL__nextFrame(var.ptr(any) vertexBuffer, var.ptr(i64) vertexCount) {
+        onUpdate();
+        LIL__runSystems();
+
+        var.[1000 x @vertex] vertices: [];
+        for (var.i64 i:0; i<app.boxCount; i+:1) {
+
+            var box: app.box2ds[i];
+            var color: box.bgColor;
+
+            var.i64 triIdx: i*6;
+
+            vertices[triIdx]: @vertex {
+                x: box.x;
+                y: box.y;
+                color: color;
+            };
+
+            vertices[triIdx+1]: @vertex {
+                x: box.x;
+                y: box.y + box.height;
+                color: color;
+            };
+
+            vertices[triIdx+2]: @vertex {
+                x: box.x + box.width;
+                y: box.y;
+                color: color;
+            };
+
+            vertices[triIdx+3]: @vertex {
+                x: box.x;
+                y: box.y + box.height;
+                color: color;
+            };
+
+            vertices[triIdx+4]: @vertex {
+                x: box.x + box.width;
+                y: box.y + box.height;
+                color: color;
+            };
+
+            vertices[triIdx+5]: @vertex {
+                x: box.x + box.width;
+                y: box.y;
+                color: color;
+            };
+        }
+
+        memcpy (vertexBuffer, pointerTo(vertices), sizeOf(vertices));
+        vertexCount: app.boxCount * 6;
+    }
 }

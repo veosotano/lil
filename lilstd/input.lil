@@ -1,0 +1,18 @@
+#export {
+    var.@input input;
+    class @input {
+        var.[65536 x bool] keyStates: [];
+        fn isKeyDown (var.i16 keyCode) => bool {
+            return @self.keyStates[keyCode];
+        };
+        fn setKeyDown (var.i16 keyCode; var.bool value) {
+            @self.keyStates[keyCode]: value;
+        };
+    };
+    fn LIL__setKeyDown(var.i16 keyCode) {
+        input.setKeyDown(keyCode, true);
+    };
+    fn LIL__setKeyUp(var.i16 keyCode) {
+        input.setKeyDown(keyCode, false);
+    };
+}
