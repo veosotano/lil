@@ -101,10 +101,20 @@ void LILTypeValidator::_validate(std::shared_ptr<LILFunctionCall> fc)
 {
     if (fc->isA(FunctionCallTypeValuePath)) {
         auto vp = fc->getSubject();
-        auto remoteNode = this->findNodeForValuePath(vp.get());
-        if (!remoteNode || !remoteNode->isA(NodeTypeVarDecl)) {
+        bool isMethod = false;
+        const auto & nodes = vp->getNodes();
+        auto firstNode = nodes.front();
+        std::shared_ptr<LILNode> remoteNode;
+        if (nodes.size() == 1 && firstNode->isA(SelectorTypeSelfSelector)) {
+            auto classDecl = this->findAncestorClass(vp);
+            remoteNode = classDecl->getMethodNamed(fc->getName());
+            isMethod = true;
+        } else {
+            remoteNode = this->findNodeForValuePath(vp.get());
+        }
+        if (!remoteNode || (!remoteNode->isA(NodeTypeFunctionDecl) && !remoteNode->isA(NodeTypeVarDecl))) {
             LILErrorMessage ei;
-            ei.message =  "Function "+LILNodeToString::stringify(vp.get())+"() not found";
+            ei.message =  "Function "+LILNodeToString::stringify(vp.get())+"."+fc->getName()+"() not found";
             LILNode::SourceLocation sl = fc->getSourceLocation();
             ei.file = sl.file;
             ei.line = sl.line;
@@ -113,8 +123,15 @@ void LILTypeValidator::_validate(std::shared_ptr<LILFunctionCall> fc)
             return;
         }
         
-        auto vd = std::static_pointer_cast<LILVarDecl>(remoteNode);
-        auto fieldTy = vd->getType();
+        std::shared_ptr<LILType> fieldTy;
+        if (remoteNode->isA(NodeTypeFunctionDecl)) {
+            auto fd = std::static_pointer_cast<LILFunctionDecl>(remoteNode);
+            fieldTy = fd->getFnType();
+        } else if (remoteNode->isTypedNode()) {
+            auto tyNode = std::static_pointer_cast<LILTypedNode>(remoteNode);
+            fieldTy = tyNode->getType();
+        }
+
         if (!this->inhibitSearchingForIfCastType && fieldTy->isA(TypeTypeMultiple)) {
             size_t outVpSize = 0;
             auto ifCastTy = this->findIfCastType(vp.get(), outVpSize);
@@ -125,7 +142,7 @@ void LILTypeValidator::_validate(std::shared_ptr<LILFunctionCall> fc)
                 return;
             }
         }
-        bool isMethod = false;
+        
         std::shared_ptr<LILType> ty;
         if (fieldTy->isA(TypeTypePointer)) {
             auto ptrTy = std::static_pointer_cast<LILPointerType>(fieldTy);
@@ -137,8 +154,8 @@ void LILTypeValidator::_validate(std::shared_ptr<LILFunctionCall> fc)
                 std::cerr << "!!!!!!! CLASS NOT FOUND FAIL !!!!!!!\n";
                 return;
             }
-            auto method = classDecl->getMethodNamed(fc->getName());
-            if (!method) {
+            auto methodNode = classDecl->getMethodNamed(fc->getName());
+            if (!methodNode) {
                 LILErrorMessage ei;
                 ei.message =  "The class "+fieldTy->getName()+" does not contain a field named "+fc->getName();
                 LILNode::SourceLocation sl = fc->getSourceLocation();
@@ -148,16 +165,15 @@ void LILTypeValidator::_validate(std::shared_ptr<LILFunctionCall> fc)
                 this->errors.push_back(ei);
                 return;
             }
-            auto methodFdVal = std::static_pointer_cast<LILVarDecl>(method)->getInitVal();
-            if (methodFdVal) {
-                auto methodFd = std::static_pointer_cast<LILFunctionDecl>(methodFdVal);
-                ty = methodFd->getFnType();
-            } else {
-                ty = method->getType();
-            }
+            auto method = std::static_pointer_cast<LILFunctionDecl>(methodNode);
+            ty = method->getFnType();
             isMethod = true;
         }
-        
+        else if (fieldTy->isA(TypeTypeFunction))
+        {
+            ty = fieldTy;
+        }
+
         if (!ty || !ty->isA(TypeTypeFunction)) {
             LILErrorMessage ei;
             ei.message =  "The path "+LILNodeToString::stringify(vp.get())+" does not point to a function";
@@ -179,12 +195,12 @@ void LILTypeValidator::_validate(std::shared_ptr<LILFunctionCall> fc)
             LILErrorMessage ei;
             if (args.size() == 0) {
                 if (fnTyArgs.size() > 1) {
-                    ei.message =  "Missing argument in call: "+LILNodeToString::stringify(vp.get())+" needs "+LILString::number((LILUnitI64)fnTyArgs.size()) + " arguments";
+                    ei.message =  "Missing argument in call: "+LILNodeToString::stringify(vp.get())+"."+fc->getName()+" needs "+LILString::number((LILUnitI64)fnTyArgs.size()) + " arguments";
                 } else {
-                    ei.message =  "Missing argument in call: "+LILNodeToString::stringify(vp.get())+" needs one argument";
+                    ei.message =  "Missing argument in call: "+LILNodeToString::stringify(vp.get())+"."+fc->getName()+" needs one argument";
                 }
             } else {
-                ei.message =  "Mismatch of number of arguments: "+LILNodeToString::stringify(vp.get())+" needs "+LILString::number((LILUnitI64)fnTyArgs.size()) + " arguments and was given " + LILString::number((LILUnitI64)args.size());
+                ei.message =  "Mismatch of number of arguments: "+LILNodeToString::stringify(vp.get())+"."+fc->getName()+" needs "+LILString::number((LILUnitI64)fnTyArgs.size()-(isMethod?1:0)) + " arguments and was given " + LILString::number((LILUnitI64)argNum-(isMethod?1:0));
             }
             LILNode::SourceLocation sl = fc->getSourceLocation();
             ei.file = sl.file;
