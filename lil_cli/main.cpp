@@ -77,17 +77,21 @@ int main(int argc, const char * argv[]) {
         }
     }
     
+    if (verbose) {
+        std::cerr << "Initializing...\n\n";
+        std::cerr << "Input file was: \n";
+        std::cerr << inName << "\n\n";
+    }
+    
     size_t slashIndex = inName.find_last_of("/");
     if (slashIndex != std::string::npos) {
         localDir = inName.substr(0, slashIndex);
+        inName = inName.substr(slashIndex+1, inName.length() - slashIndex - 1);
     } else {
         localDir = "";
     }
 
     if (verbose) {
-        std::cerr << "Initializing...\n\n";
-        std::cerr << "Input file was: \n";
-        std::cerr << inName << "\n\n";
         std::cerr << "Arguments:\n";
         for (auto arg : arguments) {
             std::cerr << arg.data() << "\n";
