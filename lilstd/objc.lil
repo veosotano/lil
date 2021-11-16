@@ -1,0 +1,15 @@
+#export {
+    class @objc_class {};
+    alias Class => ptr(@objc_class);
+    class @objc_object {
+        var.Class isa;
+    };
+    alias id => ptr(@objc_object);
+    class @objc_selector { };
+    alias SEL => ptr(@objc_selector);
+
+    fn sel_getName(SEL)=>cstr extern;
+    fn sel_registerName(cstr)=>SEL extern;
+    fn objc_lookUpClass(cstr)=>Class extern;
+    fn objc_msgSend(id,SEL...)=>id extern;
+};
