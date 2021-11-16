@@ -1208,18 +1208,17 @@ std::shared_ptr<LILFunctionType> LILTypeGuesser::findFnTypeForFunctionCall(std::
                 std::cerr << "CLASS NOT NOT FOUND FAIL!!!!\n\n";
                 return nullptr;
             }
-            auto method = classValue->getMethodNamed(fc->getName());
-            if (!method) {
+            auto methodNode = classValue->getMethodNamed(fc->getName());
+            if (!methodNode) {
                 std::cerr << "METHOD NOT NOT FOUND FAIL!!!!\n\n";
                 return nullptr;
             }
-            auto methTy = method->getType();
-            if (!methTy->isA(TypeTypeFunction)) {
-                std::cerr << "TYPE WAS NOT FUNCTION TYPE FAIL!!!!\n\n";
+            if (!methodNode->isA(NodeTypeFunctionDecl)) {
+                std::cerr << "METHOD NODE WAS NOT FUNCTION DECL FAIL!!!!\n\n";
                 return nullptr;
             }
-            auto fnTy = std::static_pointer_cast<LILFunctionType>(methTy);
-            return fnTy;
+            auto method = std::static_pointer_cast<LILFunctionDecl>(methodNode);
+            return method->getFnType();
         }
         default:
         {
@@ -1872,17 +1871,17 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(std::shared_ptr<LI
                         return nullptr;
                     }
                     auto methodName = fc->getName();
-                    auto method = classDecl->getMethodNamed(methodName);
-                    if (!method) {
+                    auto methodNode = classDecl->getMethodNamed(methodName);
+                    if (!methodNode) {
                         std::cerr << "METHOD " << methodName.data() << " NOT FOUND FAIL!!!!\n";
                         return nullptr;
                     }
-                    auto methTy = method->getType();
-                    if (!methTy->isA(TypeTypeFunction)) {
-                        std::cerr << "METHOD TYPE IS NOT FUNCTION TYPE FAIL!!!!\n";
+                    if (!methodNode->isA(NodeTypeFunctionDecl)) {
+                        std::cerr << "METHOD NODE IS NOT FUNCTION DECL FAIL!!!!\n";
                         return nullptr;
                     }
-                    auto fnTy = std::static_pointer_cast<LILFunctionType>(methTy);
+                    auto method = std::static_pointer_cast<LILFunctionDecl>(methodNode);
+                    auto fnTy = method->getFnType();
                     auto retTy = fnTy->getReturnType();
                     if (retTy) {
                         currentTy = retTy;

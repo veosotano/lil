@@ -20,6 +20,7 @@
 #include "LILVarName.h"
 #include "LILVarNode.h"
 #include "LILRootNode.h"
+#include "LILFunctionDecl.h"
 #include "LILFunctionType.h"
 #include "LILMultipleType.h"
 #include "LILNumberLiteral.h"
@@ -183,17 +184,12 @@ std::shared_ptr<LILNode> LILVisitor::findNodeForValuePath(LILValuePath * vp) con
                 {
                     auto fc = std::static_pointer_cast<LILFunctionCall>(node);
                     auto method = classDecl->getMethodNamed(fc->getName());
-                    if (!method->isA(NodeTypeVarDecl)) {
-                        std::cerr << "!!!!!!!!!!NODE IS NOT VAR DECL FAIL !!!!!!!!!!!!!!!!\n";
+                    if (!method->isA(NodeTypeFunctionDecl)) {
+                        std::cerr << "!!!!!!!!!!NODE IS NOT FUNCTION DECL FAIL !!!!!!!!!!!!!!!!\n";
                         return nullptr;
                     }
-                    auto vd = std::static_pointer_cast<LILVarDecl>(method);
-                    auto ty = vd->getType();
-                    if (!ty->isA(TypeTypeFunction)) {
-                        std::cerr << "!!!!!!!!!!TYPE IS NOT FUNCTION TYPE FAIL !!!!!!!!!!!!!!!!\n";
-                        return nullptr;
-                    }
-                    auto fnTy = std::static_pointer_cast<LILFunctionType>(ty);
+                    auto fd = std::static_pointer_cast<LILFunctionDecl>(method);
+                    auto fnTy = fd->getFnType();
                     auto retTy = fnTy->getReturnType();
                     if (!retTy->isA(TypeTypeObject)) {
                         std::cerr << "!!!!!!!!!!NODE DOES NOT POINT TO OBJECT FAIL !!!!!!!!!!!!!!!!\n";

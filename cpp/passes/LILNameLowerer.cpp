@@ -284,61 +284,7 @@ void LILNameLowerer::_process(LILNullLiteral * value)
 
 void LILNameLowerer::_process(LILVarDecl * value)
 {
-    auto initVal = value->getInitVal();
-    auto ty = value->getType();
-    if (!ty || !ty->isA(TypeTypeFunction)) {
-        return;
-    }
 
-    auto parent = value->getParentNode();
-    if (!parent) {
-        return;
-    }
-    std::shared_ptr<LILClassDecl> parentCd;
-    if (parent->isA(NodeTypeClassDecl)) {
-        parentCd = std::static_pointer_cast<LILClassDecl>(parent);
-    }
-
-    if (initVal) {
-        if (initVal->isA(NodeTypeFunctionDecl)) {
-            if (parentCd) {
-                auto fd = std::static_pointer_cast<LILFunctionDecl>(initVal);
-                auto ty = fd->getType();
-                if (ty->getTypeType() != TypeTypeFunction) {
-                    return;
-                }
-                std::string parentClass = "";
-                if (parentCd) {
-                    parentClass = parentCd->getName().data();
-                }
-                auto newName = this->decorate("", parentClass, fd->getName(), ty);
-                fd->setName(newName);
-                
-                auto fnTy = std::static_pointer_cast<LILFunctionType>(ty);
-                auto ptrTy = std::make_shared<LILPointerType>();
-                ptrTy->setName("ptr");
-                ptrTy->setArgument(parentCd->getType()->clone());
-                auto argVd = std::make_shared<LILVarDecl>();
-                argVd->setName("@self");
-                argVd->setType(ptrTy);
-                fnTy->prependArgument(argVd);
-            }
-        } else {
-            this->process(initVal.get());
-        }
-    }
-    
-    //insert the @self pointer into the function type
-    if (parentCd && !initVal) {
-        auto fnTy = std::static_pointer_cast<LILFunctionType>(ty);
-        auto ptrTy = std::make_shared<LILPointerType>();
-        ptrTy->setName("ptr");
-        ptrTy->setArgument(parentCd->getType()->clone());
-        auto argVd = std::make_shared<LILVarDecl>();
-        argVd->setName("@self");
-        argVd->setType(ptrTy);
-        fnTy->prependArgument(argVd);
-    }
 }
 
 void LILNameLowerer::_process(LILClassDecl * value)
@@ -347,7 +293,56 @@ void LILNameLowerer::_process(LILClassDecl * value)
         auto ty = value->getType();
         if (!ty || !value->isTemplate()) {
             this->processChildren(value->getFields());
-            this->processChildren(value->getMethods());
+            for (const auto & methodPair : value->getMethods())
+            {
+                auto methodNode = methodPair.second;
+                if (methodNode->isA(NodeTypeFunctionDecl)) {
+                    auto fd = std::static_pointer_cast<LILFunctionDecl>(methodNode);
+                    if (fd->getHasMultipleImpls()) {
+                        auto ptrTy = std::make_shared<LILPointerType>();
+                        ptrTy->setName("ptr");
+                        ptrTy->setArgument(value->getType()->clone());
+                        auto argVd = std::make_shared<LILVarDecl>();
+                        argVd->setName("@self");
+                        argVd->setType(ptrTy);
+                        
+                        for (const auto & innerFd : fd->getImpls()) {
+                            auto ty = innerFd->getType();
+                            if (ty->getTypeType() != TypeTypeFunction) {
+                                std::cerr << "INNER FD HAD NO FN TYPE FAIL!!!!!!!!!\n\n";
+                                return;
+                            }
+                            auto newName = this->decorate("", value->getName().data(), innerFd->getName(), ty);
+                            innerFd->setName(newName);
+                            auto fnTy = std::static_pointer_cast<LILFunctionType>(ty);
+                            fnTy->prependArgument(argVd);
+                        }
+                        //add the @self argument to the parent fd too
+                        auto fnTy = fd->getFnType();
+                        if (!fnTy) {
+                            std::cerr << "FD HAD NO FN TYPE FAIL!!!!!!!!!\n\n";
+                            return;
+                        }
+                        fnTy->prependArgument(argVd);
+                    } else {
+                        auto ty = fd->getType();
+                        if (ty->getTypeType() != TypeTypeFunction) {
+                            return;
+                        }
+                        auto newName = this->decorate("", value->getName().data(), fd->getName(), ty);
+                        fd->setName(newName);
+                        
+                        auto fnTy = std::static_pointer_cast<LILFunctionType>(ty);
+                        auto ptrTy = std::make_shared<LILPointerType>();
+                        ptrTy->setName("ptr");
+                        ptrTy->setArgument(value->getType()->clone());
+                        auto argVd = std::make_shared<LILVarDecl>();
+                        argVd->setName("@self");
+                        argVd->setType(ptrTy);
+                        fnTy->prependArgument(argVd);
+                    }
+                }
+            }
         }
     }
 }
@@ -409,7 +404,16 @@ void LILNameLowerer::_process(LILVarName * value)
 void LILNameLowerer::_process(LILFunctionDecl * value)
 {
     auto parent = value->getParentNode();
-    if (!parent || !parent->isA(NodeTypeVarDecl)) {
+    if (!parent) {
+        return;
+    }
+    if (!parent->isA(NodeTypeClassDecl)) {
+        if (value->getHasMultipleImpls()) {
+            for (const auto & impl : value->getImpls()) {
+                auto newImplName = this->decorate("", "", impl->getName(), impl->getFnType());
+                impl->setName(newImplName);
+            }
+        }
         return;
     }
     auto ty = value->getType();
@@ -419,15 +423,19 @@ void LILNameLowerer::_process(LILFunctionDecl * value)
     auto fnTy = std::static_pointer_cast<LILFunctionType>(ty);
     auto name = value->getName();
 
-    auto grandParent = parent->getParentNode();
-    if (grandParent && grandParent->isA(NodeTypeClassDecl)) {
-        auto cd = std::static_pointer_cast<LILClassDecl>(grandParent);
-        auto grandpaTy = cd->getType();
-        auto newName = this->decorate("", grandpaTy->getName(), name, ty);
-        value->setName(newName);
-        
-        
-        
+    if (parent->isA(NodeTypeClassDecl)) {
+        auto cd = std::static_pointer_cast<LILClassDecl>(parent);
+        auto classTy = cd->getType();
+        if (value->getHasMultipleImpls()) {
+            for (const auto & impl : value->getImpls()) {
+                auto newImplName = this->decorate("", classTy->getName(), impl->getName(), impl->getFnType());
+                impl->setName(newImplName);
+            }
+        } else {
+            auto newName = this->decorate("", classTy->getName(), name, ty);
+            value->setName(newName);
+        }
+
     } else {
         bool needsDecor = false;
         for (auto arg : fnTy->getArguments()) {
@@ -441,8 +449,6 @@ void LILNameLowerer::_process(LILFunctionDecl * value)
             value->setName(newName);
         }
     }
-
-    this->processChildren(value->getBody());
 }
 
 void LILNameLowerer::_process(LILFunctionCall * value)
