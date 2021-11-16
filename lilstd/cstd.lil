@@ -5,4 +5,7 @@
     fn malloc (i64)=>cstr extern;
     fn realloc (cstr,i64)=>cstr extern;
     fn free (cstr) extern;
+    fn memcpy (var.ptr(any) dst; var.ptr(any) src; var.i64 len) extern;
+    fn strcmp (var.cstr str1; var.cstr str2) => i32 extern;
+    fn abs(var.i32 value) => i32 extern;
 }
