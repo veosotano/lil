@@ -3,6 +3,8 @@
 #snippet SMALL_BUFFER_SIZE { 2 };
 #snippet BIG_BUFFER_MIN_SIZE { 10 };
 
+const DEBUG: false;
+
 #export {
     #====== class @array ===========
     #= A dynamic array which automatically grows or shrinks as needed
@@ -29,19 +31,29 @@
         #= return: a pointer to the value at given index or null
         #-------------------------------
         fn at(var.i64 index)=>ptr(@subtype)|null {
-            puts `start of at method`;
+            #if DEBUG {
+                puts `start of at method`;
+            }
             if index >= 0 {
-                puts `index was greater or equal to 0`;
-                printf(`index: %li\n`, index);
-                printf(`size: %li\n`, @self.size);
+                #if DEBUG {
+                    puts `index was greater or equal to 0`;
+                    printf(`index: %li\n`, index);
+                    printf(`size: %li\n`, @self.size);
+                }
                 if index < @self.size {
-                    puts `index was lower than @self.size`;
+                    #if DEBUG {
+                        puts `index was lower than @self.size`;
+                    }
                     if @self.buffer => sbuf {
-                        puts `buffer was sbuf`;
+                        #if DEBUG {
+                            puts `buffer was sbuf`;
+                        }
                         return pointerTo @self.buffer[index];
                     }
                     if @self.buffer => ptr(@subtype) {
-                        puts `buffer was pointer`;
+                        #if DEBUG {
+                            puts `buffer was pointer`;
+                        }
                         return @self.buffer + (sizeOf(type @subtype)*index);
                     }
                 }
@@ -125,7 +137,9 @@
         #= var newCapacity: how many elements will fit
         #-------------------------------
         fn initialize(var.i64 newCapacity)=>ptr(@subtype) {
-            printf(`initialize with %li\n`, newCapacity);
+            #if DEBUG {
+                printf(`initialize with %li\n`, newCapacity);
+            }
             @self.size: 0;
 
             if newCapacity <= #paste SMALL_BUFFER_SIZE {
