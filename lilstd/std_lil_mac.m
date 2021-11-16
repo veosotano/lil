@@ -395,7 +395,10 @@ typedef struct
     puts("mousemoved!");
 }
 - (void)keyDown:(NSEvent *)anEvent {
-    puts("keydown!");
+    LIL__setKeyDown(anEvent.keyCode);
+}
+- (void)keyUp:(NSEvent *)anEvent {
+    LIL__setKeyUp(anEvent.keyCode);
 }
 
 - (void)viewDidMoveToWindow
