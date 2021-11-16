@@ -322,64 +322,12 @@ std::shared_ptr<LILType> LILTypeResolver::_process(std::shared_ptr<LILType> valu
         }
         case TypeTypeStaticArray:
         {
-            auto cd = this->getClassContext();
-            if (cd) {
-                for (auto alias : cd->getAliases()) {
-                    auto aTy = alias->getSrcType();
-                    if (aTy->equalTo(value)) {
-                        auto dstTy = alias->getDstType();
-                        auto newTy = this->_process(dstTy);
-                        if (newTy) {
-                            ret = newTy;
-                        } else {
-                            ret = dstTy->clone();
-                        }
-                        break;
-                    }
-                }
-            }
-            if (!ret) {
-                const auto & rootNode = this->getRootNode();
-                auto aliases = rootNode->getAliases();
-                for (auto alias : aliases) {
-                    auto aTy = alias->getSrcType();
-                    if (aTy->equalTo(value)) {
-                        auto dstTy = alias->getDstType();
-                        auto newTy = this->_process(dstTy);
-                        if (newTy) {
-                            ret = newTy;
-                        } else {
-                            ret = dstTy->clone();
-                        }
-                        break;
-                    }
-                }
-            }
-            if (!ret) {
-                const auto & rootNode = this->getRootNode();
-                auto typeDecls = rootNode->getTypes();
-                for (auto typeDecl : typeDecls) {
-                    auto tTy = typeDecl->getSrcType();
-                    if (tTy->equalTo(value)) {
-                        auto dstTy = typeDecl->getDstType();
-                        auto newTy = this->_process(dstTy);
-                        if (newTy) {
-                            ret = newTy;
-                        } else {
-                            ret = dstTy->clone();
-                        }
-                        ret->setStrongTypeName(value->getName());
-                        break;
-                    }
-                }
-            }
             auto saTy = std::static_pointer_cast<LILStaticArrayType>(value);
             auto saChildTy = saTy->getType();
             if (saChildTy) {
-                auto retSaTy = std::static_pointer_cast<LILStaticArrayType>(ret);
                 auto processedSaChildTy = this->_process(saChildTy);
                 if (processedSaChildTy) {
-                    retSaTy->setType(processedSaChildTy);
+                    saTy->setType(processedSaChildTy);
                 }
             }
             break;
