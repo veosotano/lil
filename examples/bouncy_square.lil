@@ -1,0 +1,376 @@
+#configure {
+    name: "Bouncy square";
+}
+
+const.f32 windowWidth: 1440f32;
+const.f32 windowHeight: 900f32;
+
+class @level {
+    var.i64 delayInput;
+    var.f32 maxSpeed;
+    var.f32 velX;
+    var.f32 velY;
+    var.f32 size;
+    var.@rgb color;
+}
+
+//these have to be exported to be globals
+//this is a bug that will be fixed soon
+#export {
+    //fixme: should not need f32 suffix after number literal
+    var.f32 maxSpeed: 4f32; 
+    var.@rgb levelColor;
+    var.i64 delayUp: 0;
+    var.i64 delayLeft: 0;
+    var.i64 delayDown: 0;
+    var.i64 delayRight: 0;
+    var.@level level;
+}
+
+//start game in level1
+level1();
+
+fn newGame {
+    maxSpeed: level.maxSpeed;
+    app.box2ds[1].x: 720f32;
+    app.box2ds[1].y: 450f32;
+    app.box2ds[1].width: level.size;
+    app.box2ds[1].height: level.size;
+    app.velocities[1].x: level.velX;
+    app.velocities[1].y: level.velY;
+    levelColor: level.color;
+};
+
+fn level1 {
+    level: @level {
+        delayInput: 20;
+        maxSpeed: 4f32;
+        velX: 3f32;
+        velY: 2f32;
+        size: 150f32;
+        color: #1EA4CA;
+    };
+    newGame();
+}
+
+fn level2 {
+    level: @level {
+        delayInput: 16;
+        maxSpeed: 30f32;
+        velX: 15f32;
+        velY: 5f32;
+        size: 100f32;
+        color: #FF9300;
+    };
+    newGame();
+}
+
+fn level3 {
+    level: @level {
+        delayInput: 12;
+        maxSpeed: 35f32;
+        velX: 25f32;
+        velY: 15f32;
+        size: 80f32;
+        color: #9194CA;
+    };
+    newGame();
+}
+
+fn level4 {
+    level: @level {
+        delayInput: 10;
+        maxSpeed: 40f32;
+        velX: 35f32;
+        velY: 25f32;
+        size: 60f32;
+        color: #57B676;
+    };
+    newGame();
+}
+
+fn level5 {
+    level: @level {
+        delayInput: 8;
+        maxSpeed: 50f32;
+        velX: 45f32;
+        velY: 35f32;
+        size: 55f32;
+        color: #CDA470;
+    };
+    newGame();
+}
+
+fn level6 {
+    level: @level {
+        delayInput: 4;
+        maxSpeed: 60f32;
+        velX: 50f32;
+        velY: 40f32;
+        size: 50f32;
+        color: #D94F51;
+    };
+    newGame();
+}
+
+@mainMenu {
+    #new @menu game {
+        label: "Game";
+        
+        #new @menuItem new {
+            label: "New Game";
+            shortcut: "n";
+            action: pointerTo newGame;
+        }
+    }
+    
+    #new @menu levels {
+        label: "Levels";
+        
+        #new @menuItem level1 {
+            label: "Level 1";
+            shortcut: "1";
+            action: pointerTo level1;
+        }
+        
+        #new @menuItem level2 {
+            label: "Level 2";
+            shortcut: "2";
+            action: pointerTo level2;
+        }
+        
+        #new @menuItem level3 {
+            label: "Level 3";
+            shortcut: "3";
+            action: pointerTo level3;
+        }
+        
+        #new @menuItem level4 {
+            label: "Level 4";
+            shortcut: "4";
+            action: pointerTo level4;
+        }
+        #new @menuItem level5 {
+            label: "Level 5";
+            shortcut: "5";
+            action: pointerTo level5;
+        }
+        #new @menuItem level6 {
+            label: "Level 6";
+            shortcut: "6";
+            action: pointerTo level6;
+        }
+    }
+}
+
+//fixme: this should not need to be exported. Also, make it a const
+#export { var.[15 x i32] notes }
+
+//fixme: this should be part of the global declaration, not an initializer
+notes:
+     261i32, //c4
+     293i32, //d4
+     329i32, //e4
+     349i32, //f4
+     392i32, //g4
+     440i32, //a4
+     493i32, //b4
+     523i32, //c5
+     587i32, //d5
+     659i32 //e5
+;
+
+fn onUpdate {
+    var ball: @container { id: 1 };
+    applyUserInput(ball);
+    
+    bounceOnEdges(ball);
+    limitSpeed(ball);
+    //fixme: this is a hack
+    setSoundFreq(ball);
+}
+
+fn setSoundFreq(var.@container ball) {
+    var id: ball.id;
+    var.i32 ballSpeed: abs(app.velocities[id].x => i32) + abs(app.velocities[id].y => i32);
+    loop {
+        if ballSpeed >= 10i32 {
+            ballSpeed -: 10i32;
+            repeat;
+        }
+    }
+    var.i32 freq: notes[ballSpeed];
+    if freq = 0i32 {
+        freq: 440i32;
+    }
+    LIL__audioDescriptor.freq: freq;
+}
+
+fn applyUserInput (var.@container ball) {
+    var id: ball.id;
+    //W -- up
+    // fixme: I'd like this to be:
+    // if input.isKeyDown(KeyBoard.w) OR input.isKeyDown(KeyBoard.upArrow) OR input.isKeyDown(GamePad.up) { }
+    // until then, we are using the platform-specific codes for now
+    var.bool upIsPressed: false;
+    if input.isKeyDown(126i16) { upIsPressed: true }
+    if input.isKeyDown(13i16) { upIsPressed: true }
+    if (upIsPressed) {
+        if delayUp = 0 {
+            app.velocities[id].y +: 1f32;
+            delayUp +: 1;
+        } else if delayUp < level.delayInput {
+            delayUp +: 1;
+        } else {
+            delayUp: 0;
+        }
+    } else {
+        delayUp: 0;
+    }
+    //A -- left
+    var.bool leftIsPressed: false;
+    if input.isKeyDown(123i16) { leftIsPressed: true }
+    if input.isKeyDown(0i16) { leftIsPressed: true }
+    if (leftIsPressed) {
+        if delayLeft = 0 {
+            app.velocities[id].x -: 1f32;
+            delayLeft +: 1;
+        } else if delayLeft < level.delayInput {
+            delayLeft +: 1;
+        } else {
+            delayLeft: 0;
+        }
+    } else {
+        delayLeft: 0;
+    }
+    //S -- down
+    var.bool downIsPressed: false;
+    if input.isKeyDown(125i16) { downIsPressed: true }
+    if input.isKeyDown(1i16) { downIsPressed: true }
+    if (downIsPressed) {
+        if delayDown = 0 {
+            app.velocities[id].y -: 1f32;
+            delayDown +: 1;
+        } else if delayDown < level.delayInput {
+            delayDown +: 1;
+        } else {
+            delayDown: 0;
+        }
+    } else {
+        delayDown: 0;
+    }
+    //D -- right
+    var.bool rightIsPressed: false;
+    if input.isKeyDown(124i16) { rightIsPressed: true }
+    if input.isKeyDown(2i16) { rightIsPressed: true }
+    if (rightIsPressed) {
+        if delayRight = 0 {
+            app.velocities[id].x +: 1f32;
+            delayRight +: 1;
+        } else if delayRight < level.delayInput {
+            delayRight +: 1;
+        } else {
+            delayRight: 0;
+        }
+    } else {
+        delayRight: 0;
+    }
+}
+
+//fixme: should not need those f32 suffixes after number literals
+fn bounceOnEdges (var.@container ball) {
+    var top: ball.y + ball.height;
+    var bottom: ball.y;
+    var left: ball.x;
+    var right: ball.x + ball.width;
+    // printf(`x %f y %f \n`, ball.x, bottom);
+    var vel: ball.velocity;
+    if (bottom <= (0f32)) {
+        var.f32 yVel: vel.y;
+        if (yVel < 0f32) {
+            vel.y: (yVel * (-1f32));
+            ball.velocity: vel;
+        }
+    }
+    if (left <= (0f32)) {
+        var.f32 xVel: vel.x;
+        if xVel < 0f32 {
+            vel.x: (xVel * (-1f32));
+            ball.velocity: vel;
+        }
+    }
+    if (top >= windowHeight) {
+        var.f32 yVel: vel.y;
+        if yVel > 0f32 {
+            vel.y: (yVel * (-1f32));
+            ball.velocity: vel;
+        }
+    }
+    if (right >= windowWidth) {
+        var.f32 xVel: vel.x;
+        if xVel > 0f32 {
+            vel.x: (xVel * (-1f32));
+            ball.velocity: vel;
+        }
+    }
+}
+
+fn limitSpeed (var.@container ball) {
+    var vel: ball.velocity;
+    if vel.x = 0f32 {
+        if vel.y = 0f32 {
+            app.box2ds[0].bgColor: #FAC0E3;
+        } else {
+            app.box2ds[0].bgColor: levelColor;
+        }
+    } else {
+        app.box2ds[0].bgColor: levelColor;
+    }
+    //fixme: writing -maxSpeed gives problems, so this is an easy solution
+    var maxSpeedNeg: 0f32 - maxSpeed;
+    if vel.x > maxSpeed {
+        vel.x: maxSpeed;
+    }
+    if vel.x < maxSpeedNeg {
+        vel.x: maxSpeedNeg;
+    }
+    if vel.y > maxSpeed {
+        vel.y: maxSpeed;
+    }
+    if vel.y < maxSpeedNeg {
+        vel.y: maxSpeedNeg;
+    }
+    var.bool hasMaxSpeed: false;
+    if vel.x = maxSpeed {
+        hasMaxSpeed: true;
+    }
+    if vel.x = maxSpeedNeg {
+        hasMaxSpeed: true;
+    }
+    if vel.y = maxSpeed {
+        hasMaxSpeed: true;
+    }
+    if vel.y = maxSpeedNeg {
+        hasMaxSpeed: true;
+    }
+    if hasMaxSpeed {
+        app.box2ds[1].bgColor: #FFFF7F;
+    } else {
+        app.box2ds[1].bgColor: #F;
+    }
+    ball.velocity: vel;
+}
+
+//fixme: should not need those f32 suffixes everywhere
+@root {
+    width: windowWidth;
+    height: windowHeight;
+    
+    #new @container test {
+        width: 150f32;
+        height: 150f32;
+        x: 720f32;
+        y: 450f32;
+        velocity: @vel { x: 3f32; y: 2f32 };
+    }
+}
