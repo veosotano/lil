@@ -537,10 +537,10 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
     //set it as main menu
     [NSApp setMainMenu:mainMenu];
     [menuStack removeAllObjects];
-    //show window
-    [mainWindow makeKeyAndOrderFront:self];
     //call initializers
     LIL__init();
+    //show window
+    [mainWindow makeKeyAndOrderFront:self];
 }
 - (void)dealloc {
     // don’t forget to release allocated objects!
