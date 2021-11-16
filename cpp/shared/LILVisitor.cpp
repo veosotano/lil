@@ -253,9 +253,9 @@ LILString LILVisitor::decorate(LILString ns, LILString className, LILString name
         ret += LILString("n") + ns + "_";
     }
     if (className.length() > 0) {
-        ret += LILString("c") + LILString::number((LILUnitF64)className.length()) + "_" + className + "_";
+        ret += LILString("c") + LILString::number((LILUnitI64)className.length()) + "_" + className + "_";
     }
-    ret += LILString("f") + LILString::number((LILUnitF64)name.length()) + "_" + name;
+    ret += LILString("f") + LILString::number((LILUnitI64)name.length()) + "_" + name;
     if(type){
         ret += this->typeToString(type);
     }
