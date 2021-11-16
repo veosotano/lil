@@ -1,27 +1,27 @@
 #needs "cstd.lil";
 #needs "string.lil";
 
-#export fn print(var.bool|i64|f64|ptr(i8)|@string|null value) {
-    if value => bool {
-        if value {
-            puts `true`;
-        } else {
-            puts `false`;
-        }
-    }
-    if value => i64 {
-        printf(`%li\n`, value);
-    }
-    if value => f64 {
-        printf(`%lf\n`, value);
-    }
-    if value => ptr(i8) {
-        puts value;
-    }
-    if value => @string {
-        puts value.cstr();
-    }
-    if value => null {
-        puts `null`;
-    }
+#export fn print(var.bool|i64|f64|ptr(i8)|ptr(@string)|null value) {
+	if value => bool {
+		if value {
+			puts `true`;
+		} else {
+			puts `false`;
+		}
+	}
+	if value => i64 {
+		printf(`%li\n`, value);
+	}
+	if value => f64 {
+		printf(`%.17g\n`, value);
+	}
+	if value => ptr(i8) {
+		puts value;
+	}
+	if value => ptr(@string) {
+		puts value.cstr();
+	}
+	if value => null {
+		puts `null`;
+	}
 };
