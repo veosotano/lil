@@ -1,9 +1,9 @@
 #needs "cstd.lil";
 
-#export {
-    const SMALL_BUFFER_SIZE: 2;
-    const BIG_BUFFER_MIN_SIZE: 10;
+#snippet SMALL_BUFFER_SIZE { 2 };
+#snippet BIG_BUFFER_MIN_SIZE { 10 };
 
+#export {
     #====== class @array ===========
     #= A dynamic array which automatically grows or shrinks as needed
     class @array (type @subtype) {
@@ -19,7 +19,7 @@
 
         #======== var capacity =========
         #= How much space is allocated for values
-        var.i64 capacity: SMALL_BUFFER_SIZE;
+        var.i64 capacity: #paste SMALL_BUFFER_SIZE;
 
         #========== fn at ==============
         #= Returns a pointer to the value at the given index or null if not found
@@ -71,13 +71,13 @@
                 puts `capacity was lower than size`;
                 if @self.buffer => sbuf {
                     puts `buffer was sbuf`;
-                    @self.capacity: BIG_BUFFER_MIN_SIZE;
-                
+                    @self.capacity: #paste BIG_BUFFER_MIN_SIZE;
+
                     var.ptr(@subtype) firstValue: pointerTo @self.buffer[0];
                     var.ptr(@subtype) secondValue: pointerTo @self.buffer[1];
 
-                    var.ptr(@subtype) pointer: malloc(sizeOf(type @subtype) * BIG_BUFFER_MIN_SIZE) => ptr(@subtype);
-                
+                    var.ptr(@subtype) pointer: malloc(sizeOf(type @subtype) * #paste BIG_BUFFER_MIN_SIZE) => ptr(@subtype);
+
                     set(pointer, valueOf(firstValue));
                     set(pointer + 1, valueOf(secondValue));
                     set(pointerTo(@self.buffer)=>ptr(ptr(@subtype)), pointer);
@@ -128,9 +128,9 @@
             printf(`initialize with %li\n`, newCapacity);
             @self.size: 0;
 
-            if newCapacity <= SMALL_BUFFER_SIZE {
+            if newCapacity <= #paste SMALL_BUFFER_SIZE {
                 @self.buffer: [];
-                @self.capacity: SMALL_BUFFER_SIZE;
+                @self.capacity: #paste SMALL_BUFFER_SIZE;
                 return pointerTo(@self.buffer) => ptr(@subtype);
             } else {
                 var.ptr(@subtype) pointer: malloc(sizeOf(type @subtype) * newCapacity) => ptr(@subtype);
