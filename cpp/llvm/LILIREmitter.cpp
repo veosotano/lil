@@ -317,7 +317,7 @@ llvm::Value * LILIREmitter::emit(LILNode * node)
             for (auto child : value->getChildRules()) {
                 this->emit(child.get());
             }
-            break;
+            return nullptr;
         }
         case NodeTypeSimpleSelector:
         {
