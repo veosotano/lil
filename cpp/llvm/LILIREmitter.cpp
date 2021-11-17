@@ -97,8 +97,8 @@ LILIREmitter::LILIREmitter(LILString name)
     d->functionPassManager = std::make_unique<llvm::legacy::FunctionPassManager>(d->llvmModule.get());
     d->functionPassManager->add(llvm::createSROAPass());
     d->functionPassManager->add(llvm::createLICMPass());
-    d->functionPassManager->add(llvm::createInstructionCombiningPass());
     d->functionPassManager->add(llvm::createDeadCodeEliminationPass());
+    d->functionPassManager->add(llvm::createAggressiveDCEPass());
     d->functionPassManager->add(llvm::createReassociatePass());
     d->functionPassManager->add(llvm::createGVNPass());
     d->functionPassManager->add(llvm::createCFGSimplificationPass());
