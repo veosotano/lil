@@ -208,6 +208,11 @@ fn setSoundFreq(var.@container ball) {
 
 fn applyUserInput (var.@container ball) {
     var id: ball.id;
+
+    //fixme: argument should not be required
+    //var gamepad: input.getGamepad();
+    var gamepad: input.getGamepad(0);
+    
     //W -- up
     // fixme: I'd like this to be:
     // if input.isKeyDown(KeyBoard.w) OR input.isKeyDown(KeyBoard.upArrow) OR input.isKeyDown(GamePad.up) { }
@@ -215,6 +220,7 @@ fn applyUserInput (var.@container ball) {
     var.bool upIsPressed: false;
     if input.isKeyDown(126i16) { upIsPressed: true }
     if input.isKeyDown(13i16) { upIsPressed: true }
+    if gamepad.y > 0.3 { upIsPressed: true }
     if (upIsPressed) {
         if delayUp = 0 {
             app.velocities[id].y +: 1f32;
@@ -231,6 +237,7 @@ fn applyUserInput (var.@container ball) {
     var.bool leftIsPressed: false;
     if input.isKeyDown(123i16) { leftIsPressed: true }
     if input.isKeyDown(0i16) { leftIsPressed: true }
+    if gamepad.x < (0.0 - 0.3) { leftIsPressed: true }
     if (leftIsPressed) {
         if delayLeft = 0 {
             app.velocities[id].x -: 1f32;
@@ -247,6 +254,7 @@ fn applyUserInput (var.@container ball) {
     var.bool downIsPressed: false;
     if input.isKeyDown(125i16) { downIsPressed: true }
     if input.isKeyDown(1i16) { downIsPressed: true }
+    if gamepad.y < (0.0 - 0.3) { downIsPressed: true }
     if (downIsPressed) {
         if delayDown = 0 {
             app.velocities[id].y -: 1f32;
@@ -263,6 +271,7 @@ fn applyUserInput (var.@container ball) {
     var.bool rightIsPressed: false;
     if input.isKeyDown(124i16) { rightIsPressed: true }
     if input.isKeyDown(2i16) { rightIsPressed: true }
+    if gamepad.x > 0.3 { rightIsPressed: true }
     if (rightIsPressed) {
         if delayRight = 0 {
             app.velocities[id].x +: 1f32;
