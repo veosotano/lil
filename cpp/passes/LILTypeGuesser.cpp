@@ -626,11 +626,11 @@ void LILTypeGuesser::_process(LILExpression * value)
 
     auto ty = LILType::merge(leftTy, rightTy);
 
-    if (left->isTypedNode() && leftTy->getIsWeakType()) {
+    if (left->isTypedNode() && leftTy && leftTy->getIsWeakType()) {
         const auto & leftTN = std::static_pointer_cast<LILTypedNode>(left);
         leftTN->setType(ty);
     }
-    if (right->isTypedNode() && rightTy->getIsWeakType()) {
+    if (right->isTypedNode() && rightTy && rightTy->getIsWeakType()) {
         const auto & rightTN = std::static_pointer_cast<LILTypedNode>(right);
         rightTN->setType(ty);
     }
