@@ -894,7 +894,15 @@ void LILTypeGuesser::_process(LILValueList * value)
     if (!ty) {
         auto vlTy = this->findTypeForValueList(std::static_pointer_cast<LILValueList>(value->shared_from_this()));
         if (vlTy) {
-            if (vlTy->isA(TypeTypeSingle)) {
+            if (vlTy->isA(TypeTypeMultiple)){
+                auto mt = std::static_pointer_cast<LILMultipleType>(vlTy);
+                if (mt->getTypes().size() > 0) {
+                    value->setType(vlTy);
+                    return;
+                } else {
+                    vlTy = nullptr;
+                }
+            } else {
                 auto vlParent = value->getParentNode();
                 if (vlParent) {
                     switch (vlParent->getNodeType()) {
@@ -989,14 +997,6 @@ void LILTypeGuesser::_process(LILValueList * value)
                             return;
                     }
                     
-                }
-            } else if (vlTy->isA(TypeTypeMultiple)){
-                auto mt = std::static_pointer_cast<LILMultipleType>(vlTy);
-                if (mt->getTypes().size() > 0) {
-                    value->setType(vlTy);
-                    return;
-                } else {
-                    vlTy = nullptr;
                 }
             }
             if (!vlTy) {
