@@ -3508,9 +3508,12 @@ llvm::Value * LILIREmitter::_emit(LILValueList * value)
         //FIXME: optimize this into a global and memcpy when profitable
         size_t i = 0;
         for (auto node : value->getValues()) {
+            d->currentAlloca = this->_emitGEP(allocaBackup, this->llvmTypeFromLILType(ty.get()), false, 0, "", true, true, i);
             auto ir = this->emit(node.get());
-            auto gep = this->_emitGEP(d->currentAlloca, this->llvmTypeFromLILType(ty.get()), false, 0, "", true, true, i);
-            d->irBuilder.CreateStore(ir, gep);
+            if (ir != nullptr) {
+                auto gep = this->_emitGEP(allocaBackup, this->llvmTypeFromLILType(ty.get()), false, 0, "", true, true, i);
+                d->irBuilder.CreateStore(ir, gep);
+            }
             i += 1;
         }
     } else if (ty->isA(TypeTypeObject) && ty->getName().substr(0, 9) == "lil_array") {
