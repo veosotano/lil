@@ -10,6 +10,10 @@
         //defined in std/app.lil
         var.@app app extern;
 
+        //fixme: remove this once global initializers work
+        var.[4 x @HIDVendorPair] HIDVendorsTable extern;
+        var.[20 x @HIDProductPair] HIDProductsTable extern;
+
         //defined in std/os.lil
         fn LIL__setWindowBgColor(var.f32 red; var.f32 green; var.f32 blue; var.f32 alpha) extern;
 
@@ -18,6 +22,43 @@
             //get root's background color
             var bgColor: app.box2ds[0].bgColor;
             //LIL__setWindowBgColor(bgColor.red, bgColor.green, bgColor.blue, bgColor.alpha);
+            
+            //initialize gamepad data
+            //fixme: this should be initializers on the globals in input.lil, it should not be in this file
+            HIDVendorsTable:
+                @HIDVendorPair { name: `Unknown`; id: 0 },
+                @HIDVendorPair { name: `Sony`; id: 1356 },
+                @HIDVendorPair { name: `Microsoft`; id: 1118 },
+                @HIDVendorPair { name: `Logitech`; id: 1133 }
+            ;
+            HIDProductsTable:
+                //generic
+                @HIDProductPair { name: `Controller`; id: 0; vendorId: 0 },
+
+                //sony
+                @HIDProductPair { name: `DualShock 4`; id: 1476; vendorId: 1356 },
+                @HIDProductPair { name: `DualSense 5`; id: 3302; vendorId: 1356 },
+        
+                //microsoft
+                @HIDProductPair { name: `Xbox360 Controller`; id: 654; vendorId: 1118 },
+                @HIDProductPair { name: `Xbox360 Wireless Controller`; id: 655; vendorId: 1118 },
+                @HIDProductPair { name: `Xbox One Controller`; id: 721; vendorId: 1118 },
+                @HIDProductPair { name: `Xbox One Controller (Firmware 2015)`; id: 733; vendorId: 1118 },
+                @HIDProductPair { name: `Xbox One Elite Controller`; id: 739; vendorId: 1118 },
+                @HIDProductPair { name: `Xbox One S Controller`; id: 746; vendorId: 1118 },
+                @HIDProductPair { name: `Xbox One S Controller [Bluetooth]`; id: 765; vendorId: 1118 },
+                @HIDProductPair { name: `Xbox Wireless Controller`; id: 2834; vendorId: 1118 },
+        
+                //logitech
+                @HIDProductPair { name: `WingMan Gamepad Extreme`; id: 49672; vendorId: 1133 },
+                @HIDProductPair { name: `WingMan Gamepad`; id: 49673; vendorId: 1133 },
+                @HIDProductPair { name: `F310 Gamepad [DirectInput Mode]`; id: 49686; vendorId: 1133 },
+                @HIDProductPair { name: `F510 Gamepad [DirectInput Mode]`; id: 49688; vendorId: 1133 },
+                @HIDProductPair { name: `F710 Wireless Gamepad [DirectInput Mode]`; id: 49689; vendorId: 1133 },
+                @HIDProductPair { name: `F310 Gamepad [XInput Mode]`; id: 49693; vendorId: 1133 },
+                @HIDProductPair { name: `F510 Gamepad [XInput Mode]`; id: 49694; vendorId: 1133 },
+                @HIDProductPair { name: `F710 Wireless Gamepad [XInput Mode]`; id: 49695; vendorId: 1133 }
+            ;
 
             #paste LIL_INITIALIZERS;
         }

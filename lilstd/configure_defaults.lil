@@ -77,6 +77,7 @@
                 "-lc",
                 "-framework Cocoa",
                 "-framework AudioToolbox",
+                "-framework IOKit",
                 "-framework CoreVideo",
                 "-framework QuartzCore",
                 "-framework Metal",

@@ -1,12 +1,54 @@
+#needs "cstd.lil";
+
+#snippet HID_VENDORS_TABLE_LENGTH { 4 };
+#snippet HID_PRODUCTS_TABLE_LENGTH { 20 };
+
 #export {
+    class @HIDVendorPair {
+        var.ptr(i8) name;
+        var.i64 id: 0;
+    };
+    class @HIDProductPair {
+        var.ptr(i8) name;
+        var.i64 id: 0;
+        var.i64 vendorId: 0;
+    };
+    var.[#paste HID_VENDORS_TABLE_LENGTH x @HIDVendorPair] HIDVendorsTable;
+    var.[#paste HID_PRODUCTS_TABLE_LENGTH x @HIDProductPair] HIDProductsTable;
+
     var.@input input;
+    class @gamepad {
+        var.i64 vendorIndex: 0;
+        var.i64 productIndex: 0;
+        var.[64 x bool] buttonStates: [];
+        var.f64 x: 0.0;
+        var.f64 y: 0.0;
+    };
     class @input {
         var.[65536 x bool] keyStates: [];
+        var.[8 x @gamepad] gamepads: [];
+        var.i64 gamepadCount: 0;
+
         fn isKeyDown (var.i16 keyCode) => bool {
             return @self.keyStates[keyCode];
         };
         fn setKeyDown (var.i16 keyCode; var.bool value) {
             @self.keyStates[keyCode]: value;
+        };
+        fn getGamepad (var.i64 gamepadId: 0) {
+            return @self.gamepads[gamepadId];
+        };
+        fn isGamepadButtonDown (var.i64 gamepadId; var.i64 buttonId) => bool {
+            return @self.gamepads[gamepadId].buttonStates[buttonId];
+        };
+        fn setGamepadButtonDown (var.i64 gamepadId; var.i64 buttonId; var.bool value) {
+            @self.gamepads[gamepadId].buttonStates[buttonId]: value;
+        };
+        fn setGamepadX (var.i64 gamepadId; var.f64 value) {
+            @self.gamepads[gamepadId].x: value;
+        };
+        fn setGamepadY (var.i64 gamepadId; var.f64 value) {
+            @self.gamepads[gamepadId].y: value;
         };
     };
     fn LIL__setKeyDown(var.i16 keyCode) {
@@ -14,5 +56,51 @@
     };
     fn LIL__setKeyUp(var.i16 keyCode) {
         input.setKeyDown(keyCode, false);
+    };
+    fn LIL__setGamepadButtonState(var.i64 gamepadId; var.i64 buttonId; var.bool value) {
+        input.setGamepadButtonDown(gamepadId, buttonId, value);
+    };
+    fn LIL__setGamepadX(var.i64 gamepadId; var.f64 value) {
+        input.setGamepadX(gamepadId, value);
+    };
+    fn LIL__setGamepadY(var.i64 gamepadId; var.f64 value) {
+        input.setGamepadY(gamepadId, value);
+    };
+    
+    fn LIL__findVendor(var.i64 vendorId) => i64
+    {
+        var.i64 length: #paste HID_VENDORS_TABLE_LENGTH;
+        for (var.i64 i: 0; i<length; i +: 1) {
+            if HIDVendorsTable[i].id = vendorId {
+                return i;
+            }
+        }
+        return 0;
+    }
+    
+    fn LIL__findProduct(var.i64 vendorId; var.i64 productId) => i64
+    {
+        var.i64 length: #paste HID_PRODUCTS_TABLE_LENGTH;
+        for (var.i64 i: 0; i<length; i +: 1) {
+            if HIDProductsTable[i].vendorId = vendorId {
+                if HIDProductsTable[i].id = productId {
+                    return i;
+                }
+            }
+        }
+        return 0;
+    }
+    
+    fn LIL__gamepadConnected(var.i64 vendorId, var.i64 productId) => i64 {
+        var id: input.gamepadCount;
+        input.gamepadCount +: 1;
+        var vendorIndex: LIL__findVendor(vendorId);
+        var productIndex: LIL__findProduct(vendorId, productId);
+        input.gamepads[id]: @gamepad {
+            vendorIndex: vendorIndex;
+            productIndex: productIndex;
+        };
+        //printf(`Gamepad connected: vendor: %s, product: %s\n`, HIDVendorsTable[vendorIndex].name, HIDProductsTable[productIndex].name);
+        return id;
     };
 }

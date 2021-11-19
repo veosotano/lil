@@ -1,5 +1,6 @@
 #import <Cocoa/Cocoa.h>
 #import <AudioToolbox/AudioToolbox.h>
+#import <IOKit/hid/IOHIDLib.h>
 #import <QuartzCore/CAMetalLayer.h>
 #import <Metal/Metal.h>
 #include <simd/simd.h>
@@ -14,6 +15,11 @@ extern void LIL__setKeyUp(int keyCode);
 
 extern void LIL__audioInit();
 extern void LIL__audioFree();
+
+extern long int LIL__gamepadConnected(long int vendorID, long int productID);
+extern void LIL__setGamepadButtonState(long int gamepadId, long int buttonId, bool value);
+extern void LIL__setGamepadX(long int gamepadId, double value);
+extern void LIL__setGamepadY(long int gamepadId, double value);
 
 typedef struct LIL__audioDescriptorStruct {
     AudioComponentInstance * audioUnit;
@@ -116,6 +122,105 @@ void LIL__setupAudio()
 
     AudioUnitInitialize(*LIL__audioDescriptor.audioUnit);
     AudioOutputUnitStart(*LIL__audioDescriptor.audioUnit);
+}
+
+void LIL__gamepadInputListener(void* ctxt, IOReturn status, void *sender, IOHIDValueRef value)
+{
+    if (status != kIOReturnSuccess) {
+        return;
+    }
+
+    long int gamepadId = (long int)ctxt;
+
+    IOHIDElementRef Element = IOHIDValueGetElement(value);
+    unsigned int usagePage = IOHIDElementGetUsagePage(Element);
+    unsigned int usage = IOHIDElementGetUsage(Element);
+    if (usagePage == kHIDPage_Button) {
+        unsigned int buttonState = IOHIDValueGetIntegerValue(value);
+        LIL__setGamepadButtonState(gamepadId, usage, !(buttonState == 0));
+    } else if (usagePage == kHIDPage_GenericDesktop) {
+        unsigned int direction = IOHIDValueGetIntegerValue(value);
+        switch (usage) {
+            case kHIDUsage_GD_X:
+            {
+                double xValue = -((128.0 - (double)direction) / 128.0);
+                LIL__setGamepadX(gamepadId, xValue);
+                break;
+            }
+            case kHIDUsage_GD_Y:
+            {
+                double yValue = (128.0 - (double)direction) / 128.0;
+                LIL__setGamepadY(gamepadId, yValue);
+                break;
+            }
+            case kHIDUsage_GD_Z:
+                //NSLog(@"X2: %i\n", direction);
+                break;
+            case kHIDUsage_GD_Rz:
+                //NSLog(@"Y2: %i\n", direction);
+                break;
+
+            case kHIDUsage_GD_Hatswitch:
+            {
+                double xValue = 0.0, yValue = 0.0;
+                switch (direction) {
+                    case 0:  xValue = 0.0;  yValue = 1.0; break;
+                    case 1:  xValue = 1.0;  yValue = 1.0; break;
+                    case 2:  xValue = 1.0;  yValue = 0.0; break;
+                    case 3:  xValue = 1.0;  yValue = -1.0; break;
+                    case 4:  xValue = 0.0;  yValue = -1.0; break;
+                    case 5:  xValue = -1.0; yValue = -1.0; break;
+                    case 6:  xValue = -1.0; yValue = 0.0; break;
+                    case 7:  xValue = -1.0; yValue = 1.0; break;
+                    default: xValue = 0.0;  yValue = 0.0; break;
+                }
+                LIL__setGamepadX(gamepadId, xValue);
+                LIL__setGamepadY(gamepadId, yValue);
+                break;
+            }
+            default:
+                NSLog(@"Usage: %i\n", usage);
+                break;
+        }
+    }
+}
+
+void LIL__gamepadConnectedListener(void* ctxt, IOReturn status, void* sender, IOHIDDeviceRef device)
+{
+    if (status != kIOReturnSuccess) {
+        return;
+    }
+    NSUInteger vendorID = [(__bridge NSNumber *)IOHIDDeviceGetProperty(device, CFSTR(kIOHIDVendorIDKey)) unsignedIntegerValue];
+    NSUInteger productID = [(__bridge NSNumber *)IOHIDDeviceGetProperty(device, CFSTR(kIOHIDProductIDKey)) unsignedIntegerValue];
+
+    long int gamepadId = LIL__gamepadConnected(vendorID, productID);
+    
+    IOHIDDeviceRegisterInputValueCallback(device, LIL__gamepadInputListener, (void*)gamepadId);
+    IOHIDDeviceSetInputValueMatchingMultiple(device, (__bridge CFArrayRef)@[
+        @{@(kIOHIDElementUsagePageKey): @(kHIDPage_Button)},
+        @{@(kIOHIDElementUsagePageKey): @(kHIDPage_GenericDesktop)},
+    ]);
+}
+
+void LIL__setupGamepads()
+{
+    //second params mean "no options"
+    IOHIDManagerRef mgr = IOHIDManagerCreate(kCFAllocatorDefault, 0);
+    IOReturn status = IOHIDManagerOpen(mgr, 0);
+    if (status != kIOReturnSuccess) {
+        NSLog(@"Error setting up HID manager");
+        return;
+    }
+    IOHIDManagerRegisterDeviceMatchingCallback(mgr, LIL__gamepadConnectedListener, NULL);
+
+    //we're interested in gamepads with thumbsticks
+    IOHIDManagerSetDeviceMatchingMultiple(mgr, (__bridge CFArrayRef)@[
+        @{@(kIOHIDDeviceUsagePageKey): @(kHIDPage_GenericDesktop), @(kIOHIDDeviceUsageKey): @(kHIDUsage_GD_GamePad)},
+        @{@(kIOHIDDeviceUsagePageKey): @(kHIDPage_GenericDesktop), @(kIOHIDDeviceUsageKey): @(kHIDUsage_GD_MultiAxisController)},
+    ]);
+
+    //run on the main thread
+    IOHIDManagerScheduleWithRunLoop(mgr, CFRunLoopGetMain(), kCFRunLoopDefaultMode);
 }
 
 static const MTLPixelFormat LILDepthPixelFormat = MTLPixelFormatDepth32Float;
@@ -632,6 +737,7 @@ void LIL__run(float width, float height)
     [application setDelegate:LIL__applicationDelegate];
     
     LIL__setupAudio();
+    LIL__setupGamepads();
 
     // call the run method of our application
     [application run];
