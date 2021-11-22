@@ -2751,8 +2751,20 @@ llvm::Value * LILIREmitter::_emitFCArg(LILNode * value, LILType * ty)
     llvm::Value * ret = nullptr;
     bool needsTempVar = this->_needsTemporaryVariable(value);
     auto allocaBackup = d->currentAlloca;
+    bool usesPointerConversion =
+        ty
+        && ty->isA(TypeTypePointer)
+        && !value->getType()->isA(TypeTypePointer)
+    ;
     if (needsTempVar) {
-        d->currentAlloca = d->irBuilder.CreateAlloca(this->llvmTypeFromLILType(ty));
+        llvm::Type * allocaTy;
+        if (usesPointerConversion) {
+            auto ptrTy = static_cast<LILPointerType *>(ty);
+            allocaTy = this->llvmTypeFromLILType(ptrTy->getArgument().get());
+        } else {
+            allocaTy = this->llvmTypeFromLILType(ty);
+        }
+        d->currentAlloca = d->irBuilder.CreateAlloca(allocaTy);
     }
 
     if (
@@ -2761,11 +2773,7 @@ llvm::Value * LILIREmitter::_emitFCArg(LILNode * value, LILType * ty)
         ) {
         ret = this->emitNullable(value, ty);
     } else {
-        if (
-            ty
-            && ty->isA(TypeTypePointer)
-            && !value->getType()->isA(TypeTypePointer)
-            ) {
+        if ( usesPointerConversion ) {
             ret = this->emitPointer(value);
         } else {
             ret = this->emit(value);
@@ -2778,7 +2786,11 @@ llvm::Value * LILIREmitter::_emitFCArg(LILNode * value, LILType * ty)
         }
     }
     if (needsTempVar) {
-        ret = d->irBuilder.CreateLoad(d->currentAlloca);
+        if (usesPointerConversion) {
+            ret = d->currentAlloca;
+        } else {
+            ret = d->irBuilder.CreateLoad(d->currentAlloca);
+        }
     }
     if (
         ty
@@ -3686,6 +3698,10 @@ llvm::Value * LILIREmitter::emitPointer(LILNode * node)
             }
             llvm::Value * val = d->namedValues[name.data()];
             return val;
+        }
+        case NodeTypeStringLiteral:
+        {
+            return this->_emit(static_cast<LILStringLiteral *>(node));
         }
         default:
             std::cerr << "!!!!!!!!!!EMIT POINTER FAIL!!!!!!!!!!!!!!!!\n";
