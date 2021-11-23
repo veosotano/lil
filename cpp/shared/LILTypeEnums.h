@@ -148,7 +148,11 @@ namespace LIL
         ExpressionTypeLogicalOr,
         ExpressionTypeBitwiseAnd,
         ExpressionTypeBitwiseOr,
-        ExpressionTypeCast,
+        ExpressionTypeXor,
+        ExpressionTypeShiftLeft,
+        ExpressionTypeShiftRight,
+        ExpressionTypeMod,
+        ExpressionTypeCast
     };
     
     enum UnaryExpressionType

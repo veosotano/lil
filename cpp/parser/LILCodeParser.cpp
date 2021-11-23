@@ -494,7 +494,12 @@ bool LILCodeParser::isExpression() const
             d->lexer->resetPeek();
             return true;
         }
-
+            
+        case TokenTypeIdentifier:
+        {
+            d->lexer->resetPeek();
+            return this->isExpressionIdentifier(peekToken);
+        }
         case TokenTypeNone:
         case TokenTypeSemicolon:
         case TokenTypeSquareBracketOpen:
@@ -514,7 +519,6 @@ bool LILCodeParser::isExpression() const
         case TokenTypeNumberInt:
         case TokenTypeThinArrow:
         case TokenTypeBlockClose:
-        case TokenTypeIdentifier:
         case TokenTypeBlockComment:
         case TokenTypeObjectSign:
         case TokenTypeWhitespace:
@@ -1090,6 +1094,9 @@ bool LILCodeParser::isFunctionCall(bool isPastIdentifier) const
             }
         }
         if (peekToken){
+            if (peekToken->isA(TokenTypeIdentifier) && this->isExpressionIdentifier(peekToken)) {
+                return false;
+            }
             d->lexer->resetPeek();
             if (peekToken->isA(TokenTypeParenthesisOpen)) {
                 return true;
@@ -1126,6 +1133,25 @@ bool LILCodeParser::isBuiltinFunctionCall() const
         return true;
     }
 
+    return false;
+}
+
+bool LILCodeParser::isExpressionIdentifier(std::shared_ptr<LILToken> theToken) const
+{
+    std::string value = theToken->getString().data();
+    if (
+        value == "AND"
+        || value == "OR"
+        || value == "BIT_AND"
+        || value == "BIT_OR"
+        || value == "XOR"
+        || value == "SHIFT_LEFT"
+        || value == "SHIFT_RIGHT"
+        || value == "MOD"
+        )
+    {
+        return true;
+    }
     return false;
 }
 

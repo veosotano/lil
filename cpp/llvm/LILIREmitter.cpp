@@ -733,6 +733,38 @@ llvm::Value * LILIREmitter::_emitExpression(ExpressionType expType, llvm::Value 
                     break;
             }
         }
+
+        case ExpressionTypeLogicalAnd:
+        case ExpressionTypeBitwiseAnd:
+        {
+            return d->irBuilder.CreateAnd(leftV, rightV);
+        }
+
+        case ExpressionTypeLogicalOr:
+        case ExpressionTypeBitwiseOr:
+        {
+            return d->irBuilder.CreateOr(leftV, rightV);
+        }
+        
+        case ExpressionTypeXor:
+        {
+            return d->irBuilder.CreateXor(leftV, rightV);
+        }
+
+        case ExpressionTypeShiftLeft:
+        {
+            return d->irBuilder.CreateShl(leftV, rightV);
+        }
+
+        case ExpressionTypeShiftRight:
+        {
+            //using arithmetic shift because type is always signed
+            return d->irBuilder.CreateAShr(leftV, rightV);
+        }
+        case ExpressionTypeMod:
+        {
+            return d->irBuilder.CreateSRem(leftV, rightV);
+        }
             
         default:
             std::cerr << "!!!!!!!!!!UNKNOWN EXPRESSION TYPE FAIL!!!!!!!!!!!!!!!!\n";

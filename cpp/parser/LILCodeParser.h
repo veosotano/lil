@@ -61,6 +61,7 @@ namespace LIL
         bool isIndexAccessor() const;
         bool isFunctionCall(bool isPastIdentifier) const;
         bool isBuiltinFunctionCall() const;
+        bool isExpressionIdentifier(std::shared_ptr<LILToken> theToken) const;
         bool isFlowControlCall() const;
         bool isFunctionDecl() const;
         bool isFlowControl() const;

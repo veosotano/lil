@@ -1140,17 +1140,29 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
                 else if (data == "<=") {
                     exp->setExpressionType(ExpressionTypeSmallerOrEqualComparison);
                 }
-                else if (data == "&&") {
+                else if (data == "AND") {
                     exp->setExpressionType(ExpressionTypeLogicalAnd);
                 }
-                else if (data == "||") {
+                else if (data == "OR") {
                     exp->setExpressionType(ExpressionTypeLogicalOr);
                 }
-                else if (data == "&") {
+                else if (data == "BIT_AND") {
                     exp->setExpressionType(ExpressionTypeBitwiseAnd);
                 }
-                else if (data == "|") {
+                else if (data == "BIT_OR") {
                     exp->setExpressionType(ExpressionTypeBitwiseOr);
+                }
+                else if (data == "XOR") {
+                    exp->setExpressionType(ExpressionTypeXor);
+                }
+                else if (data == "SHIFT_LEFT") {
+                    exp->setExpressionType(ExpressionTypeShiftLeft);
+                }
+                else if (data == "SHIFT_RIGHT") {
+                    exp->setExpressionType(ExpressionTypeShiftRight);
+                }
+                else if (data == "MOD") {
+                    exp->setExpressionType(ExpressionTypeMod);
                 }
                 else if (data == "=>") {
                     exp->setExpressionType(ExpressionTypeCast);
