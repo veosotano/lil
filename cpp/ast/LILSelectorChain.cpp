@@ -53,3 +53,13 @@ void LILSelectorChain::setNodes(std::vector<std::shared_ptr<LILNode>> && nodes)
 {
     this->setChildNodes(std::move(nodes));
 }
+
+const std::shared_ptr<LILNode> & LILSelectorChain::getFirstNode() const
+{
+    return this->getNodes().front();
+}
+
+const std::shared_ptr<LILNode> & LILSelectorChain::getLastNode() const
+{
+    return this->getNodes().back();
+}

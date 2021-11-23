@@ -107,6 +107,7 @@ namespace LIL
         llvm::Value * _emit(LILPropertyName * value);
         llvm::Value * _emit(LILVarName * value);
         llvm::Value * _emit(LILRule * value);
+        llvm::Value* _getContainerNameFromSelectorChain(std::shared_ptr<LILSelectorChain> selCh);
         LILString _newRuleFnName();
         llvm::Value * _emit(LILSimpleSelector * value);
         llvm::Value * _emit(LILSelectorChain * value, bool & outIsId);

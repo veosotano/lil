@@ -1934,12 +1934,30 @@ llvm::Value * LILIREmitter::_emit(LILRule * value)
         llvm::BasicBlock * bb = llvm::BasicBlock::Create(d->llvmContext, "entry", applyFn);
         d->irBuilder.SetInsertPoint(bb);
     }
+
     const auto & selChNode = value->getSelectorChain();
     if (!selChNode || selChNode->getNodeType() != NodeTypeSelectorChain) {
         std::cerr << "NODE WAS NOT SELECTOR CHAIN FAIL!!!!!!!\n\n";
         return nullptr;
     }
     auto selCh = std::static_pointer_cast<LILSelectorChain>(selChNode);
+
+    //create element if needed
+    const auto & instr = value->getInstruction();
+    if (instr && instr->getInstructionType() == InstructionTypeNew) {
+        //fixme: LIL__newContainer(`test`, 0);
+        std::string newContainerFnName = "LIL__newContainer";
+        if (d->namedValues.count(newContainerFnName)) {
+            auto newContainerFn = d->namedValues[newContainerFnName];
+            std::vector<llvm::Value *> argsvect;
+            argsvect.push_back(this->_getContainerNameFromSelectorChain(selCh));
+            //fixme: get id of parent
+            auto zeroVal = llvm::ConstantInt::get(d->llvmContext, llvm::APInt(64, 0, true));
+            argsvect.push_back(zeroVal);
+            d->irBuilder.CreateCall(newContainerFn, argsvect);
+        }
+    }
+
     bool outIsId = false;
     auto selection = this->_emit(selCh.get(), outIsId);
     auto llvmTy = this->llvmTypeFromLILType(ty.get());
@@ -1996,13 +2014,26 @@ llvm::Value * LILIREmitter::_emit(LILRule * value)
         d->irBuilder.CreateCondBr(condition2, loopBB, afterBB);
         d->irBuilder.SetInsertPoint(afterBB);
     }
-
-    //create element if needed
-    const auto & instr = value->getInstruction();
-    if (instr && instr->getInstructionType() == InstructionTypeNew) {
-        //fixme: app.newElement(name:`test`; parentId: id; typeId: 0);
-    }
     return fun;
+}
+
+llvm::Value* LILIREmitter::_getContainerNameFromSelectorChain(std::shared_ptr<LILSelectorChain> selCh)
+{
+    llvm::Value * ret = nullptr;
+    auto lastNode = selCh->getLastNode();
+    if (lastNode->isA(NodeTypeSimpleSelector)) {
+        auto simpleSel = std::static_pointer_cast<LILSimpleSelector>(lastNode);
+        auto nameNode = simpleSel->getFirstNode();
+        if (nameNode->isA(NodeTypeSelector)) {
+            auto sel = std::static_pointer_cast<LILSelector>(nameNode);
+            auto name = sel->getName();
+            auto stringLit = std::make_shared<LILStringLiteral>();
+            stringLit->setValue(name);
+            stringLit->setIsCString(true);
+            return this->_emit(stringLit.get());
+        }
+    }
+    return ret;
 }
 
 LILString LILIREmitter::_newRuleFnName()
