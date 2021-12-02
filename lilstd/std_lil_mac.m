@@ -6,21 +6,6 @@
 #include <simd/simd.h>
 #include <math.h>
 
-extern void LIL__init();
-extern void LIL__addAppMenu();
-extern void LIL__addMenus();
-extern void LIL__nextFrame(void * vertexBuffer, long int * vertexCount);
-extern void LIL__setKeyDown(int keyCode);
-extern void LIL__setKeyUp(int keyCode);
-
-extern void LIL__audioInit();
-extern void LIL__audioFree();
-
-extern long int LIL__gamepadConnected(long int vendorID, long int productID);
-extern void LIL__setGamepadButtonState(long int gamepadId, long int buttonId, bool value);
-extern void LIL__setGamepadX(long int gamepadId, double value);
-extern void LIL__setGamepadY(long int gamepadId, double value);
-
 typedef struct LIL__audioDescriptorStruct {
     AudioComponentInstance * audioUnit;
     size_t bufferSize;
@@ -29,52 +14,52 @@ typedef struct LIL__audioDescriptorStruct {
     UInt32 bitsPerSample;
     UInt32 bytesPerFrame;
     UInt32 freq;
+    float volume;
     UInt32 samplesPerSecond;
 } LIL__audioDescriptorStruct;
 
-//this will be populated after calling LIL__audioInit()
-extern LIL__audioDescriptorStruct LIL__audioDescriptor;
+extern void LIL__init();
+extern void LIL__addAppMenu();
+extern void LIL__addMenus();
+extern void LIL__nextFrame(void * vertexBuffer, long int * vertexCount);
+extern void LIL__setKeyDown(int keyCode);
+extern void LIL__setKeyUp(int keyCode);
 
-float LIL__sineValue = 0.f;
+extern LIL__audioDescriptorStruct * LIL__audioInit();
+extern void LIL__audioFree();
 
-OSStatus LIL__renderSineWave(void * inData, AudioUnitRenderActionFlags * flags, const AudioTimeStamp * timestamp, UInt32 busNumber, UInt32 frames, AudioBufferList *ioData)
+extern long int LIL__gamepadConnected(long int vendorID, long int productID);
+extern void LIL__setGamepadButtonState(long int gamepadId, long int buttonId, bool value);
+extern void LIL__setGamepadX(long int gamepadId, double value);
+extern void LIL__setGamepadY(long int gamepadId, double value);
+
+
+OSStatus LIL__renderAudio(void * inData, AudioUnitRenderActionFlags * flags, const AudioTimeStamp * timestamp, UInt32 busNumber, UInt32 frames, AudioBufferList *ioData)
 {
-    short int * channel = (short int * )ioData->mBuffers[0].mData;
-    UInt32 freq = LIL__audioDescriptor.freq;
-    UInt32 period = 48000 / freq;
-    float volume = 32000.0f;
-
-    for (UInt32 i = 0; i < frames; i++) {
-        float sineValue = sinf(LIL__sineValue);
-        short int sampleValue = (short int)(sineValue * volume);
-        *channel = sampleValue;
-        channel += 1;
-        *channel = sampleValue;
-        channel += 1;
-        LIL__sineValue += 2.0f * M_PI / (float)period;
-        if (LIL__sineValue > 2.0f * M_PI) {
-            LIL__sineValue -= 2.0f * M_PI;
-        }
-    }
+    LIL__audioDescriptorStruct * audioDescriptor = (LIL__audioDescriptorStruct *)inData;
     
+    char * dstBuffer = (char * )ioData->mBuffers[0].mData;
+    UInt32 bytesToOutput = frames * audioDescriptor->bytesPerFrame;
+    
+    UInt32 region1Size = bytesToOutput;
+    UInt32 region2Size = 0;
+
+    if (audioDescriptor->playCursor + bytesToOutput > audioDescriptor->bufferSize) {
+        region1Size = audioDescriptor->bufferSize - audioDescriptor->playCursor;
+        region2Size = bytesToOutput - region1Size;
+    }
+
+    memcpy(dstBuffer, audioDescriptor->data + audioDescriptor->playCursor, region1Size);
+    if (region2Size > 0) {
+        memcpy(dstBuffer+region1Size, audioDescriptor->data, region2Size);
+    }
+    audioDescriptor->playCursor = (audioDescriptor->playCursor + bytesToOutput) % audioDescriptor->bufferSize;
     return noErr;
 }
 
-// OSStatus LIL__renderAudio(void * inData, AudioUnitRenderActionFlags * flags, const AudioTimeStamp * timestamp, UInt32 busNumber, UInt32 frames, AudioBufferList *ioData)
-// {
-//     short int * dstBuffer = (short int * )ioData->mBuffers[0].mData;
-//     short int * srcBuffer = (short int *)inData;
-//     UInt32 bytesPerFrame = 4;
-//     UInt32 bufferLength = frames * bytesPerFrame;
-//     memcpy(dstBuffer, srcBuffer, bufferLength);
-//     return noErr;
-// }
-
 void LIL__setupAudio()
 {
-    //this needs to be called so that the LIL__audioDescriptor
-    //global variable contains values from the config system
-    LIL__audioInit();
+    LIL__audioDescriptorStruct * audioDescriptor = LIL__audioInit();
 
     AudioComponentDescription acd;
     acd.componentType = kAudioUnitType_Output;
@@ -84,10 +69,10 @@ void LIL__setupAudio()
     acd.componentFlagsMask = 0;
     
     AudioComponentInstance au;
-    LIL__audioDescriptor.audioUnit = &au;
+    audioDescriptor->audioUnit = &au;
 
     AudioComponent out = AudioComponentFindNext(NULL, &acd);
-    OSStatus status = AudioComponentInstanceNew(out, LIL__audioDescriptor.audioUnit);
+    OSStatus status = AudioComponentInstanceNew(out, audioDescriptor->audioUnit);
 
     if (status != noErr) {
         NSLog(@"Error setting up audio component");
@@ -95,15 +80,15 @@ void LIL__setupAudio()
     }
     
     AudioStreamBasicDescription asbd;
-    asbd.mSampleRate = LIL__audioDescriptor.samplesPerSecond;
+    asbd.mSampleRate = audioDescriptor->samplesPerSecond;
     asbd.mFormatID = kAudioFormatLinearPCM;
     asbd.mFormatFlags = kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked;
     asbd.mFramesPerPacket = 1;
     asbd.mChannelsPerFrame = 2;
-    asbd.mBitsPerChannel = LIL__audioDescriptor.bitsPerSample;
-    asbd.mBytesPerFrame = LIL__audioDescriptor.bytesPerFrame;
-    asbd.mBytesPerPacket = LIL__audioDescriptor.bytesPerFrame;
-    status = AudioUnitSetProperty(*LIL__audioDescriptor.audioUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, 0, &asbd, sizeof(asbd));
+    asbd.mBitsPerChannel = audioDescriptor->bitsPerSample;
+    asbd.mBytesPerFrame = audioDescriptor->bytesPerFrame;
+    asbd.mBytesPerPacket = audioDescriptor->bytesPerFrame;
+    status = AudioUnitSetProperty(*(audioDescriptor->audioUnit), kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, 0, &asbd, sizeof(asbd));
 
     if (status != noErr) {
         NSLog(@"Error setting up audio output stream");
@@ -111,17 +96,18 @@ void LIL__setupAudio()
     }
     
     AURenderCallbackStruct callback;
-    callback.inputProc = LIL__renderSineWave;
+    callback.inputProcRefCon = (void *)audioDescriptor;
+    callback.inputProc = LIL__renderAudio;
 
-    status = AudioUnitSetProperty(*LIL__audioDescriptor.audioUnit, kAudioUnitProperty_SetRenderCallback, kAudioUnitScope_Global, 0, &callback, sizeof(callback));
+    status = AudioUnitSetProperty(*(audioDescriptor->audioUnit), kAudioUnitProperty_SetRenderCallback, kAudioUnitScope_Global, 0, &callback, sizeof(callback));
     
     if (status != noErr) {
         NSLog(@"Error setting up audio callback");
         return;
     }
 
-    AudioUnitInitialize(*LIL__audioDescriptor.audioUnit);
-    AudioOutputUnitStart(*LIL__audioDescriptor.audioUnit);
+    AudioUnitInitialize(*(audioDescriptor->audioUnit));
+    AudioOutputUnitStart(*(audioDescriptor->audioUnit));
 }
 
 void LIL__gamepadInputListener(void* ctxt, IOReturn status, void *sender, IOHIDValueRef value)

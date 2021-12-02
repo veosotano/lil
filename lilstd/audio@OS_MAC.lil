@@ -6,7 +6,11 @@
 
 #import "cstd.lil";
 
+#snippet M_PI { 3.14159265358979323846264338327950288f32 };
+
 #export {
+    fn sinf(var.f32 value) => f32 extern;
+    
     fn LIL__beep {
         
     };
@@ -21,24 +25,218 @@
         var.i32 bitsPerSample;
         var.i32 bytesPerFrame;
         var.i32 freq;
+        var.f32 volume;
         var.i32 samplesPerSecond;
     };
     
     var.@audioDescriptor LIL__audioDescriptor;
     
-    fn LIL__audioInit {
+    fn LIL__audioInit => ptr(@audioDescriptor) {
+        //puts `audio init`;
         LIL__audioDescriptor: @audioDescriptor {
             samplesPerSecond: #paste samplesPerSecond;
             bitsPerSample: #paste bitsPerSample;
             bytesPerFrame: #paste bytesPerFrame;
             freq: 420i32;
+            volume: 32000f32;
             bufferSize: #paste bufferSize;
             playCursor: 0;
             data: malloc(#paste bufferSize);
         };
+        return pointerTo LIL__audioDescriptor;
     };
     
     fn LIL__audioFree {
         free(LIL__audioDescriptor.data);
+    }
+
+    var.i64 LIL__sampleIndex: 0;
+    var.f32 LIL__sineValue: 0f32;
+    var.bool LIL__needsFadeIn: true;
+
+    fn LIL__generateSineTone (var.bool fadeOut: false) {
+        //printf(`//////////////////////////////////////\n`);
+        var.bool fadeIn: false;
+        if LIL__needsFadeIn {
+            fadeIn: true;
+            LIL__needsFadeIn: false;
+        }
+        //if fadeIn { puts `fadeIn` }
+        //if fadeOut { puts `fadeOut` }
+        if fadeOut {
+            LIL__needsFadeIn: true;
+        }
+        var.i32 freq: LIL__audioDescriptor.freq; //printf(`freq: %i\n`, freq);
+        var.i32 period: LIL__audioDescriptor.samplesPerSecond / freq; //printf(`period: %i\n`, period);
+        var.i32 latencySampleCount: LIL__audioDescriptor.samplesPerSecond / 15i32; //printf(`latencySampleCount: %i\n`, latencySampleCount);
+        var.i32 targetQueueBytes: latencySampleCount * LIL__audioDescriptor.bytesPerFrame; //printf(`targetQueueBytes: %i\n`, targetQueueBytes);
+        var.i64 targetCursor: ((LIL__audioDescriptor.playCursor + (targetQueueBytes => i64)) MOD LIL__audioDescriptor.bufferSize); //printf(`targetCursor: %i\n`, targetCursor);
+        var.i64 writeCursor: ((LIL__sampleIndex * (LIL__audioDescriptor.bytesPerFrame => i64)) MOD LIL__audioDescriptor.bufferSize); //printf(`writeCursor: %i\n`, writeCursor);
+        var.i64 bytesToWrite: 0;
+
+        if (writeCursor > targetCursor) {
+            bytesToWrite: LIL__audioDescriptor.bufferSize - writeCursor;
+            bytesToWrite +: targetCursor;
+        } else {
+            bytesToWrite: targetCursor - writeCursor;
+        }
+        //printf(`bytesToWrite: %i\n`, bytesToWrite);
+
+        var.ptr(i8) region1Ptr: LIL__audioDescriptor.data + writeCursor; //printf(`region1Ptr: %li\n`, region1Ptr => i64);
+        var.i64 region1Size: bytesToWrite;
+        if ((region1Size + writeCursor) > LIL__audioDescriptor.bufferSize) {
+            region1Size: LIL__audioDescriptor.bufferSize - writeCursor;
+        }
+        //printf(`region1Size: %i\n`, region1Size);
+
+        var.ptr(i8) region2Ptr: LIL__audioDescriptor.data; //printf(`region2Ptr: %li\n`, region2Ptr => i64);
+        var.i64 region2Size: bytesToWrite - region1Size; //printf(`region2Size %i\n`, region2Size);
+
+        var.i64 region1SampleCount: region1Size / (LIL__audioDescriptor.bytesPerFrame => i64); //printf(`region1SampleCount: %i\n`, region1SampleCount);
+        var.ptr(i16) channel: region1Ptr => ptr(i16); //printf(`channel: %li\n`, ((channel => i64) - (LIL__audioDescriptor.data => i64)));
+        
+        var.i64 region2SampleCount: region2Size / (LIL__audioDescriptor.bytesPerFrame => i64); //printf(`region2SampleCount: %i\n`, region2SampleCount);
+
+        var.i64 fadeInSamples: 300;
+        var.i64 fadeInSamplesRegion1: 0;
+        var.i64 fadeInSamplesRegion2: 0;
+        if fadeIn {
+            if region2SampleCount >= fadeInSamples {
+                fadeInSamplesRegion2: fadeInSamples;
+            } else if region2SampleCount > 0 {
+                fadeInSamplesRegion2: region2SampleCount;
+                fadeInSamplesRegion1: fadeInSamples - fadeInSamplesRegion2;
+            } else {
+                fadeInSamplesRegion1: fadeInSamples;
+            }
+        }
+
+        var.i64 fadeOutSamples: 300;
+        var.i64 fadeOutSamplesRegion1: 0;
+        var.i64 fadeOutSamplesRegion2: 0;
+        if fadeOut {
+            if region2SampleCount >= fadeOutSamples {
+                fadeOutSamplesRegion2: fadeOutSamples;
+            } else if region2SampleCount > 0 {
+                fadeOutSamplesRegion2: region2SampleCount;
+                fadeOutSamplesRegion1: fadeOutSamples - fadeOutSamplesRegion2;
+            } else {
+                fadeOutSamplesRegion1: fadeOutSamples;
+            }
+        }
+
+        for (var.i64 i: 0; i < region1SampleCount; i +: 1) {
+            var.f32 sineValue: sinf(LIL__sineValue);
+            var.i16 sampleValue: (sineValue * LIL__audioDescriptor.volume) => i16;
+            if fadeIn AND (fadeInSamplesRegion1 > 0) {
+                if i <= fadeInSamplesRegion1 {
+                    var.f32 fadeAmount: ((i => f32) / fadeInSamplesRegion1);
+                    //printf(`%f\n`, fadeAmount);
+                    sampleValue: ((sampleValue => f32 ) * fadeAmount) => i16;
+                }
+            }
+            if fadeOut AND (fadeOutSamplesRegion1 > 0) {
+                var.i64 fadeStartSample: region1SampleCount - fadeOutSamplesRegion1;
+                if i >= fadeStartSample {
+                    var.f32 fadeAmount: (((region1SampleCount - i) => f32) / fadeOutSamplesRegion1);
+                    sampleValue: ((sampleValue => f32 ) * fadeAmount) => i16;
+                }
+            }
+            //left channel
+            set(channel, sampleValue);
+            channel: channel + 1;
+            //right channel
+            set(channel, sampleValue);
+            channel: channel + 1;
+            LIL__sineValue +: (2.0f32 * #paste M_PI) / (period => f32);
+            if (LIL__sineValue > (2.0f32 * #paste M_PI)) {
+                LIL__sineValue -: (2.0f32 * #paste M_PI);
+            }
+            LIL__sampleIndex +: 1;
+        }
+
+        channel: region2Ptr => ptr(i16); //printf(`channel: %li\n`, channel => i64);
+
+        for (var.i64 i: 0; i < region2SampleCount; i +: 1) {
+            var.f32 sineValue: sinf(LIL__sineValue);
+            var.i16 sampleValue: (sineValue * LIL__audioDescriptor.volume) => i16;
+            if fadeIn AND (fadeInSamplesRegion2 > 0) {
+                if i <= fadeInSamplesRegion2 {
+                    var.f32 fadeAmount: ((i => f32) / fadeInSamplesRegion2);
+                    sampleValue: ((sampleValue => f32 ) * fadeAmount) => i16;
+                }
+            }
+            if fadeOut AND (fadeOutSamplesRegion2 > 0) {
+                var.i64 fadeStartSample: region2SampleCount - fadeOutSamplesRegion2;
+                if i >= fadeStartSample {
+                    var.f32 fadeAmount: (((region2SampleCount - i) => f32) / fadeOutSamplesRegion2);
+                    sampleValue: ((sampleValue => f32 ) * fadeAmount) => i16;
+                }
+            }
+            //left channel
+            set(channel, sampleValue);
+            channel: channel + 1;
+            //right channel
+            set(channel, sampleValue);
+            channel: channel + 1;
+            LIL__sineValue +: (2.0f32 * #paste M_PI) / (period => f32);
+            if (LIL__sineValue > (2.0f32 * #paste M_PI)) {
+                LIL__sineValue -: (2.0f32 * #paste M_PI);
+            }
+            LIL__sampleIndex +: 1;
+        }
+    }
+    
+    
+    fn LIL__generateSilence {
+        //puts `shhhh`;
+        //printf(`~`);
+        LIL__needsFadeIn: true;
+        var.i32 latencySampleCount: LIL__audioDescriptor.samplesPerSecond / 15i32;
+        var.i32 targetQueueBytes: latencySampleCount * LIL__audioDescriptor.bytesPerFrame;
+        var.i64 targetCursor: ((LIL__audioDescriptor.playCursor + (targetQueueBytes => i64)) MOD LIL__audioDescriptor.bufferSize);
+        var.i64 writeCursor: ((LIL__sampleIndex * (LIL__audioDescriptor.bytesPerFrame => i64)) MOD LIL__audioDescriptor.bufferSize);
+        var.i64 bytesToWrite: 0;
+        if (writeCursor > targetCursor) {
+            bytesToWrite: LIL__audioDescriptor.bufferSize - writeCursor;
+            bytesToWrite +: targetCursor;
+        } else {
+            bytesToWrite: targetCursor - writeCursor;
+        }
+
+        var.ptr(i8) region1Ptr: LIL__audioDescriptor.data + writeCursor;
+        var.i64 region1Size: bytesToWrite;
+        if ((region1Size + writeCursor) > LIL__audioDescriptor.bufferSize) {
+            region1Size: LIL__audioDescriptor.bufferSize - writeCursor;
+        }
+
+        var.ptr(i8) region2Ptr: LIL__audioDescriptor.data;
+        var.i64 region2Size: bytesToWrite - region1Size;
+
+        var.i64 region1SampleCount: region1Size / (LIL__audioDescriptor.bytesPerFrame => i64);
+        var.ptr(i16) channel: region1Ptr => ptr(i16);
+
+        for (var.i64 i: 0; i < region1SampleCount; i +: 1) {
+            //left channel
+            set(channel, 0i16);
+            channel: channel + 1;
+            //right channel
+            set(channel, 0i16);
+            channel: channel + 1;
+            LIL__sampleIndex +: 1;
+        }
+
+        var.i64 region2SampleCount: region2Size / (LIL__audioDescriptor.bytesPerFrame => i64);
+        channel: region2Ptr => ptr(i16);
+
+        for (var.i64 i: 0; i < region2SampleCount; i +: 1) {
+            //left channel
+            set(channel, 0i16);
+            channel: channel + 1;
+            //right channel
+            set(channel, 0i16);
+            channel: channel + 1;
+            LIL__sampleIndex +: 1;
+        }
     }
 }

@@ -188,6 +188,7 @@ fn onUpdate {
     limitSpeed(ball);
     //fixme: this is a hack
     setSoundFreq(ball);
+    LIL__generateSineTone(false);
 }
 
 fn setSoundFreq(var.@container ball) {
