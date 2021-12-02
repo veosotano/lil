@@ -1,4 +1,5 @@
 #needs "cstd.lil";
+#needs "time.lil";
 
 const DEBUG: false;
 
@@ -8,7 +9,7 @@ const DEBUG: false;
 #snippet entitiesSize { 2048 };
 #snippet componentsSize { 32 };
 
-fn onUpdate extern;
+fn onUpdate(var.f64 deltaTime) extern;
 
 #export {
     var.@app app;
@@ -139,6 +140,7 @@ fn onUpdate extern;
         var.i64 nameCount: 0;
         var.i64 typeCount: 0;
         var.[#paste entitiesSize x @vel] velocities: [];
+        var.i64 lastFrameTime: 0;
 
         fn newEntity => i64 {
             #if DEBUG {
@@ -262,21 +264,34 @@ fn onUpdate extern;
         return ret;
     };
     
-    fn LIL__movementSystem {
+    fn LIL__movementSystem(var.f64 deltaTime) {
         for (var.i64 i:0; i<app.entityCount; i+:1) {
-            app.box2ds[i].x +: app.velocities[i].x;
-            app.box2ds[i].y +: app.velocities[i].y;
-            app.box2ds[i].z +: app.velocities[i].z;
+            app.box2ds[i].x +: ((app.velocities[i].x => f64) * deltaTime * 60) => f32;
+            app.box2ds[i].y +: ((app.velocities[i].y => f64) * deltaTime * 60) => f32;
+            app.box2ds[i].z +: ((app.velocities[i].z => f64) * deltaTime * 60) => f32;
         }
     };
 
-    fn LIL__runSystems {
-        LIL__movementSystem();
+    fn LIL__runSystems(var.f64 deltaTime) {
+        LIL__movementSystem(deltaTime);
     };
 
-    fn LIL__nextFrame(var.ptr(any) vertexBuffer, var.ptr(i64) vertexCount) {
-        onUpdate();
-        LIL__runSystems();
+    fn LIL__nextFrame(var.ptr(any) vertexBuffer; var.ptr(i64) vertexCount; var.i64 timestamp) {
+        var.i64 currentTime: LIL__ticksToNanoseconds(timestamp);
+        var.f64 deltaTime;
+        if app.lastFrameTime = 0 {
+            deltaTime: 0.0166666666666666666666666;
+        } else {
+            deltaTime: (((currentTime - app.lastFrameTime)=>f64) * 0.000000001 => f64);
+        }
+        // if deltaTime > 0.0167 {
+        //     printf(`deltaTime: %lf\n`, deltaTime);
+        // }
+        onUpdate(deltaTime);
+        LIL__runSystems(deltaTime);
+
+        //update timestamp
+        app.lastFrameTime: currentTime;
 
         var.[1000 x @vertex] vertices: [];
         for (var.i64 i:0; i<app.boxCount; i+:1) {

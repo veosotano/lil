@@ -1,0 +1,34 @@
+#export {
+    class @_mach_timebase_info {
+        var.i32 numer;
+        var.i32 denom;
+    };
+    fn mach_timebase_info(var.ptr(@_mach_timebase_info) ptr) extern;
+    fn mach_absolute_time => i64 extern;
+
+    var.@_mach_timebase_info LIL__machTimebase;
+
+    fn LIL__timeInit {
+        LIL__machTimebase: @_mach_timebase_info {
+            numer: 0i32;
+            denom: 0i32;
+        };
+        mach_timebase_info(pointerTo LIL__machTimebase);
+    }
+    
+    fn LIL__nowInNanoseconds => i64 {
+        var.i64 machTime: mach_absolute_time();
+        return ((machTime => f64) * ((LIL__machTimebase.numer / LIL__machTimebase.denom) => f64)) => i64;
+    }
+    fn LIL__nowInMilliseconds => i64 {
+        var.i64 machTime: mach_absolute_time();
+        return ((machTime => f64) * ((LIL__machTimebase.numer / LIL__machTimebase.denom) => f64)) * 0.000001  => i64;
+    }
+    fn LIL__nowInSeconds => f64 {
+        var.i64 machTime: mach_absolute_time();
+        return ((machTime => f64) * ((LIL__machTimebase.numer / LIL__machTimebase.denom) => f64)) * 0.000000001  => f64;
+    }
+    fn LIL__ticksToNanoseconds(var.i64 ticks) => i64 {
+        return ticks * ((LIL__machTimebase.numer / LIL__machTimebase.denom) => i64);
+    }
+}

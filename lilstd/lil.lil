@@ -5,6 +5,7 @@
     #needs "print.lil";
     #if #getConfig(isApp) {
         #needs "os.lil";
+        #needs "time.lil";
         #needs "app.lil";
         #needs "input.lil";
         #needs "audio.lil";

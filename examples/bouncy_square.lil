@@ -180,7 +180,7 @@ notes:
      659i32 //e5
 ;
 
-fn onUpdate {
+fn onUpdate(var.f64 deltaTime) {
     var ball: @container { id: 1 };
     applyUserInput(ball);
     

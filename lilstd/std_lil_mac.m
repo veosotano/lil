@@ -21,7 +21,7 @@ typedef struct LIL__audioDescriptorStruct {
 extern void LIL__init();
 extern void LIL__addAppMenu();
 extern void LIL__addMenus();
-extern void LIL__nextFrame(void * vertexBuffer, long int * vertexCount);
+extern void LIL__nextFrame(void * vertexBuffer, long int * vertexCount, long int deltaTime);
 extern void LIL__setKeyDown(int keyCode);
 extern void LIL__setKeyUp(int keyCode);
 
@@ -557,7 +557,7 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
         LILMainView *theView = (__bridge LILMainView*)displayLinkContext;
         long int vertexCount = 0;
         LILMetalRenderer * renderer = theView.renderer;
-        LIL__nextFrame([renderer getVertexBufferPointer], &vertexCount);
+        LIL__nextFrame([renderer getVertexBufferPointer], &vertexCount, outputTime->hostTime);
         renderer.vertexCount = vertexCount;
         [theView render];
     }
