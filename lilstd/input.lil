@@ -23,6 +23,8 @@
         var.[64 x bool] buttonStates: [];
         var.f64 x: 0.0;
         var.f64 y: 0.0;
+        var.f64 x2: 0.0;
+        var.f64 y2: 0.0;
     };
     class @input {
         var.[65536 x bool] keyStates: [];
@@ -50,6 +52,12 @@
         fn setGamepadY (var.i64 gamepadId; var.f64 value) {
             @self.gamepads[gamepadId].y: value;
         };
+        fn setGamepadX2 (var.i64 gamepadId; var.f64 value) {
+            @self.gamepads[gamepadId].x2: value;
+        };
+        fn setGamepadY2 (var.i64 gamepadId; var.f64 value) {
+            @self.gamepads[gamepadId].y2: value;
+        };
     };
     fn LIL__setKeyDown(var.i16 keyCode) {
         input.setKeyDown(keyCode, true);
@@ -65,6 +73,12 @@
     };
     fn LIL__setGamepadY(var.i64 gamepadId; var.f64 value) {
         input.setGamepadY(gamepadId, value);
+    };
+    fn LIL__setGamepadX2(var.i64 gamepadId; var.f64 value) {
+        input.setGamepadX2(gamepadId, value);
+    };
+    fn LIL__setGamepadY2(var.i64 gamepadId; var.f64 value) {
+        input.setGamepadY2(gamepadId, value);
     };
     
     fn LIL__findVendor(var.i64 vendorId) => i64

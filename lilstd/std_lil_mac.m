@@ -32,6 +32,8 @@ extern long int LIL__gamepadConnected(long int vendorID, long int productID);
 extern void LIL__setGamepadButtonState(long int gamepadId, long int buttonId, bool value);
 extern void LIL__setGamepadX(long int gamepadId, double value);
 extern void LIL__setGamepadY(long int gamepadId, double value);
+extern void LIL__setGamepadX2(long int gamepadId, double value);
+extern void LIL__setGamepadY2(long int gamepadId, double value);
 
 
 OSStatus LIL__renderAudio(void * inData, AudioUnitRenderActionFlags * flags, const AudioTimeStamp * timestamp, UInt32 busNumber, UInt32 frames, AudioBufferList *ioData)
@@ -140,11 +142,17 @@ void LIL__gamepadInputListener(void* ctxt, IOReturn status, void *sender, IOHIDV
                 break;
             }
             case kHIDUsage_GD_Z:
-                //NSLog(@"X2: %i\n", direction);
+            {
+                double xValue = -((128.0 - (double)direction) / 128.0);
+                LIL__setGamepadX2(gamepadId, xValue);
                 break;
+            }
             case kHIDUsage_GD_Rz:
-                //NSLog(@"Y2: %i\n", direction);
+            {
+                double yValue = (128.0 - (double)direction) / 128.0;
+                LIL__setGamepadY2(gamepadId, yValue);
                 break;
+            }
 
             case kHIDUsage_GD_Hatswitch:
             {
@@ -165,7 +173,7 @@ void LIL__gamepadInputListener(void* ctxt, IOReturn status, void *sender, IOHIDV
                 break;
             }
             default:
-                NSLog(@"Usage: %i\n", usage);
+                //NSLog(@"Usage: %i\n", usage);
                 break;
         }
     }
