@@ -642,8 +642,6 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
     //set it as main menu
     [NSApp setMainMenu:mainMenu];
     [menuStack removeAllObjects];
-    //call initializers
-    LIL__init();
     //show window
     [mainWindow makeKeyAndOrderFront:self];
 }
@@ -738,6 +736,7 @@ void LIL__run(float width, float height)
     
     LIL__setupAudio();
     LIL__setupGamepads();
+    LIL__init();
 
     // call the run method of our application
     [application run];
