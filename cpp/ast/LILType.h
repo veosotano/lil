@@ -29,6 +29,8 @@ namespace LIL
         };
         static bool isBuiltInType(LILType * ty);
         static bool isNumberType(LILType * ty);
+        static bool isIntegerType(LILType * ty);
+        static bool isFloatType(LILType * ty);
         static bool combinesWithPointer(LILType * ty);
 
         LILType();
