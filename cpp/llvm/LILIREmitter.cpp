@@ -526,17 +526,37 @@ llvm::Value * LILIREmitter::_emit(LILExpression * value)
             std::cerr << "RIGHT NODE OF EXPRESSION HAD NO TYPE FAIL!!!!!!!!!!!!!!!!\n";
             return nullptr;
         }
+        static auto numLlvmTy = this->llvmTypeFromLILType(LILType::make("i64").get());
         if (leftTy->isA(TypeTypePointer) && LILType::isNumberType(rightTy.get())) {
-            auto llvmType = this->llvmTypeFromLILType(rightTy.get());
-            leftV = d->irBuilder.CreatePtrToInt(leftV, llvmType);
-        } else if (LILType::isNumberType(leftTy.get()) && rightTy->isA(TypeTypePointer)) {
-            auto llvmType = this->llvmTypeFromLILType(leftTy.get());
-            rightV = d->irBuilder.CreatePtrToInt(rightV, llvmType);
-        } else if (leftTy->isA(TypeTypePointer) && rightTy->isA(TypeTypePointer)){
             auto ptrTy = std::static_pointer_cast<LILPointerType>(leftTy);
-            auto llvmType = this->llvmTypeFromLILType(ptrTy->getArgument().get());
-            leftV = d->irBuilder.CreatePtrToInt(leftV, llvmType);
-            rightV = d->irBuilder.CreatePtrToInt(rightV, llvmType);
+            auto ptrArgTy = ptrTy->getArgument();
+            leftV = d->irBuilder.CreatePtrToInt(leftV, numLlvmTy);
+            
+            if (!LILType::isIntegerType(rightTy.get())) {
+                std::cerr << "POINTER ARITHMETIC NEEDS INTEGER FAIL!!!!!!!!!!!!!!!!\n";
+                return nullptr;
+            }
+            size_t ptrArgSize = this->getSizeOfType(ptrArgTy);
+            rightV = d->irBuilder.CreateSExt(rightV, numLlvmTy);
+            rightV = d->irBuilder.CreateMul(rightV, llvm::ConstantInt::get(d->llvmContext, llvm::APInt(64, ptrArgSize/8, false)));
+
+        } else if (LILType::isNumberType(leftTy.get()) && rightTy->isA(TypeTypePointer)) {
+            auto ptrTy = std::static_pointer_cast<LILPointerType>(rightTy);
+            auto ptrArgTy = ptrTy->getArgument();
+            rightV = d->irBuilder.CreatePtrToInt(rightV, numLlvmTy);
+            
+            if (!LILType::isIntegerType(leftTy.get())) {
+                std::cerr << "POINTER ARITHMETIC NEEDS INTEGER FAIL!!!!!!!!!!!!!!!!\n";
+                return nullptr;
+            }
+            size_t ptrArgSize = this->getSizeOfType(ptrArgTy);
+            if (ptrArgSize >= 8){
+                leftV = d->irBuilder.CreateSExt(leftV, numLlvmTy);
+                leftV = d->irBuilder.CreateMul(leftV, llvm::ConstantInt::get(d->llvmContext, llvm::APInt(64, ptrArgSize/8, false)));
+            }
+        } else if (leftTy->isA(TypeTypePointer) && rightTy->isA(TypeTypePointer)){
+            leftV = d->irBuilder.CreatePtrToInt(leftV, numLlvmTy);
+            rightV = d->irBuilder.CreatePtrToInt(rightV, numLlvmTy);
         }
         auto result = this->_emitExpression(value->getExpressionType(), leftV, rightV);
         return d->irBuilder.CreateIntToPtr(result, this->llvmTypeFromLILType(ty.get()));
@@ -4478,6 +4498,7 @@ std::shared_ptr<LILType> LILIREmitter::getMostAlignedType(const std::vector<std:
     return biggestTys.front();
 }
 
+//returns size in bits
 size_t LILIREmitter::getSizeOfType(std::shared_ptr<LILType> ty) const
 {
     size_t ret = 0;

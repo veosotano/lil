@@ -54,7 +54,7 @@ const DEBUG: false;
                         #if DEBUG {
                             puts `buffer was pointer`;
                         }
-                        return @self.buffer + (sizeOf(type @subtype)*index);
+                        return @self.buffer + index;
                     }
                 }
             }
