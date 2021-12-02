@@ -2177,7 +2177,7 @@ llvm::Value * LILIREmitter::_emit(LILVarName * value)
     auto namestr = name.data();
     llvm::Value * val = d->namedValues[namestr];
     if (!val) {
-        std::cerr << "!!!!!!!!!!UNKNOWN VARIABLE OMG ALKJDLFJA FAIL FAIL FAIL!!!!!!!!!!!!!!!!\n";
+        std::cerr << "!!!!!!!!!!UNKNOWN VARIABLE " + namestr + " OMG ALKJDLFJA FAIL FAIL FAIL!!!!!!!!!!!!!!!!\n";
         return nullptr;
     }
     return d->irBuilder.CreateLoad(val, namestr);
