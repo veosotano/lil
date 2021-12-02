@@ -484,7 +484,7 @@ llvm::Value * LILIREmitter::_emitCast(LILExpression * value)
             return d->irBuilder.CreateFPToSI(leftV, llvmType);
         //integers, either to bigger or to smaller type
         } else if (leftLlvmTy->isIntegerTy() && llvmType->isIntegerTy()) {
-            return d->irBuilder.CreateZExtOrTrunc(leftV, llvmType);
+            return d->irBuilder.CreateSExtOrTrunc(leftV, llvmType);
         } else if (leftLlvmTy->isFloatingPointTy() && llvmType->isFloatingPointTy()) {
             //floating point, to bigger type
             if (leftLlvmTy->getPrimitiveSizeInBits() < llvmType->getPrimitiveSizeInBits()) {
@@ -976,23 +976,23 @@ void LILIREmitter::_convertLlvmValueIfNeeded(llvm::Value ** llvmValue, LILType *
     const auto & srcName = srcTy->getName();
     if (dstName == "i8") {
         if (srcName == "bool") {
-            *llvmValue = d->irBuilder.CreateZExt(*llvmValue, this->llvmTypeFromLILType(dstTy));
+            *llvmValue = d->irBuilder.CreateSExt(*llvmValue, this->llvmTypeFromLILType(dstTy));
         }
     } else if (dstName == "i16") {
         if (srcName == "bool" || srcName == "i8") {
-            *llvmValue = d->irBuilder.CreateZExt(*llvmValue, this->llvmTypeFromLILType(dstTy));
+            *llvmValue = d->irBuilder.CreateSExt(*llvmValue, this->llvmTypeFromLILType(dstTy));
         }
     } else if (dstName == "i32") {
         if (srcName == "bool" || srcName == "i8" || srcName == "i16" ) {
-            *llvmValue = d->irBuilder.CreateZExt(*llvmValue, this->llvmTypeFromLILType(dstTy));
+            *llvmValue = d->irBuilder.CreateSExt(*llvmValue, this->llvmTypeFromLILType(dstTy));
         }
     } else if (dstName == "i64") {
         if (srcName == "bool" || srcName == "i8" || srcName == "i16" || srcName == "i32" ) {
-            *llvmValue = d->irBuilder.CreateZExt(*llvmValue, this->llvmTypeFromLILType(dstTy));
+            *llvmValue = d->irBuilder.CreateSExt(*llvmValue, this->llvmTypeFromLILType(dstTy));
         }
     } else if (dstName == "i128") {
         if (srcName == "bool" || srcName == "i8" || srcName == "i16" || srcName == "i32" || srcName == "i64" ) {
-            *llvmValue = d->irBuilder.CreateZExt(*llvmValue, this->llvmTypeFromLILType(dstTy));
+            *llvmValue = d->irBuilder.CreateSExt(*llvmValue, this->llvmTypeFromLILType(dstTy));
         }
     }
 }
@@ -2775,7 +2775,7 @@ llvm::Value * LILIREmitter::_emitFunctionCall(LILFunctionCall * value, LILString
                     if (fcArgTyName == "f32") {
                         fcArgIr = d->irBuilder.CreateFPExt(fcArgIr, llvm::Type::getDoubleTy(d->llvmContext));
                     } else if (fcArgTyName == "i8" || fcArgTyName == "i16") {
-                        fcArgIr = d->irBuilder.CreateZExt(fcArgIr, llvm::Type::getInt32Ty(d->llvmContext));
+                        fcArgIr = d->irBuilder.CreateSExt(fcArgIr, llvm::Type::getInt32Ty(d->llvmContext));
                     }
                 }
             }
