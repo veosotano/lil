@@ -2006,7 +2006,7 @@ bool LILPreprocessor::_processPasteInstr(std::shared_ptr<LILExpression> value)
 bool LILPreprocessor::_processPasteInstr(std::shared_ptr<LILUnaryExpression> value)
 {
     auto val = value->getValue();
-    if (val && val->isA(InstructionTypeIf)) {
+    if (val) {
         this->_nodeBuffer.emplace_back();
         bool remove = this->processPasteInstr(val);
         if (remove) {
