@@ -102,6 +102,10 @@
         <string>????</string>
         <key>CFBundleVersion</key>
         <string>1.0</string>
+        <key>NSPrincipalClass</key>
+        <string>NSApplication</string>
+        <key>NSHighResolutionCapable</key>
+        <string>True</string>
 </dict>
 </plist>" > "%name.app/Contents/Info.plist"',
                 'cp %buildPath/%out "%name.app/Contents/MacOS/%name"'

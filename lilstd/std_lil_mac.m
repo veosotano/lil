@@ -584,13 +584,18 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
 @implementation LILAppDelegate
 - (id)initWithWidth:(float) width height:(float) height {
     if ( self = [super init] ) {
+        NSScreen * mainScreen = [NSScreen mainScreen];
+        NSRect screenRect = [mainScreen frame];
+
+        width /= [mainScreen backingScaleFactor];
+        height /= [mainScreen backingScaleFactor];
+        
         if (width < 300.0) {
             width = 300.0;
         }
         if (height < 300.0) {
             height = 300.0;
         }
-        NSRect screenRect = [[NSScreen mainScreen] frame];
         
         float x = (screenRect.size.width/2) - (width/2);
         float y = (screenRect.size.height/2) - (height/2);
@@ -600,6 +605,7 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
         if (y < 0.0) {
             y = 0.0;
         }
+
         NSRect contentSize = NSMakeRect(x, y, width, height);
 
         mainWindow = [[NSWindow alloc]
