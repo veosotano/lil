@@ -644,6 +644,7 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
     [menuStack removeAllObjects];
     //show window
     [mainWindow makeKeyAndOrderFront:self];
+    [mainWindow toggleFullScreen:self];
 }
 - (void)dealloc {
     // don’t forget to release allocated objects!
