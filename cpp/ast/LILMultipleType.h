@@ -26,14 +26,14 @@ namespace LIL
         LILMultipleType(const LILMultipleType &other);
         std::shared_ptr<LILMultipleType> clone() const;
         virtual ~LILMultipleType();
-        bool equalTo(std::shared_ptr<LILNode> otherNode);
-        virtual void receiveNodeData(const LILString & data);
+        bool equalTo(std::shared_ptr<LILNode> otherNode) override;
+        void receiveNodeData(const LILString & data) override;
 
         void addType(std::shared_ptr<LILType> ty);
         void setTypes(std::vector<std::shared_ptr<LILType>> && tys);
         std::vector<std::shared_ptr<LILType>> getTypes() const;
 
-        bool getIsWeakType() const;
+        bool getIsWeakType() const override;
         void setIsWeakType(bool value);
         std::shared_ptr<LILType> getIntegerType() const override;
 
@@ -42,7 +42,7 @@ namespace LIL
         size_t indexOfType(LILType * ty) const;
 
     protected:
-        virtual std::shared_ptr<LILClonable> cloneImpl() const;
+        std::shared_ptr<LILClonable> cloneImpl() const override;
 
     private:
         std::vector<std::shared_ptr<LILType>> _types;
