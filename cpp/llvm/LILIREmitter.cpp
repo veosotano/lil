@@ -570,9 +570,23 @@ llvm::Value * LILIREmitter::_emit(LILExpression * value)
             rightV = d->irBuilder.CreateSIToFP(rightV, this->llvmTypeFromLILType(ty.get()));
         }
     }
+
     if (leftV->getType() != rightV->getType()) {
-        std::cerr << "!!!!!!!!!!LEFT AND RIGHT TYPE DONT MATCH FAIL!!!!!!!!!!!!!!!!\n";
-        return nullptr;
+        auto leftTy = left->getType();
+        auto rightTy = right->getType();
+        if (
+            leftTy && LILType::isIntegerType(leftTy.get())
+            && rightTy && LILType::isIntegerType(rightTy.get())
+        ) {
+            if (this->getSizeOfType(leftTy) > this->getSizeOfType(rightTy)) {
+                rightV = d->irBuilder.CreateSExt(rightV, leftV->getType());
+            } else {
+                leftV = d->irBuilder.CreateSExt(leftV, rightV->getType());
+            }
+        } else {
+            std::cerr << "!!!!!!!!!!LEFT AND RIGHT TYPE DONT MATCH FAIL!!!!!!!!!!!!!!!!\n";
+            return nullptr;
+        }
     }
     return this->_emitExpression(value->getExpressionType(), leftV, rightV);
 }
@@ -806,6 +820,14 @@ llvm::Value * LILIREmitter::_emit(LILUnaryExpression * value)
         return nullptr;
     }
     auto temp = d->irBuilder.CreateLoad(subject);
+    auto expTy = temp->getType();
+    if (
+        valV->getType()->isIntegerTy()
+        && expTy->isIntegerTy()
+        && (expTy->getIntegerBitWidth() > valV->getType()->getIntegerBitWidth())
+        ) {
+        valV = d->irBuilder.CreateSExt(valV, expTy);
+    }
     llvm::Value * expVal = this->_emitExpression(LILUnaryExpression::uexpToExpType(value->getUnaryExpressionType()), temp, valV);
     if (expVal) {
         d->irBuilder.CreateStore(expVal, subject);
@@ -1449,6 +1471,16 @@ llvm::Value * LILIREmitter::_emit(LILAssignment * value)
                                     && llvmValue->getType()->getTypeID() != llvm::Type::PointerTyID
                                     ){
                                     d->currentAlloca = d->irBuilder.CreateLoad(d->currentAlloca);
+                                    auto ptrTy = std::static_pointer_cast<LILPointerType>(ty);
+                                    ty = ptrTy->getArgument();
+                                }
+                                auto allocaTy = d->currentAlloca->getType()->getPointerElementType();
+                                if (
+                                    llvmValue->getType()->isIntegerTy()
+                                    && allocaTy->isIntegerTy()
+                                    && (allocaTy->getIntegerBitWidth() > llvmValue->getType()->getIntegerBitWidth())
+                                ) {
+                                    llvmValue = d->irBuilder.CreateSExt(llvmValue, allocaTy);
                                 }
                                 d->irBuilder.CreateStore(llvmValue, d->currentAlloca);
                             }
@@ -3520,6 +3552,14 @@ llvm::Value * LILIREmitter::_emitReturn(LILFlowControlCall * value)
             retVal = this->emit(arg.get());
         }
         if (retVal) {
+            auto allocaTy = d->returnAlloca->getType()->getPointerElementType();
+            if (
+                retVal->getType()->isIntegerTy()
+                && allocaTy->isIntegerTy()
+                && (allocaTy->getIntegerBitWidth() > retVal->getType()->getIntegerBitWidth())
+                ) {
+                retVal = d->irBuilder.CreateSExt(retVal, allocaTy);
+            }
             llvm::Value * theReturn = d->irBuilder.CreateStore(retVal, d->currentAlloca);
             d->currentAlloca = allocaBackup;
             return theReturn;
