@@ -50,6 +50,8 @@ namespace LIL
         LILString outFile;
         LILString dir;
         LILString source;
+        LILString cpu;
+        LILString vendor;
 
         LILIREmitter * irEmitter;
         llvm::TargetMachine * targetMachine;
@@ -85,20 +87,44 @@ void LILOutputEmitter::run(std::shared_ptr<LILRootNode> rootNode)
     
     std::error_code error_code;
     
-    auto targetTriple = llvm::sys::getDefaultTargetTriple();
+    std::string targetTriple;
+    const std::string & cpuString = this->getCPU().data();
+    const std::string & vendorString = this->getVendor().data();
+
+    if (cpuString.length() == 0 || vendorString.length() == 0) {
+        std::cerr << "Error: Unknown CPU or vendor: " << cpuString << "/" << vendorString << ".\n";
+        return;
+    }
+
+    targetTriple = cpuString + "-" + vendorString;
+
+    LLVMInitializeX86TargetInfo();
+    LLVMInitializeX86Target();
+    LLVMInitializeX86TargetMC();
+    LLVMInitializeX86AsmPrinter();
+
+    LLVMInitializeARMTargetInfo();
+    LLVMInitializeARMTarget();
+    LLVMInitializeARMTargetMC();
+    LLVMInitializeARMAsmPrinter();
     
-    llvm::InitializeNativeTarget();
-    llvm::InitializeNativeTargetAsmParser();
-    llvm::InitializeNativeTargetAsmPrinter();
-    llvm::InitializeNativeTargetDisassembler();
-    
+    LLVMInitializeAArch64TargetInfo();
+    LLVMInitializeAArch64Target();
+    LLVMInitializeAArch64TargetMC();
+    LLVMInitializeAArch64AsmPrinter();
+
+    LLVMInitializePowerPCTargetInfo();
+    LLVMInitializePowerPCTarget();
+    LLVMInitializePowerPCTargetMC();
+    LLVMInitializePowerPCAsmPrinter();
+
     std::string error;
     auto target = llvm::TargetRegistry::lookupTarget(targetTriple, error);
     if (!target) {
-        std::cerr << "Error: could not look up target.\n";
+        std::cerr << "Error: could not look up target: " << targetTriple << "\n";
         return;
     }
-    
+
     auto cpu = "generic";
     auto features = "";
     llvm::TargetOptions opt;
@@ -242,4 +268,24 @@ void LILOutputEmitter::setSource(const LILString & source)
 const LILString & LILOutputEmitter::getSource() const
 {
     return d->source;
+}
+
+void LILOutputEmitter::setCPU(const LILString & value)
+{
+    d->cpu = value;
+}
+
+const LILString & LILOutputEmitter::getCPU() const
+{
+    return d->cpu;
+}
+
+void LILOutputEmitter::setVendor(const LILString & value)
+{
+    d->vendor = value;
+}
+
+const LILString & LILOutputEmitter::getVendor() const
+{
+    return d->vendor;
 }

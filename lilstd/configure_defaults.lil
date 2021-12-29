@@ -68,7 +68,9 @@
         mac {
             suffix: #arg { name: "suffix"; default: "OS_MAC" };
             constants+: "OS_MAC";
-            minOSVersion: "10.12";
+            minOSVersion: #arg { name: "minOSVersion"; default: "10.12" };
+            cpu: #arg { name: "cpu"; default: "x86_64" };
+            vendor: #arg { name: "vendor"; default: "apple-macos%minOSVersion"};
             linkerFlags +: "-macosx_version_min %minOSVersion";
             linkerFlags +: "-framework Cocoa";
 
@@ -117,10 +119,15 @@
         ios {
             suffix: "OS_IOS";
             constants+: "OS_IOS";
+            minOSVersion: #arg { name: "minOSVersion"; default: "10.2" };
+            cpu: #arg { name: "cpu"; default: "arm64" };
+            vendor: #arg { name: "vendor"; default: "apple-ios%minOSVersion"};
         }
         android {
             suffix: "OS_ANDROID";
             constants+: "OS_ANDROID";
+            cpu: #arg { name: "cpu"; default: "arm64" };
+            vendor: #arg { name: "vendor"; default: "unkown-elf"};
         }
     }
 };

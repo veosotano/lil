@@ -310,7 +310,10 @@ void LILBuildManager::build()
         outEmitter->setInFile(this->_file);
         outEmitter->setOutFile(oFile);
         outEmitter->setDir(buildPath);
-        
+
+        outEmitter->setCPU(this->_config->getConfigString("cpu"));
+        outEmitter->setVendor(this->_config->getConfigString("vendor"));
+
         if (this->_config->getConfigBool("printOnly")) {
             outEmitter->printToOutput(mainCodeUnit->getRootNode());
         } else {
@@ -419,6 +422,8 @@ void LILBuildManager::build()
                 outEmitter->setInFile(fileNameExt);
                 outEmitter->setOutFile(oFile);
                 outEmitter->setDir(oDir);
+                outEmitter->setCPU(this->_config->getConfigString("cpu"));
+                outEmitter->setVendor(this->_config->getConfigString("vendor"));
                 
                 LIL_makeDir(oDir);
                 

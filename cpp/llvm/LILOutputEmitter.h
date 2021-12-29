@@ -42,6 +42,10 @@ namespace LIL
         const LILString & getDir() const;
         void setSource(const LILString & source);
         const LILString & getSource() const;
+        void setCPU(const LILString & value);
+        const LILString & getCPU() const;
+        void setVendor(const LILString & value);
+        const LILString & getVendor() const;
         
         void run(std::shared_ptr<LILRootNode> rootNode);
         void compileToO(std::shared_ptr<LILRootNode> rootNode);
