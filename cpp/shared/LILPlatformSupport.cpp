@@ -103,7 +103,7 @@ std::string LIL_getCurrentDir()
 
 void LIL_makeDir(const std::string & path)
 {
-    std::string commandStr = "mkdir -p "+path;
+    std::string commandStr = "mkdir -p \""+path+"\"";
     system(commandStr.c_str());
 }
 
