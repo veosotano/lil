@@ -122,6 +122,17 @@
             minOSVersion: #arg { name: "minOSVersion"; default: "10.2" };
             cpu: #arg { name: "cpu"; default: "arm64" };
             vendor: #arg { name: "vendor"; default: "apple-ios%minOSVersion"};
+            linkerFlags: "-r";
+            linkerFlagsApp: "-r";
+        }
+        iosSimulator {
+            suffix: "OS_IOS";
+            constants+: "OS_IOS";
+            minOSVersion: #arg { name: "minOSVersion"; default: "10.2" };
+            cpu: #arg { name: "cpu"; default: "x86_64" };
+            vendor: #arg { name: "vendor"; default: "apple-ios%minOSVersion-simulator"};
+            linkerFlags: "-r";
+            linkerFlagsApp: "-r";
         }
         android {
             suffix: "OS_ANDROID";
