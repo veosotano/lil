@@ -99,10 +99,23 @@
             };
         }
 
+        #if #getConfig(autoMainFn) {
+            fn main(var.i32 argc; var.ptr(cstr) argv) {
+                LIL__run();
+                return 0;
+            }
+        }
+
     } else {
-        fn main {
+        fn LIL__init
+        {
             #paste LIL_INITIALIZERS;
-            return 0;
+        }
+        #if #getConfig(autoMainFn) {
+            fn main {
+                LIL__init();
+                return 0;
+            }
         }
     }
 }
