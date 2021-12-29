@@ -5,6 +5,7 @@
 #import <Metal/Metal.h>
 #include <simd/simd.h>
 #include <math.h>
+#include <mach/mach_time.h>
 
 typedef struct LIL__audioDescriptorStruct {
     AudioComponentInstance * audioUnit;
@@ -21,7 +22,7 @@ typedef struct LIL__audioDescriptorStruct {
 extern void LIL__init();
 extern void LIL__addAppMenu();
 extern void LIL__addMenus();
-extern void LIL__nextFrame(void * vertexBuffer, long int * vertexCount, long int deltaTime);
+extern void LIL__nextFrame(void * vertexBuffer, long int * vertexCount, double deltaTime);
 extern void LIL__setKeyDown(int keyCode);
 extern void LIL__setKeyUp(int keyCode);
 extern CGSize LIL__getWindowSize();
@@ -37,7 +38,6 @@ extern void LIL__setGamepadX2(long int gamepadId, double value);
 extern void LIL__setGamepadY2(long int gamepadId, double value);
 
 extern bool LIL__automaticFullScreen();
-
 
 OSStatus LIL__renderAudio(void * inData, AudioUnitRenderActionFlags * flags, const AudioTimeStamp * timestamp, UInt32 busNumber, UInt32 frames, AudioBufferList *ioData)
 {
@@ -404,6 +404,17 @@ typedef struct
 
 @end
 
+
+mach_timebase_info_data_t LIL__machTimebase;
+long int LIL__lastFrameTime = 0;
+
+void LIL__timeInit() {
+    mach_timebase_info(&LIL__machTimebase);
+}
+long int LIL__ticksTonanoseconds(long int ticks) {
+    return (double)ticks * (double)LIL__machTimebase.numer / (double)LIL__machTimebase.denom;
+}
+
 @interface LILMainView : NSView <CALayerDelegate>
 @property(retain) LILMetalRenderer * renderer;
 @end
@@ -560,7 +571,16 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
         LILMainView *theView = (__bridge LILMainView*)displayLinkContext;
         long int vertexCount = 0;
         LILMetalRenderer * renderer = theView.renderer;
-        LIL__nextFrame([renderer getVertexBufferPointer], &vertexCount, outputTime->hostTime);
+        long int currentTime = LIL__ticksTonanoseconds(outputTime->hostTime);
+        double deltaTime;
+        if (LIL__lastFrameTime == 0) {
+            deltaTime = 0.0166666666666666666666666;
+        } else {
+            deltaTime = ((double)(currentTime - LIL__lastFrameTime) * 0.000000001);
+        }
+        LIL__lastFrameTime = currentTime;
+
+        LIL__nextFrame([renderer getVertexBufferPointer], &vertexCount, deltaTime);
         renderer.vertexCount = vertexCount;
         [theView render];
     }
@@ -746,6 +766,7 @@ void LIL__run()
     
     LIL__setupAudio();
     LIL__setupGamepads();
+    LIL__timeInit();
     LIL__init();
 
     CGSize windowSize = LIL__getWindowSize();

@@ -1,5 +1,4 @@
 #needs "cstd.lil";
-#needs "time.lil";
 
 const DEBUG: false;
 
@@ -281,22 +280,9 @@ fn onUpdate(var.f64 deltaTime) extern;
         LIL__movementSystem(deltaTime);
     };
 
-    fn LIL__nextFrame(var.ptr(any) vertexBuffer; var.ptr(i64) vertexCount; var.i64 timestamp) {
-        var.i64 currentTime: LIL__ticksToNanoseconds(timestamp);
-        var.f64 deltaTime;
-        if app.lastFrameTime = 0 {
-            deltaTime: 0.0166666666666666666666666;
-        } else {
-            deltaTime: (((currentTime - app.lastFrameTime)=>f64) * 0.000000001 => f64);
-        }
-        // if deltaTime > 0.0167 {
-        //     printf(`deltaTime: %lf\n`, deltaTime);
-        // }
+    fn LIL__nextFrame(var.ptr(any) vertexBuffer; var.ptr(i64) vertexCount; var.f64 deltaTime) {
         onUpdate(deltaTime);
         LIL__runSystems(deltaTime);
-
-        //update timestamp
-        app.lastFrameTime: currentTime;
 
         var.[1000 x @vertex] vertices: [];
         for (var.i64 i:0; i<app.boxCount; i+:1) {

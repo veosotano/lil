@@ -76,8 +76,6 @@
                 @HIDProductPair { name: `F710 Wireless Gamepad [XInput Mode]`; id: 49695; vendorId: 1133 }
             ;
 
-            LIL__timeInit();
-
             #paste LIL_INITIALIZERS;
         }
         
