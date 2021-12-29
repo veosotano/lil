@@ -206,6 +206,8 @@ std::string LILConfiguration::extractString(std::shared_ptr<LILNode> val) const
             auto name = vn->getName().data();
             if (this->_values.count(name)) {
                 return this->getConfigString(name);
+            } else {
+                return name;
             }
             break;
         }
