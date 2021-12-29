@@ -49,6 +49,7 @@ namespace LIL
 
         virtual bool getIsWeakType() const;
         std::shared_ptr<LILType> getDefaultType() const;
+        virtual std::shared_ptr<LILType> getIntegerType() const;
 
         TypeType getTypeType() const override;
         void setTypeType(TypeType newType);

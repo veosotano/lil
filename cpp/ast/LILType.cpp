@@ -332,9 +332,20 @@ bool LILType::getIsWeakType() const
 
 std::shared_ptr<LILType> LILType::getDefaultType() const
 {
+    if (this->getIsWeakType()) {
+        auto intTy = this->getIntegerType();
+        if (intTy) {
+            return intTy;
+        }
+    }
     static auto intType = std::make_shared<LILType>();
     intType->setName("i64");
     return intType;
+}
+
+std::shared_ptr<LILType> LILType::getIntegerType() const
+{
+    return nullptr;
 }
 
 TypeType LILType::getTypeType() const

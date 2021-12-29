@@ -35,6 +35,7 @@ namespace LIL
 
         bool getIsWeakType() const;
         void setIsWeakType(bool value);
+        std::shared_ptr<LILType> getIntegerType() const override;
 
         void sortTypes();
 

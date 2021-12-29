@@ -79,7 +79,7 @@ void LILStaticArrayType::setArgument(std::shared_ptr<LILNode> node)
         auto tyNode = std::static_pointer_cast<LILTypedNode>(node);
         auto ty = tyNode->getType();
         if (ty && ty->getIsWeakType()) {
-            tyNode->setType(LILType::getDefaultType());
+            tyNode->setType(ty->getDefaultType());
         }
     }
     this->_argument = node;
