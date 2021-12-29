@@ -1,0 +1,58 @@
+#needs "cstd.lil";
+#needs "objc.lil";
+#needs "string.lil";
+
+#export {
+    class @__CFString {};
+    fn NSLog(var.ptr(@__CFString) format...) extern;
+
+    fn print(var.bool|i64|f64|ptr(i8)|ptr(@string)|null value) {
+        if value => bool {
+            var.ptr(i8) cStr;
+            if value {
+                cStr: `true`;
+            } else {
+                cStr: `false`;
+            }
+            var.Class stringClass: objc_lookUpClass(`NSString`);
+            var.SEL strCreateSel: sel_registerName(`stringWithUTF8String:`);
+            var.id nsStrInstance: objc_msgSend(stringClass=>id, strCreateSel, cStr);
+            NSLog(nsStrInstance=>ptr(@__CFString));
+        }
+        if value => i64 {
+            var cStr: `%li`;
+            var.Class stringClass: objc_lookUpClass(`NSString`);
+            var.SEL strCreateSel: sel_registerName(`stringWithUTF8String:`);
+            var.id nsStrInstance: objc_msgSend(stringClass=>id, strCreateSel, cStr);
+            NSLog(nsStrInstance=>ptr(@__CFString), value);
+        }
+        if value => f64 {
+            var cStr: `%lf`;
+            var.Class stringClass: objc_lookUpClass(`NSString`);
+            var.SEL strCreateSel: sel_registerName(`stringWithUTF8String:`);
+            var.id nsStrInstance: objc_msgSend(stringClass=>id, strCreateSel, cStr);
+            NSLog(nsStrInstance=>ptr(@__CFString), value);
+        }
+        if value => ptr(i8) {
+            var cStr: value;
+            var.Class stringClass: objc_lookUpClass(`NSString`);
+            var.SEL strCreateSel: sel_registerName(`stringWithUTF8String:`);
+            var.id nsStrInstance: objc_msgSend(stringClass=>id, strCreateSel, cStr);
+            NSLog(nsStrInstance=>ptr(@__CFString));
+        }
+        if value => ptr(@string) {
+            var cStr: value.cstr();
+            var.Class stringClass: objc_lookUpClass(`NSString`);
+            var.SEL strCreateSel: sel_registerName(`stringWithUTF8String:`);
+            var.id nsStrInstance: objc_msgSend(stringClass=>id, strCreateSel, cStr);
+            NSLog(nsStrInstance=>ptr(@__CFString));
+        }
+        if value => null {
+            var.ptr(i8) cStr: `null`;
+            var.Class stringClass: objc_lookUpClass(`NSString`);
+            var.SEL strCreateSel: sel_registerName(`stringWithUTF8String:`);
+            var.id nsStrInstance: objc_msgSend(stringClass=>id, strCreateSel, cStr);
+            NSLog(nsStrInstance=>ptr(@__CFString));
+        }
+    };
+}

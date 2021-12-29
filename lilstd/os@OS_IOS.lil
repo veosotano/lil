@@ -1,0 +1,32 @@
+alias cstr => ptr(i8);
+var.id LIL__applicationDelegate extern;
+
+#export {
+    #import "objc.lil";
+
+    fn LIL__addMenu(var.cstr label) {
+        
+    }
+
+    fn LIL__addMenuItem(var.cstr label; var.cstr shortcut; var.ptr(fn) fnPtr) {
+
+    }
+
+    fn LIL__addMenuSeparator {
+
+    }
+
+    fn LIL__exitMenu {
+
+    }
+    
+    fn LIL__setWindowBgColor(var.f32 red; var.f32 green; var.f32 blue; var.f32 alpha) {
+        var.SEL selector: sel_registerName(`setWindowBackgroundRed:green:blue:alpha:`);
+        var.ptr(fn(id,SEL,f32,f32,f32,f32)=>id) castedPtr: (pointerTo(objc_msgSend) => ptr(fn(id,SEL,f32,f32,f32,f32)=>id));
+        castedPtr(LIL__applicationDelegate, selector, red, green, blue, alpha);
+    }
+    
+    fn LIL__automaticFullScreen {
+        return true;
+    }
+}
