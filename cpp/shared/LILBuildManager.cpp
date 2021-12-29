@@ -66,7 +66,7 @@ void LILBuildManager::read()
     std::ifstream file(filePath, std::ios::in);
     if (file.fail()) {
         LILErrorMessage ei;
-        ei.message = "\nERROR: Failed to read the file "+this->_file.data();
+        ei.message = "\nERROR: Failed to read the file "+filePath;
         ei.file = filePath;
         ei.line = 0;
         ei.column = 0;
@@ -198,14 +198,21 @@ void LILBuildManager::configure()
         this->_compileToS = true;
     }
     
+    
+    size_t dotIndex = this->_file.data().find_last_of(".");
+    std::string outName;
+    if (dotIndex != std::string::npos) {
+        outName = this->_file.data().substr(0, dotIndex);
+    } else {
+        outName = this->_file.data();
+    }
+    std::shared_ptr<LILStringLiteral> strLit = std::make_shared<LILStringLiteral>();
+    strLit->setValue(outName);
+    this->_config->setConfig("outName", strLit);
     auto outStr = this->_config->getConfigString("out");
     if (outStr.length() == 0) {
-        size_t dotIndex = this->_file.data().find_last_of(".");
-        if (dotIndex != std::string::npos) {
-            std::shared_ptr<LILStringLiteral> strLit = std::make_shared<LILStringLiteral>();
-            strLit->setValue(this->_file.data().substr(0, dotIndex));
-            this->_config->setConfig("out", strLit);
-        }
+        
+        this->_config->setConfig("out", strLit);
     }
 
     if (this->_verbose) {
@@ -223,6 +230,7 @@ void LILBuildManager::build()
     std::string suffix = this->_config->getConfigString("suffix");
     bool isApp = this->_config->getConfigBool("isApp");
     std::string out = this->_config->getConfigString("out");
+    std::string outName = this->_config->getConfigString("outName");
     std::string exeExt = this->_config->getConfigString("exeExt");
     std::string objExt = this->_config->getConfigString("objExt");
     std::string buildPath = this->_config->getConfigString("buildPath");
@@ -241,7 +249,7 @@ void LILBuildManager::build()
         std::ifstream file(filePath, std::ios::in);
         if (file.fail()) {
             LILErrorMessage ei;
-            ei.message = "\nERROR: Failed to read the file "+this->_file.data();
+            ei.message = "\nERROR: Failed to read the file "+filePath;
             ei.file = filePath;
             ei.line = 0;
             ei.column = 0;
@@ -304,7 +312,7 @@ void LILBuildManager::build()
         std::unique_ptr<LILOutputEmitter> outEmitter = std::make_unique<LILOutputEmitter>();
         outEmitter->setVerbose(this->_verbose);
         outEmitter->setDebugIREmitter(this->_debug);
-        LILString oFile = out;
+        LILString oFile = outName;
         oFile += (this->_compileToS ? ".s" : this->_config->getConfigString("objExt") );
 
         outEmitter->setInFile(this->_file);
@@ -439,13 +447,13 @@ void LILBuildManager::build()
             
             if (this->_config->getConfigBool("link")) {
 #if defined(_WIN32)
-                std::string linkCommand = "LINK " + buildPath + "/" + out + objExt;
+                std::string linkCommand = "LINK \"" + buildPath + "/" + outName + objExt + "\"";;
 #else
-                std::string linkCommand = "ld " + buildPath + "/" + out + objExt;
+                std::string linkCommand = "ld \"" + buildPath + "/" + outName + objExt + "\"";
 #endif
 
                 for (const auto & linkFile : linkFiles) {
-                    linkCommand += " " + linkFile;
+                    linkCommand += " \"" + linkFile + "\"";
                 }
                 
                 if (isApp) {
@@ -472,10 +480,12 @@ void LILBuildManager::build()
                     }
                 }
 
-                linkCommand += " -o " + outFileName;
+                linkCommand += " -o \"" + outFileName;
 #if defined(_WIN32)
                 linkCommand += ".exe";
 #endif
+                linkCommand += "\"";
+
                 if (this->_verbose) {
                     std::cerr << "\n============================" << "\n";
                     std::cerr << "========= LINKING ==========" << "\n";
