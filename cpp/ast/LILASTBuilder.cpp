@@ -978,9 +978,20 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
                 else if (eventType == ParserEventNumberInt)
                 {
                     std::shared_ptr<LILMultipleType> weakType = std::make_shared<LILMultipleType>();
+                    long long int numValue = num->getValue().toLongLong();
+                    
                     std::shared_ptr<LILType> type1 = std::make_shared<LILType>();
-                    type1->setName("i64");
+                    if ((numValue > 2147483647) || (numValue < -2147483647)) {
+                        type1->setName("i64");
+                    } else if ((numValue > 32767) || (numValue < -32767)) {
+                        type1->setName("i32");
+                    } else if ((numValue > 127) || (numValue < -127)) {
+                        type1->setName("i16");
+                    } else {
+                        type1->setName("i8");
+                    }
                     weakType->addType(type1);
+
                     std::shared_ptr<LILType> type2 = std::make_shared<LILType>();
                     type2->setName("f64");
                     weakType->addType(type2);
