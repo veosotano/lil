@@ -35,6 +35,8 @@ extern void LIL__setGamepadY(long int gamepadId, double value);
 extern void LIL__setGamepadX2(long int gamepadId, double value);
 extern void LIL__setGamepadY2(long int gamepadId, double value);
 
+extern bool LIL__automaticFullScreen();
+
 
 OSStatus LIL__renderAudio(void * inData, AudioUnitRenderActionFlags * flags, const AudioTimeStamp * timestamp, UInt32 busNumber, UInt32 frames, AudioBufferList *ioData)
 {
@@ -644,7 +646,9 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
     [menuStack removeAllObjects];
     //show window
     [mainWindow makeKeyAndOrderFront:self];
-    [mainWindow toggleFullScreen:self];
+    if (LIL__automaticFullScreen()) {
+        [mainWindow toggleFullScreen:self];
+    }
 }
 - (void)dealloc {
     // don’t forget to release allocated objects!

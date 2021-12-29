@@ -9,6 +9,7 @@
     link: #arg { name: "link"; default: true };
     run: #arg { name: "run"; default: false };
     isApp: #arg { name: "isApp"; default: "auto" };
+    automaticFullScreen: #arg { name: "automaticFullScreen"; default: false };
     documentation: false;
     optimize: 1;
     importStdLil: #arg { name: "import-std-lil"; default: true };

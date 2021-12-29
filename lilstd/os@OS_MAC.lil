@@ -29,4 +29,10 @@ var.id LIL__applicationDelegate extern;
         var.ptr(fn(id,SEL,f32,f32,f32,f32)=>id) castedPtr: (pointerTo(objc_msgSend) => ptr(fn(id,SEL,f32,f32,f32,f32)=>id));
         castedPtr(LIL__applicationDelegate, selector, red, green, blue, alpha);
     }
+    
+    fn LIL__automaticFullScreen {
+        //fixme the separate var decl should not be needed
+        var.bool value: #getConfig(automaticFullScreen);
+        return value;
+    }
 }
