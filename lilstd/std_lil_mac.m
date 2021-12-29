@@ -24,6 +24,7 @@ extern void LIL__addMenus();
 extern void LIL__nextFrame(void * vertexBuffer, long int * vertexCount, long int deltaTime);
 extern void LIL__setKeyDown(int keyCode);
 extern void LIL__setKeyUp(int keyCode);
+extern CGSize LIL__getWindowSize();
 
 extern LIL__audioDescriptorStruct * LIL__audioInit();
 extern void LIL__audioFree();
@@ -574,7 +575,8 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
     NSMenu * mainMenu;
     NSMutableArray * menuStack;
 }
-- (id)initWithWidth:(float) width height:(float) height;
+- (id)init;
+- (void)initializeMainWindowWithWidth:(float) width height:(float) height;
 - (void)populateMainMenu;
 - (void)addMenu:(const char *) label;
 - (void)addMenuItem:(const char *)label key:(const char *)key fnPtr:(void(*))fnPtr;
@@ -584,47 +586,50 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
 - (void)setWindowBackgroundRed:(float)red green:(float)green blue:(float)blue alpha:(float)alpha;
 @end
 @implementation LILAppDelegate
-- (id)initWithWidth:(float) width height:(float) height {
+- (id)init {
     if ( self = [super init] ) {
-        NSScreen * mainScreen = [NSScreen mainScreen];
-        NSRect screenRect = [mainScreen frame];
-
-        width /= [mainScreen backingScaleFactor];
-        height /= [mainScreen backingScaleFactor];
-        
-        if (width < 300.0) {
-            width = 300.0;
-        }
-        if (height < 300.0) {
-            height = 300.0;
-        }
-        
-        float x = (screenRect.size.width/2) - (width/2);
-        float y = (screenRect.size.height/2) - (height/2);
-        if (x < 0.0) {
-            x = 0.0;
-        }
-        if (y < 0.0) {
-            y = 0.0;
-        }
-
-        NSRect contentSize = NSMakeRect(x, y, width, height);
-
-        mainWindow = [[NSWindow alloc]
-            initWithContentRect: contentSize
-            styleMask:
-                NSWindowStyleMaskTitled
-                | NSWindowStyleMaskClosable
-                | NSWindowStyleMaskMiniaturizable
-                | NSWindowStyleMaskResizable
-            backing:NSBackingStoreBuffered
-            defer:YES];
-        
-        mainView = [[LILMainView alloc] initWithFrame:contentSize];
         menuStack = [[NSMutableArray alloc] init];
     }
     return self;
 }
+- (void)initializeMainWindowWithWidth:(float) width height:(float) height {
+    NSScreen * mainScreen = [NSScreen mainScreen];
+    NSRect screenRect = [mainScreen frame];
+
+    width /= [mainScreen backingScaleFactor];
+    height /= [mainScreen backingScaleFactor];
+    
+    if (width < 300.0) {
+        width = 300.0;
+    }
+    if (height < 300.0) {
+        height = 300.0;
+    }
+    
+    float x = (screenRect.size.width/2) - (width/2);
+    float y = (screenRect.size.height/2) - (height/2);
+    if (x < 0.0) {
+        x = 0.0;
+    }
+    if (y < 0.0) {
+        y = 0.0;
+    }
+
+    NSRect contentSize = NSMakeRect(x, y, width, height);
+
+    mainWindow = [[NSWindow alloc]
+        initWithContentRect: contentSize
+        styleMask:
+            NSWindowStyleMaskTitled
+            | NSWindowStyleMaskClosable
+            | NSWindowStyleMaskMiniaturizable
+            | NSWindowStyleMaskResizable
+        backing:NSBackingStoreBuffered
+        defer:YES];
+    
+    mainView = [[LILMainView alloc] initWithFrame:contentSize];
+}
+
 - (void)applicationWillFinishLaunching:(NSNotification *)notification {
     [mainWindow setContentView:mainView];
 }
@@ -723,7 +728,7 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
 NSAutoreleasePool * LIL__autoreleasepool;
 LILAppDelegate * LIL__applicationDelegate;
 
-void LIL__run(float width, float height)
+void LIL__run()
 {
     LIL__autoreleasepool = [[NSAutoreleasePool alloc] init];
 
@@ -731,7 +736,7 @@ void LIL__run(float width, float height)
     NSApplication * application = [NSApplication sharedApplication];
 
     // instantiate our application delegate
-    LIL__applicationDelegate = [[[LILAppDelegate alloc] initWithWidth:width height: height] autorelease];
+    LIL__applicationDelegate = [[[LILAppDelegate alloc] init] autorelease];
     
     [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
     [NSApp activateIgnoringOtherApps:YES];
@@ -742,6 +747,9 @@ void LIL__run(float width, float height)
     LIL__setupAudio();
     LIL__setupGamepads();
     LIL__init();
+
+    CGSize windowSize = LIL__getWindowSize();
+    [LIL__applicationDelegate initializeMainWindowWithWidth: windowSize.width height: windowSize.height];
 
     // call the run method of our application
     [application run];

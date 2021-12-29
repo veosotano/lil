@@ -13,6 +13,11 @@ fn onUpdate(var.f64 deltaTime) extern;
 
 #export {
     var.@app app;
+
+    class @size {
+        var.f64 width;
+        var.f64 height;
+    };
     class @rgb {
         var.f32 red;
         var.f32 green;
