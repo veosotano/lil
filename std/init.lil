@@ -37,7 +37,7 @@
 
             //get root's background color
             var bgColor: app.box2ds[id].bgColor;
-            //LIL__setWindowBgColor(bgColor.red, bgColor.green, bgColor.blue, bgColor.alpha);
+            LIL__setWindowBgColor(bgColor.red, bgColor.green, bgColor.blue, bgColor.alpha);
             
             //initialize gamepad data
             //fixme: this should be initializers on the globals in input.lil, it should not be in this file
