@@ -284,6 +284,11 @@ void LILASTValidator::validate(const std::shared_ptr<LILNode> & node)
             this->_validate(value);
             break;
         }
+        case NodeTypeSnippetInstruction:
+        {
+            //ignore;
+            break;
+        }
 
         default:
             std::cerr << "Error: unkonwn node type to validate\n";

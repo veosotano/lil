@@ -480,6 +480,7 @@ void LILTypeGuesser::process(LILNode * node)
             break;
         }
         case NodeTypeType:
+        case NodeTypeSnippetInstruction:
         {
             //do nothing
             break;

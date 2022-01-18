@@ -385,6 +385,11 @@ llvm::Value * LILIREmitter::emit(LILNode * node)
             LILValueList * value = static_cast<LILValueList *>(node);
             return this->_emit(value);
         }
+        case NodeTypeSnippetInstruction:
+        {
+            //ignore
+            return nullptr;
+        }
 
         default:
         {

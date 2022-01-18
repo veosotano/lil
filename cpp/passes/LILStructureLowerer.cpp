@@ -267,6 +267,11 @@ void LILStructureLowerer::process(std::shared_ptr<LILNode> node)
             std::shared_ptr<LILIndexAccessor> value = std::static_pointer_cast<LILIndexAccessor>(node);
             return this->_process(value);
         }
+        case NodeTypeSnippetInstruction:
+        {
+            //ignore
+            break;
+        }
 
         default:
             std::cerr << "Error: unkonwn node type to process\n";

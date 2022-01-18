@@ -235,6 +235,11 @@ void LILNameLowerer::process(LILNode * node)
             this->_process(value);
             break;
         }
+        case NodeTypeSnippetInstruction:
+        {
+            //ignore
+            break;
+        }
 
         default:
             std::cerr << "Error: unkonwn node type to process\n";

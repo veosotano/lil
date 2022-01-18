@@ -212,7 +212,9 @@ void LILFieldSorter::process(LILNode * node)
             break;
         }
         case NodeTypeType:
+        case NodeTypeSnippetInstruction:
         {
+            //ignore
             break;
         }
             

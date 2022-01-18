@@ -66,8 +66,6 @@ namespace LIL
         void processSnippets(const std::shared_ptr<LILRootNode> & rootNode);
         void processPasteInstr(const std::shared_ptr<LILRootNode> & rootNode);
         bool processPasteInstr(std::shared_ptr<LILNode> node);
-        void removeSnippets(std::shared_ptr<LILRootNode> rootNode);
-        void _removeSnippets(std::shared_ptr<LILNode> node);
         void setDir(LILString dir);
         LILString getDir() const;
         void setSuffix(const LILString & value);

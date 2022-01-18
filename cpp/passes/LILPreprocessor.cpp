@@ -89,7 +89,6 @@ void LILPreprocessor::performVisit(std::shared_ptr<LILRootNode> rootNode)
             return;
         }
     }
-    this->removeSnippets(rootNode);
 }
 
 void LILPreprocessor::processImportingInstr(const std::shared_ptr<LILRootNode> & rootNode)
@@ -848,45 +847,6 @@ bool LILPreprocessor::processPasteInstr(std::shared_ptr<LILNode> node)
     return ret;
 }
 
-void LILPreprocessor::removeSnippets(std::shared_ptr<LILRootNode> rootNode)
-{
-    std::vector<std::shared_ptr<LILNode>> nodes = rootNode->getNodes();
-    
-    for (auto node : nodes) {
-        this->_removeSnippets(node);
-    }
-    
-    std::vector<std::shared_ptr<LILNode>> resultNodes;
-    bool hasChanges = false;
-    for (auto node : nodes) {
-        if (node->isA(NodeTypeSnippetInstruction)) {
-            hasChanges = true;
-        } else {
-            resultNodes.push_back(node);
-        }
-    }
-    if (hasChanges) {
-        rootNode->setChildNodes(std::move(resultNodes));
-    }
-}
-
-void LILPreprocessor::_removeSnippets(std::shared_ptr<LILNode> node)
-{
-    std::vector<std::shared_ptr<LILNode>> resultNodes;
-    bool hasChanges = false;
-    for (auto child : node->getChildNodes()) {
-        if (child->isA(NodeTypeSnippetInstruction)) {
-            hasChanges = true;
-        } else {
-            resultNodes.push_back(child);
-        }
-    }
-    if (hasChanges) {
-        node->setChildNodes(std::move(resultNodes));
-    }
-}
-
-
 void LILPreprocessor::setDir(LILString dir)
 {
     this->_dir = dir;
@@ -1161,6 +1121,14 @@ void LILPreprocessor::_importNodeIfNeeded(std::vector<std::shared_ptr<LILNode>> 
             }
 
             newNodes->push_back(newFd);
+            break;
+        }
+            
+        case NodeTypeSnippetInstruction:
+        {
+            auto clone = node->clone();
+            clone->setIsExported(isExported);
+            newNodes->push_back(clone);
             break;
         }
             
