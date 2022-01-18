@@ -3100,7 +3100,12 @@ llvm::Value * LILIREmitter::_emitFunctionCallPointer(llvm::Value * fun, LILFunct
         else
         {
             auto declArg = declArgs[declIndex];
-            auto declArgTy = declArg->getType();
+            std::shared_ptr<LILType> declArgTy;
+            if (declArg->isA(NodeTypeType)) {
+                declArgTy = std::static_pointer_cast<LILType>(declArg);
+            } else {
+                declArgTy = declArg->getType();
+            }
             fcArgIr = this->_emitFCArg(fcValue.get(), declArgTy.get());
         }
         
