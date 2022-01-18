@@ -35,8 +35,8 @@ std::shared_ptr<LILSnippetInstruction> LILSnippetInstruction::clone() const
 
 std::shared_ptr<LILClonable> LILSnippetInstruction::cloneImpl() const
 {
-    std::shared_ptr<LILSnippetInstruction> clone = std::static_pointer_cast<LILSnippetInstruction>(LILInstruction::cloneImpl());
-    
+    std::shared_ptr<LILSnippetInstruction> clone(new LILSnippetInstruction(*this));
+
     clone->_body.clear();
     for (auto it = this->_body.begin(); it != this->_body.end(); ++it)
     {
