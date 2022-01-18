@@ -120,6 +120,7 @@ namespace LIL
         llvm::FunctionType * _emitLlvmFnType(LILFunctionType * fnTy);
         llvm::Function * _emitFn( LILFunctionDecl * value);
         llvm::Function * _emitFnBody(llvm::Function * fun, LILFunctionDecl * value);
+        void _emitDestructors(llvm::Value * ir, std::shared_ptr<LILClassDecl> cd, const LILString & name);
         llvm::Value * _emitEvaluables(const std::vector<std::shared_ptr<LILNode>> & nodes);
         llvm::Value * _emit(LILFunctionCall * value);
         llvm::Value * _emitFCMultipleValues(std::vector<std::shared_ptr<LILFunctionDecl>> funcDecls, LILFunctionCall * value, llvm::Value * instance = nullptr, std::shared_ptr<LILType> instanceTy = nullptr);

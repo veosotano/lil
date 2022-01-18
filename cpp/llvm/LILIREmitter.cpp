@@ -2378,34 +2378,9 @@ llvm::Function * LILIREmitter::_emitFnBody(llvm::Function * fun, LILFunctionDecl
                     std::cerr << "CLASS NOT FOUND FAIL!!!!\n\n";
                     continue;
                 }
-                
-                auto dtor = cd->getMethodNamed("destruct");
-                if (dtor) {
-                    if (!dtor->isA(NodeTypeFunctionDecl)) {
-                        std::cerr << "DESTRUCTOR NODE WAS NOT FUNCTION DECL FAIL!!!\n\n";
-                        return nullptr;
-                    }
-
-                    auto fd = std::static_pointer_cast<LILFunctionDecl>(dtor);
-                    auto fnName = fd->getName();
-                    auto fnTy = fd->getFnType();
-
-                    llvm::Function* fun = d->llvmModule->getFunction(fnName.data());
-                    if (!fun) {
-                        fun = this->_emitFnSignature(fnName.data(), fnTy.get());
-                    }
-                    if (fun) {
-                        const auto & name = vd->getName();
-                        auto ir = d->namedValues[name.data()];
-                        std::vector<llvm::Value *> argsvect;
-                        argsvect.push_back(ir);
-                        d->irBuilder.CreateCall(fun, argsvect);
-                    } else {
-                        std::cerr << "COULD NOT CALL DESTRUCTOR FAIL!!!!\n\n";
-                        return nullptr;
-                    }
-                }
-                
+                const auto & name = vd->getName();
+                auto ir = d->namedValues[name.data()];
+                this->_emitDestructors(ir, cd, name);
             }
         }
     }
@@ -2426,6 +2401,55 @@ llvm::Function * LILIREmitter::_emitFnBody(llvm::Function * fun, LILFunctionDecl
     d->functionPassManager->run(*fun);
 #endif
     return fun;
+}
+
+void LILIREmitter::_emitDestructors(llvm::Value * ir, std::shared_ptr<LILClassDecl> cd, const LILString & name)
+{
+    size_t fieldIndex = 0;
+    for (auto field : cd->getFields()) {
+        auto fldTy = field->getType();
+        if(
+           fldTy && fldTy->isA(TypeTypeObject)
+           && field->isA(NodeTypeVarDecl)
+        ) {
+            auto vd = std::static_pointer_cast<LILVarDecl>(field);
+            const auto & fldClassName = fldTy->getName();
+            auto fldCd = this->findClassWithName(fldClassName);
+            if (!fldCd) {
+                std::cerr << "CLASS NOT FOUND FAIL!!!!\n\n";
+                continue;
+            }
+            const auto & fldName = vd->getName();
+            auto fldIr = this->_emitGEP(ir, cd->getName(), fieldIndex, fldName, true);
+            this->_emitDestructors(fldIr, fldCd, fldName);
+        }
+        fieldIndex += 1;
+    }
+    
+    auto dtor = cd->getMethodNamed("destruct");
+    if (dtor) {
+        if (!dtor->isA(NodeTypeFunctionDecl)) {
+            std::cerr << "DESTRUCTOR NODE WAS NOT FUNCTION DECL FAIL!!!\n\n";
+            return;
+        }
+        
+        auto fd = std::static_pointer_cast<LILFunctionDecl>(dtor);
+        auto fnName = fd->getName();
+        auto fnTy = fd->getFnType();
+        
+        llvm::Function* fun = d->llvmModule->getFunction(fnName.data());
+        if (!fun) {
+            fun = this->_emitFnSignature(fnName.data(), fnTy.get());
+        }
+        if (fun) {
+            std::vector<llvm::Value *> argsvect;
+            argsvect.push_back(ir);
+            d->irBuilder.CreateCall(fun, argsvect);
+        } else {
+            std::cerr << "COULD NOT CALL DESTRUCTOR FAIL!!!!\n\n";
+            return;
+        }
+    }
 }
 
 llvm::Value * LILIREmitter::_emitEvaluables(const std::vector<std::shared_ptr<LILNode>> & nodes)
