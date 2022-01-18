@@ -15,6 +15,7 @@
 #include "LILClassDecl.h"
 #include "LILAliasDecl.h"
 #include "LILDocumentation.h"
+#include "LILFunctionDecl.h"
 #include "LILVarDecl.h"
 
 using namespace LIL;
@@ -225,6 +226,80 @@ void LILClassDecl::addDoc(std::shared_ptr<LILDocumentation> value)
 const std::vector<std::shared_ptr<LILDocumentation>> & LILClassDecl::getDocs() const
 {
     return this->_docs;
+}
+
+void LILClassDecl::add(std::shared_ptr<LILNode> node)
+{
+    switch (node->getNodeType())
+    {
+        case NodeTypeType:
+        {
+            if (this->getReceivesInherits()) {
+                this->setInheritType(node);
+            } else {
+                this->setType(std::static_pointer_cast<LILType>(node));
+            }
+            break;
+        }
+        case NodeTypeVarDecl:
+        {
+            this->addField(node);
+            break;
+        }
+        case NodeTypeFunctionDecl:
+        {
+            auto fd = std::static_pointer_cast<LILFunctionDecl>(node);
+            auto fnName = fd->getName();
+            this->addMethod(fnName.data(), fd);
+            //install arguments as local variables
+            for ( auto arg : fd->getFnType()->getArguments()) {
+                if (arg->isA(NodeTypeVarDecl)) {
+                    auto argVd = std::static_pointer_cast<LILVarDecl>(arg);
+                    fd->setLocalVariable(argVd->getName(), argVd);
+                }
+            }
+            break;
+        }
+        case NodeTypeTypeDecl:
+        {
+            if (this->getReceivesBody()) {
+                //fixme: not just aliases on classes
+                //this->addType(std::static_pointer_cast<LILTypeDecl>(node));
+            } else {
+                this->addTmplParam(node);
+            }
+            break;
+        }
+        case NodeTypeAliasDecl:
+        {
+            if (this->getReceivesBody()) {
+                auto ad = std::static_pointer_cast<LILAliasDecl>(node);
+                this->addAlias(ad);
+            }
+            break;
+        }
+        case NodeTypeDocumentation:
+        {
+            this->addDoc(std::static_pointer_cast<LILDocumentation>(node));
+            break;
+        }
+        case NodeTypeInstruction:
+        {
+            if (node->isA(InstructionTypeExpand)) {
+                for (auto child : node->getChildNodes()) {
+                    this->add(child);
+                }
+            } else {
+                this->addOther(node);
+            }
+            break;
+        }
+        default:
+        {
+            this->addOther(node);
+            break;
+        }
+    }
 }
 
 void LILClassDecl::addOther(std::shared_ptr<LILNode> value)

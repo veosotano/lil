@@ -52,6 +52,9 @@ namespace LIL
 
         std::shared_ptr<LILType> getReturnType() const;
         void setReturnType(std::shared_ptr<LILType> value);
+        
+        void setIsExpanded(bool value);
+        bool getIsExpanded() const;
 
     private:
         virtual std::shared_ptr<LILClonable> cloneImpl() const override;
@@ -62,6 +65,7 @@ namespace LIL
         bool _isVVar;
         bool _isConst;
         bool _receivesReturnType;
+        bool _isExpanded;
     };
 }
 

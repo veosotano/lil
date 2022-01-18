@@ -26,6 +26,7 @@ LILVarDecl::LILVarDecl()
 , _isVVar(false)
 , _isConst(false)
 , _receivesReturnType(false)
+, _isExpanded(false)
 {
     
 }
@@ -39,6 +40,7 @@ LILVarDecl::LILVarDecl(const LILVarDecl & orig)
 , _isVVar(orig._isVVar)
 , _isConst(orig._isConst)
 , _receivesReturnType(orig._receivesReturnType)
+, _isExpanded(orig._isExpanded)
 {
 
 }
@@ -176,4 +178,14 @@ std::shared_ptr<LILType> LILVarDecl::getReturnType() const
 void LILVarDecl::setReturnType(std::shared_ptr<LILType> value)
 {
     this->_returnType = value;
+}
+
+void LILVarDecl::setIsExpanded(bool value)
+{
+    this->_isExpanded = value;
+}
+
+bool LILVarDecl::getIsExpanded() const
+{
+    return this->_isExpanded;
 }

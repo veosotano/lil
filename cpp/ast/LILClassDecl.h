@@ -59,6 +59,7 @@ namespace LIL
         void addDoc(std::shared_ptr<LILDocumentation> value);
         const std::vector<std::shared_ptr<LILDocumentation>> & getDocs() const;
 
+        void add(std::shared_ptr<LILNode> node);
         void addOther(std::shared_ptr<LILNode> value);
         const std::vector<std::shared_ptr<LILNode>> & getOther() const;
         void clearOther();

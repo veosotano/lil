@@ -117,6 +117,7 @@ namespace LIL
         bool readGetConfigInstr();
         bool readBugInstr();
         bool readArgInstr();
+        bool readExpandInstr();
         bool readInstructionRule();
         bool readValuePath(bool allowFunctionCall);
         bool readVarName();

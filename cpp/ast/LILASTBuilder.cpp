@@ -680,65 +680,7 @@ void LILASTBuilder::receiveNodeCommit()
         case BuilderStateClassDecl:
         {
             std::shared_ptr<LILClassDecl> cd = std::static_pointer_cast<LILClassDecl>(this->currentContainer.back());
-            switch (this->currentNode->getNodeType())
-            {
-                case NodeTypeType:
-                {
-                    if (cd->getReceivesInherits()) {
-                        cd->setInheritType(this->currentNode);
-                    } else {
-                        cd->setType(std::static_pointer_cast<LILType>(this->currentNode));
-                    }
-                    break;
-                }
-                case NodeTypeVarDecl:
-                {
-                    cd->addField(this->currentNode);
-                    break;
-                }
-                case NodeTypeFunctionDecl:
-                {
-                    auto fd = std::static_pointer_cast<LILFunctionDecl>(this->currentNode);
-                    auto fnName = fd->getName();
-                    cd->addMethod(fnName.data(), fd);
-                    //install arguments as local variables
-                    for ( auto arg : fd->getFnType()->getArguments()) {
-                        if (arg->isA(NodeTypeVarDecl)) {
-                            auto argVd = std::static_pointer_cast<LILVarDecl>(arg);
-                            fd->setLocalVariable(argVd->getName(), argVd);
-                        }
-                    }
-                    break;
-                }
-                case NodeTypeTypeDecl:
-                {
-                    if (cd->getReceivesBody()) {
-                        //fixme: not just aliases on classes
-                        //cd->addType(std::static_pointer_cast<LILTypeDecl>(this->currentNode));
-                    } else {
-                        cd->addTmplParam(this->currentNode);
-                    }
-                    break;
-                }
-                case NodeTypeAliasDecl:
-                {
-                    if (cd->getReceivesBody()) {
-                        auto ad = std::static_pointer_cast<LILAliasDecl>(this->currentNode);
-                        cd->addAlias(ad);
-                    }
-                    break;
-                }
-                case NodeTypeDocumentation:
-                {
-                    cd->addDoc(std::static_pointer_cast<LILDocumentation>(this->currentNode));
-                    break;
-                }
-                default:
-                {
-                    cd->addOther(this->currentNode);
-                    break;
-                }
-            }
+            cd->add(this->currentNode);
             break;
         }
         case BuilderStateObjectDefinition:
@@ -832,6 +774,15 @@ void LILASTBuilder::receiveNodeCommit()
                 }
                 case InstructionTypeArg:
                 {
+                    instr->addNode(this->currentNode);
+                    break;
+                }
+                case InstructionTypeExpand:
+                {
+                    if (this->currentNode->isA(NodeTypeVarDecl)) {
+                        auto vd = std::static_pointer_cast<LILVarDecl>(this->currentNode);
+                        vd->setIsExpanded(true);
+                    }
                     instr->addNode(this->currentNode);
                     break;
                 }
@@ -1366,6 +1317,8 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
                         instr->setInstructionType(InstructionTypeBug);
                     } else if (data == "arg") {
                         instr->setInstructionType(InstructionTypeArg);
+                    } else if (data == "expand") {
+                        instr->setInstructionType(InstructionTypeExpand);
                     }
                     break;
                 }
