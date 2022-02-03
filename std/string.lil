@@ -130,8 +130,4 @@ const DEBUG: false;
             currentLength: newLength;
         }
     };
-
-    //exceptionally we allow an object type to not have an @ at the beginning because string literals do not use the @objtype syntax
-    //but are writen with quotes "this is a string" instead
-    alias str => @string;
 }
