@@ -22,6 +22,7 @@ var.i64 player1Score: 0;
 var.i64 player2Score: 0;
 var.i64 player1Gamepad: 0;
 var.i64 player2Gamepad: 1;
+var.bool useSoloMode: false;
 }
 
 fn onUpdate(var.f64 deltaTime) {
@@ -84,8 +85,15 @@ fn applyUserInput2 () {
     var id: 6;
     var gamepad: input.getGamepad(player2Gamepad);
     //K -- up
-    var.bool gpUpPressed: input.isGamepadButtonDown(1, 4);
-    var.bool gpDownPressed: input.isGamepadButtonDown(1, 2);
+    var.bool gpUpPressed: input.isGamepadButtonDown(player2Gamepad, 4);
+    var.bool gpDownPressed: input.isGamepadButtonDown(player2Gamepad, 2);
+    if useSoloMode {
+        var gamepad1: input.getGamepad(player1Gamepad);
+        gpUpPressed: gamepad1.y2 > 0.3;
+        gpUpPressed: gpUpPressed OR input.isGamepadButtonDown(player1Gamepad, 4);
+        gpDownPressed: gamepad1.y2 < (0.0 - 0.3);
+        gpDownPressed: gpDownPressed OR input.isGamepadButtonDown(player1Gamepad, 2);
+    }
     if ( input.isKeyDown(34i16) OR (gamepad.y > 0.3) OR gpUpPressed ) {
         app.boxVelocities[id].y +: 1.5f32;
 
@@ -377,6 +385,14 @@ fn switchGamepads {
     }
 }
 
+fn toggleSoloMode {
+    if useSoloMode {
+        useSoloMode: false;
+    } else {
+        useSoloMode: true;
+    }
+}
+
 @mainMenu {
     #new @menu controller {
         label: "Controller";
@@ -385,6 +401,11 @@ fn switchGamepads {
             label: "Switch Gamepads";
             action: pointerTo(switchGamepads);
             shortcut: "t";
+        }
+        #new @menuItem soloMode {
+            label: "Solo mode";
+            action: pointerTo(toggleSoloMode);
+            shortcut: "s";
         }
     }
 }
