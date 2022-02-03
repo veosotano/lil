@@ -1412,7 +1412,7 @@ llvm::Value * LILIREmitter::_emit(LILAssignment * value)
                         return nullptr;
                     }
                     auto field = classDecl->getFieldNamed(pnName);
-                    if (!field->isA(NodeTypeVarDecl)) {
+                    if (!field || !field->isA(NodeTypeVarDecl)) {
                         std::cerr << "!!!!!!!!!!NODE IS NOT VAR DECL FAIL !!!!!!!!!!!!!!!!\n";
                         return nullptr;
                     }
