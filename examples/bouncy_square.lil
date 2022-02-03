@@ -1,5 +1,6 @@
 #configure {
     name: "Bouncy square";
+    automaticFullScreen: true;
 }
 
 const.f32 windowWidth: 1440f32;
