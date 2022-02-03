@@ -221,15 +221,19 @@ fn player2Goal {
     player2ScoreBar.width: (player2Score => f32) * 30f32;
 };
 
-fn playerWin {
+fn newGame {
     player1Score: 0;
     player2Score: 0;
-    playBeep(150, winSoundFreq);
     goalCounterMax: 150;
     var player1ScoreBar: @container { id: 2 };
     player1ScoreBar.width: 0f32;
     var player2ScoreBar: @container { id: 4 };
     player2ScoreBar.width: 0f32;
+}
+
+fn playerWin {
+    playBeep(150, winSoundFreq);
+    newGame();
 }
 
 fn restoreBallSpeed {
@@ -396,7 +400,12 @@ fn toggleSoloMode {
 @mainMenu {
     #new @menu controller {
         label: "Controller";
-        
+
+        #new @menuItem newGame {
+            label: "New game";
+            action: pointerTo(newGame);
+            shortcut: "n";
+        }
         #new @menuItem switchGamepads {
             label: "Switch Gamepads";
             action: pointerTo(switchGamepads);
