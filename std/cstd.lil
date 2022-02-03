@@ -1,11 +1,31 @@
 #export {
     alias cstr => ptr(i8);
+
+    //IO
+    class @FILE { };
+    var.ptr(@FILE) __stdinp extern;
+    var.ptr(@FILE) __stdoutp extern;
+    var.ptr(@FILE) __stderrp extern;
+    #snippet stdIn { __stdinp };
+    #snippet stdOut { __stdoutp };
+    #snippet stdErr { __stderrp };
+
+    fn fopen (var.cstr path, var.cstr mode) => ptr(@FILE) extern;
+    fn fread(var.ptr(any) destination; var.i64 elementSize; var.i64 numElements; var.ptr(@FILE) stream) => i64 extern;
+    fn fclose (var.ptr(@FILE) stream) => i32 extern;
+    fn fwrite (var.ptr(any) data; var.i64 elementSize; var.i64 numElements; var.ptr(@FILE) stream) => i64 extern;
     fn printf (cstr...)=>i32 extern;
     fn puts (cstr)=>i32 extern;
+
+    //memory
     fn malloc (i64)=>cstr extern;
     fn realloc (cstr,i64)=>cstr extern;
     fn free (cstr) extern;
     fn memcpy (var.ptr(any) dst; var.ptr(any) src; var.i64 len) extern;
+
+    //c strings
     fn strcmp (var.cstr str1; var.cstr str2) => i32 extern;
+
+    //math
     fn abs(var.i32 value) => i32 extern;
 }
