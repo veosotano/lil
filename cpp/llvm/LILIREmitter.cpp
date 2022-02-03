@@ -1144,6 +1144,9 @@ llvm::Value * LILIREmitter::_emit(LILObjectDefinition * value)
                         break;
                     }
                 }
+            } else {
+                std::cerr << "NODE WAS NOT ASSIGNMENT FAIL !!!!!!!!\n\n";
+                return nullptr;
             }
         }
         
