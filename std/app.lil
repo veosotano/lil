@@ -102,9 +102,6 @@ fn onUpdate(var.f64 deltaTime) extern;
         }
 
         fn setWidth(var.f32 value) {
-            var selectable: app.selectables[@self.id];
-            var.cstr name: app.getName(selectable.nameId);
-            //printf(`set width of %s to %f\n`, name, value);
             app.box2ds[@self.componentId].width: value;
             app.getCollider(@self.id).width: value;
         };

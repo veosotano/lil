@@ -441,7 +441,6 @@ typedef struct
     [renderEncoder setVertexBuffer:vertexBuffer offset:0 atIndex:LILVertexInputIndexVertices ];
 
     LILUniforms uniforms;
-    //uniforms.scale = (0.7 + (0.2 * sin(frameNum * 0.1)));
     uniforms.scale = 1.0;
     uniforms.viewportSize = viewportSize;
     [renderEncoder setVertexBytes:&uniforms length:sizeof(uniforms) atIndex:LILVertexInputIndexUniforms ];
