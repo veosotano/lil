@@ -33,12 +33,12 @@ level1();
 
 fn newGame {
     maxSpeed: level.maxSpeed;
-    app.box2ds[1].x: 720f32;
-    app.box2ds[1].y: 450f32;
+    app.boxPositions[1].x: 720f32;
+    app.boxPositions[1].y: 450f32;
     app.box2ds[1].width: level.size;
     app.box2ds[1].height: level.size;
-    app.velocities[1].x: level.velX;
-    app.velocities[1].y: level.velY;
+    app.boxVelocities[1].x: level.velX;
+    app.boxVelocities[1].y: level.velY;
     levelColor: level.color;
 };
 
@@ -194,7 +194,7 @@ fn onUpdate(var.f64 deltaTime) {
 
 fn setSoundFreq(var.@container ball) {
     var id: ball.id;
-    var.i32 ballSpeed: abs(app.velocities[id].x => i32) + abs(app.velocities[id].y => i32);
+    var.i32 ballSpeed: abs(app.boxVelocities[id].x => i32) + abs(app.boxVelocities[id].y => i32);
     loop {
         if ballSpeed >= 10i32 {
             ballSpeed -: 10i32;
@@ -225,7 +225,7 @@ fn applyUserInput (var.@container ball) {
     if gamepad.y > 0.3 { upIsPressed: true }
     if (upIsPressed) {
         if delayUp = 0 {
-            app.velocities[id].y +: 1f32;
+            app.boxVelocities[id].y +: 1f32;
             delayUp +: 1;
         } else if delayUp < level.delayInput {
             delayUp +: 1;
@@ -242,7 +242,7 @@ fn applyUserInput (var.@container ball) {
     if gamepad.x < (0.0 - 0.3) { leftIsPressed: true }
     if (leftIsPressed) {
         if delayLeft = 0 {
-            app.velocities[id].x -: 1f32;
+            app.boxVelocities[id].x -: 1f32;
             delayLeft +: 1;
         } else if delayLeft < level.delayInput {
             delayLeft +: 1;
@@ -259,7 +259,7 @@ fn applyUserInput (var.@container ball) {
     if gamepad.y < (0.0 - 0.3) { downIsPressed: true }
     if (downIsPressed) {
         if delayDown = 0 {
-            app.velocities[id].y -: 1f32;
+            app.boxVelocities[id].y -: 1f32;
             delayDown +: 1;
         } else if delayDown < level.delayInput {
             delayDown +: 1;
@@ -276,7 +276,7 @@ fn applyUserInput (var.@container ball) {
     if gamepad.x > 0.3 { rightIsPressed: true }
     if (rightIsPressed) {
         if delayRight = 0 {
-            app.velocities[id].x +: 1f32;
+            app.boxVelocities[id].x +: 1f32;
             delayRight +: 1;
         } else if delayRight < level.delayInput {
             delayRight +: 1;

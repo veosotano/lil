@@ -73,11 +73,11 @@ fn applyUserInput () {
     if input.isKeyDown(1i16) { downIsPressed: true }
     if gamepad.y < (0.0 - 0.3) { downIsPressed: true }
     if (upIsPressed) {
-        app.velocities[id].y +: 1.5f32;
+        app.boxVelocities[id].y +: 1.5f32;
     } else if (downIsPressed) {
-        app.velocities[id].y -: 1.5f32;
+        app.boxVelocities[id].y -: 1.5f32;
     } else {
-        app.velocities[id].y: 0f32;
+        app.boxVelocities[id].y: 0f32;
     }
 };
 fn applyUserInput2 () {
@@ -87,13 +87,13 @@ fn applyUserInput2 () {
     var.bool gpUpPressed: input.isGamepadButtonDown(1, 4);
     var.bool gpDownPressed: input.isGamepadButtonDown(1, 2);
     if ( input.isKeyDown(34i16) OR (gamepad.y > 0.3) OR gpUpPressed ) {
-        app.velocities[id].y +: 1.5f32;
+        app.boxVelocities[id].y +: 1.5f32;
 
     //I -- down
     } else if ( input.isKeyDown(40i16) OR (gamepad.y < (0.0 - 0.3)) OR gpDownPressed ) {
-        app.velocities[id].y -: 1.5f32;
+        app.boxVelocities[id].y -: 1.5f32;
     } else {
-        app.velocities[id].y: 0f32;
+        app.boxVelocities[id].y: 0f32;
     }
 };
 
