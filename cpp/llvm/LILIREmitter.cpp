@@ -1253,15 +1253,21 @@ llvm::Value * LILIREmitter::_emit(LILAssignment * value)
             }
 
             if (llvmValue) {
-                this->_convertLlvmValueIfNeeded(&llvmValue, ty.get(), theValue->getType().get());
-
                 if (
                     ty->isA(TypeTypePointer)
                     && llvmValue->getType()->getTypeID() != llvm::Type::PointerTyID
                     ){
+                    auto ptrTy = std::static_pointer_cast<LILPointerType>(ty);
+                    auto argTy = ptrTy->getArgument();
+                    if (this->_isAnyPtrTy(ptrTy.get())) {
+                        this->_convertLlvmValueIfNeeded(&llvmValue, ptrTy.get(), theValue->getType().get());
+                    } else {
+                        this->_convertLlvmValueIfNeeded(&llvmValue, argTy.get(), theValue->getType().get());
+                    }
                     d->currentAlloca = d->irBuilder.CreateLoad(d->currentAlloca);
                     d->irBuilder.CreateStore(llvmValue, d->currentAlloca);
                 } else {
+                    this->_convertLlvmValueIfNeeded(&llvmValue, ty.get(), theValue->getType().get());
                     d->irBuilder.CreateStore(llvmValue, d->currentAlloca);
                 }
             }
