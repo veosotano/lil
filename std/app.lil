@@ -121,6 +121,9 @@ fn onUpdate(var.f64 deltaTime) extern;
         fn getBackground {
             return app.box2ds[@self.componentId].bgColor;
         };
+        fn getBackgroundPointer {
+            return pointerTo app.box2ds[@self.componentId].bgColor;
+        };
         fn setX(var.f32 value) {
             app.boxPositions[@self.componentId].x: value;
             app.colliders[@self.id].x: value;
@@ -147,6 +150,9 @@ fn onUpdate(var.f64 deltaTime) extern;
         };
         fn getVelocity() => @vel {
             return app.boxVelocities[@self.componentId];
+        }
+        fn getVelocityPointer() => ptr(@vel) {
+            return pointerTo app.boxVelocities[@self.componentId];
         }
     };
 
