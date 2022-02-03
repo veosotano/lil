@@ -447,7 +447,7 @@ void LILBuildManager::build()
             
             if (this->_config->getConfigBool("link")) {
 #if defined(_WIN32)
-                std::string linkCommand = "LINK \"" + buildPath + "/" + outName + objExt + "\"";;
+                std::string linkCommand = "LINK \"" + buildPath + "/" + outName + objExt + "\"";
 #else
                 std::string linkCommand = "ld \"" + buildPath + "/" + outName + objExt + "\"";
 #endif
