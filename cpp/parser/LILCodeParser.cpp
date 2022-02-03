@@ -3017,12 +3017,13 @@ bool LILCodeParser::readObjectDefinition()
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
 
     //read the inner part of the block
+    bool readPNBackup = d->readVarNameOverPropertyName;
     d->readVarNameOverPropertyName = false;
     while (d->currentToken && !d->currentToken->isA(TokenTypeBlockClose))
     {
         this->parseNext();
     }
-    d->readVarNameOverPropertyName = true;
+    d->readVarNameOverPropertyName = readPNBackup;
     LIL_CHECK_FOR_END
 
     //we're out of the block, we expect a closing brace
@@ -3092,12 +3093,13 @@ bool LILCodeParser::readRule()
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
 
     //read the inner part of the block
+    bool readPNBackup = d->readVarNameOverPropertyName;
     d->readVarNameOverPropertyName = false;
     while (!this->atEndOfSource() && valid && !d->currentToken->isA(TokenTypeBlockClose))
     {
         this->parseNext();
     }
-    d->readVarNameOverPropertyName = true;
+    d->readVarNameOverPropertyName = readPNBackup;
     if (!this->atEndOfSource())
     {
         //we expect a block to close
