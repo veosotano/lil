@@ -85,6 +85,7 @@
                 "-framework CoreVideo",
                 "-framework QuartzCore",
                 "-framework Metal",
+                "-framework MetalKit",
                 "-macosx_version_min %minOSVersion";
             appBuildSteps:
                 'mkdir -p "%name.app/Contents/MacOS"',

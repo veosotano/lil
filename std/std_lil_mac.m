@@ -3,6 +3,7 @@
 #import <IOKit/hid/IOHIDLib.h>
 #import <QuartzCore/CAMetalLayer.h>
 #import <Metal/Metal.h>
+#import <MetalKit/MetalKit.h>
 #include <simd/simd.h>
 #include <math.h>
 #include <mach/mach_time.h>
@@ -19,10 +20,19 @@ typedef struct LIL__audioDescriptorStruct {
     UInt32 samplesPerSecond;
 } LIL__audioDescriptorStruct;
 
+typedef struct LIL__resourceStruct {
+    char path[1024];
+    void * data;
+} LIL__resourceStruct;
+
 extern void LIL__init();
 extern void LIL__addAppMenu();
 extern void LIL__addMenus();
-extern void LIL__nextFrame(void * vertexBuffer, long int * vertexCount, double deltaTime);
+extern void LIL__nextFrame(double deltaTime);
+extern void LIL__makeBoxVertices(void * vertexBuffer, long int * vertexCount);
+extern void LIL__makeTextureVertices(void * vertexBuffer, long int * vertexCount);
+extern long int LIL__getResourceCount();
+extern LIL__resourceStruct * LIL__getResorceById(long int id);
 extern void LIL__setKeyDown(int keyCode);
 extern void LIL__setKeyUp(int keyCode);
 extern CGSize LIL__getWindowSize();
@@ -237,6 +247,9 @@ typedef struct
     float green;
     float blue;
     float alpha;
+    
+    float textureX;
+    float textureY;
 } LILVertex;
 
 typedef struct
@@ -248,11 +261,14 @@ typedef struct
 @interface LILMetalRenderer : NSObject
 
 - (nonnull id)initWithMetalDevice:(nonnull id<MTLDevice>)device_ drawablePixelFormat:(MTLPixelFormat)drawablePixelFormat;
+- (void)loadTextureForFile:(NSString *)filename;
 - (void)renderToMetalLayer:(nonnull CAMetalLayer*)metalLayer;
 - (void *)getVertexBufferPointer;
 
 @property(nonatomic, assign) MTLClearColor windowBgColor;
-@property(nonatomic, assign) long int vertexCount;
+@property(nonatomic, assign) long int boxVertexCount;
+@property(nonatomic, assign) long int textureVertexCount;
+@property(nonatomic, assign) long int textureCount;
 
 @end
 
@@ -260,18 +276,28 @@ typedef struct
 {
     id <MTLDevice> device;
     id <MTLCommandQueue> commandQueue;
-    id <MTLRenderPipelineState> pipelineState;
+    id <MTLRenderPipelineState> boxPipeline;
     id <MTLBuffer> vertexBuffer;
     id <MTLTexture> depthTarget;
+    id <MTLTexture> textures[32];
+    id <MTLRenderPipelineState> texturePipelines[32];
+    id <MTLFunction> vertexShaderFn;
+    id <MTLFunction> fragmentShaderFn;
+    id <MTLFunction> textureShaderFn;
+    MTLPixelFormat drawablePixelFormat_;
     MTLRenderPassDescriptor * drawableRenderDescriptor;
     vector_uint2 viewportSize;
     NSUInteger frameNum;
     MTLClearColor windowBgColor_;
-    long int vertexCount_;
+    long int boxVertexCount_;
+    long int textureVertexCount_;
+    long int textureCount;
 }
 
 @synthesize windowBgColor = windowBgColor_;
-@synthesize vertexCount = vertexCount_;
+@synthesize boxVertexCount = boxVertexCount_;
+@synthesize textureVertexCount = textureVertexCount_;
+@synthesize textureCount = textureCount_;
 
 - (nonnull id)initWithMetalDevice:(nonnull id<MTLDevice>)device_ drawablePixelFormat:(MTLPixelFormat)drawablePixelFormat
 {
@@ -280,8 +306,11 @@ typedef struct
     {
         device = device_;
         frameNum = 0;
-        vertexCount_ = 0;
+        boxVertexCount_ = 0;
+        textureVertexCount_ = 0;
+        textureCount_ = 0;
         self.windowBgColor = MTLClearColorMake(0., 0., 0., 1.);
+        drawablePixelFormat_ = drawablePixelFormat;
 
         commandQueue = [device newCommandQueue];
 
@@ -302,42 +331,88 @@ typedef struct
             return nil;
         }
 
-        id <MTLFunction> vertexProgram = [shaderLib newFunctionWithName:@"vertexShader"];
-        if(!vertexProgram) {
+        vertexShaderFn = [shaderLib newFunctionWithName:@"vertexShader"];
+        if(!vertexShaderFn) {
             NSLog(@">> ERROR: Couldn't load vertex function from default library");
             return nil;
         }
 
-        id <MTLFunction> fragmentProgram = [shaderLib newFunctionWithName:@"fragmentShader"];
-        if(!fragmentProgram) {
+        fragmentShaderFn = [shaderLib newFunctionWithName:@"fragmentShader"];
+        if(!fragmentShaderFn) {
             NSLog(@" ERROR: Couldn't load fragment function from default library");
             return nil;
         }
+        
+        textureShaderFn = [shaderLib newFunctionWithName:@"textureShader"];
+        if(!textureShaderFn) {
+            NSLog(@" ERROR: Couldn't load texture function from default library");
+            return nil;
+        }
 
-        // Create a new empty vertex buffer
+        //create a new empty vertex buffer
         vertexBuffer = [device newBufferWithLength:(sizeof(LILVertex)*1000) options:MTLResourceStorageModeShared];
-
-        vertexBuffer.label = @"VertexBuffer";
-
-        // Create a pipeline state descriptor to create a compiled pipeline state object
-        MTLRenderPipelineDescriptor *pipelineDescriptor = [[MTLRenderPipelineDescriptor alloc] init];
-
-        pipelineDescriptor.label                           = @"MyPipeline";
-        pipelineDescriptor.vertexFunction                  = vertexProgram;
-        pipelineDescriptor.fragmentFunction                = fragmentProgram;
-        pipelineDescriptor.colorAttachments[0].pixelFormat = drawablePixelFormat;
-
-        pipelineDescriptor.depthAttachmentPixelFormat      = LILDepthPixelFormat;
+        vertexBuffer.label = @"BoxVertexBuffer";
 
         NSError *error;
-        pipelineState = [device newRenderPipelineStateWithDescriptor:pipelineDescriptor error:&error];
-        if(!pipelineState)
+
+        //create pipeline state descriptors to create a compiled pipeline state object
+        //box
+        MTLRenderPipelineDescriptor *boxPipelineDescriptor = [[MTLRenderPipelineDescriptor alloc] init];
+        boxPipelineDescriptor.label                           = @"boxPipeline";
+        boxPipelineDescriptor.vertexFunction                  = vertexShaderFn;
+        boxPipelineDescriptor.fragmentFunction                = fragmentShaderFn;
+        boxPipelineDescriptor.colorAttachments[0].pixelFormat = drawablePixelFormat_;
+        boxPipelineDescriptor.depthAttachmentPixelFormat      = LILDepthPixelFormat;
+
+        boxPipeline = [device newRenderPipelineStateWithDescriptor:boxPipelineDescriptor error:&error];
+        if(!boxPipeline)
         {
-            NSLog(@"ERROR: Failed aquiring pipeline state: %@", error);
+            NSLog(@"ERROR: Failed aquiring box pipeline state: %@", error);
             return nil;
         }
     }
     return self;
+}
+
+- (void)loadTextureForFile:(NSString *)filename
+{
+    NSLog(@"Loading texture");
+    NSURL * textureUrl = [[NSBundle mainBundle] URLForResource:filename withExtension:nil];
+    if (textureUrl != nil) {
+        MTKTextureLoader * loader = [[MTKTextureLoader alloc] initWithDevice: device];
+
+        NSDictionary * textureOptions = @{
+            MTKTextureLoaderOptionSRGB : @NO
+        };
+        textures[textureCount] = [loader newTextureWithContentsOfURL: textureUrl options: textureOptions error: nil ];
+        if(textures[textureCount])
+        {
+            NSLog(@"Created texture from %@", textureUrl.absoluteString);
+        }
+        else
+        {
+            NSLog(@"Failed to create the texture from %@", textureUrl.absoluteString);
+            return;
+        }
+        
+        NSError *error;
+        
+        MTLRenderPipelineDescriptor *texturePipelineDescriptor = [[MTLRenderPipelineDescriptor alloc] init];
+        texturePipelineDescriptor.label                           = @"texturePipeline";
+        texturePipelineDescriptor.vertexFunction                  = vertexShaderFn;
+        texturePipelineDescriptor.fragmentFunction                = textureShaderFn;
+        texturePipelineDescriptor.colorAttachments[0].pixelFormat = drawablePixelFormat_;
+        texturePipelineDescriptor.depthAttachmentPixelFormat      = LILDepthPixelFormat;
+
+        texturePipelines[textureCount] = [device newRenderPipelineStateWithDescriptor:texturePipelineDescriptor error:&error];
+        if(!texturePipelines[textureCount])
+        {
+            NSLog(@"ERROR: Failed aquiring texture pipeline state: %@", error);
+            return;
+        }
+        
+        textureCount += 1;
+    }
 }
 
 - (void)renderToMetalLayer:(nonnull CAMetalLayer*)metalLayer
@@ -360,8 +435,8 @@ typedef struct
     
     id <MTLRenderCommandEncoder> renderEncoder = [commandBuffer renderCommandEncoderWithDescriptor:drawableRenderDescriptor];
 
-
-    [renderEncoder setRenderPipelineState:pipelineState];
+    //box
+    [renderEncoder setRenderPipelineState:boxPipeline];
 
     [renderEncoder setVertexBuffer:vertexBuffer offset:0 atIndex:LILVertexInputIndexVertices ];
 
@@ -371,7 +446,19 @@ typedef struct
     uniforms.viewportSize = viewportSize;
     [renderEncoder setVertexBytes:&uniforms length:sizeof(uniforms) atIndex:LILVertexInputIndexUniforms ];
 
-    [renderEncoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:self.vertexCount];
+    [renderEncoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:self.boxVertexCount];
+    
+    for (long int i = 0; i < textureCount; i+=1) {
+        //texture
+        [renderEncoder setRenderPipelineState:texturePipelines[i]];
+        [renderEncoder setVertexBuffer:vertexBuffer offset:(sizeof(LILVertex) * self.boxVertexCount) atIndex:LILVertexInputIndexVertices ];
+        [renderEncoder setVertexBytes:&uniforms length:sizeof(uniforms) atIndex:LILVertexInputIndexUniforms ];
+        [renderEncoder setFragmentTexture:textures[i] atIndex:0];
+
+        long int vtxStart = self.boxVertexCount + (i * 6);
+        
+        [renderEncoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:vtxStart vertexCount:6];
+    }
 
     [renderEncoder endEncoding];
 
@@ -569,7 +656,8 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
     @autoreleasepool
     {
         LILMainView *theView = (__bridge LILMainView*)displayLinkContext;
-        long int vertexCount = 0;
+        long int boxVertexCount = 0;
+        long int textureVertexCount = 0;
         LILMetalRenderer * renderer = theView.renderer;
         long int currentTime = LIL__ticksTonanoseconds(outputTime->hostTime);
         double deltaTime;
@@ -580,8 +668,12 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
         }
         LIL__lastFrameTime = currentTime;
 
-        LIL__nextFrame([renderer getVertexBufferPointer], &vertexCount, deltaTime);
-        renderer.vertexCount = vertexCount;
+        LIL__nextFrame(deltaTime);
+        char * vertexBufferPointer = [renderer getVertexBufferPointer];
+        LIL__makeBoxVertices((void *)vertexBufferPointer, &boxVertexCount);
+        renderer.boxVertexCount = boxVertexCount;
+        LIL__makeTextureVertices((void *)(vertexBufferPointer + (boxVertexCount * sizeof(LILVertex))), &textureVertexCount);
+        renderer.textureVertexCount = textureVertexCount;
         [theView render];
     }
     return kCVReturnSuccess;
@@ -604,6 +696,7 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
 - (void)exitMenu;
 - (void)menuItemSelected:(NSMenuItem *) menuItem;
 - (void)setWindowBackgroundRed:(float)red green:(float)green blue:(float)blue alpha:(float)alpha;
+- (LILMainView *)getMainView;
 @end
 @implementation LILAppDelegate
 - (id)init {
@@ -652,6 +745,15 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
 
 - (void)applicationWillFinishLaunching:(NSNotification *)notification {
     [mainWindow setContentView:mainView];
+    
+    long int count = LIL__getResourceCount();
+    LILMetalRenderer * renderer = mainView.renderer;
+
+    for(long int i = 0; i<count; i+=1) {
+        LIL__resourceStruct * res = LIL__getResorceById(i);
+        NSString * path = [[NSString alloc] initWithUTF8String: res->path];
+        [renderer loadTextureForFile:path];
+    }
 }
 - (void)applicationDidFinishLaunching:(NSNotification *)notification {
     //setup main menu item
@@ -741,6 +843,11 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
 - (void)setWindowBackgroundRed:(float)red green:(float)green blue:(float)blue alpha:(float)alpha
 {
     mainView.renderer.windowBgColor = MTLClearColorMake(red, green, blue, alpha);
+}
+
+- (LILMainView *)getMainView
+{
+    return mainView;
 }
 
 @end

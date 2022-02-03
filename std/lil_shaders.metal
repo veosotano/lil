@@ -25,6 +25,10 @@ typedef struct
     float green;
     float blue;
     float alpha;
+    
+    float textureX;
+    float textureY;
+
 } LILVertex;
 
 typedef struct
@@ -38,6 +42,7 @@ struct RasterizerData
 {
     float4 clipSpacePosition [[position]];
     float3 color;
+    float2 texture;
 };
 
 vertex RasterizerData
@@ -65,6 +70,8 @@ vertexShader(uint vertexID [[ vertex_id ]],
     out.clipSpacePosition.w = 1.0;
 
     out.color = float3(vtx.red, vtx.green, vtx.blue);
+    
+    out.texture = float2(vtx.textureX, vtx.textureY);
 
     return out;
 }
@@ -75,3 +82,11 @@ fragmentShader(RasterizerData in [[stage_in]])
     return float4(in.color, 1.0);
 }
 
+fragment float4
+textureShader(  RasterizerData in [[stage_in]],
+                texture2d<float> texture [[texture(0)]] )
+{
+    constexpr sampler defaultSampler;
+    float4 color = texture.sample(defaultSampler, in.texture);
+    return float4(color.r, color.g, color.b, 1.0);
+}

@@ -1902,7 +1902,8 @@ llvm::Value * LILIREmitter::_emit(LILRule * value)
         //std::cerr << "RULE HAD NO TYPE FAIL!!!!!!!\n\n";
         return nullptr;
     }
-    if (ty->getName() == "mainMenu" || ty->getName() == "menuItem" || ty->getName() == "menu") {
+    const auto & tyName = ty->getName();
+    if (tyName == "mainMenu" || tyName == "menuItem" || tyName == "menu") {
         return nullptr;
     }
     auto fnTy = std::make_shared<LILFunctionType>();
@@ -2011,16 +2012,35 @@ llvm::Value * LILIREmitter::_emit(LILRule * value)
     //create element if needed
     const auto & instr = value->getInstruction();
     if (instr && instr->getInstructionType() == InstructionTypeNew) {
-        //fixme: LIL__newContainer(`test`, 0);
-        std::string newContainerFnName = "LIL__newContainer";
-        if (d->namedValues.count(newContainerFnName)) {
-            auto newContainerFn = d->namedValues[newContainerFnName];
-            std::vector<llvm::Value *> argsvect;
-            argsvect.push_back(this->_getContainerNameFromSelectorChain(selCh));
-            //fixme: get id of parent
-            auto zeroVal = llvm::ConstantInt::get(d->llvmContext, llvm::APInt(64, 0, true));
-            argsvect.push_back(zeroVal);
-            d->irBuilder.CreateCall(newContainerFn, argsvect);
+        d->currentAlloca = d->irBuilder.CreateAlloca(this->llvmTypeFromLILType(ty.get()));
+        auto cd = this->findClassWithName(ty->getName());
+        
+        auto initializeMethod = cd->getMethodNamed("initialize");
+        if (initializeMethod) {
+            if (!initializeMethod->isA(NodeTypeFunctionDecl)) {
+                std::cerr << "NODE WAS NOT FUNCTION DECL FAIL!!!!!!!!!!!!!!!!\n\n";
+                return nullptr;
+            }
+            auto fd = std::static_pointer_cast<LILFunctionDecl>(initializeMethod);
+            llvm::Function* fun = d->llvmModule->getFunction(fd->getName().data());
+            if (fun) {
+                std::vector<llvm::Value *> argsvect;
+                //@self
+                argsvect.push_back(d->currentAlloca);
+                //name
+                argsvect.push_back(this->_getContainerNameFromSelectorChain(selCh));
+                //parentId
+                //fixme: get id of parent
+                auto zeroVal = llvm::ConstantInt::get(d->llvmContext, llvm::APInt(64, 0, true));
+                argsvect.push_back(zeroVal);
+                d->irBuilder.CreateCall(fun, argsvect);
+            } else {
+                std::cerr << "COULD NOT CALL INITIALIZE FUNCTION FAIL!!!!!!!!!!!!!!!!\n\n";
+                return nullptr;
+            }
+        } else {
+            std::cerr << "INITIALIZE METHOD NOT FOUND FAIL!!!!!!!!!!!!!!!!\n\n";
+            return nullptr;
         }
     }
 
@@ -2061,10 +2081,20 @@ llvm::Value * LILIREmitter::_emit(LILRule * value)
         auto idGep = llvm::GetElementPtrInst::Create(selClassTy, selAlloca, idList, "ids", d->irBuilder.GetInsertBlock());
         auto currentId = d->irBuilder.CreateLoad(idGep);
         
-        d->currentAlloca = d->irBuilder.CreateAlloca(llvmTy, 0, "");
-        auto gep = this->_emitGEP(d->currentAlloca, llvmTy, true, 0, "id", true, false, 0);
+        bool needsCast = tyName != "container";
+        llvm::Type * containerTy;
+        if (needsCast) {
+            containerTy = d->classTypes.at("container");
+        } else {
+            containerTy = llvmTy;
+        }
+        d->currentAlloca = d->irBuilder.CreateAlloca(containerTy);
+        auto gep = this->_emitGEP(d->currentAlloca, containerTy, true, 0, "id", true, false, 0);
         d->irBuilder.CreateStore(currentId, gep);
         std::vector<llvm::Value *> argsvect;
+        if (needsCast) {
+            d->currentAlloca = d->irBuilder.CreatePointerCast(d->currentAlloca, llvmTy->getPointerTo());
+        }
         argsvect.push_back(d->currentAlloca);
         d->irBuilder.CreateCall(fun, argsvect);
         
@@ -2427,6 +2457,9 @@ void LILIREmitter::_emitDestructors(llvm::Value * ir, std::shared_ptr<LILClassDe
            && field->isA(NodeTypeVarDecl)
         ) {
             auto vd = std::static_pointer_cast<LILVarDecl>(field);
+            if (vd->getIsVVar()) {
+                continue;
+            }
             const auto & fldClassName = fldTy->getName();
             auto fldCd = this->findClassWithName(fldClassName);
             if (!fldCd) {

@@ -1,4 +1,5 @@
 #needs "cstd.lil";
+#needs "string.lil";
 
 const DEBUG: false;
 
@@ -27,20 +28,34 @@ fn onUpdate(var.f64 deltaTime) extern;
         var.f32 x;
         var.f32 y;
         var.@rgb color;
+        var.f32 textureX;
+        var.f32 textureY;
     };
     class @selectable {
         var.i64 nameId;
         var.i64 parentId;
         var.i64 typeId;
         var.i64 componentId;
+        var.i64 resourceId;
     };
-    class @box2d {
+    class @pos {
         var.f32 x;
         var.f32 y;
         var.f32 z;
+    };
+    class @box2d {
         var.f32 width;
         var.f32 height;
         var.@rgb bgColor;
+    };
+    class @img {
+        var.f32 width;
+        var.f32 height;
+        var.i64 textureId;
+    };
+    class @resource {
+        var.[1024 x i8] path;
+        var.ptr(any)|null data;
     };
     class @vel
     {
@@ -79,6 +94,11 @@ fn onUpdate(var.f64 deltaTime) extern;
         
         fn getComponentId => i64 {
             return app.selectables[@self.id].componentId;
+        }
+        
+        fn initialize(var.cstr name; var.i64 parentId: 0) => i64 {
+            var componentId: app.newBox();
+            return app.newElement(name, parentId, 0, componentId);
         }
 
         fn setWidth(var.f32 value) {
@@ -131,19 +151,114 @@ fn onUpdate(var.f64 deltaTime) extern;
         fn getVelocity() => @vel {
             return app.boxVelocities[@self.componentId];
         }
-    }
+    };
+
+    class @image {
+        //this class MUST only be an i64
+        //do not add any more vars
+        var.i64 id: 0;
+
+        //public interface
+        vvar.i64 componentId;
+        vvar.f32 width;
+        vvar.f32 height;
+        vvar.f32 x;
+        vvar.f32 y;
+        vvar.f32 z;
+        vvar.@vel velocity;
+        //fixme: should be =>cstr
+        vvar.ptr(@string)=>ptr(i8) src;
+
+        fn getComponentId => i64 {
+            return app.selectables[@self.id].componentId;
+        }
+
+        fn initialize(var.cstr name; var.i64 parentId: 0) => i64 {
+            puts `created image!`;
+            var componentId: app.newImg();
+            @self.id: app.newElement(name, parentId, 1, componentId);
+            return @self.id;
+        }
+
+        fn setWidth(var.f32 value) {
+            app.imgs[@self.componentId].width: value;
+            app.getCollider(@self.id).width: value;
+        };
+        fn getWidth {
+            return app.imgs[@self.componentId].width;
+        };
+        fn setHeight(var.f32 value) {
+            app.imgs[@self.componentId].height: value;
+            app.getCollider(@self.id).height: value;
+        };
+        fn getHeight {
+            return app.imgs[@self.componentId].height;
+        };
+        fn setX(var.f32 value) {
+            app.imgPositions[@self.componentId].x: value;
+            app.colliders[@self.id].x: value;
+        }
+        fn getX() => f32 {
+            return app.imgPositions[@self.componentId].x;
+        };
+        fn setY(var.f32 value) {
+            app.imgPositions[@self.componentId].y: value;
+            app.colliders[@self.id].y: value;
+        };
+        fn getY() => f32 {
+            return app.imgPositions[@self.componentId].y;
+        };
+        fn setZ(var.f32 value) {
+            app.imgPositions[@self.componentId].z: value;
+            app.colliders[@self.id].z: value;
+        };
+        fn getZ() => f32 {
+            return app.imgPositions[@self.componentId].z;
+        };
+        fn setVelocity(var.@vel value) {
+            app.imgVelocities[@self.componentId]: value;
+        };
+        fn getVelocity() => @vel {
+            return app.imgVelocities[@self.componentId];
+        }
+        fn getVelocityPointer() => ptr(@vel) {
+            return pointerTo app.imgVelocities[@self.componentId];
+        }
+
+        fn getSrc() => cstr {
+            return pointerTo(app.resources[@self.id].path) => ptr(i8);
+        }
+        fn setSrc(var.ptr(@string) value) {
+            puts `set src of image!`;
+            memcpy(@self.src, value.cstr(), value.length);
+            app.newResource(@self.id);
+            puts @self.src;
+        }
+    };
 
     class @app {
         var.[#paste entitiesSize x @selectable] selectables: [];
         var.i64 entityCount: 0;
+        //boxes
+        var.[#paste entitiesSize x @pos] boxPositions: [];
+        var.[#paste entitiesSize x @vel] boxVelocities: [];
         var.[#paste entitiesSize x @box2d] box2ds: [];
         var.i64 boxCount: 0;
+        //imgs
+        var.[#paste entitiesSize x @pos] imgPositions: [];
+        var.[#paste entitiesSize x @vel] imgVelocities: [];
+        var.[#paste entitiesSize x @img] imgs: [];
+        var.i64 imgCount: 0;
+        //colliders
         var.[#paste entitiesSize x i64] colliderIds: [];
         var.[#paste componentsSize x @collider] colliders: [];
         var.[#paste namesSize x cstr] names: [];
         var.i64 nameCount: 0;
         var.i64 typeCount: 0;
-        var.[#paste entitiesSize x @vel] velocities: [];
+
+        var.[#paste entitiesSize x i64] resourceIds: [];
+        var.[#paste entitiesSize x @resource] resources: [];
+        var.i64 resourceCount: 0;
         var.i64 lastFrameTime: 0;
 
         fn newEntity => i64 {
@@ -231,6 +346,11 @@ fn onUpdate(var.f64 deltaTime) extern;
             @self.boxCount +: 1;
             return currentCount;
         };
+        fn newImg => i64 {
+            var currentCount: @self.imgCount;
+            @self.imgCount +: 1;
+            return currentCount;
+        };
         fn setCollider(var.i64 id; var.@collider value) {
             var.i64 colliderId: @self.colliderIds[id];
             @self.colliders[colliderId]: value;
@@ -239,17 +359,12 @@ fn onUpdate(var.f64 deltaTime) extern;
             var.i64 colliderId: @self.colliderIds[id];
             return pointerTo @self.colliders[colliderId];
         };
-    };
-    
-    fn LIL__newElement(var.cstr name; var.i64 parentId: 0; var.i64 typeId: 0; var.i64 boxId: 0)=>i64 {
-        return app.newElement(name, parentId, typeId, boxId);
+        fn newResource(var.i64 id) {
+            @self.resourceIds[@self.resourceCount]: id;
+            @self.resourceCount +: 1;
+        }
     };
 
-    fn LIL__newContainer(var.cstr name; var.i64 parentId: 0) => i64 {
-        var boxId: app.newBox();
-        return app.newElement(name, parentId, 0, boxId);
-    }
-    
     fn LIL__nameToNameId(var.cstr name) => i64 {
         return app.registerName(name);
     };
@@ -268,11 +383,26 @@ fn onUpdate(var.f64 deltaTime) extern;
         return ret;
     };
     
+    fn LIL__getResourceCount => i64 {
+        return app.resourceCount;
+    }
+    
+    fn LIL__getResorceById(var.i64 id) => ptr(@resource) {
+        var resId: app.resourceIds[id];
+        return pointerTo app.resources[resId];
+    }
+    
     fn LIL__movementSystem(var.f64 deltaTime) {
-        for (var.i64 i:0; i<app.entityCount; i+:1) {
-            app.box2ds[i].x +: ((app.velocities[i].x => f64) * deltaTime * 60) => f32;
-            app.box2ds[i].y +: ((app.velocities[i].y => f64) * deltaTime * 60) => f32;
-            app.box2ds[i].z +: ((app.velocities[i].z => f64) * deltaTime * 60) => f32;
+        var.f64 dt: deltaTime * 60;
+        for (var.i64 i:0; i<app.boxCount; i+:1) {
+            app.boxPositions[i].x +: ((app.boxVelocities[i].x => f64) * dt) => f32;
+            app.boxPositions[i].y +: ((app.boxVelocities[i].y => f64) * dt) => f32;
+            app.boxPositions[i].z +: ((app.boxVelocities[i].z => f64) * dt) => f32;
+        }
+        for (var.i64 i:0; i<app.imgCount; i+:1) {
+            app.imgPositions[i].x +: ((app.imgVelocities[i].x => f64) * dt) => f32;
+            app.imgPositions[i].y +: ((app.imgVelocities[i].y => f64) * dt) => f32;
+            app.imgPositions[i].z +: ((app.imgVelocities[i].z => f64) * dt) => f32;
         }
     };
 
@@ -283,53 +413,136 @@ fn onUpdate(var.f64 deltaTime) extern;
     fn LIL__nextFrame(var.ptr(any) vertexBuffer; var.ptr(i64) vertexCount; var.f64 deltaTime) {
         onUpdate(deltaTime);
         LIL__runSystems(deltaTime);
+    }
+    
+    fn LIL__makeBoxVertices(var.ptr(any) vertexBuffer; var.ptr(i64) vertexCount) {
 
         var.[1000 x @vertex] vertices: [];
         for (var.i64 i:0; i<app.boxCount; i+:1) {
 
             var box: app.box2ds[i];
+            var pos: app.boxPositions[i];
             var color: box.bgColor;
 
             var.i64 triIdx: i*6;
 
             vertices[triIdx]: @vertex {
-                x: box.x;
-                y: box.y;
+                x: pos.x + box.width;
+                y: pos.y;
                 color: color;
+                textureX: 1f32;
+                textureY: 1f32;
             };
 
             vertices[triIdx+1]: @vertex {
-                x: box.x;
-                y: box.y + box.height;
+                x: pos.x;
+                y: pos.y;
                 color: color;
+                textureX: 0f32;
+                textureY: 1f32;
             };
 
             vertices[triIdx+2]: @vertex {
-                x: box.x + box.width;
-                y: box.y;
+                x: pos.x;
+                y: pos.y + box.height;
                 color: color;
+                textureX: 0f32;
+                textureY: 0f32;
             };
 
+
             vertices[triIdx+3]: @vertex {
-                x: box.x;
-                y: box.y + box.height;
+                x: pos.x + box.width;
+                y: pos.y;
                 color: color;
+                textureX: 1f32;
+                textureY: 1f32;
             };
 
             vertices[triIdx+4]: @vertex {
-                x: box.x + box.width;
-                y: box.y + box.height;
+                x: pos.x;
+                y: pos.y + box.height;
                 color: color;
+                textureX: 0f32;
+                textureY: 0f32;
             };
 
             vertices[triIdx+5]: @vertex {
-                x: box.x + box.width;
-                y: box.y;
+                x: pos.x + box.width;
+                y: pos.y + box.height;
                 color: color;
+                textureX: 1f32;
+                textureY: 0f32;
             };
         }
 
-        memcpy (vertexBuffer, pointerTo(vertices), sizeOf(vertices));
+        var.i64 bufferSize: (sizeOf(type @vertex) * 6 * app.boxCount);
+        memcpy (vertexBuffer, pointerTo(vertices), bufferSize);
         vertexCount: app.boxCount * 6;
+    }
+    
+    fn LIL__makeTextureVertices(var.ptr(any) vertexBuffer; var.ptr(i64) vertexCount) {
+        var.[1000 x @vertex] vertices: [];
+        for (var.i64 i:0; i<app.imgCount; i+:1) {
+
+            var img: app.imgs[i];
+            var pos: app.imgPositions[i];
+            var color: #F00;
+
+            var.i64 triIdx: i*6;
+            
+            vertices[triIdx]: @vertex {
+                x: pos.x + img.width;
+                y: pos.y;
+                color: color;
+                textureX: 1f32;
+                textureY: 1f32;
+            };
+
+            vertices[triIdx+1]: @vertex {
+                x: pos.x;
+                y: pos.y;
+                color: color;
+                textureX: 0f32;
+                textureY: 1f32;
+            };
+
+            vertices[triIdx+2]: @vertex {
+                x: pos.x;
+                y: pos.y + img.height;
+                color: color;
+                textureX: 0f32;
+                textureY: 0f32;
+            };
+
+
+            vertices[triIdx+3]: @vertex {
+                x: pos.x + img.width;
+                y: pos.y;
+                color: color;
+                textureX: 1f32;
+                textureY: 1f32;
+            };
+
+            vertices[triIdx+4]: @vertex {
+                x: pos.x;
+                y: pos.y + img.height;
+                color: color;
+                textureX: 0f32;
+                textureY: 0f32;
+            };
+
+            vertices[triIdx+5]: @vertex {
+                x: pos.x + img.width;
+                y: pos.y + img.height;
+                color: color;
+                textureX: 1f32;
+                textureY: 0f32;
+            };
+        }
+
+        var.i64 bufferSize: (sizeOf(type @vertex) * 6 * app.imgCount);
+        memcpy (vertexBuffer, pointerTo(vertices), bufferSize);
+        vertexCount: app.imgCount * 6;
     }
 }
