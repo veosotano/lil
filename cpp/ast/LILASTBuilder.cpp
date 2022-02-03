@@ -698,7 +698,7 @@ void LILASTBuilder::receiveNodeCommit()
                     break;
                 }
                 default:
-                    od->addNode(this->currentNode);
+                    od->addChild(this->currentNode);
                     break;
             }
             break;

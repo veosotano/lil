@@ -550,7 +550,7 @@ bool LILColorMaker::_processColorInstr(std::shared_ptr<LILInstruction> value)
         redPn->setName("red");
         red->setSubject(redPn);
         red->setValue(redNumLit);
-        objDef->addNode(red);
+        objDef->addChild(red);
         //green
         auto greenNumLit = std::make_shared<LILNumberLiteral>();
         greenNumLit->setType(numTy);

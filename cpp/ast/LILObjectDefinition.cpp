@@ -39,7 +39,7 @@ std::shared_ptr<LILClonable> LILObjectDefinition::cloneImpl() const
 
     for (auto it = this->getChildNodes().begin(); it!=this->getChildNodes().end(); ++it)
     {
-        clone->addNode((*it)->clone());
+        clone->addChild((*it)->clone());
     }
     //clone LILTypedNode
     if (this->_type) {
@@ -70,4 +70,9 @@ const std::vector<std::shared_ptr<LILNode>> & LILObjectDefinition::getNodes() co
 void LILObjectDefinition::setNodes(const std::vector<std::shared_ptr<LILNode>> && nodes)
 {
     this->setChildNodes(std::move(nodes));
+}
+
+void LILObjectDefinition::addChild(std::shared_ptr<LILNode> child)
+{
+    this->addNode(child);
 }
