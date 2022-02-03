@@ -32,7 +32,7 @@ fn onUpdate(var.f64 deltaTime) extern;
         var.i64 nameId;
         var.i64 parentId;
         var.i64 typeId;
-        var.i64 boxId;
+        var.i64 componentId;
     };
     class @box2d {
         var.f32 x;
@@ -68,7 +68,7 @@ fn onUpdate(var.f64 deltaTime) extern;
         var.i64 id: 0;
 
         //public interface
-        vvar.i64 boxId;
+        vvar.i64 componentId;
         vvar.f32 width;
         vvar.f32 height;
         vvar.@rgb background;
@@ -76,60 +76,60 @@ fn onUpdate(var.f64 deltaTime) extern;
         vvar.f32 y;
         vvar.f32 z;
         vvar.@vel velocity;
-
-        fn getBoxId => i64 {
-            return app.selectables[@self.id].boxId;
+        
+        fn getComponentId => i64 {
+            return app.selectables[@self.id].componentId;
         }
 
         fn setWidth(var.f32 value) {
             var selectable: app.selectables[@self.id];
             var.cstr name: app.getName(selectable.nameId);
             //printf(`set width of %s to %f\n`, name, value);
-            app.box2ds[@self.boxId].width: value;
+            app.box2ds[@self.componentId].width: value;
             app.getCollider(@self.id).width: value;
         };
         fn getWidth {
-            return app.box2ds[@self.boxId].width;
+            return app.box2ds[@self.componentId].width;
         };
         fn setHeight(var.f32 value) {
-            app.box2ds[@self.boxId].height: value;
+            app.box2ds[@self.componentId].height: value;
             app.getCollider(@self.id).height: value;
         };
         fn getHeight {
-            return app.box2ds[@self.boxId].height;
+            return app.box2ds[@self.componentId].height;
         };
         fn setBackground(var.@rgb value) {
-            app.box2ds[@self.boxId].bgColor: value;
+            app.box2ds[@self.componentId].bgColor: value;
         };
         fn getBackground {
-            return app.box2ds[@self.boxId].bgColor;
+            return app.box2ds[@self.componentId].bgColor;
         };
         fn setX(var.f32 value) {
-            app.box2ds[@self.boxId].x: value;
+            app.boxPositions[@self.componentId].x: value;
             app.colliders[@self.id].x: value;
         }
         fn getX() => f32 {
-            return app.box2ds[@self.boxId].x;
+            return app.boxPositions[@self.componentId].x;
         };
         fn setY(var.f32 value) {
-            app.box2ds[@self.boxId].y: value;
+            app.boxPositions[@self.componentId].y: value;
             app.colliders[@self.id].y: value;
         };
         fn getY() => f32 {
-            return app.box2ds[@self.boxId].y;
+            return app.boxPositions[@self.componentId].y;
         };
         fn setZ(var.f32 value) {
-            app.box2ds[@self.boxId].z: value;
+            app.boxPositions[@self.componentId].z: value;
             app.colliders[@self.id].z: value;
         };
         fn getZ() => f32 {
-            return app.box2ds[@self.boxId].z;
+            return app.boxPositions[@self.componentId].z;
         };
         fn setVelocity(var.@vel value) {
-            app.velocities[@self.id]: value;
+            app.boxVelocities[@self.componentId]: value;
         };
         fn getVelocity() => @vel {
-            return app.velocities[@self.id];
+            return app.boxVelocities[@self.componentId];
         }
     }
 
@@ -212,7 +212,7 @@ fn onUpdate(var.f64 deltaTime) extern;
             }
             @self.selectables[id]: value;
         };
-        fn newElement(var.cstr name; var.i64 parentId: 0; var.i64 typeId: 0; var.i64 boxId: 0)=>i64 {
+        fn newElement(var.cstr name; var.i64 parentId: 0; var.i64 typeId: 0; var.i64 componentId: 0)=>i64 {
             #if DEBUG {
                 puts `Creating new element`;
             }
@@ -222,7 +222,7 @@ fn onUpdate(var.f64 deltaTime) extern;
                 nameId: nameId;
                 parentId: parentId;
                 typeId: typeId;
-                boxId: boxId;
+                componentId: componentId;
             });
             return id;
         };
