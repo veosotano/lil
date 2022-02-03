@@ -260,7 +260,7 @@ void LILASTBuilder::receiveNodeStart(NodeType nodeType)
             std::shared_ptr<LILValuePath> vp = std::make_shared<LILValuePath>();
             if (this->currentNode)
             {
-                vp->addNode(this->currentNode);
+                vp->addChild(this->currentNode);
                 this->currentNode.reset();
             }
             this->currentContainer.push_back(vp);
