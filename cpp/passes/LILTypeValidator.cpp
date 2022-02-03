@@ -25,6 +25,7 @@
 #include "LILObjectType.h"
 #include "LILPointerType.h"
 #include "LILPropertyName.h"
+#include "LILStaticArrayType.h"
 #include "LILTypeDecl.h"
 #include "LILValuePath.h"
 #include "LILVarDecl.h"
@@ -469,84 +470,165 @@ void LILTypeValidator::_validate(std::shared_ptr<LILObjectDefinition> od)
         LILString pnName;
         if (asSubject->isA(NodeTypeValuePath)) {
             auto vp = std::static_pointer_cast<LILValuePath>(asSubject);
-            auto firstNode = vp->getNodes().front();
+            auto nodes = vp->getNodes();
+            auto firstNode = nodes.front();
+            std::shared_ptr<LILType> currentTy;
             if (!firstNode || !firstNode->isA(NodeTypePropertyName)) {
                 std::cerr << "!!!!!!! FIRST NODE IS NOT PROPERTY NAME FAIL !!!!!!!\n";
                 continue;
             }
             auto pn = std::static_pointer_cast<LILPropertyName>(firstNode);
             pnName = pn->getName();
-        } else if (asSubject->isA(NodeTypeVarName)){
-            pnName = std::static_pointer_cast<LILVarName>(asSubject)->getName();
-        } else if (asSubject->isA(NodeTypePropertyName)){
-            pnName = std::static_pointer_cast<LILPropertyName>(asSubject)->getName();
-        }
 
-        bool fieldFound = false;
-        for (auto clField : clFields) {
-            if (!clField->isA(NodeTypeVarDecl)) {
-                std::cerr << "!!!!!!! FIELD IN CLASS IS NOT VAR DECL FAIL !!!!!!!\n";
+            auto vd = classValue->getFieldNamed(pnName);
+            if (!vd) {
+                LILErrorMessage ei;
+                ei.message =  "The field "+pnName+" was not found on class @"+classValue->getName();
+                LILNode::SourceLocation sl = as->getSourceLocation();
+                ei.file = sl.file;
+                ei.line = sl.line;
+                ei.column = sl.column;
+                this->errors.push_back(ei);
                 continue;
             }
-            auto vd = std::static_pointer_cast<LILVarDecl>(clField);
-            if (pnName == vd->getName()) {
-                fieldFound = true;
 
-                bool found = false;
-                auto vdTy = vd->getType();
-                auto asTy = as->getType();
-                if (vdTy->isA(TypeTypeMultiple)) {
-                    auto multiTy = std::static_pointer_cast<LILMultipleType>(vdTy);
-                    if (asTy->isA(TypeTypeMultiple)) {
-                        bool allFound = true;
-                        auto asMtTy = std::static_pointer_cast<LILMultipleType>(asTy);
-                        for (auto asMtTy : asMtTy->getTypes()) {
-                            found = false;
-                            for (auto mtTy : multiTy->getTypes()) {
-                                if (mtTy->equalTo(asMtTy)) {
-                                    found = true;
+            currentTy = vd->getType();
+            
+            bool needsContinue = false;
+            for (size_t i = 1, j = nodes.size(); i<j; ++i) {
+                auto node = nodes[i];
+                switch (node->getNodeType()) {
+                    case NodeTypePropertyName:
+                    {
+                        auto pn = std::static_pointer_cast<LILPropertyName>(node);
+                        auto pnName = pn->getName();
+                        if (currentTy->isA(TypeTypePointer)) {
+                            auto ptrTy = std::static_pointer_cast<LILPointerType>(currentTy);
+                            currentTy = ptrTy->getArgument();
+                        }
+                        if (!currentTy->isA(TypeTypeObject)) {
+                            std::cerr << "CURRENT TY WAS NOT OBJECT TY FAIL!!!!\n";
+                            return;
+                        }
+                        auto className = currentTy->getName().data();
+                        auto classDecl = this->findClassWithName(className);
+                        if (!classDecl) {
+                            std::cerr << "CLASS "+className+" NOT FOUND FAIL!!!!\n";
+                            return;
+                        }
+                        auto field = classDecl->getFieldNamed(pnName);
+                        if (!field) {
+                            LILErrorMessage ei;
+                            ei.message =  "The field "+pnName+" was not found on class @"+className;
+                            LILNode::SourceLocation sl = as->getSourceLocation();
+                            ei.file = sl.file;
+                            ei.line = sl.line;
+                            ei.column = sl.column;
+                            this->errors.push_back(ei);
+                            needsContinue = true;
+                            break;
+                        }
+                        if (field->getNodeType() == NodeTypeVarDecl) {
+                            auto vd = std::static_pointer_cast<LILVarDecl>(field);
+                            if (vd->getIsVVar()) {
+                                auto retTy = vd->getReturnType();
+                                if (retTy) {
+                                    currentTy = retTy;
                                     break;
                                 }
                             }
-                            if (!found) {
-                                allFound = false;
-                                break;
-                            }
                         }
-                        found = allFound;
-                    } else if (asTy->getIsNullable()) {
-                        asTy->setIsNullable(false);
-                        for (auto mtTy : multiTy->getTypes()) {
-                            if (mtTy->equalTo(asTy)) {
-                                found = true;
-                                break;
-                            }
-                        }
-                        asTy->setIsNullable(true);
-                        
-                    } else {
-                        if (vdTy->getIsNullable() && asTy->getName() == "null") {
-                            found = true;
-                        } else {
-                            for (auto mtTy : multiTy->getTypes()) {
-                                if (mtTy->equalTo(asTy)) {
-                                    found = true;
-                                    break;
-                                }
-                            }
-                        }
+                        currentTy = field->getType();
+                        break;
                     }
-                } else if (vdTy->getIsNullable() && !asTy->getIsNullable()) {
-                    vdTy->setIsNullable(false);
-                    found = vdTy->equalTo(asTy);
-                    vdTy->setIsNullable(true);
-                } else {
-                    found = this->typesCompatible(vdTy, asTy);
+                    case NodeTypeFunctionCall:
+                    {
+                        auto fc = std::static_pointer_cast<LILFunctionCall>(node);
+                        if (currentTy->isA(TypeTypePointer)) {
+                            auto ptrTy = std::static_pointer_cast<LILPointerType>(currentTy);
+                            currentTy = ptrTy->getArgument();
+                        }
+                        auto className = currentTy->getName().data();
+                        if (!currentTy->isA(TypeTypeObject)) {
+                            std::cerr << "TYPE " << className << " IS NOT OBJECT TYPE FAIL!!!!\n";
+                            return;
+                        }
+                        auto classDecl = this->findClassWithName(className);
+                        if (!classDecl) {
+                            std::cerr << "CLASS " << className << " NOT FOUND FAIL!!!!\n";
+                            return;
+                        }
+                        auto methodName = fc->getName();
+                        auto methodNode = classDecl->getMethodNamed(methodName);
+                        if (!methodNode) {
+                            LILErrorMessage ei;
+                            ei.message =  "The method "+methodName+" was not found on class @"+className;
+                            LILNode::SourceLocation sl = as->getSourceLocation();
+                            ei.file = sl.file;
+                            ei.line = sl.line;
+                            ei.column = sl.column;
+                            this->errors.push_back(ei);
+                            needsContinue = true;
+                            break;
+                        }
+                        if (!methodNode->isA(NodeTypeFunctionDecl)) {
+                            std::cerr << "METHOD NODE IS NOT FUNCTION DECL FAIL!!!!\n";
+                            return;
+                        }
+                        auto method = std::static_pointer_cast<LILFunctionDecl>(methodNode);
+                        auto fnTy = method->getFnType();
+                        currentTy = fnTy->getReturnType();
+                        break;
+                    }
+                    case NodeTypeIndexAccessor:
+                    {
+                        if (currentTy->isA(TypeTypeObject)) {
+                            const auto & className = currentTy->getName();
+                            auto cd = this->findClassWithName(className);
+                            if (!cd) {
+                                std::cerr << "CLASS " + className.data() + " NOT FOUND FAIL!!!!\n";
+                                return;
+                            }
+                            auto method = cd->getMethodNamed("at");
+                            if (!method) {
+                                std::cerr << "CLASS " + className.data() + " HAD NOT at METHOD FAIL!!!!\n";
+                                return;
+                            }
+                            auto methodTy = method->getType();
+                            if (!methodTy || !methodTy->isA(TypeTypeFunction)) {
+                                std::cerr << "BAD AT METHOD FAIL!!!!\n";
+                                return;
+                            }
+                            auto mFnTy = std::static_pointer_cast<LILFunctionType>(methodTy);
+                            auto retTy = mFnTy->getReturnType();
+                            if (!retTy) {
+                                std::cerr << "FN TYPE HAD NO RETURN TY FAIL!!!!\n";
+                                return;
+                            }
+                            currentTy = retTy;
+                            break;
+                        }
+                        else if (!currentTy->isA(TypeTypeStaticArray))
+                        {
+                            std::cerr << "FIELD TYPE IS NOT ARRAY TYPE FAIL!!!!\n";
+                            return;
+                        }
+                        auto saTy = std::static_pointer_cast<LILStaticArrayType>(currentTy);
+                        currentTy = saTy->getType();
+                        break;
+                    }
+                    default:
+                        std::cerr << "UNKNOWN NODE TYPE IN VALUE PATH FAIL!!!!!!!!!!!!!!!!\n";
+                        break;
                 }
-
-                if (!found) {
+                if (needsContinue) {
+                    continue;
+                }
+                auto asTy = as->getType();
+                bool valid = this->_validateField(currentTy, asTy);
+                if (!valid) {
                     LILErrorMessage ei;
-                    ei.message =  "The field "+pnName+" needs to be of type "+LILNodeToString::stringify(vdTy.get())+", "+LILNodeToString::stringify(asTy.get())+" was given instead";
+                    ei.message =  "The field "+pnName+" needs to be of type "+LILNodeToString::stringify(currentTy.get())+", "+LILNodeToString::stringify(asTy.get())+" was given instead";
                     LILNode::SourceLocation sl = as->getSourceLocation();
                     ei.file = sl.file;
                     ei.line = sl.line;
@@ -554,8 +636,31 @@ void LILTypeValidator::_validate(std::shared_ptr<LILObjectDefinition> od)
                     this->errors.push_back(ei);
                 }
             }
+            
+            return;
+            
+            
+            
+        } else if (asSubject->isA(NodeTypeVarName)){
+            pnName = std::static_pointer_cast<LILVarName>(asSubject)->getName();
+        } else if (asSubject->isA(NodeTypePropertyName)){
+            pnName = std::static_pointer_cast<LILPropertyName>(asSubject)->getName();
         }
-        if (!fieldFound) {
+        auto vd = classValue->getFieldNamed(pnName);
+        if (vd) {
+            auto vdTy = vd->getType();
+            auto asTy = as->getType();
+            bool valid = this->_validateField(vdTy, asTy);
+            if (!valid) {
+                LILErrorMessage ei;
+                ei.message =  "The field "+pnName+" needs to be of type "+LILNodeToString::stringify(vdTy.get())+", "+LILNodeToString::stringify(asTy.get())+" was given instead";
+                LILNode::SourceLocation sl = as->getSourceLocation();
+                ei.file = sl.file;
+                ei.line = sl.line;
+                ei.column = sl.column;
+                this->errors.push_back(ei);
+            }
+        } else {
             LILErrorMessage ei;
             ei.message =  "The field "+pnName+" was not found on class @"+classValue->getName();
             LILNode::SourceLocation sl = as->getSourceLocation();
@@ -565,6 +670,61 @@ void LILTypeValidator::_validate(std::shared_ptr<LILObjectDefinition> od)
             this->errors.push_back(ei);
         }
     }
+}
+
+bool LILTypeValidator::_validateField(std::shared_ptr<LILType> vdTy, std::shared_ptr<LILType> asTy)
+{
+    bool found = false;
+    if (vdTy->isA(TypeTypeMultiple)) {
+        auto multiTy = std::static_pointer_cast<LILMultipleType>(vdTy);
+        if (asTy->isA(TypeTypeMultiple)) {
+            bool allFound = true;
+            auto asMtTy = std::static_pointer_cast<LILMultipleType>(asTy);
+            for (auto asMtTy : asMtTy->getTypes()) {
+                found = false;
+                for (auto mtTy : multiTy->getTypes()) {
+                    if (mtTy->equalTo(asMtTy)) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    allFound = false;
+                    break;
+                }
+            }
+            found = allFound;
+        } else if (asTy->getIsNullable()) {
+            asTy->setIsNullable(false);
+            for (auto mtTy : multiTy->getTypes()) {
+                if (mtTy->equalTo(asTy)) {
+                    found = true;
+                    break;
+                }
+            }
+            asTy->setIsNullable(true);
+            
+        } else {
+            if (vdTy->getIsNullable() && asTy->getName() == "null") {
+                found = true;
+            } else {
+                for (auto mtTy : multiTy->getTypes()) {
+                    if (mtTy->equalTo(asTy)) {
+                        found = true;
+                        break;
+                    }
+                }
+            }
+        }
+    } else if (vdTy->getIsNullable() && !asTy->getIsNullable()) {
+        vdTy->setIsNullable(false);
+        found = vdTy->equalTo(asTy);
+        vdTy->setIsNullable(true);
+    } else {
+        found = this->typesCompatible(vdTy, asTy);
+    }
+    
+    return found;
 }
 
 void LILTypeValidator::_validate(std::shared_ptr<LILVarDecl> vd)

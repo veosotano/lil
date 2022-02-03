@@ -85,6 +85,7 @@ bool LILVarDecl::equalTo(std::shared_ptr<LILNode> otherNode)
     if ( this->_receivesReturnType != castedNode->_receivesReturnType) return false;
     if ( this->_returnType && !castedNode->_returnType) return false;
     if ( this->_returnType && (!this->_returnType->equalTo(castedNode->_returnType))) return false;
+    if ( this->_isExpanded != castedNode->_isExpanded) return false;
     return true;
 }
 

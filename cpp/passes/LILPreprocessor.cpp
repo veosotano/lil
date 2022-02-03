@@ -1002,6 +1002,7 @@ void LILPreprocessor::_importNodeIfNeeded(std::vector<std::shared_ptr<LILNode>> 
                 newVd->setIsExtern(true);
                 newVd->setIsExported(isExported);
                 newVd->setName(vd->getName());
+                newVd->setIsExpanded(vd->getIsExpanded());
                 newVd->setType(ty->clone());
                 newNodes->push_back(newVd);
             } else {
@@ -1046,6 +1047,7 @@ void LILPreprocessor::_importNodeIfNeeded(std::vector<std::shared_ptr<LILNode>> 
                     newVd->setName(fldVd->getName());
                     newVd->setIsIVar(fldVd->getIsIVar());
                     newVd->setIsVVar(fldVd->getIsVVar());
+                    newVd->setIsExpanded(fldVd->getIsExpanded());
                     auto initVal = fldVd->getInitVal();
                     if (initVal) {
                         newVd->setInitVal(fldVd->getInitVal()->clone());

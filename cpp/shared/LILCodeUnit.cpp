@@ -30,6 +30,7 @@
 #include "LILNameLowerer.h"
 #include "LILParameterSorter.h"
 #include "LILPassManager.h"
+#include "LILPathExpander.h"
 #include "LILStructureLowerer.h"
 #include "LILToStringVisitor.h"
 #include "LILTypeGuesser.h"
@@ -420,10 +421,28 @@ void LILCodeUnit::runPasses()
         stringVisitor->setPrintHeadline(false);
         passes.push_back(stringVisitor);
     }
+    
+    //structure lowering
+    auto structureLowerer = new LILStructureLowerer();
+    passes.push_back(structureLowerer);
+    if (verbose) {
+        auto stringVisitor = new LILToStringVisitor();
+        stringVisitor->setPrintHeadline(false);
+        passes.push_back(stringVisitor);
+    }
 
     //type guessing
     auto typeGuesser = new LILTypeGuesser();
     passes.push_back(typeGuesser);
+    if (verbose) {
+        auto stringVisitor = new LILToStringVisitor();
+        stringVisitor->setPrintHeadline(false);
+        passes.push_back(stringVisitor);
+    }
+
+    //path expander
+    auto pathExpander = new LILPathExpander();
+    passes.push_back(pathExpander);
     if (verbose) {
         auto stringVisitor = new LILToStringVisitor();
         stringVisitor->setPrintHeadline(false);
@@ -460,15 +479,6 @@ void LILCodeUnit::runPasses()
     //constant folding
     auto constantFolder = new LILConstantFolder();
     passes.push_back(constantFolder);
-    if (verbose) {
-        auto stringVisitor = new LILToStringVisitor();
-        stringVisitor->setPrintHeadline(false);
-        passes.push_back(stringVisitor);
-    }
-
-    //structure lowering
-    auto structureLowerer = new LILStructureLowerer();
-    passes.push_back(structureLowerer);
     if (verbose) {
         auto stringVisitor = new LILToStringVisitor();
         stringVisitor->setPrintHeadline(false);
@@ -591,6 +601,15 @@ void LILCodeUnit::runPassesForNeeds()
         stringVisitor->setPrintHeadline(false);
         passes.push_back(stringVisitor);
     }
+    
+    //structure lowering
+    auto structureLowerer = new LILStructureLowerer();
+    passes.push_back(structureLowerer);
+    if (verbose) {
+        auto stringVisitor = new LILToStringVisitor();
+        stringVisitor->setPrintHeadline(false);
+        passes.push_back(stringVisitor);
+    }
 
     //type guessing
     auto typeGuesser = new LILTypeGuesser();
@@ -613,15 +632,6 @@ void LILCodeUnit::runPassesForNeeds()
     //parameter sorting
     auto parameterSorter = new LILParameterSorter();
     passes.push_back(parameterSorter);
-    if (verbose) {
-        auto stringVisitor = new LILToStringVisitor();
-        stringVisitor->setPrintHeadline(false);
-        passes.push_back(stringVisitor);
-    }
-
-    //structure lowering
-    auto structureLowerer = new LILStructureLowerer();
-    passes.push_back(structureLowerer);
     if (verbose) {
         auto stringVisitor = new LILToStringVisitor();
         stringVisitor->setPrintHeadline(false);

@@ -38,6 +38,7 @@ namespace LIL
         void _validate(std::shared_ptr<LILFunctionCall> fc);
         bool _isDefinitionOf(std::shared_ptr<LILType> nativeTy, std::shared_ptr<LILType> customTy);
         void _validate(std::shared_ptr<LILObjectDefinition> od);
+        bool _validateField(std::shared_ptr<LILType> vdTy, std::shared_ptr<LILType> asTy);
         void _validate(std::shared_ptr<LILVarDecl> vd);
         inline void validateChildren(const std::vector<std::shared_ptr<LILNode>> & children);
         bool typesCompatible(const std::shared_ptr<LILType> & ty1, const std::shared_ptr<LILType> & ty2);

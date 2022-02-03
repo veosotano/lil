@@ -1865,6 +1865,20 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(std::shared_ptr<LI
                     std::cerr << "SUBJ TY WAS NULL FAIL!!!!\n";
                     return nullptr;
                 }
+            } else if (firstNode->isA(NodeTypePropertyName)) {
+                auto parentNode = vp->getParentNode();
+                if (parentNode->isA(NodeTypeAssignment)) {
+                    auto grandpaNode = parentNode->getParentNode();
+                    if (grandpaNode->isA(NodeTypeObjectDefinition)) {
+                        auto objDef = std::static_pointer_cast<LILObjectDefinition>(grandpaNode);
+                        currentTy = objDef->getType();
+                        startIndex = 0;
+                    }
+                }
+                if (!currentTy) {
+                    std::cerr << "COULD NOT FIND TYPE FOR PROPERTY NAME FAIL!!!!\n";
+                    return nullptr;
+                }
             }
             else if (firstNode->isA(SelectorTypeSelfSelector)) {
                 auto classDecl = this->findAncestorClass(firstNode);
@@ -1896,6 +1910,12 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(std::shared_ptr<LI
                         return nullptr;
                     }
                     auto field = classDecl->getFieldNamed(pnName);
+                    if (!field) {
+                        field = this->_findExpandedField(classDecl, pnName);
+                        if(field) {
+                            classDecl = this->findAncestorClass(field);
+                        }
+                    }
                     if (!field) {
                         std::cerr << "FIELD WAS NULL FAIL!!!!\n";
                         return nullptr;
@@ -2009,6 +2029,37 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(std::shared_ptr<LI
     }
     
     return nullptr;
+}
+
+std::shared_ptr<LILNode> LILTypeGuesser::_findExpandedField(std::shared_ptr<LILClassDecl> classDecl, const LILString & pnName) const
+{
+    std::shared_ptr<LILNode> ret = nullptr;
+    bool found = false;
+    for (auto field : classDecl->getFields()) {
+        if (!field->isA(NodeTypeVarDecl)) {
+            continue;
+        }
+        auto vd = std::static_pointer_cast<LILVarDecl>(field);
+        if (vd->getIsExpanded()) {
+            auto vdTy = vd->getType();
+            if (vdTy && vdTy->isA(TypeTypeObject)) {
+                classDecl = this->findClassWithName(vdTy->getName());
+                if (!found) {
+                    ret = classDecl->getFieldNamed(pnName);
+                    if (!ret) {
+                        ret = this->_findExpandedField(classDecl, pnName);
+                    }
+                    if (ret) {
+                        found = true;
+                    }
+                } else {
+                    std::cerr << "EXPANDED FIELD CLASH FAIL!!!!!!!!!!!!!!!!\n";
+                    return nullptr;
+                }
+            }
+        }
+    }
+    return ret;
 }
 
 std::shared_ptr<LILType> LILTypeGuesser::findTypeForSelectorChain(std::shared_ptr<LILSelectorChain> selCh) const
