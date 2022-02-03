@@ -37,7 +37,6 @@ namespace LIL
         void setChildRules(std::vector<std::shared_ptr<LILRule>> && nodes);
         void setInstruction(std::shared_ptr<LILNode> instruction);
         const std::shared_ptr<LILNode> getInstruction() const;
-        const std::vector<std::shared_ptr<LILNode>> & getNodes() const;
         std::shared_ptr<LILNode> getFirstSelector() const;
 
     protected:

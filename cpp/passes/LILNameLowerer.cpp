@@ -373,7 +373,7 @@ void LILNameLowerer::_process(LILPropertyName * value)
 
 void LILNameLowerer::_process(LILRule * value)
 {
-    this->processChildren(value->getNodes());
+    this->processChildren(value->getChildNodes());
 }
 
 void LILNameLowerer::_process(LILSimpleSelector * value)

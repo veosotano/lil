@@ -642,7 +642,7 @@ LILToStrInfo LILToStringVisitor::_stringify(LILRule * value)
 {
     LILToStrInfo ret;
     ret.value = "Rule:";
-    this->stringifyChildren(value->getNodes(), ret);
+    this->stringifyChildren(value->getChildNodes(), ret);
     return ret;
 }
 

@@ -296,7 +296,7 @@ void LILFieldSorter::_process(LILPropertyName * value)
 
 void LILFieldSorter::_process(LILRule * value)
 {
-    this->processChildren(value->getNodes());
+    this->processChildren(value->getChildNodes());
 }
 
 void LILFieldSorter::_process(LILSimpleSelector * value)

@@ -338,7 +338,7 @@ void LILParameterSorter::_process(LILPropertyName * value)
 
 void LILParameterSorter::_process(LILRule * value)
 {
-    this->processChildren(value->getNodes());
+    this->processChildren(value->getChildNodes());
 }
 
 void LILParameterSorter::_process(LILSimpleSelector * value)

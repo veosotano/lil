@@ -119,11 +119,6 @@ const std::shared_ptr<LILNode> LILRule::getInstruction() const
     return this->_instruction;
 }
 
-const std::vector<std::shared_ptr<LILNode>> & LILRule::getNodes() const
-{
-    return this->getChildNodes();
-}
-
 std::shared_ptr<LILNode> LILRule::getFirstSelector() const
 {
     if (this->_selectorChain) {
