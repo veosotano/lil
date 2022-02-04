@@ -2049,7 +2049,8 @@ llvm::Value * LILIREmitter::_emit(LILRule * value)
     auto llvmTy = this->llvmTypeFromLILType(ty.get());
     if (outIsId) {
         d->currentAlloca = d->irBuilder.CreateAlloca(llvmTy, 0, "");
-        auto gep = this->_emitGEP(d->currentAlloca, llvmTy, true, 0, "id", true, false, 0);
+        //hack: using the array index to get to the id field of super
+        auto gep = this->_emitGEP(d->currentAlloca, llvmTy, true, 0, "id", true, true, 0);
         d->irBuilder.CreateStore(selection, gep);
         std::vector<llvm::Value *> argsvect;
         argsvect.push_back(d->currentAlloca);
@@ -2089,7 +2090,8 @@ llvm::Value * LILIREmitter::_emit(LILRule * value)
             containerTy = llvmTy;
         }
         d->currentAlloca = d->irBuilder.CreateAlloca(containerTy);
-        auto gep = this->_emitGEP(d->currentAlloca, containerTy, true, 0, "id", true, false, 0);
+        //hack: using the array index to get to the id field of super
+        auto gep = this->_emitGEP(d->currentAlloca, containerTy, true, 0, "id", true, true, 0);
         d->irBuilder.CreateStore(currentId, gep);
         std::vector<llvm::Value *> argsvect;
         if (needsCast) {

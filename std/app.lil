@@ -76,11 +76,23 @@ fn onUpdate(var.f64 deltaTime) extern;
         var.[#paste selectionSize x i64] ids: [];
         var.i64 size: 0;
     };
+    class @element {
+        var.i64 id: 0;
+        
+        vvar.@selectable selectable;
+        
+        fn getSelectable => @selectable {
+            return app.selectables[@self.id];
+        }
+        fn getSelectablePointer => ptr(@selectable) {
+            return pointerTo app.selectables[@self.id];
+        }
+    };
     class @container
     {
         //this class MUST only be an i64
         //do not add any more vars
-        var.i64 id: 0;
+        #expand var.@element super: @element { };
 
         //public interface
         vvar.i64 componentId;
@@ -159,7 +171,7 @@ fn onUpdate(var.f64 deltaTime) extern;
     class @image {
         //this class MUST only be an i64
         //do not add any more vars
-        var.i64 id: 0;
+        #expand var.@element super: @element { };
 
         //public interface
         vvar.i64 componentId;
