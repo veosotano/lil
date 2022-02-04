@@ -28,6 +28,7 @@
 #include "LILTypeValidator.h"
 #include "LILMethodInserter.h"
 #include "LILNameLowerer.h"
+#include "LILObjDefExpander.h"
 #include "LILParameterSorter.h"
 #include "LILPassManager.h"
 #include "LILPathExpander.h"
@@ -488,6 +489,15 @@ void LILCodeUnit::runPasses()
     //name lowering
     auto nameLowerer = new LILNameLowerer();
     passes.push_back(nameLowerer);
+    if (d->verbose) {
+        auto stringVisitor = new LILToStringVisitor();
+        stringVisitor->setPrintHeadline(false);
+        passes.push_back(stringVisitor);
+    }
+    
+    //objDef expansion
+    auto objDefExpander = new LILObjDefExpander();
+    passes.push_back(objDefExpander);
     if (d->verbose) {
         auto stringVisitor = new LILToStringVisitor();
         stringVisitor->setPrintHeadline(false);
