@@ -1202,6 +1202,8 @@ std::shared_ptr<LILType> LILTypeGuesser::recursiveFindTypeFromAncestors(std::sha
                         return this->findTypeForVarName(std::static_pointer_cast<LILVarName>(subject));
                     } else if (subject->isA(NodeTypeValuePath)) {
                         return this->findTypeForValuePath(std::static_pointer_cast<LILValuePath>(subject));
+                    } else if (subject->isA(NodeTypePropertyName)) {
+                        return this->findTypeForPropertyName(std::static_pointer_cast<LILPropertyName>(subject));
                     }
                 }
                 
@@ -2029,6 +2031,15 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(std::shared_ptr<LI
         }
     }
     
+    return nullptr;
+}
+
+std::shared_ptr<LILType> LILTypeGuesser::findTypeForPropertyName(std::shared_ptr<LILPropertyName> name) const
+{
+    auto remoteNode = this->findNodeForPropertyName(name.get());
+    if (remoteNode) {
+        return remoteNode->getType();
+    }
     return nullptr;
 }
 
