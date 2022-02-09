@@ -143,8 +143,12 @@ std::shared_ptr<LILNode> LILVisitor::findNodeForPropertyName(LILPropertyName * n
     auto parent = name->getParentNode();
     if (parent->getNodeType() == NodeTypeAssignment) {
         auto grandpa = parent->getParentNode();
-        if (grandpa->getNodeType() == NodeTypeObjectDefinition) {
+        auto gpTy = grandpa->getNodeType();
+        if ( gpTy == NodeTypeObjectDefinition || gpTy == NodeTypeRule ) {
             auto grandpaTy = grandpa->getType();
+            if (!grandpaTy && gpTy == NodeTypeRule) {
+                grandpaTy = LILObjectType::make("container");
+            }
             auto classDecl = this->findClassWithName(grandpaTy->getName());
             
             auto pnName = name->getName();
