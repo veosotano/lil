@@ -1,23 +1,23 @@
 #configure {
     out: #arg { name: "out"; default: null };
     buildPath: "lil_build_tmp";
-    printOnly: #arg { name: "print-only"; default: false };
+    printOnly: #arg { name: "printOnly"; default: false };
     format: #arg { name: "format"; default: "o" }; //o, ll or s
-    singleFile: #arg { name: "single-file"; default: false };
-    isMain: #arg { name: "is-main"; default: true };
+    singleFile: #arg { name: "singleFile"; default: false };
+    isMain: #arg { name: "isMain"; default: true };
     compile: #arg { name: "compile"; default: true };
     link: #arg { name: "link"; default: true };
     run: #arg { name: "run"; default: false };
     isApp: #arg { name: "isApp"; default: "auto" };
-    autoMainFn: #arg { name: "auto-main-fn"; default: true };
+    autoMainFn: #arg { name: "autoMainFn"; default: true };
     automaticFullScreen: #arg { name: "automaticFullScreen"; default: false };
     documentation: false;
     optimize: 1;
-    importStdLil: #arg { name: "import-std-lil"; default: true };
-    debugStdLil: #arg { name: "debug-std-lil"; default: false };
-    stdLilPath: #arg { name: "std-lil-path"; default: "%compilerDir/std/lil.lil" };
-    linkerFlags: #arg { name: "linker-flags"; default: "-lc" };
-    imports: #arg { name: "init-import-path"; default: "%compilerDir/std/init.lil" };
+    importStdLil: #arg { name: "importStdLil"; default: true };
+    debugStdLil: #arg { name: "debugStdLil"; default: false };
+    stdLilPath: #arg { name: "stdLilPath"; default: "%compilerDir/std/lil.lil" };
+    linkerFlags: #arg { name: "linkerFlags"; default: "-lc" };
+    imports: #arg { name: "initImportPath"; default: "%compilerDir/std/init.lil" };
     memorySize: 268435456; //in bytes, 256 MB by default (not used yet)
 
     objExt: ".o";
@@ -40,13 +40,13 @@
     builds {
         debug {
             optimize: #arg { name: "optimize"; default: 1 };
-            buildPath: #arg { name: "build-path"; default: "lil_build_tmp/debug" };
+            buildPath: #arg { name: "buildPath"; default: "lil_build_tmp/debug" };
             constants+: "DEBUG_BUILD";
         }
 
         release {
             optimize: #arg { name: "optimize"; default: 3 };
-            buildPath: #arg { name: "build-path"; default: "lil_build_tmp/release" };
+            buildPath: #arg { name: "buildPath"; default: "lil_build_tmp/release" };
             constants+: "RELEASE_BUILD";
         }
 

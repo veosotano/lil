@@ -56,12 +56,12 @@ int main(int argc, const char * argv[]) {
             arguments.push_back(command);
             ++i;
 
-        } else if (command == "--no-configure-defaults") {
+        } else if (command == "--noConfigureDefaults") {
             noConfigureDefaults = true;
             arguments.push_back(command);
             ++i;
 
-        } else if (command == "--debug-configure-defaults") {
+        } else if (command == "--debugConfigureDefaults") {
             debugConfigureDefaults = true;
             arguments.push_back(command);
             ++i;
