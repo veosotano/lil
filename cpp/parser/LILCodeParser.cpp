@@ -5597,21 +5597,21 @@ bool LILCodeParser::readIfFlowControl()
             this->readNextToken();
             LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
 
-            bool needsBlockClose  = false;
             if (d->currentToken->isA(TokenTypeBlockOpen)){
-                needsBlockClose = true;
                 d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
                 this->readNextToken();
                 LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-            }
 
-            this->readEvaluables();
+                this->readEvaluables();
 
-            if (needsBlockClose){
                 LIL_EXPECT(TokenTypeBlockClose, "block close")
                 d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
                 this->readNextToken();
                 LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+
+            } else if (d->currentToken->isA(TokenTypeIdentifier) && d->currentToken->getString() == "if") {
+                this->readIfFlowControl();
+                d->receiver->receiveNodeCommit();
             }
         }
     }
