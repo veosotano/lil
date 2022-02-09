@@ -992,6 +992,7 @@ void LILTypeGuesser::_process(LILValueList * value)
                             } else {
                                 std::cerr << "REMOTE NODE NOT FOUND FAIL!!!!!!!\n\n";
                             }
+                            break;
                         }
                         default:
                             std::cerr << "UNKNOWN PARENT TYPE FAIL!!!!!!!\n\n";
