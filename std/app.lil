@@ -252,10 +252,8 @@ fn onUpdate(var.f64 deltaTime) extern;
             return pointerTo(app.resources[@self.id].path) => ptr(i8);
         }
         fn setSrc(var.ptr(@string) value) {
-            puts `set src of image!`;
             memcpy(@self.src, value.cstr(), value.length);
             app.newResource(@self.id);
-            puts @self.src;
         }
     };
     
