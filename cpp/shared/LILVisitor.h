@@ -23,6 +23,7 @@ namespace LIL
     class LILErrorMessage;
     class LILValuePath;
     class LILVarName;
+    class LILPropertyName;
     class LILRootNode;
     class LILRule;
 
@@ -49,6 +50,7 @@ namespace LIL
         std::shared_ptr<LILNode> findNodeForVarName(LILVarName * name) const;
         std::shared_ptr<LILNode> findNodeForName(LILString name, LILNode * parent) const;
         std::shared_ptr<LILNode> findNodeForValuePath(LILValuePath * vp) const;
+        std::shared_ptr<LILNode> findNodeForPropertyName(LILPropertyName * name) const;
         std::shared_ptr<LILNode> recursiveFindNode(std::shared_ptr<LILNode> node) const;
 
         LILString decorate(LILString ns, LILString className, LILString name, std::shared_ptr<LILType> type) const;
@@ -61,6 +63,7 @@ namespace LIL
         std::shared_ptr<LILClassDecl> findAncestorClass(std::shared_ptr<LILNode> node) const;
         std::shared_ptr<LILRule> findAncestorRule(std::shared_ptr<LILNode> node) const;
         std::shared_ptr<LILType> findIfCastType(LILValuePath * vp, size_t & outStartIndex) const;
+        std::shared_ptr<LILNode> findExpandedField(std::shared_ptr<LILClassDecl> classDecl, const LILString & pnName) const;
 
     private:
         bool _printHeadline;

@@ -137,6 +137,26 @@ std::shared_ptr<LILNode> LILVisitor::findNodeForName(LILString name, LILNode * p
     return nullptr;
 }
 
+std::shared_ptr<LILNode> LILVisitor::findNodeForPropertyName(LILPropertyName * name) const
+{
+    std::shared_ptr<LILNode> ret;
+    auto parent = name->getParentNode();
+    if (parent->getNodeType() == NodeTypeAssignment) {
+        auto grandpa = parent->getParentNode();
+        if (grandpa->getNodeType() == NodeTypeObjectDefinition) {
+            auto grandpaTy = grandpa->getType();
+            auto classDecl = this->findClassWithName(grandpaTy->getName());
+            
+            auto pnName = name->getName();
+            ret = classDecl->getFieldNamed(pnName);
+            if (!ret) {
+                ret = this->findExpandedField(classDecl, pnName);
+            }
+        }
+    }
+    return ret;
+}
+
 std::shared_ptr<LILNode> LILVisitor::findNodeForValuePath(LILValuePath * vp) const
 {
     auto nodes = vp->getNodes();
@@ -240,6 +260,10 @@ std::shared_ptr<LILNode> LILVisitor::recursiveFindNode(std::shared_ptr<LILNode> 
         case NodeTypeValuePath:
         {
             return this->recursiveFindNode(this->findNodeForValuePath(static_cast<LILValuePath *>(node.get())));
+        }
+        case NodeTypePropertyName:
+        {
+            return this->recursiveFindNode(this->findNodeForPropertyName(static_cast<LILPropertyName *>(node.get())));
         }
         default:
             return node;
@@ -449,6 +473,37 @@ std::shared_ptr<LILType> LILVisitor::findIfCastType(LILValuePath * vp, size_t & 
             }
         }
         parent = parent->getParentNode();
+    }
+    return ret;
+}
+
+std::shared_ptr<LILNode> LILVisitor::findExpandedField(std::shared_ptr<LILClassDecl> classDecl, const LILString & pnName) const
+{
+    std::shared_ptr<LILNode> ret = nullptr;
+    bool found = false;
+    for (auto field : classDecl->getFields()) {
+        if (!field->isA(NodeTypeVarDecl)) {
+            continue;
+        }
+        auto vd = std::static_pointer_cast<LILVarDecl>(field);
+        if (vd->getIsExpanded()) {
+            auto vdTy = vd->getType();
+            if (vdTy && vdTy->isA(TypeTypeObject)) {
+                classDecl = this->findClassWithName(vdTy->getName());
+                if (!found) {
+                    ret = classDecl->getFieldNamed(pnName);
+                    if (!ret) {
+                        ret = this->findExpandedField(classDecl, pnName);
+                    }
+                    if (ret) {
+                        found = true;
+                    }
+                } else {
+                    std::cerr << "EXPANDED FIELD CLASH FAIL!!!!!!!!!!!!!!!!\n";
+                    return nullptr;
+                }
+            }
+        }
     }
     return ret;
 }
