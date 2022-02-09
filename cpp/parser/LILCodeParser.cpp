@@ -2756,15 +2756,29 @@ bool LILCodeParser::readValueList(bool useComma)
 {
     LIL_START_NODE(NodeTypeValueList)
     bool needsSquareBracketClose = false;
+    bool valid;
+    bool outIsSV;
+    NodeType outType;
+
     if (d->currentToken->isA(TokenTypeSquareBracketOpen)) {
         needsSquareBracketClose = true;
         d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
         this->readNextToken();
         LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+        
+        if (!d->currentToken->isA(TokenTypeSquareBracketClose)) {
+            valid = this->readExpression(outIsSV, outType);
+            if (valid) {
+                d->receiver->receiveNodeCommit();
+            } else {
+                LIL_CANCEL_NODE
+            }
+            if (this->atEndOfSource()) {
+                LIL_END_NODE
+            }
+            this->skip(TokenTypeWhitespace);
+        }
     }
-    bool valid;
-    bool outIsSV;
-    NodeType outType;
     auto tokTy = useComma ? TokenTypeComma : TokenTypeSemicolon;
     while (d->currentToken->isA(tokTy)) {
         d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
