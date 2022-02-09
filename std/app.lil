@@ -38,6 +38,10 @@ fn onUpdate(var.f64 deltaTime) extern;
         var.i64 componentId;
         var.i64 resourceId;
     };
+    class @pos2d {
+        var.f32 x;
+        var.f32 y;
+    };
     class @pos {
         var.f32 x;
         var.f32 y;
@@ -250,6 +254,35 @@ fn onUpdate(var.f64 deltaTime) extern;
             puts @self.src;
         }
     };
+    
+    class @sprite {
+        //this class MUST only be an i64
+        //do not add any more vars
+        #expand var.@image super: @image { };
+        
+        vvar.f32 clipX;
+        vvar.f32 clipY;
+        
+        fn initialize(var.cstr name; var.i64 parentId: 0) => i64 {
+            puts `created sprite!`;
+            var componentId: app.newImg();
+            @self.id: app.newElement(name, parentId, 2, componentId);
+            return @self.id;
+        }
+        
+        fn setClipX(var.f32 value) {
+            app.imgClips[@self.componentId].x: value;
+        }
+        fn getClipX() => f32 {
+            return app.imgClips[@self.componentId].x;
+        };
+        fn setClipY(var.f32 value) {
+            app.imgClips[@self.componentId].y: value;
+        };
+        fn getClipY() => f32 {
+            return app.imgClips[@self.componentId].y;
+        };
+    }
 
     class @app {
         var.[#paste entitiesSize x @selectable] selectables: [];
@@ -262,6 +295,7 @@ fn onUpdate(var.f64 deltaTime) extern;
         //imgs
         var.[#paste entitiesSize x @pos] imgPositions: [];
         var.[#paste entitiesSize x @vel] imgVelocities: [];
+        var.[#paste entitiesSize x @pos2d] imgClips: [];
         var.[#paste entitiesSize x @img] imgs: [];
         var.i64 imgCount: 0;
         //colliders
@@ -502,6 +536,7 @@ fn onUpdate(var.f64 deltaTime) extern;
 
             var img: app.imgs[i];
             var pos: app.imgPositions[i];
+            var clip: app.imgClips[i];
             var color: #F00;
 
             var.i64 triIdx: i*6;
@@ -510,24 +545,24 @@ fn onUpdate(var.f64 deltaTime) extern;
                 x: pos.x + img.width;
                 y: pos.y;
                 color: color;
-                textureX: 1f32;
-                textureY: 1f32;
+                textureX: clip.x + img.width;
+                textureY: clip.y + img.height;
             };
 
             vertices[triIdx+1]: @vertex {
                 x: pos.x;
                 y: pos.y;
                 color: color;
-                textureX: 0f32;
-                textureY: 1f32;
+                textureX: clip.x;
+                textureY: clip.y + img.height;
             };
 
             vertices[triIdx+2]: @vertex {
                 x: pos.x;
                 y: pos.y + img.height;
                 color: color;
-                textureX: 0f32;
-                textureY: 0f32;
+                textureX: clip.x;
+                textureY: clip.y;
             };
 
 
@@ -535,24 +570,24 @@ fn onUpdate(var.f64 deltaTime) extern;
                 x: pos.x + img.width;
                 y: pos.y;
                 color: color;
-                textureX: 1f32;
-                textureY: 1f32;
+                textureX: clip.x + img.width;
+                textureY: clip.y + img.height;
             };
 
             vertices[triIdx+4]: @vertex {
                 x: pos.x;
                 y: pos.y + img.height;
                 color: color;
-                textureX: 0f32;
-                textureY: 0f32;
+                textureX: clip.x;
+                textureY: clip.y;
             };
 
             vertices[triIdx+5]: @vertex {
                 x: pos.x + img.width;
                 y: pos.y + img.height;
                 color: color;
-                textureX: 1f32;
-                textureY: 0f32;
+                textureX: clip.x + img.width;
+                textureY: clip.y;
             };
         }
 

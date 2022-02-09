@@ -86,7 +86,7 @@ fragment float4
 textureShader(  RasterizerData in [[stage_in]],
                 texture2d<float> texture [[texture(0)]] )
 {
-    constexpr sampler defaultSampler;
-    float4 color = texture.sample(defaultSampler, in.texture);
+    constexpr sampler theSampler(coord::pixel);
+    float4 color = texture.sample(theSampler, in.texture);
     return float4(color.r, color.g, color.b, 1.0);
 }
