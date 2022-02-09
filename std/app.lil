@@ -91,6 +91,10 @@ fn onUpdate(var.f64 deltaTime) extern;
         fn getSelectablePointer => ptr(@selectable) {
             return pointerTo app.selectables[@self.id];
         }
+        fn getName => cstr {
+            var selectable: @self.selectable;
+            return app.getName(selectable.nameId);
+        }
     };
     class @container
     {
