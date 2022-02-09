@@ -946,6 +946,9 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
                     std::shared_ptr<LILType> type2 = std::make_shared<LILType>();
                     type2->setName("f64");
                     weakType->addType(type2);
+                    std::shared_ptr<LILType> type3 = std::make_shared<LILType>();
+                    type3->setName("f32");
+                    weakType->addType(type3);
                     weakType->setIsWeakType(true);
                     num->setType(weakType);
                 }
