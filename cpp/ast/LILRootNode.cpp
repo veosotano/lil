@@ -175,6 +175,7 @@ void LILRootNode::add(std::shared_ptr<LILNode> node, bool addToNodeTree)
                 case InstructionTypeSnippet:
                 case InstructionTypeBug:
                 case InstructionTypeArg:
+                case InstructionTypeExpand:
                     //do nothing
                     break;
 
