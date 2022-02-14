@@ -1,3 +1,5 @@
+#needs "app.lil";
+
 #export {
     class @animationFrame {
         var.f32 x: 0f32;

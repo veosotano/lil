@@ -1,6 +1,3 @@
-#needs "cstd.lil";
-#needs "string.lil";
-
 const DEBUG: false;
 
 #snippet entityTypesSize { 10 };
@@ -12,6 +9,9 @@ const DEBUG: false;
 fn onUpdate(var.f64 deltaTime) extern;
 
 #export {
+    #needs "cstd.lil";
+    #needs "string.lil";
+    
     var.@app app;
 
     class @size {
