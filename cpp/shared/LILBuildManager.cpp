@@ -109,8 +109,8 @@ void LILBuildManager::read()
 void LILBuildManager::configure()
 {
     const auto & config = this->_codeUnit->getRootNode()->getConfigure();
-    std::unordered_map<std::string, std::shared_ptr<LILRule>> builds;
-    std::unordered_map<std::string, std::shared_ptr<LILRule>> targets;
+    std::unordered_map<std::string, std::vector<std::shared_ptr<LILRule>>> builds;
+    std::unordered_map<std::string, std::vector<std::shared_ptr<LILRule>>> targets;
     for (const auto & conf : config) {
         if (conf->isA(InstructionTypeConfigure)) {
             const auto & nodes = conf->getChildNodes();
@@ -137,9 +137,9 @@ void LILBuildManager::configure()
                                         {
                                             auto childSel = std::static_pointer_cast<LILSelector>(firstChildSel);
                                             if (selName == "builds") {
-                                                builds[childSel->getName().data()] = childRule;
+                                                builds[childSel->getName().data()].push_back(childRule);
                                             } else {
-                                                targets[childSel->getName().data()] = childRule;
+                                                targets[childSel->getName().data()].push_back(childRule);
                                             }
                                             break;
                                         }
@@ -164,9 +164,11 @@ void LILBuildManager::configure()
     }
     auto build = this->_config->getConfigString("build");
     if (builds.count(build) > 0) {
-        const auto & rule = builds[build];
-        for (const auto & node : rule->getValues()) {
-            this->_config->applyConfig(node);
+        const auto & rules = builds[build];
+        for (const auto & rule : rules) {
+            for (const auto & node : rule->getValues()) {
+                this->_config->applyConfig(node);
+            }
         }
     }
     
@@ -178,9 +180,11 @@ void LILBuildManager::configure()
     targetStr->setValue(target);
     this->_config->setConfig("target", targetStr);
     if (targets.count(target) > 0) {
-        const auto & rule = targets[target];
-        for (const auto & node : rule->getValues()) {
-            this->_config->applyConfig(node);
+        const auto & targetRules = targets[target];
+        for (const auto & targetRule : targetRules) {
+            for (const auto & node : targetRule->getValues()) {
+                this->_config->applyConfig(node);
+            }
         }
     }
     
