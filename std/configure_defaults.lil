@@ -10,6 +10,7 @@
     run: #arg { name: "run"; default: false };
     isApp: #arg { name: "isApp"; default: "auto" };
     autoMainFn: #arg { name: "autoMainFn"; default: true };
+    onUpdateFn: #arg { name: "onUpdateFn"; default: false };
     automaticFullScreen: #arg { name: "automaticFullScreen"; default: false };
     documentation: false;
     optimize: 1;

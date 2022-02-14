@@ -462,7 +462,9 @@ fn onUpdate(var.f64 deltaTime) extern;
     };
 
     fn LIL__nextFrame(var.ptr(any) vertexBuffer; var.ptr(i64) vertexCount; var.f64 deltaTime) {
-        onUpdate(deltaTime);
+        #if #getConfig(onUpdateFn) {
+            onUpdate(deltaTime);
+        }
         LIL__runSystems(deltaTime);
     }
     
