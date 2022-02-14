@@ -38,6 +38,7 @@ std::shared_ptr<LILClonable> LILSnippetInstruction::cloneImpl() const
     std::shared_ptr<LILSnippetInstruction> clone(new LILSnippetInstruction(*this));
 
     clone->_body.clear();
+    clone->clearChildNodes();
     for (auto it = this->_body.begin(); it != this->_body.end(); ++it)
     {
         clone->add((*it)->clone());
