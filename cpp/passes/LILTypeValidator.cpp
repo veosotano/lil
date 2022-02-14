@@ -92,6 +92,13 @@ void LILTypeValidator::validate(std::shared_ptr<LILNode> node)
             this->_validate(vd);
             break;
         }
+
+        case NodeTypeVarName:
+        {
+            auto vn = std::static_pointer_cast<LILVarName>(node);
+            this->_validate(vn);
+            break;
+        }
             
         default:
             break;
@@ -802,6 +809,20 @@ void LILTypeValidator::_validate(std::shared_ptr<LILVarDecl> vd)
             ei.column = sl.column;
             this->errors.push_back(ei);
         }
+    }
+}
+
+void LILTypeValidator::_validate(std::shared_ptr<LILVarName> vn)
+{
+    auto remoteNode = this->findNodeForVarName(vn.get());
+    if (!remoteNode) {
+        LILErrorMessage ei;
+        ei.message =  "There is no variable with the name " + vn->getName() + ", please check the spelling or wether the name is available in the current scope";
+        LILNode::SourceLocation sl = vn->getSourceLocation();
+        ei.file = sl.file;
+        ei.line = sl.line;
+        ei.column = sl.column;
+        this->errors.push_back(ei);
     }
 }
 

@@ -22,6 +22,7 @@
 #include "LILObjectDefinition.h"
 #include "LILRootNode.h"
 #include "LILVarDecl.h"
+#include "LILVarName.h"
 
 namespace LIL
 {
@@ -40,6 +41,7 @@ namespace LIL
         void _validate(std::shared_ptr<LILObjectDefinition> od);
         bool _validateField(std::shared_ptr<LILType> vdTy, std::shared_ptr<LILType> asTy);
         void _validate(std::shared_ptr<LILVarDecl> vd);
+        void _validate(std::shared_ptr<LILVarName> vn);
         inline void validateChildren(const std::vector<std::shared_ptr<LILNode>> & children);
         bool typesCompatible(const std::shared_ptr<LILType> & ty1, const std::shared_ptr<LILType> & ty2);
     };
