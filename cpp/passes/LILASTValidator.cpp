@@ -390,6 +390,8 @@ void LILASTValidator::_validate(const std::shared_ptr<LILUnaryExpression> & valu
             case NodeTypeValuePath:
             case NodeTypeVarName:
             case NodeTypeFunctionCall:
+            case NodeTypeStringLiteral:
+            case NodeTypeStringFunction:
                 break;
                 
             default:
