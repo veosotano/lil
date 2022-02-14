@@ -449,6 +449,35 @@ void LILBuildManager::build()
             
             std::string outFileName = buildPath + "/" + out;
             
+            if (isApp && this->_config->getConfigBool("buildResources")) {
+                if (this->_verbose) {
+                    std::cerr << "\n============================" << "\n";
+                    std::cerr << "==== BUILDING RESOURCES ====" << "\n";
+                    std::cerr << "============================" << "\n";
+                }
+
+                std::vector<std::string> steps;
+                for (const auto & buildStep : this->_config->getConfigItems("resourceBuildSteps")) {
+                    auto tmp = this->_config->extractString(buildStep);
+                    if (tmp.length() > 0) {
+                        steps.push_back(tmp);
+                    }
+                }
+                for (const auto & step : steps) {
+                    if (this->_verbose) {
+                        std::cerr << step << "\n\n";
+                    }
+                    
+                    std::string stepCommand = step;
+                    stepCommand.append(" 2>&1");
+                    std::unique_ptr<FILE, decltype(&pclose)> stepPipe(popen(stepCommand.c_str(), "r"), pclose);
+                    if (!stepPipe) {
+                        std::cerr << "ERROR: popen() failed while trying to execute resource build step! \n";
+                        return;
+                    }
+                }
+            }
+            
             if (this->_config->getConfigBool("link")) {
 #if defined(_WIN32)
                 std::string linkCommand = "LINK \"" + buildPath + "/" + outName + objExt + "\"";

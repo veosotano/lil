@@ -73,11 +73,17 @@
             minOSVersion: #arg { name: "minOSVersion"; default: "10.12" };
             cpu: #arg { name: "cpu"; default: "x86_64" };
             vendor: #arg { name: "vendor"; default: "apple-macos%minOSVersion"};
+            buildResources: #arg { name: "buildResources"; default: true };
+            resourceBuildSteps:
+                'clang -c std/std_lil_mac.m -o "%buildPath/std/std_lil_mac.o"',
+                'xcrun -sdk macosx metal -c std/lil_shaders.metal -o "%buildPath/std/lil_shaders.air"',
+                'xcrun -sdk macosx metallib "%buildPath/std/lil_shaders.air" -o "%buildPath/std/lil_shaders.metallib"'
+            ;
             linkerFlags +: "-macosx_version_min %minOSVersion";
             linkerFlags +: "-framework Cocoa";
 
             linkerFlagsApp:
-                "std_lil_mac.o",
+                '"%buildPath/std/std_lil_mac.o"',
                 "-lc",
                 "-framework Cocoa",
                 "-framework AudioToolbox",
@@ -113,7 +119,8 @@
         <string>True</string>
 </dict>
 </plist>" > "%name.app/Contents/Info.plist"',
-                'cp %buildPath/%out "%name.app/Contents/MacOS/%name"'
+                'cp "%buildPath/%out" "%name.app/Contents/MacOS/%name"',
+                'cp "%buildPath/std/lil_shaders.metallib" "%name.app/Contents/Resources/lil_shaders.metallib"'
             ; //linkerFlagsApp
 
             runCommand: '%buildPath/"%out"';
