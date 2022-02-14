@@ -140,11 +140,11 @@ void LILASTBuilder::receiveNodeStart(NodeType nodeType)
         case NodeTypeUnaryExpression:
         {
             this->state.push_back(BuilderStateUnaryExpression);
+            std::shared_ptr<LILUnaryExpression> exp = std::make_shared<LILUnaryExpression>();
+            this->currentContainer.push_back(exp);
             if (this->currentNode)
             {
-                std::shared_ptr<LILUnaryExpression> exp = std::make_shared<LILUnaryExpression>();
                 exp->setSubject(this->currentNode);
-                this->currentContainer.push_back(exp);
                 this->currentNode.reset();
             }
             break;

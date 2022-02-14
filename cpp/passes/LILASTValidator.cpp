@@ -344,6 +344,7 @@ void LILASTValidator::_validate(const std::shared_ptr<LILExpression> & value)
         case NodeTypeVarName:
         case NodeTypeFunctionCall:
         case NodeTypeInstruction:
+        case NodeTypeUnaryExpression:
             break;
             
         default:
@@ -361,6 +362,7 @@ void LILASTValidator::_validate(const std::shared_ptr<LILExpression> & value)
         case NodeTypeVarName:
         case NodeTypeFunctionCall:
         case NodeTypeInstruction:
+        case NodeTypeUnaryExpression:
             break;
             
         case NodeTypeType:

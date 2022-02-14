@@ -147,4 +147,7 @@ void LILUnaryExpression::receiveNodeData(const LILString &data)
     else if (data == "/") {
         this->setUnaryExpressionType(UnaryExpressionTypeDivision);
     }
+    else if (data == "!") {
+        this->setUnaryExpressionType(UnaryExpressionTypeNot);
+    }
 }

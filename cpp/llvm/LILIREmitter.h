@@ -91,6 +91,7 @@ namespace LIL
         llvm::Value * _emit(LILExpression * value);
         llvm::Value * _emitExpression(ExpressionType expType, llvm::Value * leftV, llvm::Value * rightV);
         llvm::Value * _emit(LILUnaryExpression * value);
+        llvm::Value * _emitNotExp(LILUnaryExpression * value);
         llvm::Value * _emitCast(LILExpression * value);
         llvm::Value * _emit(LILStringLiteral * value);
         llvm::Value * _emit(LILStringFunction * value);

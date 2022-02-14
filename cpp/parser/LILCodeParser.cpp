@@ -1360,11 +1360,11 @@ bool LILCodeParser::canHaveExpression(NodeType nodeType) const
         case NodeTypeFunctionCall:
         case NodeTypeValuePath:
         case NodeTypeInstruction:
+        case NodeTypeUnaryExpression:
             return true;
         case NodeTypeStringLiteral:
         case NodeTypeCStringLiteral:
         case NodeTypeStringFunction:
-        case NodeTypeUnaryExpression:
         case NodeTypeFlag:
         case NodeTypeFilter:
         case NodeTypeRoot:
@@ -2264,58 +2264,77 @@ bool LILCodeParser::readExpression(bool &outIsSingleValue, NodeType & outType)
     bool done = false;
     bool valid = false;
 
-    bool isNegation = false;
-    if (d->currentToken->isA(TokenTypeNegator))
-    {
-        isNegation = true;
-        this->skip(TokenTypeNegator);
-        if (this->atEndOfSource())
-            return false;
-        this->skip(TokenTypeWhitespace);
-        if (this->atEndOfSource())
-            return false;
-    }
     bool isSingleValue = false;
     NodeType svNodeType = NodeTypeInvalid;
-    if (d->currentToken->isA(TokenTypeParenthesisOpen))
+
+    if (d->currentToken->isA(TokenTypeNegator))
     {
-        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+        LIL_START_NODE(NodeTypeUnaryExpression)
+        d->receiver->receiveNodeData(ParserEventExpressionSign, d->currentToken->getString());
         this->readNextToken();
-        if (this->atEndOfSource())
-            return false;
-        this->skip(TokenTypeWhitespace);
-        if (this->atEndOfSource())
-            return false;
-        //in case reading the expression gives a single value, take the event from here
-        bool outIsSV = false;
-        NodeType svExpTy = NodeTypeInvalid;
-        valid = this->readExpression(outIsSV, svNodeType);
-        if (valid && outIsSV)
-        {
-            svNodeType = svExpTy;
+        LIL_CHECK_FOR_END
+
+        if (d->currentToken->isA(TokenTypeParenthesisOpen)) {
+            bool expIsSV = false;
+            LIL::NodeType expType;
+            valid = this->readExpression(expIsSV, expType);
+            if (valid) {
+                d->receiver->receiveNodeCommit();
+            } else {
+                LIL_CANCEL_NODE
+            }
+        } else {
+            valid = this->readSingleValue(svNodeType);
+            d->receiver->receiveNodeCommit();
+            isSingleValue = true;
+            this->skip(TokenTypeWhitespace);
+            if (this->atEndOfSource())
+                return valid;
         }
-        if (this->atEndOfSource())
-            return false;
-        this->skip(TokenTypeWhitespace);
-        if (this->atEndOfSource())
-            return false;
-        if (!d->currentToken->isA(TokenTypeParenthesisClose))
-            return false;
-        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
-        this->readNextToken();
-        if (this->atEndOfSource())
-            return false;
-        this->skip(TokenTypeWhitespace);
-        if (this->atEndOfSource())
-            return false;
+        LIL_END_NODE_NO_RETURN
     }
     else
     {
-        valid = this->readSingleValue(svNodeType);
-        isSingleValue = true;
-        this->skip(TokenTypeWhitespace);
-        if (this->atEndOfSource())
-            return valid;
+        if (d->currentToken->isA(TokenTypeParenthesisOpen))
+        {
+            d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+            this->readNextToken();
+            if (this->atEndOfSource())
+                return false;
+            this->skip(TokenTypeWhitespace);
+            if (this->atEndOfSource())
+                return false;
+            //in case reading the expression gives a single value, take the event from here
+            bool outIsSV = false;
+            NodeType svExpTy = NodeTypeInvalid;
+            valid = this->readExpression(outIsSV, svNodeType);
+            if (valid && outIsSV)
+            {
+                svNodeType = svExpTy;
+            }
+            if (this->atEndOfSource())
+                return false;
+            this->skip(TokenTypeWhitespace);
+            if (this->atEndOfSource())
+                return false;
+            if (!d->currentToken->isA(TokenTypeParenthesisClose))
+                return false;
+            d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+            this->readNextToken();
+            if (this->atEndOfSource())
+                return false;
+            this->skip(TokenTypeWhitespace);
+            if (this->atEndOfSource())
+                return false;
+        }
+        else
+        {
+            valid = this->readSingleValue(svNodeType);
+            isSingleValue = true;
+            this->skip(TokenTypeWhitespace);
+            if (this->atEndOfSource())
+                return valid;
+        }
     }
 
     if (

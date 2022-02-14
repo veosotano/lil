@@ -246,7 +246,11 @@ llvm::Value * LILIREmitter::emit(LILNode * node)
         case NodeTypeUnaryExpression:
         {
             LILUnaryExpression * value = static_cast<LILUnaryExpression *>(node);
-            return this->_emit(value);
+            if (value->getUnaryExpressionType() == UnaryExpressionTypeNot) {
+                return this->_emitNotExp(value);
+            } else {
+                return this->_emit(value);
+            }
         }
         case NodeTypeStringLiteral:
         {
@@ -836,6 +840,25 @@ llvm::Value * LILIREmitter::_emit(LILUnaryExpression * value)
     llvm::Value * expVal = this->_emitExpression(LILUnaryExpression::uexpToExpType(value->getUnaryExpressionType()), temp, valV);
     if (expVal) {
         d->irBuilder.CreateStore(expVal, subject);
+    }
+    return nullptr;
+}
+
+llvm::Value * LILIREmitter::_emitNotExp(LILUnaryExpression * value)
+{
+    std::shared_ptr<LILNode> val = value->getValue();
+    llvm::Value * valV = this->emit(val.get());
+    if (!valV) {
+        std::cerr << "!!!!!!!!!!VALUE EMIT FAIL!!!!!!!!!!!!!!!!\n";
+        return nullptr;
+    }
+    switch (valV->getType()->getTypeID()) {
+        case llvm::Type::IntegerTyID:
+            return d->irBuilder.CreateNot(valV);
+
+        default:
+            std::cerr << "!!!!!!! UNKNOWN TYPE IN NOT EXPRESSION FAIL!!!!!!!!!!!!!!!!\n";
+            return nullptr;
     }
     return nullptr;
 }

@@ -162,6 +162,7 @@ namespace LIL
         UnaryExpressionTypeSubtraction,
         UnaryExpressionTypeMultiplication,
         UnaryExpressionTypeDivision,
+        UnaryExpressionTypeNot,
     };
 
     enum FunctionCallType
