@@ -5531,15 +5531,6 @@ bool LILCodeParser::readIfFlowControl()
         this->readNextToken();
         LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
 
-        //open parenthesis
-        bool needsParenthesisClose  = false;
-        if (d->currentToken->isA(TokenTypeParenthesisOpen)){
-            needsParenthesisClose = true;
-            d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
-            this->readNextToken();
-            LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-        }
-
         bool outIsSV = false;
         NodeType svExpTy = NodeTypeInvalid;
         bool conditionValid = this->readExpression(outIsSV, svExpTy);
@@ -5550,14 +5541,6 @@ bool LILCodeParser::readIfFlowControl()
         else
         {
             return false;
-        }
-
-        //close parenthesis
-        if (needsParenthesisClose){
-            LIL_EXPECT(TokenTypeParenthesisClose, "closing parenthesis")
-            d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
-            this->readNextToken();
-            LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
         }
     }
 
