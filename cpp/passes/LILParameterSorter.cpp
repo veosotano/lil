@@ -503,8 +503,10 @@ void LILParameterSorter::_process(LILFunctionCall * value)
                         }
                         if (!found && plainArgs.size() >= plainArgCount+1) {
                             auto newAsgmt = std::make_shared<LILAssignment>();
+                            newAsgmt->setSourceLocation(currentNode->getSourceLocation());
                             auto newVn = std::make_shared<LILVarName>();
                             newVn->setName(declVd->getName());
+                            newVn->setSourceLocation(currentNode->getSourceLocation());
                             auto callArg = plainArgs[plainArgCount];
                             auto callArgTy = callArg->getType();
                             if (!callArg) {
