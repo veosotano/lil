@@ -814,6 +814,19 @@ void LILTypeValidator::_validate(std::shared_ptr<LILVarDecl> vd)
 
 void LILTypeValidator::_validate(std::shared_ptr<LILVarName> vn)
 {
+    auto parent = vn->getParentNode();
+    if (parent && parent->getNodeType() == NodeTypeAssignment) {
+        auto grandpa = parent->getParentNode();
+        if (grandpa && grandpa->getNodeType() == NodeTypeFunctionCall) {
+            //s'all good, man, this case will be checked when validating the call
+            return;
+        }
+    }
+    if (parent && parent->getInstructionType() == InstructionTypeGetConfig) {
+        //FIXME: validate that the configuration exists
+        return;
+    }
+    
     auto remoteNode = this->findNodeForVarName(vn.get());
     if (!remoteNode) {
         LILErrorMessage ei;
