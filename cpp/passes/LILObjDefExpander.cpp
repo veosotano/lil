@@ -56,9 +56,6 @@ void LILObjDefExpander::performVisit(std::shared_ptr<LILRootNode> rootNode)
 }
 
 void LILObjDefExpander::process(LILNode * node) {
-    for (auto child : node->getChildNodes()) {
-        this->process(child.get());
-    }
     switch (node->getNodeType()) {
         case NodeTypeObjectDefinition:
         {
@@ -188,6 +185,10 @@ void LILObjDefExpander::process(LILNode * node) {
             
         default:
             break;
+    }
+
+    for (auto child : node->getChildNodes()) {
+        this->process(child.get());
     }
 }
 
