@@ -75,3 +75,8 @@ bool LILBoolLiteral::equalTo(std::shared_ptr<LILNode> otherNode)
     if ( this->_value != castedNode->_value ) return false;
     return true;
 }
+
+std::shared_ptr<LILType> LILBoolLiteral::getType() const
+{
+    return LILType::make("bool");
+}

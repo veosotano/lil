@@ -30,6 +30,7 @@ namespace LIL
         void setValue(bool newValue);
         bool getValue();
         bool equalTo(std::shared_ptr<LILNode> otherNode);
+        std::shared_ptr<LILType> getType() const override;
         
     protected:
         bool _value;
