@@ -26,10 +26,10 @@ namespace LIL
         LILBoolLiteral(const LILBoolLiteral & other);
         std::shared_ptr<LILBoolLiteral> clone() const;
         virtual ~LILBoolLiteral();
-        void receiveNodeData(const LIL::LILString &data);
+        void receiveNodeData(const LIL::LILString &data) override;
         void setValue(bool newValue);
         bool getValue();
-        bool equalTo(std::shared_ptr<LILNode> otherNode);
+        bool equalTo(std::shared_ptr<LILNode> otherNode) override;
         std::shared_ptr<LILType> getType() const override;
         
     protected:
@@ -39,7 +39,7 @@ namespace LIL
         LILString _originalRep;
         
     private:
-        virtual std::shared_ptr<LILClonable> cloneImpl() const;
+        std::shared_ptr<LILClonable> cloneImpl() const override;
     };
 }
 
