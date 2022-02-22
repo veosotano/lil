@@ -396,14 +396,18 @@ void LILParameterSorter::_process(LILFunctionCall * value)
         
         if (firstNode->isA(NodeTypeVarName)) {
             auto vn = std::static_pointer_cast<LILVarName>(firstNode);
-            std::shared_ptr<LILNode> subjectNode = this->findNodeForVarName(vn.get());
-            if (subjectNode && subjectNode->isA(NodeTypeVarDecl)) {
-                auto vd = std::static_pointer_cast<LILVarDecl>(subjectNode);
-                varName = vd->getName();
-                if (vd->getIsExtern()) {
-                    isExtern = true;
+            std::shared_ptr<LILNode> subjectNode = this->recursiveFindNode(vn);
+            if (subjectNode) {
+                if (subjectNode->isA(NodeTypeVarDecl)) {
+                    auto vd = std::static_pointer_cast<LILVarDecl>(subjectNode);
+                    varName = vd->getName();
+                    if (vd->getIsExtern()) {
+                        isExtern = true;
+                    }
+                    currentTy = vd->getType();
                 }
-                currentTy = vd->getType();
+            } else {
+                return;
             }
         } else if (firstNode->isA(SelectorTypeSelfSelector)) {
             auto cd = this->findAncestorClass(firstNode);
