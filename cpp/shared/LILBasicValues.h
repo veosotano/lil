@@ -16,6 +16,7 @@
 #ifndef LILBASICVALUES_H
 #define LILBASICVALUES_H
 
+#include <algorithm>
 #include <cstdio>
 #include <vector>
 #include <map>
