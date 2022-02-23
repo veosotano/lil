@@ -4,6 +4,8 @@
 #snippet HID_PRODUCTS_TABLE_LENGTH { 20 };
 
 #export {
+    #import "keyCodes.lil";
+
     class @HIDVendorPair {
         var.ptr(i8) name;
         var.i64 id: 0;
