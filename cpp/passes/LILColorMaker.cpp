@@ -468,6 +468,7 @@ bool LILColorMaker::_processColorInstr(std::shared_ptr<LILInstruction> value)
             case InstructionTypeExport:
             case InstructionTypeDelete:
             case InstructionTypeSnippet:
+            case InstructionTypeExpand:
             {
                 //do nothing
                 break;
