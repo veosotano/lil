@@ -31,6 +31,10 @@ std::shared_ptr<LILType> LILType::merge(std::shared_ptr<LILType> typeA, std::sha
     if (typeA->equalTo(typeB)) {
         return typeA;
     }
+    
+    if (LILType::isIntegerType(typeA.get()) && LILType::isIntegerType(typeB.get())) {
+        return (typeA->getBitWidth() > typeB->getBitWidth() ? typeA : typeB);
+    }
 
     auto multiA = std::dynamic_pointer_cast<LILMultipleType>(typeA);
     auto multiB = std::dynamic_pointer_cast<LILMultipleType>(typeB);
@@ -63,6 +67,12 @@ std::shared_ptr<LILType> LILType::merge(std::shared_ptr<LILType> typeA, std::sha
             if (found){
                 return typeB;
             } else {
+                if (
+                    LILType::isIntegerType(typeB.get())
+                    && (typeB->getBitWidth() > multiA->getIntegerType()->getBitWidth())
+                ) {
+                    return typeB;
+                }
                 return nullptr;
             }
         }
