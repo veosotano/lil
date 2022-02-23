@@ -1098,7 +1098,15 @@ bool LILCodeParser::isFunctionCall(bool isPastIdentifier) const
         }
         if (peekToken){
             if (peekToken->isA(TokenTypeIdentifier) && this->isExpressionIdentifier(peekToken)) {
+                d->lexer->resetPeek();
                 return false;
+            }
+            if (peekToken->isA(TokenTypeNegator)) {
+                peekToken = d->lexer->peekNextToken();
+                if (peekToken && peekToken->isA(TokenTypeEqualSign)) {
+                    d->lexer->resetPeek();
+                    return false;
+                }
             }
             d->lexer->resetPeek();
             if (peekToken->isA(TokenTypeParenthesisOpen)) {
@@ -2481,9 +2489,17 @@ bool LILCodeParser::readExpressionInner()
     LIL_START_NODE(NodeTypeExpression)
     
     bool isValid = false;
-    d->receiver->receiveNodeData(ParserEventExpressionSign, d->currentToken->getString());
-    this->readNextToken();
-    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+    if (d->currentToken->isA(TokenTypeNegator)) {
+        this->readNextToken();
+        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+        d->receiver->receiveNodeData(ParserEventExpressionSign, "!" + d->currentToken->getString());
+        this->readNextToken();
+        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+    } else {
+        d->receiver->receiveNodeData(ParserEventExpressionSign, d->currentToken->getString());
+        this->readNextToken();
+        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+    }
 
     if (isCast) {
         isValid = this->readType();
