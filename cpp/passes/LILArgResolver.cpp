@@ -52,6 +52,9 @@ void LILArgResolver::performVisit(std::shared_ptr<LILRootNode> rootNode)
     for (auto node : nodes) {
         this->processArgInstr(node);
     }
+    for (auto node : rootNode->getInitializers()) {
+        this->processArgInstr(node);
+    }
 }
 
 bool LILArgResolver::processArgInstr(std::shared_ptr<LILNode> node)

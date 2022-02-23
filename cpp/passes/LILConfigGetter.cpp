@@ -55,6 +55,9 @@ void LILConfigGetter::performVisit(std::shared_ptr<LILRootNode> rootNode)
     for (auto node : nodes) {
         this->processGetConfigInstr(node);
     }
+    for (auto node : rootNode->getInitializers()) {
+        this->processGetConfigInstr(node);
+    }
 }
 
 bool LILConfigGetter::processGetConfigInstr(std::shared_ptr<LILNode> node)
