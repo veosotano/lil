@@ -1228,6 +1228,12 @@ std::shared_ptr<LILType> LILTypeGuesser::recursiveFindTypeFromAncestors(std::sha
                     }
                     auto field = classValue->getFieldNamed(subjectName);
                     if (!field) {
+                        field = this->findExpandedField(classValue, subjectName);
+                        if(field) {
+                            classValue = this->findAncestorClass(field);
+                        }
+                    }
+                    if (!field) {
                         std::cerr << "FIELD NOT FOUND IN CLASS FAIL!!!!!!\n\n";
                         return nullptr;
                     }
