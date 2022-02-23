@@ -7,123 +7,105 @@ to provide a better alternative to CSS, but then grew into a full blown language
 
 ## Mini tutorial
 
-LIL aims to be "batteries included". That means that by default it will provide the infrastructure necessary to render your app into a window or screen.
+LIL aims to be "batteries included". That means that by default it will provide the infrastructure necessary to render your game into a window or screen.
 You have a full 2D/3D rendering engine at your disposal that will take care of such details for you, so you can focus on what makes your app or game special.
 
-At the topmost of the visual hierarchy of a frame there is the `@root` object, which you can use in a selector chain, like so:
+At the topmost of the visual hierarchy of a frame there is the `@root` object, which you can use to target the main view itself, like so:
 
-	//add 10 points of padding
+	//set the size of the window and background color
 	@root {
-		padding: 10;
-	}
-
-Let's say we want to add a button to the app:
-
-	@root {
-		padding: 10;
-
-		#new myButton {
-			width: 200;
-			height: 60;
-			content: "Press me";
-			font.color: #F;
-			background: #C;
-			shape: 10; //rounded corners
-		}
-	}
-
-Now let's add a hover state:
-
-	@root {
-		padding: 10;
-
-		#new myButton {
-			width: 200;
-			height: 60;
-			content: "Press me";
-			font.color: #F;
-			background: #C;
-			shape: 10; //rounded corners
-			
-			@this::hover {
-				background: #0;
-			}
-		}
-	}
-
-Now we have a button we can interact with. But we would like to reuse this button style, so we put it into a snippet:
-
-	#snippet buttonStyle {
-		width: 200;
-		height: 60;
-		font.color: #F;
+		width: 1440;
+		height: 900;
 		background: #C;
-		shape: 10; //rounded corners
-
-		@this::hover {
-			background: #0;
-		}
-	};
-
-	@root {
-		padding: 10;
-
-		//apply the styles by pasting them
-		#new myButton {
-			#paste buttonStyle;
-			content: "Press me";
-		}
-		//we can make another one 
-		#new myButton2 {
-			#paste buttonStyle;
-			content: "No thank you";
-		}
 	}
 
-But a button would be not be a real button if was not doing anything. Let's change that:
+Let's add something to it:
 
-	fn button1Pressed {
-		//just put some text into the terminal output
-		print "Button 1 pressed";
-	};
-	fn aPress(var.i64 number) {
-		print "Pressed button %number";
-	};
-	#snippet buttonStyle {
-		width: 200;
-		height: 60;
-		font.color: #F;
+	@root {
+		width: 1440;
+		height: 900;
 		background: #C;
-		shape: 10; //rounded corners
 
-		@this::hover {
-			background: #0;
-		}
-	};
-	@root {
-		padding: 10;
-
-		//apply the styles by pasting them
-		#new myButton {
-			#paste buttonStyle;
-			content: "Press me";
-			on.click: button1Pressed(); //implicitly wrapped in a fn {}
-		}
-		//we can make another one 
-		#new myButton2 {
-			#paste buttonStyle;
-			content: "No thank you";
-			on.click: aPress(2); //implicitly wrapped in a fn {}
+		#new @container test {
+			width: 200;
+			height: 200;
+			background: #9;
+			x: 620;
+			y: 350;
 		}
 	}
 
-Now if you click the first button, it will print the text "Button 1 pressed" to the console, without the quotes, and if you press the second one it
-will output "Pressed button 2", since we passed `2` as the argument to the function. Notice that the call is not executed when it is declared but
-as a result of the user interaction. This is because it was expressed inside of a rule, and the compiler knows that it needs to create an anonymous
-function containing your code and calls it appropriately when needed.
+Instead of just a square, let's make it an image:
 
-Obviously this is nowhere enough to make a full app. I'll be adding some more complete tutorials in the future, stay tuned! Also take a look at the
-specification, it is just the beginning right now, but this will all come together soon.
+	@root {
+		width: 1440;
+		height: 900;
+		background: #C;
+
+		#new @image test {
+			width: 200;
+			height: 200;
+			src: "myimage.png";
+			x: 620;
+			y: 350;
+		}
+	}
+
+We already have some rudimentary physics (more to come), so let's play with velocities:
+
+	@root {
+		width: 1440;
+		height: 900;
+		background: #C;
+
+		#new @image test {
+			width: 200;
+			height: 200;
+			src: "myimage.png";
+			x: 620;
+			y: 350;
+			velocity: @vel {
+				x: 5;
+				y: 3;
+			};
+		}
+	}
+
+Let's set some configuration values. We give the app a name, we automatically enter fullscreen mode and we enable the onUpdate function and do some work on every frame.
+
+	#configure {
+    	name: "Professor";
+    	automaticFullScreen: true;
+    	onUpdateFn: true;
+	}
+	fn onUpdate(var.f64 deltaTime) {
+		//cheating here, no selection system yet
+		//also, suppose the following functions exist:
+		var img: @image { id: 1 };
+		applyUserInput(img);
+		limitSpeed(img);
+		updateAI(img);
+		print "done with the frame :)";
+	}
+	@root {
+		width: 1440;
+		height: 900;
+		background: #C;
+
+		#new @image test {
+			width: 200;
+			height: 200;
+			src: "myimage.png";
+			x: 620;
+			y: 350;
+			velocity: @vel {
+				x: 5;
+				y: 3;
+			};
+		}
+	}
+
+To be continued...
 
 ## Please contribute
 This is an open source project which aims to bring a great new technology to use for the general public, to make it fun to create apps and games.
