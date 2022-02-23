@@ -19,8 +19,10 @@
 #include "LILVisitor.h"
 #include "LILNode.h"
 #include "LILFunctionCall.h"
+#include "LILFunctionType.h"
 #include "LILObjectDefinition.h"
 #include "LILRootNode.h"
+#include "LILValuePath.h"
 #include "LILVarDecl.h"
 #include "LILVarName.h"
 
@@ -37,6 +39,7 @@ namespace LIL
         
         void validate(std::shared_ptr<LILNode> node);
         void _validate(std::shared_ptr<LILFunctionCall> fc);
+        void _validateFCArguments(std::shared_ptr<LILFunctionType> fnTy, std::shared_ptr<LILFunctionCall> fc, bool isMethod, std::shared_ptr<LILValuePath> vp);
         bool _isDefinitionOf(std::shared_ptr<LILType> nativeTy, std::shared_ptr<LILType> customTy);
         void _validate(std::shared_ptr<LILObjectDefinition> od);
         bool _validateField(std::shared_ptr<LILType> vdTy, std::shared_ptr<LILType> asTy);

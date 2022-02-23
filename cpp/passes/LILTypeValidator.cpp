@@ -193,35 +193,7 @@ void LILTypeValidator::_validate(std::shared_ptr<LILFunctionCall> fc)
             return;
         }
         auto fnTy = std::static_pointer_cast<LILFunctionType>(ty);
-        auto fnTyArgs = fnTy->getArguments();
-        auto args = fc->getArguments();
-        size_t argNum = args.size();
-        if (isMethod) {
-            argNum += 1;
-        }
-        if (fnTyArgs.size() != argNum) {
-            LILErrorMessage ei;
-            if (args.size() == 0) {
-                if (fnTyArgs.size() > 1) {
-                    ei.message =  "Missing argument in call: "+LILNodeToString::stringify(vp.get())+"."+fc->getName()+" needs "+LILString::number((LILUnitI64)fnTyArgs.size()) + " arguments";
-                } else {
-                    ei.message =  "Missing argument in call: "+LILNodeToString::stringify(vp.get())+"."+fc->getName()+" needs one argument";
-                }
-            } else {
-                ei.message =  "Mismatch of number of arguments: "+LILNodeToString::stringify(vp.get())+"."+fc->getName()+" needs "+LILString::number((LILUnitI64)fnTyArgs.size()-(isMethod?1:0)) + " arguments and was given " + LILString::number((LILUnitI64)argNum-(isMethod?1:0));
-            }
-            LILNode::SourceLocation sl = fc->getSourceLocation();
-            ei.file = sl.file;
-            ei.line = sl.line;
-            ei.column = sl.column;
-            this->errors.push_back(ei);
-            return;
-        }
-        for (size_t i=0,j=args.size(); i<j; ++i) {
-            auto declArg = fnTyArgs[i];
-            auto callArg = args[i];
-            //FIXME
-        }
+        this->_validateFCArguments(fnTy, fc, isMethod, vp);
     }
     else if ( fc->isA(FunctionCallTypeNone))
     {
@@ -284,106 +256,174 @@ void LILTypeValidator::_validate(std::shared_ptr<LILFunctionCall> fc)
             return;
         }
         
-        auto fnTyArgs = fnTy->getArguments();
-        auto fcArgTys = fc->getArgumentTypes();
-        auto fcArgs = fc->getArguments();
-        if (fcArgs.size() != fcArgTys.size()) {
-            std::cerr << "!!!!!!! SIZE OF FUNCTION CALL ARGS AND ARGUMENT TYPES WAS NOT THE SAME FAIL !!!!!!!\n";
-            return;
-        }
-        if (!fnTy->getIsVariadic() && fnTyArgs.size() != fcArgTys.size()) {
-            LILErrorMessage ei;
-            ei.message =  "Function "+fc->getName()+" requires " + LILString::number((LILUnitI64)fnTyArgs.size()) + " arguments and " + LILString::number((LILUnitI64)fcArgTys.size()) + " were given.";
-            LILNode::SourceLocation sl = fc->getSourceLocation();
-            ei.file = sl.file;
-            ei.line = sl.line;
-            ei.column = sl.column;
-            this->errors.push_back(ei);
-        }
-        
-        auto conversions = this->getRootNode()->getConversions();
-        
-        size_t i = 0;
-        for (auto fnTyArg : fnTyArgs) {
-            if (fcArgTys.size() > i) {
-                auto fcArgTy = fcArgTys[i];
+        this->_validateFCArguments(fnTy, fc, false, nullptr);
+    }
+}
 
-                std::shared_ptr<LILType> argTy;
-                LILString argName;
-                if (fnTyArg->isA(NodeTypeType))
-                {
-                    argTy = std::static_pointer_cast<LILType>(fnTyArg);
-                    argName = LILString::number((LILUnitI64)i+1);
+void LILTypeValidator::_validateFCArguments(std::shared_ptr<LILFunctionType> fnTy, std::shared_ptr<LILFunctionCall> fc, bool isMethod, std::shared_ptr<LILValuePath> vp)
+{
+    auto fnTyArgs = fnTy->getArguments();
+    auto fcArgTys = fc->getArgumentTypes();
+    auto fcArgs = fc->getArguments();
+    if (fcArgs.size() != fcArgTys.size()) {
+        std::cerr << "!!!!!!! SIZE OF FUNCTION CALL ARGS AND ARGUMENT TYPES WAS NOT THE SAME FAIL !!!!!!!\n";
+        return;
+    }
+    LILString fnName;
+    if (isMethod) {
+        fnName.append(LILNodeToString::stringify(vp.get())+".");
+    }
+    fnName.append(fc->getName());
+    if (!fnTy->getIsVariadic() && (fcArgTys.size() > fnTyArgs.size())) {
+        LILErrorMessage ei;
+        ei.message =  "Function "+fnName+" requires " + LILString::number((LILUnitI64)fnTyArgs.size()) + " arguments and " + LILString::number((LILUnitI64)fcArgTys.size()) + " were given.";
+        LILNode::SourceLocation sl = fc->getSourceLocation();
+        ei.file = sl.file;
+        ei.line = sl.line;
+        ei.column = sl.column;
+        this->errors.push_back(ei);
+    }
+    
+    size_t i = 0;
+    size_t argNum = fcArgs.size();
+    if (isMethod) {
+        argNum += 1;
+    }
+    for (auto fnTyArg : fnTyArgs) {
+        if (fnTyArg->getNodeType() == NodeTypeVarDecl) {
+            auto vd = std::static_pointer_cast<LILVarDecl>(fnTyArg);
+            auto vdName = vd->getName();
+            if (vdName == "@self") {
+                continue;
+            }
+            if (!vd->getInitVal()) {
+                if (fcArgs.size() < i) {
+                    LILErrorMessage ei;
+                    ei.message =  "Missing argument in call: "+fnName+" needs "+LILString::number((LILUnitI64)fnTyArgs.size()-(isMethod?1:0)) + " arguments and was given " + LILString::number((LILUnitI64)argNum-(isMethod?1:0));
+                    LILNode::SourceLocation sl = fc->getSourceLocation();
+                    ei.file = sl.file;
+                    ei.line = sl.line;
+                    ei.column = sl.column;
+                    this->errors.push_back(ei);
+                    return;
                 }
-                else if (fnTyArg->isA(NodeTypeVarDecl))
-                {
-                    argTy = fnTyArg->getType();
-                    auto vd = std::static_pointer_cast<LILVarDecl>(fnTyArg);
-                    argName = vd->getName();
-                }
-                if (argTy->isA(TypeTypeMultiple)) {
-                    auto mtTy = std::static_pointer_cast<LILMultipleType>(argTy);
-                    bool found = false;
-                    if (fcArgTy->isA(TypeTypeMultiple)) {
-                        auto fcArgMultipleTy = std::static_pointer_cast<LILMultipleType>(fcArgTy);
-                        bool allFound = true;
-                        for (auto fcArgMtTy : fcArgMultipleTy->getTypes()) {
-                            found = false;
-                            for (auto mtArgTy : mtTy->getTypes()) {
-                                if (fcArgMtTy->equalTo(mtArgTy) || this->_isDefinitionOf(fcArgMtTy, mtArgTy)) {
-                                    found = true;
-                                    break;
-                                }
-                            }
-                            if (!found) {
-                                allFound = false;
-                                break;
-                            }
-                        }
-                        found = allFound;
-                    } else {
-                        bool wasNullable = false;
-                        if (fcArgTy->getIsNullable() && mtTy->getIsNullable()) {
-                            wasNullable = true;
-                            fcArgTy->setIsNullable(false);
-                        }
-                        for (auto mtArgTy : mtTy->getTypes()) {
-                            if (this->typesCompatible(mtArgTy, fcArgTy) || this->_isDefinitionOf(fcArgTy, mtArgTy)) {
-                                i += 1;
-                                found = true;
-                                break;
-                            } else {
-                                LILString conversionName = LILNodeToString::stringify(fcArgTy.get());
-                                conversionName += "_to_";
-                                conversionName += LILNodeToString::stringify(mtArgTy.get());
-                                if (conversions.count(conversionName)) {
-                                    i += 1;
-                                    found = true;
-                                    break;
-                                }
-                            }
-                        }
-                        if (wasNullable) {
-                            fcArgTy->setIsNullable(true);
-                        }
-                    }
-                    if (found) {
+                auto callVal = fcArgs.at(i);
+                if (callVal->getNodeType() == NodeTypeAssignment) {
+                    auto as = std::static_pointer_cast<LILAssignment>(callVal);
+                    auto subject = as->getSubject();
+                    if (subject->getNodeType() != NodeTypeVarName) {
+                        std::cerr << "!!!!!!! SUBJECT OF ASSIGNMENT WAS NOT VAR NAME FAIL !!!!!!!\n";
                         continue;
                     }
+                    auto subjVn = std::static_pointer_cast<LILVarName>(subject);
+                    auto vnName = subjVn->getName();
+                    if (vdName != vnName) {
+                        LILErrorMessage ei;
+                        ei.message =  "Function call: "+fnName+" has no argument named "+ vnName;
+                        LILNode::SourceLocation sl = fc->getSourceLocation();
+                        ei.file = sl.file;
+                        ei.line = sl.line;
+                        ei.column = sl.column;
+                        this->errors.push_back(ei);
+                        return;
+                    }
                 }
-                else if (fcArgTy->isA(TypeTypeMultiple))
-                {
-                    auto mtTy = std::static_pointer_cast<LILMultipleType>(fcArgTy);
-                    bool found = false;
+                //all good
+                i += 1;
+            } else {
+                if (fcArgs.size() > i) {
+                    auto callVal = fcArgs.at(i);
+                    if (callVal->getNodeType() == NodeTypeAssignment) {
+                        auto as = std::static_pointer_cast<LILAssignment>(callVal);
+                        auto subject = as->getSubject();
+                        if (subject->getNodeType() != NodeTypeVarName) {
+                            std::cerr << "!!!!!!! SUBJECT OF ASSIGNMENT WAS NOT VAR NAME FAIL !!!!!!!\n";
+                            continue;
+                        }
+                        auto subjVn = std::static_pointer_cast<LILVarName>(subject);
+                        auto vnName = subjVn->getName();
+                        if (vdName == vnName) {
+                            //the argument was used because the name matched
+                            i += 1;
+                        }
+                    } else {
+                        //the argument was used because a value was passed
+                        i += 1;
+                    }
+                }
+            }
+        } else {
+            if (fcArgs.size() <= i) {
+                LILErrorMessage ei;
+                ei.message =  "Missing argument in call: "+fnName+" needs "+LILString::number((LILUnitI64)fnTyArgs.size()-(isMethod?1:0)) + " arguments and was given " + LILString::number((LILUnitI64)argNum-(isMethod?1:0));
+                LILNode::SourceLocation sl = fc->getSourceLocation();
+                ei.file = sl.file;
+                ei.line = sl.line;
+                ei.column = sl.column;
+                this->errors.push_back(ei);
+                return;
+            }
+        }
+    }
+
+    auto conversions = this->getRootNode()->getConversions();
+    
+    i = 0;
+    for (auto fnTyArg : fnTyArgs) {
+        if (fcArgTys.size() > i) {
+            auto fcArgTy = fcArgTys[i];
+            
+            std::shared_ptr<LILType> argTy;
+            LILString argName;
+            if (fnTyArg->isA(NodeTypeType))
+            {
+                argTy = std::static_pointer_cast<LILType>(fnTyArg);
+                argName = LILString::number((LILUnitI64)i+1);
+            }
+            else if (fnTyArg->isA(NodeTypeVarDecl))
+            {
+                argTy = fnTyArg->getType();
+                auto vd = std::static_pointer_cast<LILVarDecl>(fnTyArg);
+                argName = vd->getName();
+                if (argName == "@self") {
+                    continue;
+                }
+            }
+            if (argTy->isA(TypeTypeMultiple)) {
+                auto mtTy = std::static_pointer_cast<LILMultipleType>(argTy);
+                bool found = false;
+                if (fcArgTy->isA(TypeTypeMultiple)) {
+                    auto fcArgMultipleTy = std::static_pointer_cast<LILMultipleType>(fcArgTy);
+                    bool allFound = true;
+                    for (auto fcArgMtTy : fcArgMultipleTy->getTypes()) {
+                        found = false;
+                        for (auto mtArgTy : mtTy->getTypes()) {
+                            if (fcArgMtTy->equalTo(mtArgTy) || this->_isDefinitionOf(fcArgMtTy, mtArgTy)) {
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found) {
+                            allFound = false;
+                            break;
+                        }
+                    }
+                    found = allFound;
+                } else {
+                    bool wasNullable = false;
+                    if (fcArgTy->getIsNullable() && mtTy->getIsNullable()) {
+                        wasNullable = true;
+                        fcArgTy->setIsNullable(false);
+                    }
                     for (auto mtArgTy : mtTy->getTypes()) {
-                        if (this->typesCompatible(argTy, mtArgTy) || this->_isDefinitionOf(mtArgTy, argTy)) {
+                        if (this->typesCompatible(mtArgTy, fcArgTy) || this->_isDefinitionOf(fcArgTy, mtArgTy)) {
                             i += 1;
                             found = true;
                             break;
                         } else {
-                            LILString conversionName = LILNodeToString::stringify(mtArgTy.get());
+                            LILString conversionName = LILNodeToString::stringify(fcArgTy.get());
                             conversionName += "_to_";
-                            conversionName += LILNodeToString::stringify(argTy.get());
+                            conversionName += LILNodeToString::stringify(mtArgTy.get());
                             if (conversions.count(conversionName)) {
                                 i += 1;
                                 found = true;
@@ -391,45 +431,74 @@ void LILTypeValidator::_validate(std::shared_ptr<LILFunctionCall> fc)
                             }
                         }
                     }
-                    if (found) {
-                        continue;
+                    if (wasNullable) {
+                        fcArgTy->setIsNullable(true);
                     }
                 }
-                else
-                {
-                    if (this->typesCompatible(argTy, fcArgTy) || this->_isDefinitionOf(fcArgTy, argTy)) {
+                if (found) {
+                    continue;
+                }
+            }
+            else if (fcArgTy->isA(TypeTypeMultiple))
+            {
+                auto mtTy = std::static_pointer_cast<LILMultipleType>(fcArgTy);
+                bool found = false;
+                for (auto mtArgTy : mtTy->getTypes()) {
+                    if (this->typesCompatible(argTy, mtArgTy) || this->_isDefinitionOf(mtArgTy, argTy)) {
                         i += 1;
-                        continue;
+                        found = true;
+                        break;
                     } else {
-                        LILString conversionName = fcArgTy->getStrongTypeName();
-                        if (conversionName.length() == 0) {
-                            conversionName = LILNodeToString::stringify(fcArgTy.get());
-                        }
+                        LILString conversionName = LILNodeToString::stringify(mtArgTy.get());
                         conversionName += "_to_";
-                        auto targetTyName = argTy->getStrongTypeName();
-                        if (targetTyName.length() > 0) {
-                            conversionName += targetTyName;
-                        } else {
-                            conversionName += LILNodeToString::stringify(argTy.get());
-                        }
+                        conversionName += LILNodeToString::stringify(argTy.get());
                         if (conversions.count(conversionName)) {
                             i += 1;
-                            continue;
+                            found = true;
+                            break;
                         }
                     }
                 }
-
-                LILErrorMessage ei;
-                ei.message =  "Type mismatch while calling " + fc->getName() + ": argument " + argName + " needs type "+LILNodeToString::stringify(argTy.get())+" but was given "+LILNodeToString::stringify(fcArgTy.get());
-                LILNode::SourceLocation sl = fcArgs[i]->getSourceLocation();
-                ei.file = sl.file;
-                ei.line = sl.line;
-                ei.column = sl.column;
-                this->errors.push_back(ei);
+                if (found) {
+                    continue;
+                }
             }
-
-            i += 1;
+            else
+            {
+                if (this->typesCompatible(argTy, fcArgTy) || this->_isDefinitionOf(fcArgTy, argTy)) {
+                    i += 1;
+                    continue;
+                } else {
+                    LILString conversionName = fcArgTy->getStrongTypeName();
+                    if (conversionName.length() == 0) {
+                        conversionName = LILNodeToString::stringify(fcArgTy.get());
+                    }
+                    conversionName += "_to_";
+                    auto targetTyName = argTy->getStrongTypeName();
+                    if (targetTyName.length() > 0) {
+                        conversionName += targetTyName;
+                    } else {
+                        conversionName += LILNodeToString::stringify(argTy.get());
+                    }
+                    if (conversions.count(conversionName)) {
+                        i += 1;
+                        continue;
+                    }
+                }
+            }
+            
+            LILErrorMessage ei;
+            ei.message =  "Type mismatch while calling " + fnName + ": argument " + argName + " needs type "+LILNodeToString::stringify(argTy.get())+" but was given "+LILNodeToString::stringify(fcArgTy.get());
+            LILNode::SourceLocation sl = fcArgs[i]->getSourceLocation();
+            ei.file = sl.file;
+            ei.line = sl.line;
+            ei.column = sl.column;
+            this->errors.push_back(ei);
+        } else {
+            
         }
+        
+        i += 1;
     }
 }
 
