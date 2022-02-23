@@ -2381,7 +2381,9 @@ bool LILPreprocessor::_processPasteInstr(std::shared_ptr<LILInstruction> value)
             auto & nbb = this->_nodeBuffer.back();
             auto snipBody = snippet->getBody();
             if (snipBody.size() > 0) {
-                nbb.insert(nbb.end(), snipBody.begin(), snipBody.end());
+                for (size_t i = 0; i<snipBody.size(); i+=1) {
+                    nbb.push_back(snipBody[i]->clone());
+                }
             } else {
                 return true;
             }
