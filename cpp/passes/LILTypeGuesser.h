@@ -23,6 +23,7 @@
 #include "LILBoolLiteral.h"
 #include "LILClassDecl.h"
 #include "LILCombinator.h"
+#include "LILEnum.h"
 #include "LILExpression.h"
 #include "LILFilter.h"
 #include "LILFlag.h"
@@ -87,6 +88,7 @@ namespace LIL
         void _process(LILStringFunction * value);
         void _process(LILNullLiteral * value);
         void _process(LILVarDecl * value);
+        void _process(LILEnum * value);
         void _process(LILClassDecl * value);
         void _process(LILObjectDefinition * value);
         void _process(LILAssignment * value);
@@ -131,6 +133,7 @@ namespace LIL
         std::shared_ptr<LILType> findTypeFromCallers(const std::vector<std::shared_ptr<LILNode>> & nodes, const std::shared_ptr<LILVarDecl> & vd, size_t argCount) const;
         std::shared_ptr<LILType> nullsToNullableTypes(std::shared_ptr<LILType> ty) const;
         std::shared_ptr<LILType> findTypeForValueList(std::shared_ptr<LILValueList> value) const;
+        std::shared_ptr<LILType> findTypeForEnum(LILEnum * value) const;
     };
 }
 

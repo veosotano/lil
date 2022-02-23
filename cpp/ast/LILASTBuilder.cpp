@@ -21,6 +21,7 @@
 #include "LILCombinator.h"
 #include "LILConversionDecl.h"
 #include "LILDocumentation.h"
+#include "LILEnum.h"
 #include "LILExpression.h"
 #include "LILFilter.h"
 #include "LILFlag.h"
@@ -396,6 +397,12 @@ void LILASTBuilder::receiveNodeStart(NodeType nodeType)
         {
             this->state.push_back(BuilderStateDocumentation);
             this->currentContainer.push_back(std::make_shared<LILDocumentation>());
+            break;
+        }
+        case NodeTypeEnum:
+        {
+            this->state.push_back(BuilderStateEnum);
+            this->currentContainer.push_back(std::make_shared<LILEnum>());
             break;
         }
         default:
@@ -836,6 +843,16 @@ void LILASTBuilder::receiveNodeCommit()
                 if (childDoc->getContent().length() > 0) {
                     doc->add(this->currentNode);
                 }
+            }
+            break;
+        }
+        case BuilderStateEnum:
+        {
+            auto enm = std::static_pointer_cast<LILEnum>(this->currentContainer.back());
+            if (this->currentNode->getNodeType() == NodeTypeType) {
+                enm->setType(std::static_pointer_cast<LILType>(this->currentNode));
+            } else {
+                enm->addValue(this->currentNode);
             }
             break;
         }
@@ -1419,6 +1436,15 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
             auto saTy = std::static_pointer_cast<LILStaticArrayType>(this->currentContainer.back());
             if (eventType == ParserEventType) {
                 saTy->setReceivesType(true);
+            }
+            break;
+        }
+            
+        case BuilderStateEnum:
+        {
+            if (eventType == ParserEventVarName) {
+                auto enm = std::static_pointer_cast<LILEnum>(this->currentContainer.back());
+                enm->setName(data);
             }
             break;
         }

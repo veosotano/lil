@@ -123,9 +123,12 @@ void LILPathExpander::_process(LILValuePath * vp)
     } else {
         firstNode = nodes.front();
         if (firstNode->isA(NodeTypeVarName)) {
-            auto remoteNode = this->findNodeForVarName(std::static_pointer_cast<LILVarName>(firstNode).get());
+            auto remoteNode = this->recursiveFindNode(firstNode);
             std::shared_ptr<LILType> subjTy;
             if (remoteNode) {
+                if (remoteNode->getNodeType() == NodeTypeEnum) {
+                    return;
+                }
                 subjTy = remoteNode->getType();
                 if (!subjTy && remoteNode->isA(NodeTypeVarDecl)) {
                     auto vd = std::static_pointer_cast<LILVarDecl>(remoteNode);
@@ -361,7 +364,6 @@ void LILPathExpander::_process(LILObjectDefinition * objdef)
 {
     LILString classNameStr = objdef->getType()->getName();
     std::string className = classNameStr.data();
-    
     auto classDecl = this->findClassWithName(classNameStr);
     
     for (auto node : objdef->getNodes()) {

@@ -1139,6 +1139,13 @@ void LILPreprocessor::_importNodeIfNeeded(std::vector<std::shared_ptr<LILNode>> 
             //ignore
             break;
         }
+            
+        case NodeTypeEnum:
+        {
+            node->setIsExported(isExported);
+            newNodes->push_back(node);
+            break;
+        }
 
         default:
             std::cerr << "UNIMPLEMENTED FAIL !!!!!! \n\n";

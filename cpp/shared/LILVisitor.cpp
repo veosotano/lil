@@ -14,6 +14,7 @@
 
 #include "LILVisitor.h"
 #include "LILClassDecl.h"
+#include "LILEnum.h"
 #include "LILErrorMessage.h"
 #include "LILFlowControl.h"
 #include "LILFunctionCall.h"
@@ -156,6 +157,9 @@ std::shared_ptr<LILNode> LILVisitor::findNodeForPropertyName(LILPropertyName * n
             if (!ret) {
                 ret = this->findExpandedField(classDecl, pnName);
             }
+        } else if (gpTy == NodeTypeEnum) {
+            auto enm = std::static_pointer_cast<LILEnum>(grandpa);
+            ret = enm->getValueNamed(name->getName());
         }
     }
     return ret;

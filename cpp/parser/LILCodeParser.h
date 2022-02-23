@@ -81,6 +81,7 @@ namespace LIL
         bool readAliasDecl();
         bool readTypeDecl();
         bool readConversionDecl();
+        bool readEnum();
         bool readAssignment(bool allowValuePath, bool firstIsVar, bool firstPartAlreadyRead = false);
         //readVals auto commits
         bool readVals();

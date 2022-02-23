@@ -24,6 +24,7 @@
 #include "LILCombinator.h"
 #include "LILConversionDecl.h"
 #include "LILDocumentation.h"
+#include "LILEnum.h"
 #include "LILExpression.h"
 #include "LILFilter.h"
 #include "LILFlag.h"
@@ -78,6 +79,7 @@ namespace LIL
         LILToStrInfo _stringify(LILAliasDecl * value);
         LILToStrInfo _stringify(LILTypeDecl * value);
         LILToStrInfo _stringify(LILConversionDecl * value);
+        LILToStrInfo _stringify(LILEnum * value);
         LILToStrInfo _stringify(LILClassDecl * value);
         LILToStrInfo _stringify(LILObjectDefinition * value);
         LILToStrInfo _stringify(LILAssignment * value);

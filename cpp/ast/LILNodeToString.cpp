@@ -21,6 +21,7 @@
 #include "LILClassDecl.h"
 #include "LILCombinator.h"
 #include "LILConversionDecl.h"
+#include "LILEnum.h"
 #include "LILExpression.h"
 #include "LILFilter.h"
 #include "LILFlag.h"
@@ -397,6 +398,19 @@ LILString LILNodeToString::stringify(LILNode * node)
         {
             auto value = static_cast<LILConversionDecl *>(node);
             return value->_srcTyName + " => " + value->_destTyName;
+        }
+        case NodeTypeEnum:
+        {
+            auto value = static_cast<LILEnum *>(node);
+            LILString tempstr;
+            auto children = value->getChildNodes();
+            for (size_t i = 0, j = children.size(); i<j; i+=1) {
+                tempstr += LILNodeToString::stringify(children[i].get());
+                if (i<j-1) {
+                    tempstr += ", ";
+                }
+            }
+            return tempstr;
         }
         case NodeTypeClassDecl:
         {

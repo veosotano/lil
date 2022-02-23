@@ -17,6 +17,7 @@
 #include "LILASTBuilder.h"
 #include "LILAssignment.h"
 #include "LILConversionDecl.h"
+#include "LILEnum.h"
 #include "LILExpression.h"
 #include "LILFlowControl.h"
 #include "LILFlowControlCall.h"
@@ -126,6 +127,11 @@ bool LILColorMaker::processColorInstr(std::shared_ptr<LILNode> node)
         case NodeTypeConversionDecl:
         {
             auto value = std::static_pointer_cast<LILConversionDecl>(node);
+            return this->_processColorInstr(value);
+        }
+        case NodeTypeEnum:
+        {
+            auto value = std::static_pointer_cast<LILEnum>(node);
             return this->_processColorInstr(value);
         }
         case NodeTypeObjectDefinition:
@@ -668,6 +674,14 @@ bool LILColorMaker::_processColorInstr(std::shared_ptr<LILConversionDecl> value)
     }
     if (hasChangesBody) {
         value->setBody(std::move(resultNodes));
+    }
+    return false;
+}
+
+bool LILColorMaker::_processColorInstr(std::shared_ptr<LILEnum> value)
+{
+    for (auto node : value->getValues()) {
+        this->processColorInstr(node);
     }
     return false;
 }

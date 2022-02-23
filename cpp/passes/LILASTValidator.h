@@ -25,6 +25,7 @@
 #include "LILCombinator.h"
 #include "LILConversionDecl.h"
 #include "LILDocumentation.h"
+#include "LILEnum.h"
 #include "LILExpression.h"
 #include "LILFilter.h"
 #include "LILFlag.h"
@@ -84,6 +85,7 @@ namespace LIL
         void _validate(const std::shared_ptr<LILAliasDecl> & value);
         void _validate(const std::shared_ptr<LILTypeDecl> & value);
         void _validate(const std::shared_ptr<LILConversionDecl> & value);
+        void _validate(const std::shared_ptr<LILEnum> & value);
         void _validate(const std::shared_ptr<LILClassDecl> & value);
         void _validate(const std::shared_ptr<LILObjectDefinition> & value);
         void _validate(const std::shared_ptr<LILAssignment> & value);

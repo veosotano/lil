@@ -780,6 +780,9 @@ bool LILCodeParser::isRule() const
         if (tokenStr == "conversion") {
             return false;
         }
+        if (tokenStr == "enum") {
+            return false;
+        }
         if (this->isFunctionDecl())
         {
             return false;
@@ -1394,6 +1397,7 @@ bool LILCodeParser::canHaveExpression(NodeType nodeType) const
         case NodeTypeIndexAccessor:
         case NodeTypeSelectorChain:
         case NodeTypeConversionDecl:
+        case NodeTypeEnum:
         case NodeTypeSimpleSelector:
         case NodeTypeFlowControlCall:
         case NodeTypeStaticArrayType:
@@ -2106,6 +2110,100 @@ bool LILCodeParser::readConversionDecl()
     LIL_END_NODE_SKIP(false)
 }
 
+bool LILCodeParser::readEnum()
+{
+    LIL_START_NODE(NodeTypeEnum)
+    bool valid = true;
+
+    d->receiver->receiveNodeData(ParserEventEnum, d->currentToken->getString());
+
+    this->readNextToken();
+    LIL_CHECK_FOR_END
+
+    if (d->currentToken->isA(TokenTypeDot)) {
+        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+        this->readNextToken();
+        LIL_CHECK_FOR_END
+        
+        bool tyValid = this->readType();
+        if (tyValid) {
+            d->receiver->receiveNodeCommit();
+        }
+    }
+    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+
+    //read the enum name
+    LIL_EXPECT(TokenTypeIdentifier, "identifier")
+
+    LILString name = d->currentToken->getString();
+
+    d->receiver->receiveNodeData(ParserEventVarName, d->currentToken->getString());
+
+    std::shared_ptr<LILToken> theIdentifier = d->currentToken;
+
+    this->readNextToken();
+    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+
+    LIL_EXPECT(TokenTypeBlockOpen, "block open")
+    d->receiver->receiveNodeData(ParserEventBody, "");
+    d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+    this->readNextToken();
+    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+
+    LIL_EXPECT(TokenTypeIdentifier, "identifier")
+
+    bool done = false;
+    while (!done) {
+        done = true;
+
+        if (!d->currentToken->isA(TokenTypeIdentifier)) {
+            break;
+        }
+
+        if (this->isAssignment()) {
+            bool asgmtValid = this->readAssignment(false, false);
+            if (asgmtValid) {
+                d->receiver->receiveNodeCommit();
+            } else {
+                LIL_CANCEL_NODE
+            }
+            LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+            if (d->currentToken->isA(TokenTypeSemicolon)) {
+                done = false;
+                d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+                this->readNextToken();
+                LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+            }
+        } else {
+            bool pNameValid = this->readPropertyName();
+            if (pNameValid) {
+                d->receiver->receiveNodeCommit();
+            } else {
+                LIL_CANCEL_NODE
+            }
+            if (d->currentToken->isA(TokenTypeComma) || d->currentToken->isA(TokenTypeSemicolon)) {
+                done = false;
+                d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+                this->readNextToken();
+                LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+            }
+        }
+    }
+    
+    if (!this->atEndOfSource())
+    {
+        LIL_EXPECT(TokenTypeBlockClose, "block close")
+        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+        this->readNextToken();
+    }
+    
+    if (!valid) {
+        LIL_CANCEL_NODE
+    }
+
+    LIL_END_NODE_SKIP(false)
+}
+
 bool LILCodeParser::readAssignment(bool allowValuePath, bool firstIsVar, bool firstPartAlreadyRead)
 {
     LIL_START_NODE(NodeTypeAssignment)
@@ -2448,6 +2546,9 @@ bool LILCodeParser::readSingleValue(NodeType &nodeType)
         }
         if (tokenStr == "conversion") {
             return this->readConversionDecl();
+        }
+        if (tokenStr == "enum") {
+            return this->readEnum();
         }
         if (this->isFunctionDecl())
         {

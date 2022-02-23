@@ -18,6 +18,7 @@
 #include "LILClassDecl.h"
 #include "LILConversionDecl.h"
 #include "LILDocumentation.h"
+#include "LILEnum.h"
 #include "LILFunctionDecl.h"
 #include "LILInstruction.h"
 #include "LILNodeToString.h"
@@ -239,6 +240,15 @@ void LILRootNode::add(std::shared_ptr<LILNode> node, bool addToNodeTree)
         case NodeTypeRule:
         {
             this->addRule(std::static_pointer_cast<LILRule>(node));
+            break;
+        }
+        case NodeTypeEnum:
+        {
+            auto enm = std::static_pointer_cast<LILEnum>(node);
+            if (addToNodeTree) {
+                this->addNode(enm);
+            }
+            this->setLocalVariable(enm->getName(), enm);
             break;
         }
         default:

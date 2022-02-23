@@ -145,6 +145,12 @@ void LILASTValidator::validate(const std::shared_ptr<LILNode> & node)
             this->_validate(value);
             break;
         }
+        case NodeTypeEnum:
+        {
+            std::shared_ptr<LILEnum> value = std::static_pointer_cast<LILEnum>(node);
+            this->_validate(value);
+            break;
+        }
         case NodeTypeClassDecl:
         {
             std::shared_ptr<LILClassDecl> value = std::static_pointer_cast<LILClassDecl>(node);
@@ -607,6 +613,27 @@ void LILASTValidator::_validate(const std::shared_ptr<LILConversionDecl> & value
         ei.line = sl.line;
         ei.column = sl.column;
         this->errors.push_back(ei);
+    }
+}
+
+void LILASTValidator::_validate(const std::shared_ptr<LILEnum> & value)
+{
+    auto children = value->getChildNodes();
+    for (size_t i=0, j=children.size(); i<j; ++i) {
+        NodeType childType = children[i]->getNodeType();
+        switch (childType) {
+            case NodeTypePropertyName:
+            case NodeTypeAssignment:
+            case NodeTypeInstruction:
+            {
+                break;
+            }
+            default:
+            {
+                this->illegalNodeType(children[i].get(), value.get());
+                return;
+            }
+        }
     }
 }
 

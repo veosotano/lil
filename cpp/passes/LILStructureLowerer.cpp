@@ -153,6 +153,7 @@ void LILStructureLowerer::process(std::shared_ptr<LILNode> node)
         case NodeTypeAliasDecl:
         case NodeTypeTypeDecl:
         case NodeTypeConversionDecl:
+        case NodeTypeEnum:
         {
             //do nothing
             break;

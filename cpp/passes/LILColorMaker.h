@@ -21,6 +21,7 @@ namespace LIL
 {
     class LILAssignment;
     class LILConversionDecl;
+    class LILEnum;
     class LILExpression;
     class LILFlowControl;
     class LILFlowControlCall;
@@ -58,6 +59,7 @@ namespace LIL
         bool _processColorInstr(std::shared_ptr<LILInstruction> value);
         bool _processColorInstr(std::shared_ptr<LILValueList> value);
         bool _processColorInstr(std::shared_ptr<LILConversionDecl> value);
+        bool _processColorInstr(std::shared_ptr<LILEnum> value);
     };
 }
 

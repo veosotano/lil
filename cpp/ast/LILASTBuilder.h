@@ -66,6 +66,7 @@ namespace LIL
         BuilderStateValueList,
         BuilderStateIndexAccessor,
         BuilderStateDocumentation,
+        BuilderStateEnum,
     };
     class LILNode;
     class LILRootNode;

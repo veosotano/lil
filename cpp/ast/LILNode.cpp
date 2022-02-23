@@ -73,6 +73,7 @@ bool LILNode::isContainerNode(NodeType nodeType)
         case NodeTypeAliasDecl:
         case NodeTypeTypeDecl:
         case NodeTypeConversionDecl:
+        case NodeTypeEnum:
         case NodeTypeAssignment:
         case NodeTypeExpression:
         case NodeTypeUnaryExpression:

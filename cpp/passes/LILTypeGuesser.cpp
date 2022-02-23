@@ -350,6 +350,12 @@ void LILTypeGuesser::process(LILNode * node)
             //do nothing
             break;
         }
+        case NodeTypeEnum:
+        {
+            LILEnum * value = static_cast<LILEnum *>(node);
+            this->_process(value);
+            break;
+        }
         case NodeTypeClassDecl:
         {
             LILClassDecl * value = static_cast<LILClassDecl *>(node);
@@ -685,6 +691,17 @@ void LILTypeGuesser::_process(LILVarDecl * value)
             auto type = this->getNodeType(initValue);
             if(type)
                 value->setType(type);
+        }
+    }
+}
+
+void LILTypeGuesser::_process(LILEnum * value)
+{
+    auto ty = value->getType();
+    if (!ty) {
+        auto enumTy = this->findTypeForEnum(value);
+        if (enumTy) {
+            value->setType(enumTy);
         }
     }
 }
@@ -1196,7 +1213,13 @@ std::shared_ptr<LILType> LILTypeGuesser::recursiveFindTypeFromAncestors(std::sha
                     if (fldTy) {
                         return fldTy;
                     }
-                } else {
+                }
+                else if (grandpa->isA(NodeTypeEnum))
+                {
+                    return grandpa->getType();
+                }
+                else
+                {
                     auto subject = asgmt->getSubject();
                     if (subject->isA(NodeTypeVarName)) {
                         return this->findTypeForVarName(std::static_pointer_cast<LILVarName>(subject));
@@ -1462,6 +1485,18 @@ std::shared_ptr<LILType> LILTypeGuesser::getNodeType(std::shared_ptr<LILNode> no
                 return objTy;
             }
             return nullptr;
+        }
+        case NodeTypeEnum:
+        {
+            auto enm = std::static_pointer_cast<LILEnum>(node);
+            auto ty = enm->getType();
+            if (!ty) {
+                ty = this->findTypeForEnum(enm.get());
+                if (ty) {
+                    enm->setType(ty);
+                }
+            }
+            return ty;
         }
         default:
             return nullptr;
@@ -1839,12 +1874,15 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForVarName(std::shared_ptr<LILV
 std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(std::shared_ptr<LILValuePath> vp) const
 {
     auto nodes = vp->getNodes();
-    std::shared_ptr<LILNode> firstNode;
+    std::shared_ptr<LILNode> currentNode;
     std::shared_ptr<LILType> currentTy;
     if (nodes.size() == 1) {
-        firstNode = nodes.front();
-        if (firstNode->isA(NodeTypeVarName)) {
-            return this->findTypeForVarName(std::static_pointer_cast<LILVarName>(firstNode));
+        currentNode = nodes.front();
+        if (currentNode->isA(NodeTypeVarName)) {
+            auto remoteNode = this->recursiveFindNode(currentNode);
+            if (remoteNode) {
+                return this->getNodeType(remoteNode);
+            }
         }
     } else if (nodes.size() > 1){
         size_t startIndex = 1;
@@ -1859,16 +1897,20 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(std::shared_ptr<LI
             }
 
         } else {
-            firstNode = nodes.front();
-            if (firstNode->isA(NodeTypeVarName)) {
-                std::shared_ptr<LILType> subjTy = this->findTypeForVarName(std::static_pointer_cast<LILVarName>(firstNode));
-                if (subjTy) {
-                    currentTy = subjTy;
-                } else {
+            currentNode = nodes.front();
+            if (currentNode->isA(NodeTypeVarName)) {
+                currentNode = this->recursiveFindNode(currentNode);
+                if (currentNode) {
+                    currentTy = currentNode->getType();
+                    if (!currentTy) {
+                        currentTy = this->getNodeType(currentNode);
+                    }
+                }
+                if (!currentTy) {
                     std::cerr << "SUBJ TY WAS NULL FAIL!!!!\n";
                     return nullptr;
                 }
-            } else if (firstNode->isA(NodeTypePropertyName)) {
+            } else if (currentNode->isA(NodeTypePropertyName)) {
                 auto parentNode = vp->getParentNode();
                 if (parentNode->isA(NodeTypeAssignment)) {
                     auto grandpaNode = parentNode->getParentNode();
@@ -1883,8 +1925,9 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(std::shared_ptr<LI
                     return nullptr;
                 }
             }
-            else if (firstNode->isA(SelectorTypeSelfSelector)) {
-                auto classDecl = this->findAncestorClass(firstNode);
+            else if (currentNode->isA(SelectorTypeSelfSelector)) {
+                auto classDecl = this->findAncestorClass(currentNode);
+                currentNode = classDecl;
                 currentTy = classDecl->getType();
             }
         }
@@ -1902,39 +1945,51 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(std::shared_ptr<LI
                         auto ptrTy = std::static_pointer_cast<LILPointerType>(currentTy);
                         currentTy = ptrTy->getArgument();
                     }
-                    if (!currentTy->isA(TypeTypeObject)) {
-                        std::cerr << "CURRENT TY WAS NOT OBJECT TY FAIL!!!!\n";
-                        return nullptr;
-                    }
-                    auto className = currentTy->getName().data();
-                    auto classDecl = this->findClassWithName(className);
-                    if (!classDecl) {
-                        std::cerr << "CLASS "+className+" NOT FOUND FAIL!!!!\n";
-                        return nullptr;
-                    }
-                    auto field = classDecl->getFieldNamed(pnName);
-                    if (!field) {
-                        field = this->findExpandedField(classDecl, pnName);
-                        if(field) {
-                            classDecl = this->findAncestorClass(field);
+                    auto currentNodeTy = currentNode->getNodeType();
+                    if (currentNodeTy == NodeTypeClassDecl || currentNodeTy == NodeTypeVarDecl ) {
+                        if (currentTy->getTypeType() != TypeTypeObject) {
+                            std::cerr << "CURRENT TY WAS NOT OBJECT TY FAIL!!!!\n";
+                            return nullptr;
                         }
-                    }
-                    if (!field) {
-                        std::cerr << "FIELD WAS NULL FAIL!!!!\n";
-                        return nullptr;
-                    }
-                    if (field->getNodeType() == NodeTypeVarDecl) {
-                        auto vd = std::static_pointer_cast<LILVarDecl>(field);
-                        if (vd->getIsVVar()) {
-                            auto retTy = vd->getReturnType();
-                            if (retTy) {
-                                currentTy = retTy;
-                                break;
+                        auto className = currentTy->getName().data();
+                        auto classDecl = this->findClassWithName(className);
+                        if (!classDecl) {
+                            std::cerr << "CLASS "+className+" NOT FOUND FAIL!!!!\n";
+                            return nullptr;
+                        }
+                        auto field = classDecl->getFieldNamed(pnName);
+                        if (!field) {
+                            field = this->findExpandedField(classDecl, pnName);
+                            if(field) {
+                                classDecl = this->findAncestorClass(field);
                             }
                         }
+                        if (!field) {
+                            std::cerr << "FIELD WAS NULL FAIL!!!!\n";
+                            return nullptr;
+                        }
+                        if (field->getNodeType() == NodeTypeVarDecl) {
+                            auto vd = std::static_pointer_cast<LILVarDecl>(field);
+                            if (vd->getIsVVar()) {
+                                auto retTy = vd->getReturnType();
+                                if (retTy) {
+                                    currentTy = retTy;
+                                    break;
+                                }
+                            }
+                        }
+                        auto fieldTy = this->getNodeType(field);
+                        currentTy = fieldTy;
+                        
+                    } else if (currentNode->getNodeType() == NodeTypeEnum) {
+                        auto enm = std::static_pointer_cast<LILEnum>(currentNode);
+                        auto enumTy = enm->getType();
+                        if (!enumTy) {
+                            enumTy = this->findTypeForEnum(enm.get());
+                        }
+                        return enumTy;
                     }
-                    auto fieldTy = this->getNodeType(field);
-                    currentTy = fieldTy;
+                    
                     break;
                 }
                 case NodeTypeFunctionCall:
@@ -2260,4 +2315,29 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForValueList(std::shared_ptr<LI
     }
     
     return mTy;
+}
+
+
+std::shared_ptr<LILType> LILTypeGuesser::findTypeForEnum(LILEnum * value) const
+{
+    std::shared_ptr<LILType> ret;
+    for (const auto & val : value->getValues()) {
+        auto ty = val->getType();
+        if (!ty) {
+            auto valTy = this->getNodeType(val);
+            if (valTy) {
+                ty = valTy;
+            }
+        }
+        if (ty) {
+            if (!ret) {
+                ret = ty;
+            } else if (!ret->equalTo(ty)) {
+                if (ty->getBitWidth() > ret->getBitWidth()) {
+                    ret = ty;
+                }
+            }
+        }
+    }
+    return ret;
 }

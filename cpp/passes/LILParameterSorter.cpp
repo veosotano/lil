@@ -105,6 +105,7 @@ void LILParameterSorter::process(LILNode * node)
         case NodeTypeAliasDecl:
         case NodeTypeTypeDecl:
         case NodeTypeConversionDecl:
+        case NodeTypeEnum:
         {
             //do nothing
             break;

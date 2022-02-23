@@ -24,6 +24,7 @@
 #include "LILConfigGetter.h"
 #include "LILConversionInserter.h"
 #include "LILConstantFolder.h"
+#include "LILEnumLowerer.h"
 #include "LILFieldSorter.h"
 #include "LILTypeValidator.h"
 #include "LILMethodInserter.h"
@@ -444,6 +445,15 @@ void LILCodeUnit::runPasses()
     //path expander
     auto pathExpander = new LILPathExpander();
     passes.push_back(pathExpander);
+    if (verbose) {
+        auto stringVisitor = new LILToStringVisitor();
+        stringVisitor->setPrintHeadline(false);
+        passes.push_back(stringVisitor);
+    }
+
+    //enum lowering
+    auto enumLowerer = new LILEnumLowerer();
+    passes.push_back(enumLowerer);
     if (verbose) {
         auto stringVisitor = new LILToStringVisitor();
         stringVisitor->setPrintHeadline(false);

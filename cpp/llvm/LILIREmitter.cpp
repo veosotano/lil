@@ -17,6 +17,7 @@
 
 #include "LILFunctionDecl.h"
 #include "LILFunctionType.h"
+#include "LILEnum.h"
 #include "LILIndexAccessor.h"
 #include "LILMultipleType.h"
 #include "LILNodeToString.h"
@@ -274,6 +275,7 @@ llvm::Value * LILIREmitter::emit(LILNode * node)
         }
         case NodeTypeAliasDecl:
         case NodeTypeTypeDecl:
+        case NodeTypeEnum:
         {
             //do nothing
             return nullptr;
@@ -1605,7 +1607,7 @@ llvm::Value * LILIREmitter::_emit(LILValuePath * value)
     const auto & childNodes = value->getNodes();
     if (childNodes.size() == 1)
     {
-        return this->emit(childNodes[0].get());
+        return this->emit(childNodes.at(0).get());
     }
     else if (childNodes.size() > 1)
     {
@@ -1618,18 +1620,32 @@ llvm::Value * LILIREmitter::_emit(LILValuePath * value)
 
         if (firstNode->isA(NodeTypeVarName)) {
             auto vn = std::static_pointer_cast<LILVarName>(firstNode);
-            std::shared_ptr<LILNode> subjectNode = this->findNodeForVarName(vn.get());
-            if (subjectNode && subjectNode->isA(NodeTypeVarDecl)) {
-                auto vd = std::static_pointer_cast<LILVarDecl>(subjectNode);
-                instanceName = vd->getName();
-                llvmSubject = d->namedValues[instanceName.data()];
-                stringRep = vn->getName();
-                auto vdTy = vd->getType();
-                if (!vdTy) {
-                    std::cerr << "TYPE OF VAR DECL WAS NULL FAIL !!!!!!!!!!!!!!!!\n";
-                    return nullptr;
+            std::shared_ptr<LILNode> subjectNode = this->recursiveFindNode(vn);
+            if (subjectNode) {
+                if (subjectNode->isA(NodeTypeVarDecl)) {
+                    auto vd = std::static_pointer_cast<LILVarDecl>(subjectNode);
+                    instanceName = vd->getName();
+                    llvmSubject = d->namedValues[instanceName.data()];
+                    stringRep = vn->getName();
+                    auto vdTy = vd->getType();
+                    if (!vdTy) {
+                        std::cerr << "TYPE OF VAR DECL WAS NULL FAIL !!!!!!!!!!!!!!!!\n";
+                        return nullptr;
+                    }
+                    currentTy = vdTy;
+                } else if (subjectNode->isA(NodeTypeEnum)) {
+                    auto enm = std::static_pointer_cast<LILEnum>(subjectNode);
+                    auto pnNode = childNodes.at(1);
+                    if (pnNode->getNodeType() == NodeTypePropertyName) {
+                        auto pn = std::static_pointer_cast<LILPropertyName>(pnNode);
+                        auto enmValue = enm->getValueNamed(pn->getName());
+                        if (!enmValue) {
+                            std::cerr << "ENUM VALUE NOT FOUND FAIL !!!!!!!!!!!!!!!!\n";
+                            return nullptr;
+                        }
+                        return this->emit(enmValue.get());
+                    }
                 }
-                currentTy = vdTy;
             }
         } else {
             //selector

@@ -160,6 +160,12 @@ LILToStrInfo LILToStringVisitor::stringify(LILNode * node)
             info = this->_stringify(value);
             break;
         }
+        case NodeTypeEnum:
+        {
+            LILEnum * value = static_cast<LILEnum *>(node);
+            info = this->_stringify(value);
+            break;
+        }
         case NodeTypeClassDecl:
         {
             LILClassDecl * value = static_cast<LILClassDecl *>(node);
@@ -509,6 +515,14 @@ LILToStrInfo LILToStringVisitor::_stringify(LILConversionDecl *value)
     };
     ret.children.push_back(bodyInfo);
 
+    return ret;
+}
+
+LILToStrInfo LILToStringVisitor::_stringify(LILEnum *value)
+{
+    LILToStrInfo ret;
+    ret.value = "Enum "+value->getName();
+    this->stringifyChildren(value->getValues(), ret);
     return ret;
 }
 
