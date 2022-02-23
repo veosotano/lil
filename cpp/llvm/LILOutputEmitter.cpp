@@ -93,10 +93,10 @@ void LILOutputEmitter::run(std::shared_ptr<LILRootNode> rootNode)
 
     if (cpuString.length() == 0 || vendorString.length() == 0) {
         std::cerr << "Error: Unknown CPU or vendor: " << cpuString << "/" << vendorString << ".\n";
-        return;
+        targetTriple = llvm::sys::getDefaultTargetTriple();
+    } else {
+        targetTriple = cpuString + "-" + vendorString;
     }
-
-    targetTriple = cpuString + "-" + vendorString;
 
     LLVMInitializeX86TargetInfo();
     LLVMInitializeX86Target();
