@@ -526,17 +526,17 @@ llvm::Value * LILIREmitter::_emit(LILExpression * value)
         std::cerr << "EXPRESION HAD NO TYPE FAIL!!!!!!!!!!!!!!!!\n";
         return nullptr;
     }
-    if (ty->isA(TypeTypePointer)) {
-        auto leftTy = left->getType();
-        if (!leftTy) {
-            std::cerr << "LEFT NODE OF EXPRESSION HAD NO TYPE FAIL!!!!!!!!!!!!!!!!\n";
-            return nullptr;
-        }
-        auto rightTy = right->getType();
-        if (!rightTy) {
-            std::cerr << "RIGHT NODE OF EXPRESSION HAD NO TYPE FAIL!!!!!!!!!!!!!!!!\n";
-            return nullptr;
-        }
+    auto leftTy = left->getType();
+    if (!leftTy) {
+        std::cerr << "LEFT NODE OF EXPRESSION HAD NO TYPE FAIL!!!!!!!!!!!!!!!!\n";
+        return nullptr;
+    }
+    auto rightTy = right->getType();
+    if (!rightTy) {
+        std::cerr << "RIGHT NODE OF EXPRESSION HAD NO TYPE FAIL!!!!!!!!!!!!!!!!\n";
+        return nullptr;
+    }
+    if (leftTy->isA(TypeTypePointer) || rightTy->isA(TypeTypePointer)) {
         static auto numLlvmTy = this->llvmTypeFromLILType(LILType::make("i64").get());
         if (leftTy->isA(TypeTypePointer) && LILType::isNumberType(rightTy.get())) {
             auto ptrTy = std::static_pointer_cast<LILPointerType>(leftTy);
