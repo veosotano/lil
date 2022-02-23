@@ -401,7 +401,15 @@ typedef struct
         texturePipelineDescriptor.label                           = @"texturePipeline";
         texturePipelineDescriptor.vertexFunction                  = vertexShaderFn;
         texturePipelineDescriptor.fragmentFunction                = textureShaderFn;
-        texturePipelineDescriptor.colorAttachments[0].pixelFormat = drawablePixelFormat_;
+        MTLRenderPipelineColorAttachmentDescriptor *attachment = texturePipelineDescriptor.colorAttachments[0];
+        attachment.pixelFormat = drawablePixelFormat_;
+        attachment.blendingEnabled = YES;
+        attachment.rgbBlendOperation = MTLBlendOperationAdd;
+        attachment.alphaBlendOperation = MTLBlendOperationAdd;
+        attachment.sourceRGBBlendFactor = MTLBlendFactorSourceAlpha;
+        attachment.sourceAlphaBlendFactor = MTLBlendFactorSourceAlpha;
+        attachment.destinationRGBBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
+        attachment.destinationAlphaBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
         texturePipelineDescriptor.depthAttachmentPixelFormat      = LILDepthPixelFormat;
 
         texturePipelines[textureCount] = [device newRenderPipelineStateWithDescriptor:texturePipelineDescriptor error:&error];

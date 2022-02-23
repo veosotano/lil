@@ -88,5 +88,5 @@ textureShader(  RasterizerData in [[stage_in]],
 {
     constexpr sampler theSampler(coord::pixel);
     float4 color = texture.sample(theSampler, in.texture);
-    return float4(color.r, color.g, color.b, 1.0);
+    return float4(color.r, color.g, color.b, color.a);
 }
