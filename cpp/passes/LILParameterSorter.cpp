@@ -381,9 +381,15 @@ void LILParameterSorter::_process(LILFunctionDecl * value)
 void LILParameterSorter::_process(LILFunctionCall * value)
 {
     if (value->getFunctionCallType() != FunctionCallTypeValuePath) {
+        const auto & callName = value->getName();
+        auto remoteNode = this->findNodeForName(callName, value->getParentNode().get());
+        if (remoteNode && remoteNode->getNodeType() == NodeTypeFunctionDecl) {
+            auto fd = std::static_pointer_cast<LILFunctionDecl>(remoteNode);
+            this->_processArguments(value, fd.get());
+        }
         return;
     }
-    
+
     auto vp = std::static_pointer_cast<LILValuePath>(value->getParentNode());
     
     auto childNodes = vp->getNodes();
@@ -466,75 +472,8 @@ void LILParameterSorter::_process(LILFunctionCall * value)
                             currentTy = ptrRetArg;
                         }
                     }
-
-                    auto declArgs = fnTy->getArguments();
-                    auto callArgs = fc->getArguments();
-                    std::vector<std::shared_ptr<LILAssignment>> asgmtArgs;
-                    std::vector<std::shared_ptr<LILNode>> plainArgs;
                     
-                    for (auto callArg : callArgs) {
-                        if (callArg->isA(NodeTypeAssignment)) {
-                            asgmtArgs.push_back(std::static_pointer_cast<LILAssignment>(callArg));
-                        } else {
-                            plainArgs.push_back(callArg);
-                        }
-                    }
-                    
-                    std::vector<std::shared_ptr<LILNode>> newArgs;
-                    
-                    //in the order of the arguments in the declaration
-                    size_t plainArgCount = 0;
-                    for (auto declArg : declArgs) {
-                        if (!declArg->isA(NodeTypeVarDecl)) {
-                            std::cerr << "!!!!!!!!!!DECL ARG WAS NOT VAR DECL FAIL!!!!!!!!!!!!!!!!\n";
-                            return;
-                        }
-                        auto declVd = std::static_pointer_cast<LILVarDecl>(declArg);
-                        
-                        //find the argument in the call
-                        bool found = false;
-                        for (auto asgmtArg : asgmtArgs) {
-                            auto callAsgmtSubj = asgmtArg->getSubject();
-                            if (!callAsgmtSubj->isA(NodeTypeVarName)) {
-                                std::cerr << "!!!!!!!!!!SUBJECT OF ASSIGNMENT WAS NOT VAR NAME FAIL!!!!!!!!!!!!!!!!\n";
-                                return;
-                            }
-                            auto caVn = std::static_pointer_cast<LILVarName>(callAsgmtSubj);
-                            if (declVd->getName() == caVn->getName()) {
-                                found = true;
-                                newArgs.push_back(asgmtArg);
-                                break;
-                            }
-                        }
-                        if (!found && plainArgs.size() >= plainArgCount+1) {
-                            auto newAsgmt = std::make_shared<LILAssignment>();
-                            newAsgmt->setSourceLocation(currentNode->getSourceLocation());
-                            auto newVn = std::make_shared<LILVarName>();
-                            newVn->setName(declVd->getName());
-                            newVn->setSourceLocation(currentNode->getSourceLocation());
-                            auto callArg = plainArgs[plainArgCount];
-                            auto callArgTy = callArg->getType();
-                            if (!callArg) {
-                                std::cerr << "!!!!!!!!!!CALL ARG HAD NO TYPE FAIL!!!!!!!!!!!!!!!!\n";
-                                return;
-                            }
-                            newAsgmt->setType(callArgTy->clone());
-                            
-                            newAsgmt->setSubject(newVn);
-                            newAsgmt->setValue(callArg);
-                            newArgs.push_back(newAsgmt);
-                            ++plainArgCount;
-                            found = true;
-                        }
-                        
-                        //if we need the default value
-                        if (!found && declVd->getInitVal()) {
-                            newArgs.push_back(this->_varDeclToAssignment(declVd));
-                        }
-                    }
-                    
-                    fc->setArguments(std::move(newArgs));
-                    
+                    this->_processArguments(fc.get(), method.get());
                     break;
                 }
                     
@@ -570,6 +509,97 @@ void LILParameterSorter::_process(LILFunctionCall * value)
             ++it;
         }
     }
+}
+
+void LILParameterSorter::_processArguments(LILFunctionCall * fc, LILFunctionDecl * fd)
+{
+    auto fnTy = fd->getFnType();
+    auto declArgs = fnTy->getArguments();
+    auto callArgs = fc->getArguments();
+    std::vector<std::shared_ptr<LILAssignment>> asgmtArgs;
+    std::vector<std::shared_ptr<LILNode>> plainArgs;
+
+    for (auto callArg : callArgs) {
+        if (callArg->isA(NodeTypeAssignment)) {
+            asgmtArgs.push_back(std::static_pointer_cast<LILAssignment>(callArg));
+        } else {
+            plainArgs.push_back(callArg);
+        }
+    }
+
+    std::vector<std::shared_ptr<LILNode>> newArgs;
+
+    //in the order of the arguments in the declaration
+    size_t plainArgCount = 0;
+    for (auto declArg : declArgs) {
+        if (!declArg->isA(NodeTypeVarDecl)) {
+            if ( plainArgs.size() >= (plainArgCount+1) ) {
+                newArgs.push_back(plainArgs[plainArgCount]);
+                plainArgCount += 1;
+            }
+            continue;
+        }
+        auto declVd = std::static_pointer_cast<LILVarDecl>(declArg);
+        
+        //find the argument in the call
+        bool found = false;
+        for (auto asgmtArg : asgmtArgs) {
+            auto callAsgmtSubj = asgmtArg->getSubject();
+            if (!callAsgmtSubj->isA(NodeTypeVarName)) {
+                std::cerr << "!!!!!!!!!!SUBJECT OF ASSIGNMENT WAS NOT VAR NAME FAIL!!!!!!!!!!!!!!!!\n";
+                return;
+            }
+            auto caVn = std::static_pointer_cast<LILVarName>(callAsgmtSubj);
+            if (declVd->getName() == caVn->getName()) {
+                found = true;
+                newArgs.push_back(asgmtArg);
+                break;
+            }
+        }
+        if (!found && plainArgs.size() >= plainArgCount+1) {
+            auto newAsgmt = std::make_shared<LILAssignment>();
+            newAsgmt->setSourceLocation(fc->getSourceLocation());
+            auto newVn = std::make_shared<LILVarName>();
+            newVn->setName(declVd->getName());
+            newVn->setSourceLocation(fc->getSourceLocation());
+            auto callArg = plainArgs[plainArgCount];
+            auto callArgTy = callArg->getType();
+            if (!callArg) {
+                std::cerr << "!!!!!!!!!!CALL ARG HAD NO TYPE FAIL!!!!!!!!!!!!!!!!\n";
+                return;
+            }
+            newAsgmt->setType(callArgTy->clone());
+            
+            newAsgmt->setSubject(newVn);
+            newAsgmt->setValue(callArg);
+            newArgs.push_back(newAsgmt);
+            ++plainArgCount;
+            found = true;
+        }
+        
+        //if we need the default value
+        if (!found && declVd->getInitVal()) {
+            newArgs.push_back(this->_varDeclToAssignment(declVd));
+        }
+    }
+
+    if (plainArgs.size() > plainArgCount) {
+        for (size_t i=plainArgCount; i<plainArgs.size(); i+=1) {
+            newArgs.push_back(plainArgs[i]);
+        }
+    }
+    
+    fc->setArguments(std::move(newArgs));
+    std::vector<std::shared_ptr<LILType>> newArgumentTypes;
+    for (const auto & arg : fc->getArguments()) {
+        auto ty = arg->getType();
+        if (!ty) {
+            std::cerr << "!!!!!!!!!!CALL ARG HAD NO TYPE FAIL!!!!!!!!!!!!!!!!\n";
+            continue;
+        }
+        newArgumentTypes.push_back(ty);
+    }
+    fc->setArgumentTypes(newArgumentTypes);
 }
 
 void LILParameterSorter::_process(LILFlowControl * value)

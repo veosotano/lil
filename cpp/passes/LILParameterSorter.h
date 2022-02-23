@@ -91,6 +91,7 @@ namespace LIL
         void _process(LILFlag * value);
         void _process(LILFunctionDecl * value);
         void _process(LILFunctionCall * value);
+        void _processArguments(LILFunctionCall * fc, LILFunctionDecl * fd);
         void _process(LILFlowControl * value);
         void _process(LILFlowControlCall * value);
         void _process(LILInstruction * value);
