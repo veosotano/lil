@@ -82,7 +82,7 @@ namespace LIL
         std::vector<std::shared_ptr<LILNode>> _body;
         std::vector<std::shared_ptr<LILFunctionDecl>> _impls;
         std::vector<std::shared_ptr<LILDocumentation>> _docs;
-        std::shared_ptr<LILNode> _finally;
+        std::shared_ptr<LILNode> _fnlly;
         std::shared_ptr<LILFunctionType> _fnType;
         bool _receivesFunctionBody;
         FunctionDeclType _functionDeclType;

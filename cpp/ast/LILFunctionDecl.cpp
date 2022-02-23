@@ -36,7 +36,7 @@ LILFunctionDecl::LILFunctionDecl(const LILFunctionDecl &other)
 , _body(other._body)
 , _impls(other._impls)
 , _docs(other._docs)
-, _finally(other._finally)
+, _fnlly(other._fnlly)
 , _fnType(other._fnType)
 , _receivesFunctionBody(other._receivesFunctionBody)
 , _functionDeclType(other._functionDeclType)
@@ -88,8 +88,8 @@ std::shared_ptr<LILClonable> LILFunctionDecl::cloneImpl() const
     {
         clone->addEvaluable((*it)->clone());
     }
-    if (this->_finally) {
-        clone->setFinally(this->_finally->clone());
+    if (this->_fnlly) {
+        clone->setFinally(this->_fnlly->clone());
     }
     if (this->_fnType) {
         clone->_fnType = this->_fnType->clone();
@@ -263,16 +263,16 @@ void LILFunctionDecl::setIsConstructor(bool value)
 
 std::shared_ptr<LILNode> LILFunctionDecl::getFinally() const
 {
-    return this->_finally;
+    return this->_fnlly;
 }
 
 void LILFunctionDecl::setFinally(std::shared_ptr<LILNode> value)
 {
-    if (this->_finally) {
-        this->removeNode(this->_finally);
+    if (this->_fnlly) {
+        this->removeNode(this->_fnlly);
     }
     this->addNode(value);
-    this->_finally = value;
+    this->_fnlly = value;
 }
 
 bool LILFunctionDecl::getIsExtern() const
