@@ -3628,6 +3628,7 @@ llvm::Value * LILIREmitter::_emitLoop(LILFlowControl * value)
     exp->setType(boolTy);
     auto leftVn = std::make_shared<LILVarName>();
     leftVn->setName(condName);
+    leftVn->setType(boolTy);
     exp->setLeft(leftVn);
     auto rightVal = std::make_shared<LILBoolLiteral>();
     rightVal->setValue(true);
