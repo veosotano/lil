@@ -655,11 +655,11 @@ void LILParameterSorter::processChildren(const std::vector<std::shared_ptr<LILNo
 std::shared_ptr<LILAssignment> LILParameterSorter::_varDeclToAssignment(std::shared_ptr<LILVarDecl> vd)
 {
     std::shared_ptr<LILAssignment> ret = std::make_shared<LILAssignment>();
-    std::shared_ptr<LILValuePath> vp = std::make_shared<LILValuePath>();
     std::shared_ptr<LILVarName> vn = std::make_shared<LILVarName>();
     vn->setName(vd->getName());
-    vp->addChild(vn);
-    ret->setSubject(vp);
+    ret->setSubject(vn);
+    auto initVal = vd->getInitVal();
+    ret->setType(initVal->getType());
     ret->setValue(vd->getInitVal());
     return ret;
     
