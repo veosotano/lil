@@ -56,7 +56,12 @@ void LILTypeValidator::performVisit(std::shared_ptr<LILRootNode> rootNode)
     this->setRootNode(rootNode);
     std::vector<std::shared_ptr<LILNode>> nodes = rootNode->getNodes();
     for (const auto & node : nodes) {
-        this->validate(node);
+        if (
+            (node->getNodeType() != NodeTypeInstruction)
+            && (node->getNodeType() != NodeTypeSnippetInstruction)
+        ) {
+            this->validate(node);
+        }
     }
     if (this->getVerbose() && !this->hasErrors()) {
         std::cerr << "All OK\n\n";
