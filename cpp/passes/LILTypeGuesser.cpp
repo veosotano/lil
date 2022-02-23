@@ -688,7 +688,10 @@ void LILTypeGuesser::_process(LILVarDecl * value)
     if (!value->getType()) {
         std::shared_ptr<LILNode> initValue = value->getInitVal();
         if (initValue) {
-            auto type = this->getNodeType(initValue);
+            auto type = initValue->getType();
+            if (!type) {
+                type = this->getNodeType(initValue);
+            }
             if(type)
                 value->setType(type);
         }
