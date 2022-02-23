@@ -343,6 +343,7 @@ void LILASTValidator::_validate(const std::shared_ptr<LILExpression> & value)
 {
     auto left = value->getLeft();
     switch (left->getNodeType()) {
+        case NodeTypeNull:
         case NodeTypeBoolLiteral:
         case NodeTypeNumberLiteral:
         case NodeTypeExpression:
@@ -361,6 +362,7 @@ void LILASTValidator::_validate(const std::shared_ptr<LILExpression> & value)
     }
     auto right = value->getRight();
     switch (right->getNodeType()) {
+        case NodeTypeNull:
         case NodeTypeBoolLiteral:
         case NodeTypeNumberLiteral:
         case NodeTypeExpression:

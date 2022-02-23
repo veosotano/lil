@@ -568,6 +568,14 @@ llvm::Value * LILIREmitter::_emit(LILExpression * value)
         } else if (leftTy->isA(TypeTypePointer) && rightTy->isA(TypeTypePointer)){
             leftV = d->irBuilder.CreatePtrToInt(leftV, numLlvmTy);
             rightV = d->irBuilder.CreatePtrToInt(rightV, numLlvmTy);
+        } else if (leftTy->isA(TypeTypePointer) && rightTy->getName() == "null") {
+            auto ptrTy = std::static_pointer_cast<LILPointerType>(leftTy);
+            leftV = d->irBuilder.CreatePtrToInt(leftV, numLlvmTy);
+            rightV = d->irBuilder.CreateSExt(rightV, numLlvmTy);
+        } else if (leftTy->getName() == "null" && rightTy->isA(TypeTypePointer)) {
+            leftV = d->irBuilder.CreateSExt(leftV, numLlvmTy);
+            auto ptrTy = std::static_pointer_cast<LILPointerType>(rightTy);
+            rightV = d->irBuilder.CreatePtrToInt(rightV, numLlvmTy);
         }
         auto result = this->_emitExpression(value->getExpressionType(), leftV, rightV);
         return d->irBuilder.CreateIntToPtr(result, this->llvmTypeFromLILType(ty.get()));
@@ -950,8 +958,11 @@ llvm::Value * LILIREmitter::_emit(LILStringFunction * value)
 
 llvm::Value * LILIREmitter::_emit(LILNullLiteral * value)
 {
-    std::cerr << "!!!!!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!\n";
-    return nullptr;
+    auto zeroLit = std::make_shared<LILNumberLiteral>();
+    zeroLit->setValue("0");
+    auto zeroTy = LILType::make("i8");
+    zeroLit->setType(zeroTy);
+    return this->emit(zeroLit.get());
 }
 
 llvm::Value * LILIREmitter::_emit(LILVarDecl * value)
