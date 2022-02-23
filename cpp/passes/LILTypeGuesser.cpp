@@ -606,6 +606,25 @@ void LILTypeGuesser::_process(LILExpression * value)
     if (existingTy) {
         return;
     }
+    
+    switch (value->getExpressionType()) {
+        case ExpressionTypeSmallerComparison:
+        case ExpressionTypeSmallerOrEqualComparison:
+        case ExpressionTypeBiggerComparison:
+        case ExpressionTypeBiggerOrEqualComparison:
+        case ExpressionTypeEqualComparison:
+        case ExpressionTypeNotEqualComparison:
+        case ExpressionTypeLogicalOr:
+        case ExpressionTypeLogicalAnd:
+        {
+            auto boolTy = LILType::make("bool");
+            value->setType(boolTy);
+            return;
+        }
+
+        default:
+            break;
+    }
 
     std::shared_ptr<LILNode> left = value->getLeft();
     std::shared_ptr<LILNode> right = value->getRight();
@@ -1509,6 +1528,23 @@ std::shared_ptr<LILType> LILTypeGuesser::getNodeType(std::shared_ptr<LILNode> no
 
 std::shared_ptr<LILType> LILTypeGuesser::getExpType(std::shared_ptr<LILExpression> exp) const
 {
+    switch (exp->getExpressionType()) {
+        case ExpressionTypeSmallerComparison:
+        case ExpressionTypeSmallerOrEqualComparison:
+        case ExpressionTypeBiggerComparison:
+        case ExpressionTypeBiggerOrEqualComparison:
+        case ExpressionTypeEqualComparison:
+        case ExpressionTypeNotEqualComparison:
+        case ExpressionTypeLogicalOr:
+        case ExpressionTypeLogicalAnd:
+        {
+            return LILType::make("bool");
+        }
+            
+        default:
+            break;
+    }
+
     //try to find from contents
     std::shared_ptr<LILNode> left = exp->getLeft();
     std::shared_ptr<LILType> leftType = this->getNodeType(left);
