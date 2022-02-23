@@ -34,7 +34,7 @@ namespace llvm {
 
     // Information about the current token.
     const char *TokStart;
-    lltok::Kind CurKind;
+    lltoken::Kind CurKind;
     std::string StrVal;
     unsigned UIntVal;
     Type *TyVal;
@@ -49,13 +49,13 @@ namespace llvm {
     explicit LLVMIRLexer(StringRef StartBuf, SourceMgr &SM, SMDiagnostic &,
                      LLVMContext &C);
 
-    lltok::Kind Lex() {
+    lltoken::Kind Lex() {
       return CurKind = LexToken();
     }
 
     typedef SMLoc LocTy;
     LocTy getLoc() const { return SMLoc::getFromPointer(TokStart); }
-    lltok::Kind getKind() const { return CurKind; }
+    lltoken::Kind getKind() const { return CurKind; }
     const std::string &getStrVal() const { return StrVal; }
     Type *getTyVal() const { return TyVal; }
     unsigned getUIntVal() const { return UIntVal; }
@@ -73,27 +73,27 @@ namespace llvm {
     void Warning(const Twine &Msg) const { return Warning(getLoc(), Msg); }
 
   private:
-    lltok::Kind LexToken();
+    lltoken::Kind LexToken();
 
     int getNextChar();
-    lltok::Kind ReadString(lltok::Kind kind);
+    lltoken::Kind ReadString(lltoken::Kind kind);
     bool ReadVarName();
 
-    lltok::Kind LexWhitespace();
-    lltok::Kind LexComment();
-    lltok::Kind LexIdentifier();
-    lltok::Kind LexDigitOrNegative();
-    lltok::Kind LexPositive();
-    lltok::Kind LexAt();
-    lltok::Kind LexDollar();
-    lltok::Kind LexExclaim();
-    lltok::Kind LexPercent();
-    lltok::Kind LexUIntID(lltok::Kind Token);
-    lltok::Kind LexVar(lltok::Kind Var, lltok::Kind VarID);
-    lltok::Kind LexQuote();
-    lltok::Kind Lex0x();
-    lltok::Kind LexHash();
-    lltok::Kind LexCaret();
+    lltoken::Kind LexWhitespace();
+    lltoken::Kind LexComment();
+    lltoken::Kind LexIdentifier();
+    lltoken::Kind LexDigitOrNegative();
+    lltoken::Kind LexPositive();
+    lltoken::Kind LexAt();
+    lltoken::Kind LexDollar();
+    lltoken::Kind LexExclaim();
+    lltoken::Kind LexPercent();
+    lltoken::Kind LexUIntID(lltoken::Kind Token);
+    lltoken::Kind LexVar(lltoken::Kind Var, lltoken::Kind VarID);
+    lltoken::Kind LexQuote();
+    lltoken::Kind Lex0x();
+    lltoken::Kind LexHash();
+    lltoken::Kind LexCaret();
 
     uint64_t atoull(const char *Buffer, const char *End);
     uint64_t HexIntToVal(const char *Buffer, const char *End);

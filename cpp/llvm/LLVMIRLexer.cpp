@@ -179,7 +179,7 @@ int LLVMIRLexer::getNextChar() {
   }
 }
 
-lltok::Kind LLVMIRLexer::LexToken() {
+lltoken::Kind LLVMIRLexer::LexToken() {
   while (true) {
     TokStart = CurPtr;
 
@@ -190,8 +190,8 @@ lltok::Kind LLVMIRLexer::LexToken() {
       if (isalpha(static_cast<unsigned char>(CurChar)) || CurChar == '_')
         return LexIdentifier();
 
-      return lltok::Error;
-    case EOF: return lltok::Eof;
+      return lltoken::Error;
+    case EOF: return lltoken::Eof;
     case 0:
     case ' ':
     case '\t':
@@ -207,37 +207,37 @@ lltok::Kind LLVMIRLexer::LexToken() {
       if (const char *Ptr = isLabelTail(CurPtr)) {
         CurPtr = Ptr;
         StrVal.assign(TokStart, CurPtr-1);
-        return lltok::LabelStr;
+        return lltoken::LabelStr;
       }
       if (CurPtr[0] == '.' && CurPtr[1] == '.') {
         CurPtr += 2;
-        return lltok::dotdotdot;
+        return lltoken::dotdotdot;
       }
-      return lltok::Error;
+      return lltoken::Error;
     case ';':
             return LexComment();
     case '!': return LexExclaim();
     case '^':
       return LexCaret();
     case ':':
-      return lltok::colon;
+      return lltoken::colon;
     case '#': return LexHash();
     case '0': case '1': case '2': case '3': case '4':
     case '5': case '6': case '7': case '8': case '9':
     case '-':
       return LexDigitOrNegative();
-    case '=': return lltok::equal;
-    case '[': return lltok::lsquare;
-    case ']': return lltok::rsquare;
-    case '{': return lltok::lbrace;
-    case '}': return lltok::rbrace;
-    case '<': return lltok::less;
-    case '>': return lltok::greater;
-    case '(': return lltok::lparen;
-    case ')': return lltok::rparen;
-    case ',': return lltok::comma;
-    case '*': return lltok::star;
-    case '|': return lltok::bar;
+    case '=': return lltoken::equal;
+    case '[': return lltoken::lsquare;
+    case ']': return lltoken::rsquare;
+    case '{': return lltoken::lbrace;
+    case '}': return lltoken::rbrace;
+    case '<': return lltoken::less;
+    case '>': return lltoken::greater;
+    case '(': return lltoken::lparen;
+    case ')': return lltoken::rparen;
+    case ',': return lltoken::comma;
+    case '*': return lltoken::star;
+    case '|': return lltoken::bar;
     }
   }
 }
@@ -246,15 +246,15 @@ lltok::Kind LLVMIRLexer::LexToken() {
 ///   GlobalVar   @\"[^\"]*\"
 ///   GlobalVar   @[-a-zA-Z$._][-a-zA-Z$._0-9]*
 ///   GlobalVarID @[0-9]+
-lltok::Kind LLVMIRLexer::LexAt() {
-  return LexVar(lltok::GlobalVar, lltok::GlobalID);
+lltoken::Kind LLVMIRLexer::LexAt() {
+  return LexVar(lltoken::GlobalVar, lltoken::GlobalID);
 }
 
-lltok::Kind LLVMIRLexer::LexDollar() {
+lltoken::Kind LLVMIRLexer::LexDollar() {
   if (const char *Ptr = isLabelTail(TokStart)) {
     CurPtr = Ptr;
     StrVal.assign(TokStart, CurPtr - 1);
-    return lltok::LabelStr;
+    return lltoken::LabelStr;
   }
 
   // Handle DollarStringConstant: $\"[^\"]*\"
@@ -266,36 +266,36 @@ lltok::Kind LLVMIRLexer::LexDollar() {
 
       if (CurChar == EOF) {
         Error("end of file in COMDAT variable name");
-        return lltok::Error;
+        return lltoken::Error;
       }
       if (CurChar == '"') {
         StrVal.assign(TokStart + 2, CurPtr - 1);
         UnEscapeLexed(StrVal);
         if (StringRef(StrVal).find_first_of(0) != StringRef::npos) {
           Error("Null bytes are not allowed in names");
-          return lltok::Error;
+          return lltoken::Error;
         }
-        return lltok::ComdatVar;
+        return lltoken::ComdatVar;
       }
     }
   }
 
   // Handle ComdatVarName: $[-a-zA-Z$._][-a-zA-Z$._0-9]*
   if (ReadVarName())
-    return lltok::ComdatVar;
+    return lltoken::ComdatVar;
 
-  return lltok::Error;
+  return lltoken::Error;
 }
 
 /// ReadString - Read a string until the closing quote.
-lltok::Kind LLVMIRLexer::ReadString(lltok::Kind kind) {
+lltoken::Kind LLVMIRLexer::ReadString(lltoken::Kind kind) {
   const char *Start = CurPtr;
   while (true) {
     int CurChar = getNextChar();
 
     if (CurChar == EOF) {
       Error("end of file in string constant");
-      return lltok::Error;
+      return lltoken::Error;
     }
     if (CurChar == '"') {
       StrVal.assign(Start, CurPtr-1);
@@ -325,11 +325,11 @@ bool LLVMIRLexer::ReadVarName() {
 
 // Lex an ID: [0-9]+. On success, the ID is stored in UIntVal and Token is
 // returned, otherwise the Error token is returned.
-lltok::Kind LLVMIRLexer::LexUIntID(lltok::Kind Token)
+lltoken::Kind LLVMIRLexer::LexUIntID(lltoken::Kind Token)
 {
   const char *NumStart = CurPtr;
   if (!isdigit(static_cast<unsigned char>(CurPtr[0])))
-    return lltok::Error;
+    return lltoken::Error;
 
   for (++CurPtr; isdigit(static_cast<unsigned char>(CurPtr[0])); ++CurPtr)
     /*empty*/;
@@ -342,7 +342,7 @@ lltok::Kind LLVMIRLexer::LexUIntID(lltok::Kind Token)
   return Token;
 }
 
-lltok::Kind LLVMIRLexer::LexVar(lltok::Kind Var, lltok::Kind VarID) {
+lltoken::Kind LLVMIRLexer::LexVar(lltoken::Kind Var, lltoken::Kind VarID) {
   // Handle StringConstant: \"[^\"]*\"
   if (CurPtr[0] == '"') {
     ++CurPtr;
@@ -352,14 +352,14 @@ lltok::Kind LLVMIRLexer::LexVar(lltok::Kind Var, lltok::Kind VarID) {
 
       if (CurChar == EOF) {
         Error("end of file in global variable name");
-        return lltok::Error;
+        return lltoken::Error;
       }
       if (CurChar == '"') {
         StrVal.assign(TokStart+2, CurPtr-1);
         UnEscapeLexed(StrVal);
         if (StringRef(StrVal).find_first_of(0) != StringRef::npos) {
           Error("Null bytes are not allowed in names");
-          return lltok::Error;
+          return lltoken::Error;
         }
         return Var;
       }
@@ -378,25 +378,25 @@ lltok::Kind LLVMIRLexer::LexVar(lltok::Kind Var, lltok::Kind VarID) {
 ///   LocalVar   ::= %\"[^\"]*\"
 ///   LocalVar   ::= %[-a-zA-Z$._][-a-zA-Z$._0-9]*
 ///   LocalVarID ::= %[0-9]+
-lltok::Kind LLVMIRLexer::LexPercent() {
-  return LexVar(lltok::LocalVar, lltok::LocalVarID);
+lltoken::Kind LLVMIRLexer::LexPercent() {
+  return LexVar(lltoken::LocalVar, lltoken::LocalVarID);
 }
 
 /// Lex all tokens that start with a " character.
 ///   QuoteLabel        "[^"]+":
 ///   StringConstant    "[^"]*"
-lltok::Kind LLVMIRLexer::LexQuote() {
-  lltok::Kind kind = ReadString(lltok::StringConstant);
-  if (kind == lltok::Error || kind == lltok::Eof)
+lltoken::Kind LLVMIRLexer::LexQuote() {
+  lltoken::Kind kind = ReadString(lltoken::StringConstant);
+  if (kind == lltoken::Error || kind == lltoken::Eof)
     return kind;
 
   if (CurPtr[0] == ':') {
     ++CurPtr;
     if (StringRef(StrVal).find_first_of(0) != StringRef::npos) {
       Error("Null bytes are not allowed in names");
-      kind = lltok::Error;
+      kind = lltoken::Error;
     } else {
-      kind = lltok::LabelStr;
+      kind = lltoken::LabelStr;
     }
   }
 
@@ -406,7 +406,7 @@ lltok::Kind LLVMIRLexer::LexQuote() {
 /// Lex all tokens that start with a ! character.
 ///    !foo
 ///    !
-lltok::Kind LLVMIRLexer::LexExclaim() {
+lltoken::Kind LLVMIRLexer::LexExclaim() {
   // Lex a metadata name as a MetadataVar.
   if (isalpha(static_cast<unsigned char>(CurPtr[0])) ||
       CurPtr[0] == '-' || CurPtr[0] == '$' ||
@@ -419,40 +419,40 @@ lltok::Kind LLVMIRLexer::LexExclaim() {
 
     StrVal.assign(TokStart+1, CurPtr);   // Skip !
     UnEscapeLexed(StrVal);
-    return lltok::MetadataVar;
+    return lltoken::MetadataVar;
   }
-  return lltok::exclaim;
+  return lltoken::exclaim;
 }
 
 /// Lex all tokens that start with a ^ character.
 ///    SummaryID ::= ^[0-9]+
-lltok::Kind LLVMIRLexer::LexCaret() {
+lltoken::Kind LLVMIRLexer::LexCaret() {
   // Handle SummaryID: ^[0-9]+
-  return LexUIntID(lltok::SummaryID);
+  return LexUIntID(lltoken::SummaryID);
 }
 
 /// Lex all tokens that start with a # character.
 ///    AttrGrpID ::= #[0-9]+
-lltok::Kind LLVMIRLexer::LexHash() {
+lltoken::Kind LLVMIRLexer::LexHash() {
   // Handle AttrGrpID: #[0-9]+
-  return LexUIntID(lltok::AttrGrpID);
+  return LexUIntID(lltoken::AttrGrpID);
 }
 
 /// Lex whitespace character.
-lltok::Kind LLVMIRLexer::LexWhitespace() {
+lltoken::Kind LLVMIRLexer::LexWhitespace() {
     StrVal.assign(CurPtr-1, CurPtr);
-    return lltok::Whitespace;
+    return lltoken::Whitespace;
 }
 
 /// Lex comment.
-lltok::Kind LLVMIRLexer::LexComment() {
+lltoken::Kind LLVMIRLexer::LexComment() {
     const char *StartChar = CurPtr;
     unsigned int currentChar = this->getNextChar();
     while (currentChar != '\n' && currentChar != '\r' && currentChar != EOF) {
         currentChar = this->getNextChar();
     }
     StrVal.assign(StartChar-1, CurPtr);
-    return lltok::Comment;
+    return lltoken::Comment;
 }
 
 /// Lex a label, integer type, keyword, or hexadecimal integer constant.
@@ -460,7 +460,7 @@ lltok::Kind LLVMIRLexer::LexComment() {
 ///    IntegerType     i[0-9]+
 ///    Keyword         sdiv, float, ...
 ///    HexIntConstant  [us]0x[0-9A-Fa-f]+
-lltok::Kind LLVMIRLexer::LexIdentifier() {
+lltoken::Kind LLVMIRLexer::LexIdentifier() {
   const char *StartChar = CurPtr;
   const char *IntEnd = CurPtr[-1] == 'i' ? nullptr : StartChar;
   const char *KeywordEnd = nullptr;
@@ -478,7 +478,7 @@ lltok::Kind LLVMIRLexer::LexIdentifier() {
   // this really is a label.
   if (!IgnoreColonInIdentifiers && *CurPtr == ':') {
     StrVal.assign(StartChar-1, CurPtr++);
-    return lltok::LabelStr;
+    return lltoken::LabelStr;
   }
 
   // Otherwise, this wasn't a label.  If this was valid as an integer type,
@@ -490,10 +490,10 @@ lltok::Kind LLVMIRLexer::LexIdentifier() {
     if (NumBits < IntegerType::MIN_INT_BITS ||
         NumBits > IntegerType::MAX_INT_BITS) {
       Error("bitwidth for integer type out of range!");
-      return lltok::Error;
+      return lltoken::Error;
     }
     StrVal.assign(StartChar-1, CurPtr);
-    return lltok::Type;
+    return lltoken::Type;
   }
 
   // Otherwise, this was a letter sequence.  See which keyword this is.
@@ -506,7 +506,7 @@ lltok::Kind LLVMIRLexer::LexIdentifier() {
 #define KEYWORD(STR)                                                           \
   do {                                                                         \
     if (Keyword == #STR)                                                       \
-      return lltok::kw_##STR;                                                  \
+      return lltoken::kw_##STR;                                                  \
   } while (false)
 
   KEYWORD(true);    KEYWORD(false);
@@ -819,7 +819,7 @@ lltok::Kind LLVMIRLexer::LexIdentifier() {
   do {                                                                         \
     if (Keyword == STR) {                                                      \
       TyVal = LLVMTY;                                                          \
-      return lltok::Type;                                                      \
+      return lltoken::Type;                                                      \
     }                                                                          \
   } while (false)
 
@@ -842,7 +842,7 @@ lltok::Kind LLVMIRLexer::LexIdentifier() {
   do {                                                                         \
     if (Keyword == #STR) {                                                     \
       UIntVal = Instruction::Enum;                                             \
-      return lltok::kw_##STR;                                                  \
+      return lltoken::kw_##STR;                                                  \
     }                                                                          \
   } while (false)
 
@@ -909,7 +909,7 @@ lltok::Kind LLVMIRLexer::LexIdentifier() {
   do {                                                                         \
     if (Keyword.startswith("DW_" #TYPE "_")) {                                 \
       StrVal.assign(Keyword.begin(), Keyword.end());                           \
-      return lltok::TOKEN;                                                     \
+      return lltoken::TOKEN;                                                     \
     }                                                                          \
   } while (false)
 
@@ -925,28 +925,28 @@ lltok::Kind LLVMIRLexer::LexIdentifier() {
 
   if (Keyword.startswith("DIFlag")) {
     StrVal.assign(Keyword.begin(), Keyword.end());
-    return lltok::DIFlag;
+    return lltoken::DIFlag;
   }
 
   if (Keyword.startswith("DISPFlag")) {
     StrVal.assign(Keyword.begin(), Keyword.end());
-    return lltok::DISPFlag;
+    return lltoken::DISPFlag;
   }
 
   if (Keyword.startswith("CSK_")) {
     StrVal.assign(Keyword.begin(), Keyword.end());
-    return lltok::ChecksumKind;
+    return lltoken::ChecksumKind;
   }
 
   if (Keyword == "NoDebug" || Keyword == "FullDebug" ||
       Keyword == "LineTablesOnly" || Keyword == "DebugDirectivesOnly") {
     StrVal.assign(Keyword.begin(), Keyword.end());
-    return lltok::EmissionKind;
+    return lltoken::EmissionKind;
   }
 
   if (Keyword == "GNU" || Keyword == "None" || Keyword == "Default") {
     StrVal.assign(Keyword.begin(), Keyword.end());
-    return lltok::NameTableKind;
+    return lltoken::NameTableKind;
   }
 
   // Check for [us]0x[0-9A-Fa-f]+ which are Hexadecimal constant generated by
@@ -960,25 +960,25 @@ lltok::Kind LLVMIRLexer::LexIdentifier() {
     if (!all_of(HexStr, isxdigit)) {
       // Bad token, return it as an error.
       CurPtr = TokStart+3;
-      return lltok::Error;
+      return lltoken::Error;
     }
     APInt Tmp(bits, HexStr, 16);
     uint32_t activeBits = Tmp.getActiveBits();
     if (activeBits > 0 && activeBits < bits)
       Tmp = Tmp.trunc(activeBits);
     APSIntVal = APSInt(Tmp, TokStart[0] == 'u');
-    return lltok::APSInt;
+    return lltoken::APSInt;
   }
 
   // If this is "cc1234", return this as just "cc".
   if (TokStart[0] == 'c' && TokStart[1] == 'c') {
     CurPtr = TokStart+2;
-    return lltok::kw_cc;
+    return lltoken::kw_cc;
   }
 
   // Finally, if this isn't known, return an error.
   CurPtr = TokStart+1;
-  return lltok::Error;
+  return lltoken::Error;
 }
 
 /// Lex all tokens that start with a 0x prefix, knowing they match and are not
@@ -988,7 +988,7 @@ lltok::Kind LLVMIRLexer::LexIdentifier() {
 ///    HexFP128Constant  0xL[0-9A-Fa-f]+
 ///    HexPPC128Constant 0xM[0-9A-Fa-f]+
 ///    HexHalfConstant   0xH[0-9A-Fa-f]+
-lltok::Kind LLVMIRLexer::Lex0x() {
+lltoken::Kind LLVMIRLexer::Lex0x() {
   CurPtr = TokStart + 2;
 
   char Kind;
@@ -1001,7 +1001,7 @@ lltok::Kind LLVMIRLexer::Lex0x() {
   if (!isxdigit(static_cast<unsigned char>(CurPtr[0]))) {
     // Bad token, return it as an error.
     CurPtr = TokStart+1;
-    return lltok::Error;
+    return lltoken::Error;
   }
 
   while (isxdigit(static_cast<unsigned char>(CurPtr[0])))
@@ -1013,7 +1013,7 @@ lltok::Kind LLVMIRLexer::Lex0x() {
     // Half, Float, and double only.
     APFloatVal = APFloat(APFloat::IEEEdouble(),
                          APInt(64, HexIntToVal(TokStart + 2, CurPtr)));
-    return lltok::APFloat;
+    return lltoken::APFloat;
   }
 
   uint64_t Pair[2];
@@ -1023,21 +1023,21 @@ lltok::Kind LLVMIRLexer::Lex0x() {
     // F80HexFPConstant - x87 long double in hexadecimal format (10 bytes)
     FP80HexToIntPair(TokStart+3, CurPtr, Pair);
     APFloatVal = APFloat(APFloat::x87DoubleExtended(), APInt(80, Pair));
-    return lltok::APFloat;
+    return lltoken::APFloat;
   case 'L':
     // F128HexFPConstant - IEEE 128-bit in hexadecimal format (16 bytes)
     HexToIntPair(TokStart+3, CurPtr, Pair);
     APFloatVal = APFloat(APFloat::IEEEquad(), APInt(128, Pair));
-    return lltok::APFloat;
+    return lltoken::APFloat;
   case 'M':
     // PPC128HexFPConstant - PowerPC 128-bit in hexadecimal format (16 bytes)
     HexToIntPair(TokStart+3, CurPtr, Pair);
     APFloatVal = APFloat(APFloat::PPCDoubleDouble(), APInt(128, Pair));
-    return lltok::APFloat;
+    return lltoken::APFloat;
   case 'H':
     APFloatVal = APFloat(APFloat::IEEEhalf(),
                          APInt(16,HexIntToVal(TokStart+3, CurPtr)));
-    return lltok::APFloat;
+    return lltoken::APFloat;
   }
 }
 
@@ -1050,7 +1050,7 @@ lltok::Kind LLVMIRLexer::Lex0x() {
 ///    HexFP80Constant   0xK[0-9A-Fa-f]+
 ///    HexFP128Constant  0xL[0-9A-Fa-f]+
 ///    HexPPC128Constant 0xM[0-9A-Fa-f]+
-lltok::Kind LLVMIRLexer::LexDigitOrNegative() {
+lltoken::Kind LLVMIRLexer::LexDigitOrNegative() {
   // If the letter after the negative is not a number, this is probably a label.
   if (!isdigit(static_cast<unsigned char>(TokStart[0])) &&
       !isdigit(static_cast<unsigned char>(CurPtr[0]))) {
@@ -1058,10 +1058,10 @@ lltok::Kind LLVMIRLexer::LexDigitOrNegative() {
     if (const char *End = isLabelTail(CurPtr)) {
       StrVal.assign(TokStart, End-1);
       CurPtr = End;
-      return lltok::LabelStr;
+      return lltoken::LabelStr;
     }
 
-    return lltok::Error;
+    return lltoken::Error;
   }
 
   // At this point, it is either a label, int or fp constant.
@@ -1078,7 +1078,7 @@ lltok::Kind LLVMIRLexer::LexDigitOrNegative() {
       Error("invalid value number (too large)!");
     UIntVal = unsigned(Val);
     StrVal.assign(TokStart, CurPtr - TokStart);
-    return lltok::LabelID;
+    return lltoken::LabelID;
   }
 
   // Check to see if this really is a string label, e.g. "-1:".
@@ -1086,7 +1086,7 @@ lltok::Kind LLVMIRLexer::LexDigitOrNegative() {
     if (const char *End = isLabelTail(CurPtr)) {
       StrVal.assign(TokStart, End-1);
       CurPtr = End;
-      return lltok::LabelStr;
+      return lltoken::LabelStr;
     }
   }
 
@@ -1097,7 +1097,7 @@ lltok::Kind LLVMIRLexer::LexDigitOrNegative() {
       return Lex0x();
     StrVal.assign(TokStart, CurPtr);
     APSIntVal = APSInt(StringRef(TokStart, CurPtr - TokStart));
-    return lltok::APSInt;
+    return lltoken::APSInt;
   }
 
   ++CurPtr;
@@ -1117,16 +1117,16 @@ lltok::Kind LLVMIRLexer::LexDigitOrNegative() {
   APFloatVal = APFloat(APFloat::IEEEdouble(),
                        StringRef(TokStart, CurPtr - TokStart));
   StrVal.assign(TokStart, CurPtr);
-  return lltok::APFloat;
+  return lltoken::APFloat;
 }
 
 /// Lex a floating point constant starting with +.
 ///    FPConstant  [-+]?[0-9]+[.][0-9]*([eE][-+]?[0-9]+)?
-lltok::Kind LLVMIRLexer::LexPositive() {
+lltoken::Kind LLVMIRLexer::LexPositive() {
   // If the letter after the negative is a number, this is probably not a
   // label.
   if (!isdigit(static_cast<unsigned char>(CurPtr[0])))
-    return lltok::Error;
+    return lltoken::Error;
 
   // Skip digits.
   for (++CurPtr; isdigit(static_cast<unsigned char>(CurPtr[0])); ++CurPtr)
@@ -1135,7 +1135,7 @@ lltok::Kind LLVMIRLexer::LexPositive() {
   // At this point, we need a '.'.
   if (CurPtr[0] != '.') {
     CurPtr = TokStart+1;
-    return lltok::Error;
+    return lltoken::Error;
   }
 
   ++CurPtr;
@@ -1154,5 +1154,5 @@ lltok::Kind LLVMIRLexer::LexPositive() {
 
   APFloatVal = APFloat(APFloat::IEEEdouble(),
                        StringRef(TokStart, CurPtr - TokStart));
-  return lltok::APFloat;
+  return lltoken::APFloat;
 }

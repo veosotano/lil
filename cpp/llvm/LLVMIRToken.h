@@ -10,11 +10,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef LLVM_LIB_ASMPARSER_LLTOKEN_H
-#define LLVM_LIB_ASMPARSER_LLTOKEN_H
+#ifndef LLVM_LLVMIRTOKEN_H
+#define LLVM_LLVMIRTOKEN_H
 
 namespace llvm {
-namespace lltok {
+namespace lltoken {
 enum Kind {
   // Markers
   Eof,
@@ -467,7 +467,7 @@ enum Kind {
   Whitespace, // whitespace chars: \t, \n, \r
   Comment, // ; comment
 };
-} // end namespace lltok
+} // end namespace lltoken
 } // end namespace llvm
 
 #endif

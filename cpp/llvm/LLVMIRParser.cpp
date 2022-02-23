@@ -88,12 +88,12 @@ void LLVMIRParser::skipWhitespaceAndComments()
 {
     while (1) {
         auto tokenKind = this->_lexer.getKind();
-        if (tokenKind != lltok::Whitespace && tokenKind != lltok::Comment) {
+        if (tokenKind != lltoken::Whitespace && tokenKind != lltoken::Comment) {
             return;
         }
         const std::string & data = this->_lexer.getStrVal();
         LLVMIRParserEvent event;
-        if (tokenKind == lltok::Whitespace) {
+        if (tokenKind == lltoken::Whitespace) {
             event = LLVMIRParserEventWhitespace;
         } else {
             event = LLVMIRParserEventComment;
@@ -108,7 +108,7 @@ void LLVMIRParser::skipWhitespaceAndComments()
 
 bool LLVMIRParser::atEndOfSource()
 {
-    return this->_lexer.getKind() == lltok::Eof;
+    return this->_lexer.getKind() == lltoken::Eof;
 }
 
 void LLVMIRParser::readNextToken()
@@ -137,98 +137,98 @@ bool LLVMIRParser::run()
 bool LLVMIRParser::parseNext()
 {
     switch (this->_lexer.getKind()) {
-        case lltok::Eof:
+        case lltoken::Eof:
         {
             return false;
         }
-        case lltok::Whitespace:
+        case lltoken::Whitespace:
         {
             this->skipWhitespaceAndComments();
             return true;
         }
-        case lltok::Comment:
+        case lltoken::Comment:
         {
             this->_receiver->receiveLLVMIRData(LLVMIRParserEventComment, this->_lexer.getStrVal());
             this->readNextToken();
             return true;
         }
-        case lltok::LocalVarID:
-        case lltok::LocalVar:
+        case lltoken::LocalVarID:
+        case lltoken::LocalVar:
         {
             return this->parseLocalVar();
         }
-        case lltok::kw_unreachable:
-        case lltok::kw_ret:
-        case lltok::kw_br:
-        case lltok::kw_switch:
-        case lltok::kw_indirectbr:
-        case lltok::kw_invoke:
-        case lltok::kw_resume:
-        case lltok::kw_cleanupret:
-        case lltok::kw_catchret:
-        case lltok::kw_catchswitch:
-        case lltok::kw_catchpad:
-        case lltok::kw_cleanuppad:
-        case lltok::kw_callbr:
-        case lltok::kw_fneg:
-        case lltok::kw_add:
-        case lltok::kw_sub:
-        case lltok::kw_mul:
-        case lltok::kw_shl:
-        case lltok::kw_fadd:
-        case lltok::kw_fsub:
-        case lltok::kw_fmul:
-        case lltok::kw_fdiv:
-        case lltok::kw_frem:
-        case lltok::kw_sdiv:
-        case lltok::kw_udiv:
-        case lltok::kw_lshr:
-        case lltok::kw_ashr:
-        case lltok::kw_urem:
-        case lltok::kw_srem:
-        case lltok::kw_and:
-        case lltok::kw_or:
-        case lltok::kw_xor:
-        case lltok::kw_icmp:
-        case lltok::kw_fcmp:
-        case lltok::kw_trunc:
-        case lltok::kw_zext:
-        case lltok::kw_sext:
-        case lltok::kw_fptrunc:
-        case lltok::kw_fpext:
-        case lltok::kw_bitcast:
-        case lltok::kw_addrspacecast:
-        case lltok::kw_uitofp:
-        case lltok::kw_sitofp:
-        case lltok::kw_fptoui:
-        case lltok::kw_fptosi:
-        case lltok::kw_inttoptr:
-        case lltok::kw_ptrtoint:
-        case lltok::kw_select:
-        case lltok::kw_va_arg:
-        case lltok::kw_extractelement:
-        case lltok::kw_insertelement:
-        case lltok::kw_shufflevector:
-        case lltok::kw_phi:
-        case lltok::kw_landingpad:
-        case lltok::kw_call:
-        case lltok::kw_tail:
-        case lltok::kw_musttail:
-        case lltok::kw_notail:
-        case lltok::kw_alloca:
-        case lltok::kw_load:
-        case lltok::kw_store:
-        case lltok::kw_cmpxchg:
-        case lltok::kw_atomicrmw:
-        case lltok::kw_fence:
-        case lltok::kw_getelementptr:
-        case lltok::kw_extractvalue:
-        case lltok::kw_insertvalue:
+        case lltoken::kw_unreachable:
+        case lltoken::kw_ret:
+        case lltoken::kw_br:
+        case lltoken::kw_switch:
+        case lltoken::kw_indirectbr:
+        case lltoken::kw_invoke:
+        case lltoken::kw_resume:
+        case lltoken::kw_cleanupret:
+        case lltoken::kw_catchret:
+        case lltoken::kw_catchswitch:
+        case lltoken::kw_catchpad:
+        case lltoken::kw_cleanuppad:
+        case lltoken::kw_callbr:
+        case lltoken::kw_fneg:
+        case lltoken::kw_add:
+        case lltoken::kw_sub:
+        case lltoken::kw_mul:
+        case lltoken::kw_shl:
+        case lltoken::kw_fadd:
+        case lltoken::kw_fsub:
+        case lltoken::kw_fmul:
+        case lltoken::kw_fdiv:
+        case lltoken::kw_frem:
+        case lltoken::kw_sdiv:
+        case lltoken::kw_udiv:
+        case lltoken::kw_lshr:
+        case lltoken::kw_ashr:
+        case lltoken::kw_urem:
+        case lltoken::kw_srem:
+        case lltoken::kw_and:
+        case lltoken::kw_or:
+        case lltoken::kw_xor:
+        case lltoken::kw_icmp:
+        case lltoken::kw_fcmp:
+        case lltoken::kw_trunc:
+        case lltoken::kw_zext:
+        case lltoken::kw_sext:
+        case lltoken::kw_fptrunc:
+        case lltoken::kw_fpext:
+        case lltoken::kw_bitcast:
+        case lltoken::kw_addrspacecast:
+        case lltoken::kw_uitofp:
+        case lltoken::kw_sitofp:
+        case lltoken::kw_fptoui:
+        case lltoken::kw_fptosi:
+        case lltoken::kw_inttoptr:
+        case lltoken::kw_ptrtoint:
+        case lltoken::kw_select:
+        case lltoken::kw_va_arg:
+        case lltoken::kw_extractelement:
+        case lltoken::kw_insertelement:
+        case lltoken::kw_shufflevector:
+        case lltoken::kw_phi:
+        case lltoken::kw_landingpad:
+        case lltoken::kw_call:
+        case lltoken::kw_tail:
+        case lltoken::kw_musttail:
+        case lltoken::kw_notail:
+        case lltoken::kw_alloca:
+        case lltoken::kw_load:
+        case lltoken::kw_store:
+        case lltoken::kw_cmpxchg:
+        case lltoken::kw_atomicrmw:
+        case lltoken::kw_fence:
+        case lltoken::kw_getelementptr:
+        case lltoken::kw_extractvalue:
+        case lltoken::kw_insertvalue:
         {
             bool outAteExtraComma = false;
             return this->parseInstruction(outAteExtraComma);
         }
-        case lltok::kw_define:
+        case lltoken::kw_define:
         {
             return this->parseDefine();
         }
@@ -243,13 +243,13 @@ bool LLVMIRParser::parseNext()
 bool LLVMIRParser::parseLocalVar()
 {
     START_NODE(LLVMIRParserEventLocalVar)
-    if (this->_lexer.getKind() != lltok::LocalVarID && this->_lexer.getKind() != lltok::LocalVar) {
+    if (this->_lexer.getKind() != lltoken::LocalVarID && this->_lexer.getKind() != lltoken::LocalVar) {
         return false;
     }
     SEND_DATA(LLVMIRParserEventLocalVar);
     this->readNextToken();
 
-    if (this->_lexer.getKind() != lltok::equal) {
+    if (this->_lexer.getKind() != lltoken::equal) {
         this->_receiver->receiveLLVMIRError("Unexpected token", this->line, this->column);
     }
     //consume the =
@@ -267,112 +267,112 @@ bool LLVMIRParser::parseInstruction(bool & outAteExtraComma)
     START_NODE(LLVMIRParserEventInstruction);
     bool valid = false;
     switch (this->_lexer.getKind()) {
-        case lltok::Eof:
+        case lltoken::Eof:
         {
             this->_receiver->receiveLLVMIRError("found end of file when expecting more instructions", this->line, this->column);
             break;
         }
         // Terminator Instructions.
-        case lltok::kw_unreachable:
+        case lltoken::kw_unreachable:
         {
             valid = this->parseUnreachable();
             break;
         }
-        case lltok::kw_ret:
+        case lltoken::kw_ret:
         {
             return this->parseRet();
         }
-        case lltok::kw_br:
+        case lltoken::kw_br:
         {
             return this->parseBr();
         }
-        case lltok::kw_switch:
+        case lltoken::kw_switch:
         {
             return this->parseSwitch();
         }
-        case lltok::kw_indirectbr:
+        case lltoken::kw_indirectbr:
         {
             return this->parseIndirectBr();
         }
-        case lltok::kw_invoke:
+        case lltoken::kw_invoke:
         {
             return this->parseInvoke();
         }
-        case lltok::kw_resume:
+        case lltoken::kw_resume:
         {
             return this->parseResume();
         }
-        case lltok::kw_cleanupret:
+        case lltoken::kw_cleanupret:
         {
             return this->parseCleanupRet();
         }
-        case lltok::kw_catchret:
+        case lltoken::kw_catchret:
         {
             return this->parseCatchRet();
         }
-        case lltok::kw_catchswitch:
+        case lltoken::kw_catchswitch:
         {
             return this->parseCatchSwitch();
         }
-        case lltok::kw_catchpad:
+        case lltoken::kw_catchpad:
         {
             return this->parseCatchPad();
         }
-        case lltok::kw_cleanuppad:
+        case lltoken::kw_cleanuppad:
         {
             return this->parseCleanupPad();
         }
-        case lltok::kw_callbr:
+        case lltoken::kw_callbr:
         {
             return this->parseCallBr();
         }
-        case lltok::kw_fneg:
+        case lltoken::kw_fneg:
         {
             return this->parseFneg();
         }
 
-        case lltok::kw_add:
-        case lltok::kw_sub:
-        case lltok::kw_mul:
-        case lltok::kw_shl:
+        case lltoken::kw_add:
+        case lltoken::kw_sub:
+        case lltoken::kw_mul:
+        case lltoken::kw_shl:
         {
             return this->parseBinaryOp(false, true, false);
         }
-        case lltok::kw_fadd:
-        case lltok::kw_fsub:
-        case lltok::kw_fmul:
-        case lltok::kw_fdiv:
-        case lltok::kw_frem:
+        case lltoken::kw_fadd:
+        case lltoken::kw_fsub:
+        case lltoken::kw_fmul:
+        case lltoken::kw_fdiv:
+        case lltoken::kw_frem:
         {
             return this->parseBinaryOp(true, false, false);
         }
-        case lltok::kw_sdiv:
-        case lltok::kw_udiv:
-        case lltok::kw_lshr:
-        case lltok::kw_ashr:
+        case lltoken::kw_sdiv:
+        case lltoken::kw_udiv:
+        case lltoken::kw_lshr:
+        case lltoken::kw_ashr:
         {
             return this->parseBinaryOp(false, false, false);
         }
             
-        case lltok::kw_urem:
-        case lltok::kw_srem:
+        case lltoken::kw_urem:
+        case lltoken::kw_srem:
         {
             return this->parseArithmetic();
         }
             
-        case lltok::kw_and:
-        case lltok::kw_or:
-        case lltok::kw_xor:
+        case lltoken::kw_and:
+        case lltoken::kw_or:
+        case lltoken::kw_xor:
         {
             valid = this->parseLogical();
             break;
         }
-        case lltok::kw_icmp:
+        case lltoken::kw_icmp:
         {
             valid = this->parseCompare();
             break;
         }
-        case lltok::kw_fcmp:
+        case lltoken::kw_fcmp:
         {
             valid = this->parseOptionalFastMathFlags();
             if (!valid) {
@@ -382,121 +382,121 @@ bool LLVMIRParser::parseInstruction(bool & outAteExtraComma)
             return false;
         }
         //casts
-        case lltok::kw_trunc:
-        case lltok::kw_zext:
-        case lltok::kw_sext:
-        case lltok::kw_fptrunc:
-        case lltok::kw_fpext:
-        case lltok::kw_bitcast:
-        case lltok::kw_addrspacecast:
-        case lltok::kw_uitofp:
-        case lltok::kw_sitofp:
-        case lltok::kw_fptoui:
-        case lltok::kw_fptosi:
-        case lltok::kw_inttoptr:
-        case lltok::kw_ptrtoint:
+        case lltoken::kw_trunc:
+        case lltoken::kw_zext:
+        case lltoken::kw_sext:
+        case lltoken::kw_fptrunc:
+        case lltoken::kw_fpext:
+        case lltoken::kw_bitcast:
+        case lltoken::kw_addrspacecast:
+        case lltoken::kw_uitofp:
+        case lltoken::kw_sitofp:
+        case lltoken::kw_fptoui:
+        case lltoken::kw_fptosi:
+        case lltoken::kw_inttoptr:
+        case lltoken::kw_ptrtoint:
             return this->parseCast();
 
         //other
-        case lltok::kw_select:
+        case lltoken::kw_select:
         {
             valid = this->parseSelect();
             break;
         }
             
-        case lltok::kw_va_arg:
+        case lltoken::kw_va_arg:
         {
             std::cerr << "!!!!!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!\n";
             return false;
         }
-        case lltok::kw_extractelement:
+        case lltoken::kw_extractelement:
         {
             valid = this->parseExtractElement();
             break;
         }
-        case lltok::kw_insertelement:
+        case lltoken::kw_insertelement:
         {
             valid = this->parseInsertElement();
             break;
         }
-        case lltok::kw_shufflevector:
+        case lltoken::kw_shufflevector:
         {
             valid = this->parseShuffleVector();
             break;
         }
-        case lltok::kw_phi:
+        case lltoken::kw_phi:
         {
             valid = this->parsePhi(outAteExtraComma);
             break;
         }
-        case lltok::kw_landingpad:
+        case lltoken::kw_landingpad:
         {
             std::cerr << "!!!!!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!\n";
             return false;
         }
 
         //call
-        case lltok::kw_call:
+        case lltoken::kw_call:
         {
             valid = this->parseCall();
             break;
         }
-        case lltok::kw_tail:
+        case lltoken::kw_tail:
         {
             std::cerr << "!!!!!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!\n";
             return false;
         }
-        case lltok::kw_musttail:
+        case lltoken::kw_musttail:
         {
             std::cerr << "!!!!!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!\n";
             return false;
         }
-        case lltok::kw_notail:
+        case lltoken::kw_notail:
         {
             std::cerr << "!!!!!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!\n";
             return false;
         }
-        case lltok::kw_alloca:
+        case lltoken::kw_alloca:
         {
             valid = this->parseAlloca(outAteExtraComma);
             break;
         }
-        case lltok::kw_load:
+        case lltoken::kw_load:
         {
             valid = this->parseLoad(outAteExtraComma);
             break;
         }
-        case lltok::kw_store:
+        case lltoken::kw_store:
         {
             valid = this->parseStore(outAteExtraComma);
             break;
         }
-        case lltok::kw_cmpxchg:
+        case lltoken::kw_cmpxchg:
         {
             valid = this->parseCmpXchng(outAteExtraComma);
             break;
         }
-        case lltok::kw_atomicrmw:
+        case lltoken::kw_atomicrmw:
         {
             valid = this->parseAtomicRMW(outAteExtraComma);
             break;
         }
-        case lltok::kw_fence:
+        case lltoken::kw_fence:
         {
             valid = this->parseFence(outAteExtraComma);
             break;
         }
-        case lltok::kw_getelementptr:
+        case lltoken::kw_getelementptr:
         {
             valid = this->parseGetElementPtr(outAteExtraComma);
             break;
         }
-        case lltok::kw_extractvalue:
+        case lltoken::kw_extractvalue:
         {
             valid = this->parseExtractValue(outAteExtraComma);
             break;
         }
-        case lltok::kw_insertvalue:
+        case lltoken::kw_insertvalue:
         {
             valid = this->parseInsertValue(outAteExtraComma);
             break;
@@ -565,10 +565,10 @@ bool LLVMIRParser::parseFunctionHeader()
         CANCEL_NODE
     }
     auto nameTokKind = this->_lexer.getKind();
-    if (nameTokKind == lltok::GlobalVar) {
+    if (nameTokKind == lltoken::GlobalVar) {
         SEND_STR(LLVMIRParserEventFunctionName, "@" + this->_lexer.getStrVal() )
         this->readNextToken();
-    } else if (nameTokKind == lltok::GlobalID){
+    } else if (nameTokKind == lltoken::GlobalID){
         SEND_STR(LLVMIRParserEventFunctionID, "%" + this->_lexer.getStrVal() )
         this->readNextToken();
     }
@@ -582,7 +582,7 @@ bool LLVMIRParser::parseFunctionHeader()
         CANCEL_NODE
     }
     valid = this->parseFnAttributeValuePairs(false);
-    if (this->_lexer.getKind() == lltok::kw_section) {
+    if (this->_lexer.getKind() == lltoken::kw_section) {
         SEND_DATA(LLVMIRParserEventSection)
         this->readNextToken();
         valid = this->parseValue(ignoreType);
@@ -590,7 +590,7 @@ bool LLVMIRParser::parseFunctionHeader()
             CANCEL_NODE
         }
     }
-    if (this->_lexer.getKind() == lltok::kw_partition) {
+    if (this->_lexer.getKind() == lltoken::kw_partition) {
         SEND_DATA(LLVMIRParserEventPartition)
         this->readNextToken();
         valid = this->parseValue(ignoreType);
@@ -603,7 +603,7 @@ bool LLVMIRParser::parseFunctionHeader()
         CANCEL_NODE
     }
     valid = this->parseOptionalAlignment();
-    if (this->_lexer.getKind() == lltok::kw_gc) {
+    if (this->_lexer.getKind() == lltoken::kw_gc) {
         SEND_DATA(LLVMIRParserEventGc)
         this->readNextToken();
         valid = this->parseValue(ignoreType);
@@ -611,7 +611,7 @@ bool LLVMIRParser::parseFunctionHeader()
             CANCEL_NODE
         }
     }
-    if (this->_lexer.getKind() == lltok::kw_prefix) {
+    if (this->_lexer.getKind() == lltoken::kw_prefix) {
         SEND_DATA(LLVMIRParserEventPrefix)
         this->readNextToken();
         valid = this->parseGlobalTypeAndValue(ignoreType);
@@ -619,7 +619,7 @@ bool LLVMIRParser::parseFunctionHeader()
             CANCEL_NODE
         }
     }
-    if (this->_lexer.getKind() == lltok::kw_prologue) {
+    if (this->_lexer.getKind() == lltoken::kw_prologue) {
         SEND_DATA(LLVMIRParserEventPrologue)
         this->readNextToken();
         valid = this->parseGlobalTypeAndValue(ignoreType);
@@ -627,7 +627,7 @@ bool LLVMIRParser::parseFunctionHeader()
             CANCEL_NODE
         }
     }
-    if (this->_lexer.getKind() == lltok::kw_personality) {
+    if (this->_lexer.getKind() == lltoken::kw_personality) {
         SEND_DATA(LLVMIRParserEventPersonality)
         this->readNextToken();
         valid = this->parseGlobalTypeAndValue(ignoreType);
@@ -640,7 +640,7 @@ bool LLVMIRParser::parseFunctionHeader()
 
 bool LLVMIRParser::parseOptionalFunctionMetadata()
 {
-    while (this->_lexer.getKind() == lltok::MetadataVar) {
+    while (this->_lexer.getKind() == lltoken::MetadataVar) {
         bool valid = this->parseGlobalObjectMetadataAttachment();
         if (!valid) {
             return false;
@@ -661,7 +661,7 @@ bool LLVMIRParser::parseGlobalObjectMetadataAttachment()
 
 bool LLVMIRParser::parseMetadataAttachment()
 {
-    if (this->_lexer.getKind() != lltok::MetadataVar) {
+    if (this->_lexer.getKind() != lltoken::MetadataVar) {
         this->_receiver->receiveLLVMIRError("Expected metadata attachment", this->line, this->column);
         return false;
     }
@@ -685,11 +685,11 @@ bool LLVMIRParser::parseInstructionMetada()
 bool LLVMIRParser::parseArgumentList()
 {
     START_NODE(LLVMIRParserEventArgumentList)
-    EXPECT(lltok::lparen, "(", "expected '(' in argument list", LLVMIRParserEventPunctuation)
+    EXPECT(lltoken::lparen, "(", "expected '(' in argument list", LLVMIRParserEventPunctuation)
     auto tk = this->_lexer.getKind();
-    if (tk == lltok::rparen) {
+    if (tk == lltoken::rparen) {
         //empty
-    } else if (tk == lltok::dotdotdot) {
+    } else if (tk == lltoken::dotdotdot) {
         SEND_STR(LLVMIRParserEventVariadic, "...")
         this->readNextToken();
     } else {
@@ -697,7 +697,7 @@ bool LLVMIRParser::parseArgumentList()
         while (!done) {
             done = true;
             //handle ... at end of arg list
-            if (this->_lexer.getKind() == lltok::dotdotdot) {
+            if (this->_lexer.getKind() == lltoken::dotdotdot) {
                 SEND_STR(LLVMIRParserEventVariadic, "...")
                 this->readNextToken();
                 break;
@@ -713,19 +713,19 @@ bool LLVMIRParser::parseArgumentList()
                 CANCEL_NODE
             }
 
-            if (this->_lexer.getKind() == lltok::LocalVar) {
+            if (this->_lexer.getKind() == lltoken::LocalVar) {
                 SEND_DATA(LLVMIRParserEventAttributeName)
                 this->readNextToken();
             }
 
-            if (this->_lexer.getKind() == lltok::comma) {
+            if (this->_lexer.getKind() == lltoken::comma) {
                 SEND_STR(LLVMIRParserEventPunctuation, ",");
                 this->readNextToken();
                 done = false;
             }
         }
     }
-    EXPECT(lltok::rparen, ")", "expected ')' at end of argument list", LLVMIRParserEventPunctuation)
+    EXPECT(lltoken::rparen, ")", "expected ')' at end of argument list", LLVMIRParserEventPunctuation)
     END_NODE
 }
 
@@ -733,8 +733,8 @@ bool LLVMIRParser::parseOptionalUnnamedAddr()
 {
     auto tk = this->_lexer.getKind();
     if (
-        tk == lltok::kw_unnamed_addr
-        || tk == lltok::kw_local_unnamed_addr
+        tk == lltoken::kw_unnamed_addr
+        || tk == lltoken::kw_local_unnamed_addr
     ) {
         SEND_DATA(LLVMIRParserEventUnnamedAddr)
     }
@@ -743,22 +743,22 @@ bool LLVMIRParser::parseOptionalUnnamedAddr()
 
 bool LLVMIRParser::parseOptionalComdat()
 {
-    if (this->_lexer.getKind() != lltok::kw_comdat) {
+    if (this->_lexer.getKind() != lltoken::kw_comdat) {
         return true;
     }
     START_NODE(LLVMIRParserEventComdat)
     SEND_DATA_
     this->readNextToken();
-    if (this->_lexer.getKind() == lltok::lparen) {
+    if (this->_lexer.getKind() == lltoken::lparen) {
         SEND_STR(LLVMIRParserEventPunctuation, ")")
         this->readNextToken();
-        if (this->_lexer.getKind() == lltok::ComdatVar) {
+        if (this->_lexer.getKind() == lltoken::ComdatVar) {
             SEND_DATA(LLVMIRParserEventComdatVar)
             this->readNextToken();
         } else {
             ERROR("expected comdat variable")
         }
-        EXPECT(lltok::rparen, ")", "expected ')' after comdat var", LLVMIRParserEventPunctuation)
+        EXPECT(lltoken::rparen, ")", "expected ')' after comdat var", LLVMIRParserEventPunctuation)
     }
     END_NODE
 }
@@ -766,16 +766,16 @@ bool LLVMIRParser::parseOptionalComdat()
 bool LLVMIRParser::parseFunctionBody()
 {
     START_NODE(LLVMIRParserEventFunctionBody)
-    EXPECT(lltok::lbrace, "{", "expected '{' in function body", LLVMIRParserEventPunctuation)
-    if (this->_lexer.getKind() == lltok::rbrace) {
+    EXPECT(lltoken::lbrace, "{", "expected '{' in function body", LLVMIRParserEventPunctuation)
+    if (this->_lexer.getKind() == lltoken::rbrace) {
         SEND_STR(LLVMIRParserEventPunctuation, "}")
         this->readNextToken();
         ERROR("function body requires at least one basic block")
     }
     auto tk = this->_lexer.getKind();
     while (
-        tk != lltok::rbrace
-        && tk != lltok::kw_uselistorder
+        tk != lltoken::rbrace
+        && tk != lltoken::kw_uselistorder
     ) {
         bool valid = this->parseBasicBlock();
         if (!valid) {
@@ -783,17 +783,17 @@ bool LLVMIRParser::parseFunctionBody()
         }
         tk = this->_lexer.getKind();
     }
-    while (this->_lexer.getKind() != lltok::rbrace) {
+    while (this->_lexer.getKind() != lltoken::rbrace) {
         this->parseUseListOrder();
     }
-    EXPECT(lltok::rbrace, "}", "expected '}' at end of function body", LLVMIRParserEventPunctuation)
+    EXPECT(lltoken::rbrace, "}", "expected '}' at end of function body", LLVMIRParserEventPunctuation)
     END_NODE
 }
 
 bool LLVMIRParser::parseBasicBlock()
 {
     START_NODE(LLVMIRParserEventBasicBlock)
-    if (this->_lexer.getKind() == lltok::LabelStr || this->_lexer.getKind() == lltok::LabelID) {
+    if (this->_lexer.getKind() == lltoken::LabelStr || this->_lexer.getKind() == lltoken::LabelID) {
         SEND_STR(LLVMIRParserEventBasicBlock, this->_lexer.getStrVal()+":")
         this->readNextToken();
         
@@ -801,14 +801,14 @@ bool LLVMIRParser::parseBasicBlock()
     bool done = false;
     while (!done) {
         done = true;
-        if (this->_lexer.getKind() == lltok::LocalVarID) {
+        if (this->_lexer.getKind() == lltoken::LocalVarID) {
             SEND_DATA(LLVMIRParserEventLocalVarID)
             this->readNextToken();
-            EXPECT(lltok::equal, "=", "expected '=' after instruction id", LLVMIRParserEventPunctuation)
-        } else if (this->_lexer.getKind() == lltok::LocalVar) {
+            EXPECT(lltoken::equal, "=", "expected '=' after instruction id", LLVMIRParserEventPunctuation)
+        } else if (this->_lexer.getKind() == lltoken::LocalVar) {
             SEND_DATA(LLVMIRParserEventLocalVar)
             this->readNextToken();
-            EXPECT(lltok::equal, "=", "expected '=' after instruction name", LLVMIRParserEventPunctuation)
+            EXPECT(lltoken::equal, "=", "expected '=' after instruction name", LLVMIRParserEventPunctuation)
         }
         bool outAteExtraComma = false;
         bool valid = this->parseInstruction(outAteExtraComma);
@@ -827,7 +827,7 @@ bool LLVMIRParser::parseBasicBlock()
         } else {
             // With a normal result, we check to see if the instruction is followed by
             // a comma and metadata.
-            if (this->_lexer.getKind() == lltok::comma) {
+            if (this->_lexer.getKind() == lltoken::comma) {
                 SEND_STR(LLVMIRParserEventPunctuation, ",")
                 this->readNextToken();
                 
@@ -839,9 +839,9 @@ bool LLVMIRParser::parseBasicBlock()
         }
         auto tk = this->_lexer.getKind();
         if (
-            tk == lltok::LabelStr
-            || tk == lltok::rbrace
-            || tk == lltok::kw_uselistorder
+            tk == lltoken::LabelStr
+            || tk == lltoken::rbrace
+            || tk == lltoken::kw_uselistorder
         ) {
             done = true;
         }
@@ -885,12 +885,12 @@ bool LLVMIRParser::parseBr()
     if (outType == LLVMIRParserEventLabelType) {
         END_NODE
     }
-    EXPECT(lltok::comma, ",", "expected ',' after branch condition", LLVMIRParserEventPunctuation)
+    EXPECT(lltoken::comma, ",", "expected ',' after branch condition", LLVMIRParserEventPunctuation)
     valid = this->parseTypeAndValue(outType);
     if (!valid) {
         CANCEL_NODE
     }
-    EXPECT(lltok::comma, ",", "expected ',' after true destination", LLVMIRParserEventPunctuation)
+    EXPECT(lltoken::comma, ",", "expected ',' after true destination", LLVMIRParserEventPunctuation)
     valid = this->parseTypeAndValue(outType);
     if (!valid) {
         CANCEL_NODE
@@ -908,18 +908,18 @@ bool LLVMIRParser::parseSwitch()
     if (!valid) {
         CANCEL_NODE
     }
-    EXPECT(lltok::comma, ",", "expected ',' after switch condition", LLVMIRParserEventPunctuation)
+    EXPECT(lltoken::comma, ",", "expected ',' after switch condition", LLVMIRParserEventPunctuation)
     valid = this->parseTypeAndValue(outType);
     if (!valid) {
         CANCEL_NODE
     }
-    EXPECT(lltok::lsquare, "[", "expected '[' with switch table", LLVMIRParserEventPunctuation);
-    while (this->_lexer.getKind() != lltok::rsquare) {
+    EXPECT(lltoken::lsquare, "[", "expected '[' with switch table", LLVMIRParserEventPunctuation);
+    while (this->_lexer.getKind() != lltoken::rsquare) {
         valid = this->parseTypeAndValue(outType);
         if (!valid) {
             CANCEL_NODE
         }
-        EXPECT(lltok::comma, ",", "expected ',' after switch condition", LLVMIRParserEventPunctuation)
+        EXPECT(lltoken::comma, ",", "expected ',' after switch condition", LLVMIRParserEventPunctuation)
         valid = this->parseTypeAndValue(outType);
         if (!valid) {
             CANCEL_NODE
@@ -940,22 +940,22 @@ bool LLVMIRParser::parseIndirectBr()
     if (!valid) {
         CANCEL_NODE
     }
-    EXPECT(lltok::comma, ",", "expected ',' after indirectbr address", LLVMIRParserEventPunctuation)
+    EXPECT(lltoken::comma, ",", "expected ',' after indirectbr address", LLVMIRParserEventPunctuation)
     
-    EXPECT(lltok::lsquare, "[", "expected '[' with indirectbr", LLVMIRParserEventPunctuation);
+    EXPECT(lltoken::lsquare, "[", "expected '[' with indirectbr", LLVMIRParserEventPunctuation);
     
     bool done = false;
     while (!done) {
         done = true;
         this->parseTypeAndValue(outType);
-        if (this->_lexer.getKind() == lltok::comma) {
+        if (this->_lexer.getKind() == lltoken::comma) {
             SEND_STR(LLVMIRParserEventPunctuation, ",");
             this->readNextToken();
             done = false;
         }
     }
     
-    EXPECT(lltok::rsquare, "]", "expected ']' at end of block list", LLVMIRParserEventPunctuation);
+    EXPECT(lltoken::rsquare, "]", "expected ']' at end of block list", LLVMIRParserEventPunctuation);
     END_NODE
 }
 
@@ -997,12 +997,12 @@ bool LLVMIRParser::parseInvoke()
     if (!valid) {
         CANCEL_NODE
     }
-    EXPECT(lltok::kw_to, "to", "expected 'to' in invoke", LLVMIRParserEventKeyword)
+    EXPECT(lltoken::kw_to, "to", "expected 'to' in invoke", LLVMIRParserEventKeyword)
     valid = this->parseTypeAndValue(outType);
     if (!valid) {
         CANCEL_NODE
     }
-    EXPECT(lltok::kw_unwind, "unwind", "expected 'unwind' in invoke", LLVMIRParserEventKeyword)
+    EXPECT(lltoken::kw_unwind, "unwind", "expected 'unwind' in invoke", LLVMIRParserEventKeyword)
     valid = this->parseTypeAndValue(outType);
     if (!valid) {
         CANCEL_NODE
@@ -1035,17 +1035,17 @@ bool LLVMIRParser::parseOptionalLinkageAux(bool & outHasLinkage)
 {
     auto tk = this->_lexer.getKind();
     if (
-        tk == lltok::kw_private
-        || tk == lltok::kw_internal
-        || tk == lltok::kw_weak
-        || tk == lltok::kw_weak_odr
-        || tk == lltok::kw_linkonce
-        || tk == lltok::kw_linkonce_odr
-        || tk == lltok::kw_available_externally
-        || tk == lltok::kw_appending
-        || tk == lltok::kw_common
-        || tk == lltok::kw_extern_weak
-        || tk == lltok::kw_external
+        tk == lltoken::kw_private
+        || tk == lltoken::kw_internal
+        || tk == lltoken::kw_weak
+        || tk == lltoken::kw_weak_odr
+        || tk == lltoken::kw_linkonce
+        || tk == lltoken::kw_linkonce_odr
+        || tk == lltoken::kw_available_externally
+        || tk == lltoken::kw_appending
+        || tk == lltoken::kw_common
+        || tk == lltoken::kw_extern_weak
+        || tk == lltoken::kw_external
     ) {
         outHasLinkage = true;
     } else {
@@ -1060,13 +1060,13 @@ bool LLVMIRParser::parseOptionalLinkageAux(bool & outHasLinkage)
 bool LLVMIRParser::parseOptionalDSOLocal()
 {
     switch (this->_lexer.getKind()) {
-        case lltok::kw_dso_local:
+        case lltoken::kw_dso_local:
         {
             SEND_DATA(LLVMIRParserEventDSOLocal)
             this->readNextToken();
             break;
         }
-        case lltok::kw_dso_preemptable:
+        case lltoken::kw_dso_preemptable:
         {
             SEND_DATA(LLVMIRParserEventDSOPreemptable)
             this->readNextToken();
@@ -1081,13 +1081,13 @@ bool LLVMIRParser::parseOptionalDSOLocal()
 bool LLVMIRParser::parseOptionalDLLStorageClass()
 {
     switch (this->_lexer.getKind()) {
-        case lltok::kw_dllimport:
+        case lltoken::kw_dllimport:
         {
             SEND_DATA(LLVMIRParserEventDLLImport)
             this->readNextToken();
             break;
         }
-        case lltok::kw_dllexport:
+        case lltoken::kw_dllexport:
         {
             SEND_DATA(LLVMIRParserEventDLLExport)
             this->readNextToken();
@@ -1103,207 +1103,207 @@ bool LLVMIRParser::parseOptionalCallingConv()
 {
     START_NODE(LLVMIRParserEventCallingConv)
     switch (this->_lexer.getKind()) {
-        case lltok::kw_ccc:
+        case lltoken::kw_ccc:
         {
             SEND_STR(LLVMIRParserEventCallingConv, "ccc")
             break;
         }
-        case lltok::kw_fastcc:
+        case lltoken::kw_fastcc:
         {
             SEND_STR(LLVMIRParserEventCallingConv, "fastcc")
             break;
         }
-        case lltok::kw_coldcc:
+        case lltoken::kw_coldcc:
         {
             SEND_STR(LLVMIRParserEventCallingConv, "coldcc")
             break;
         }
-        case lltok::kw_x86_stdcallcc:
+        case lltoken::kw_x86_stdcallcc:
         {
             SEND_STR(LLVMIRParserEventCallingConv, "x86_stdcallcc")
             break;
         }
-        case lltok::kw_x86_fastcallcc:
+        case lltoken::kw_x86_fastcallcc:
         {
             SEND_STR(LLVMIRParserEventCallingConv, "x86_fastcallc")
             break;
         }
-        case lltok::kw_x86_regcallcc:
+        case lltoken::kw_x86_regcallcc:
         {
             SEND_STR(LLVMIRParserEventCallingConv, "x86_regcallcc")
             break;
         }
-        case lltok::kw_x86_thiscallcc:
+        case lltoken::kw_x86_thiscallcc:
         {
             SEND_STR(LLVMIRParserEventCallingConv, "x86_thiscallc")
             break;
         }
-        case lltok::kw_x86_vectorcallcc:
+        case lltoken::kw_x86_vectorcallcc:
         {
             SEND_STR(LLVMIRParserEventCallingConv, "x86_vectorcallcc")
             break;
         }
-        case lltok::kw_arm_apcscc:
+        case lltoken::kw_arm_apcscc:
         {
             SEND_STR(LLVMIRParserEventCallingConv, "arm_apcscc")
             break;
         }
-        case lltok::kw_arm_aapcscc:
+        case lltoken::kw_arm_aapcscc:
         {
             SEND_STR(LLVMIRParserEventCallingConv, "arm_aapcscc")
             break;
         }
-        case lltok::kw_arm_aapcs_vfpcc:
+        case lltoken::kw_arm_aapcs_vfpcc:
         {
             SEND_STR(LLVMIRParserEventCallingConv, "arm_aapcs_vfpcc")
             break;
         }
-        case lltok::kw_aarch64_vector_pcs:
+        case lltoken::kw_aarch64_vector_pcs:
         {
             SEND_STR(LLVMIRParserEventCallingConv, "aarch64_vector_pcs")
             break;
         }
-        case lltok::kw_msp430_intrcc:
+        case lltoken::kw_msp430_intrcc:
         {
             SEND_STR(LLVMIRParserEventCallingConv, "msp430_intrcc")
             break;
         }
-        case lltok::kw_avr_intrcc:
+        case lltoken::kw_avr_intrcc:
         {
             SEND_STR(LLVMIRParserEventCallingConv, "avr_intrcc")
             break;
         }
-        case lltok::kw_avr_signalcc:
+        case lltoken::kw_avr_signalcc:
         {
             SEND_STR(LLVMIRParserEventCallingConv, "avr_signalcc")
             break;
         }
-        case lltok::kw_ptx_kernel:
+        case lltoken::kw_ptx_kernel:
         {
             SEND_STR(LLVMIRParserEventCallingConv, "ptx_kernel")
             break;
         }
-        case lltok::kw_ptx_device:
+        case lltoken::kw_ptx_device:
         {
             SEND_STR(LLVMIRParserEventCallingConv, "ptx_device")
             break;
         }
-        case lltok::kw_spir_kernel:
+        case lltoken::kw_spir_kernel:
         {
             SEND_STR(LLVMIRParserEventCallingConv, "spir_kernel")
             break;
         }
-        case lltok::kw_spir_func:
+        case lltoken::kw_spir_func:
         {
             SEND_STR(LLVMIRParserEventCallingConv, "spir_func")
             break;
         }
-        case lltok::kw_intel_ocl_bicc:
+        case lltoken::kw_intel_ocl_bicc:
         {
             SEND_STR(LLVMIRParserEventCallingConv, "intel_ocl_bic")
             break;
         }
-        case lltok::kw_x86_64_sysvcc:
+        case lltoken::kw_x86_64_sysvcc:
         {
             SEND_STR(LLVMIRParserEventCallingConv, "x86_64_sysvcc")
             break;
         }
-        case lltok::kw_win64cc:
+        case lltoken::kw_win64cc:
         {
             SEND_STR(LLVMIRParserEventCallingConv, "win64cc")
             break;
         }
-        case lltok::kw_webkit_jscc:
+        case lltoken::kw_webkit_jscc:
         {
             SEND_STR(LLVMIRParserEventCallingConv, "webkit_jscc")
             break;
         }
-        case lltok::kw_anyregcc:
+        case lltoken::kw_anyregcc:
         {
             SEND_STR(LLVMIRParserEventCallingConv, "anyregcc")
             break;
         }
-        case lltok::kw_preserve_mostcc:
+        case lltoken::kw_preserve_mostcc:
         {
             SEND_STR(LLVMIRParserEventCallingConv, "preserve_mostcc")
             break;
         }
-        case lltok::kw_preserve_allcc:
+        case lltoken::kw_preserve_allcc:
         {
             SEND_STR(LLVMIRParserEventCallingConv, "preserve_allc")
             break;
         }
-        case lltok::kw_ghccc:
+        case lltoken::kw_ghccc:
         {
             SEND_STR(LLVMIRParserEventCallingConv, "ghccc")
             break;
         }
-        case lltok::kw_swiftcc:
+        case lltoken::kw_swiftcc:
         {
             SEND_STR(LLVMIRParserEventCallingConv, "swiftcc")
             break;
         }
-        case lltok::kw_x86_intrcc:
+        case lltoken::kw_x86_intrcc:
         {
             SEND_STR(LLVMIRParserEventCallingConv, "x86_intrcc")
             break;
         }
-        case lltok::kw_hhvmcc:
+        case lltoken::kw_hhvmcc:
         {
             SEND_STR(LLVMIRParserEventCallingConv, "hhvmcc")
             break;
         }
-        case lltok::kw_hhvm_ccc:
+        case lltoken::kw_hhvm_ccc:
         {
             SEND_STR(LLVMIRParserEventCallingConv, "hhvm_ccc")
             break;
         }
-        case lltok::kw_cxx_fast_tlscc:
+        case lltoken::kw_cxx_fast_tlscc:
         {
             SEND_STR(LLVMIRParserEventCallingConv, "cxx_fast_tlsc")
             break;
         }
-        case lltok::kw_amdgpu_vs:
+        case lltoken::kw_amdgpu_vs:
         {
             SEND_STR(LLVMIRParserEventCallingConv, "amdgpu_vs")
             break;
         }
-        case lltok::kw_amdgpu_ls:
+        case lltoken::kw_amdgpu_ls:
         {
             SEND_STR(LLVMIRParserEventCallingConv, "amdgpu_ls")
             break;
         }
-        case lltok::kw_amdgpu_hs:
+        case lltoken::kw_amdgpu_hs:
         {
             SEND_STR(LLVMIRParserEventCallingConv, "amdgpu_hs")
             break;
         }
-        case lltok::kw_amdgpu_es:
+        case lltoken::kw_amdgpu_es:
         {
             SEND_STR(LLVMIRParserEventCallingConv, "amdgpu_es")
             break;
         }
-        case lltok::kw_amdgpu_gs:
+        case lltoken::kw_amdgpu_gs:
         {
             SEND_STR(LLVMIRParserEventCallingConv, "amdgpu_gs")
             break;
         }
-        case lltok::kw_amdgpu_ps:
+        case lltoken::kw_amdgpu_ps:
         {
             SEND_STR(LLVMIRParserEventCallingConv, "amdgpu_ps")
             break;
         }
-        case lltok::kw_amdgpu_cs:
+        case lltoken::kw_amdgpu_cs:
         {
             SEND_STR(LLVMIRParserEventCallingConv, "amdgpu_cs")
             break;
         }
-        case lltok::kw_amdgpu_kernel:
+        case lltoken::kw_amdgpu_kernel:
         {
             SEND_STR(LLVMIRParserEventCallingConv, "amdgpu_kernel")
             break;
         }
-        case lltok::kw_cc: {
+        case lltoken::kw_cc: {
             this->_lexer.Lex();
             LLVMIRParserEvent outType = LLVMIRParserEventNone;
             this->parseValue(outType);
@@ -1325,7 +1325,7 @@ bool LLVMIRParser::parseOptionalReturnAttrs()
     while (!done) {
         done = true;
         switch (this->_lexer.getKind()) {
-            case lltok::StringConstant:
+            case lltoken::StringConstant:
             {
                 bool valid = this->parseStringAttribute();
                 if (!valid) {
@@ -1335,8 +1335,8 @@ bool LLVMIRParser::parseOptionalReturnAttrs()
                 }
                 break;
             }
-            case lltok::kw_dereferenceable:
-            case lltok::kw_dereferenceable_or_null:
+            case lltoken::kw_dereferenceable:
+            case lltoken::kw_dereferenceable_or_null:
             {
                 bool valid = this->parseOptionalDerefAttrBytes();
                 if (!valid) {
@@ -1346,7 +1346,7 @@ bool LLVMIRParser::parseOptionalReturnAttrs()
                 }
                 break;
             }
-            case lltok::kw_align:
+            case lltoken::kw_align:
             {
                 bool valid = this->parseOptionalAlignment();
                 if (!valid) {
@@ -1356,95 +1356,95 @@ bool LLVMIRParser::parseOptionalReturnAttrs()
                 }
                 break;
             }
-            case lltok::kw_inreg:
+            case lltoken::kw_inreg:
             {
                 this->_receiver->receiveLLVMIRData(LLVMIRParserEventReturnAttr, "inreg");
                 this->readNextToken();
                 done = false;
                 break;
             }
-            case lltok::kw_noalias:
+            case lltoken::kw_noalias:
             {
                 this->_receiver->receiveLLVMIRData(LLVMIRParserEventReturnAttr, "noalias");
                 this->readNextToken();
                 done = false;
                 break;
             }
-            case lltok::kw_nonnull:
+            case lltoken::kw_nonnull:
             {
                 this->_receiver->receiveLLVMIRData(LLVMIRParserEventReturnAttr, "nonnull");
                 this->readNextToken();
                 done = false;
                 break;
             }
-            case lltok::kw_signext:
+            case lltoken::kw_signext:
             {
                 this->_receiver->receiveLLVMIRData(LLVMIRParserEventReturnAttr, "signext");
                 this->readNextToken();
                 done = false;
                 break;
             }
-            case lltok::kw_zeroext:
+            case lltoken::kw_zeroext:
             {
                 this->_receiver->receiveLLVMIRData(LLVMIRParserEventReturnAttr, "zeroext");
                 this->readNextToken();
                 done = false;
                 break;
             }
-            case lltok::kw_byval:
-            case lltok::kw_inalloca:
-            case lltok::kw_nest:
-            case lltok::kw_nocapture:
-            case lltok::kw_returned:
-            case lltok::kw_sret:
-            case lltok::kw_swifterror:
-            case lltok::kw_swiftself:
-            case lltok::kw_immarg:
+            case lltoken::kw_byval:
+            case lltoken::kw_inalloca:
+            case lltoken::kw_nest:
+            case lltoken::kw_nocapture:
+            case lltoken::kw_returned:
+            case lltoken::kw_sret:
+            case lltoken::kw_swifterror:
+            case lltoken::kw_swiftself:
+            case lltoken::kw_immarg:
             {
                 INVALID("invalid use of parameter-only attribute")
                 return false;
             }
-            case lltok::kw_alignstack:
-            case lltok::kw_alwaysinline:
-            case lltok::kw_argmemonly:
-            case lltok::kw_builtin:
-            case lltok::kw_cold:
-            case lltok::kw_inlinehint:
-            case lltok::kw_jumptable:
-            case lltok::kw_minsize:
-            case lltok::kw_naked:
-            case lltok::kw_nobuiltin:
-            case lltok::kw_noduplicate:
-            case lltok::kw_noimplicitfloat:
-            case lltok::kw_noinline:
-            case lltok::kw_nonlazybind:
-            case lltok::kw_noredzone:
-            case lltok::kw_noreturn:
-            case lltok::kw_nocf_check:
-            case lltok::kw_nounwind:
-            case lltok::kw_optforfuzzing:
-            case lltok::kw_optnone:
-            case lltok::kw_optsize:
-            case lltok::kw_returns_twice:
-            case lltok::kw_sanitize_address:
-            case lltok::kw_sanitize_hwaddress:
-            case lltok::kw_sanitize_memtag:
-            case lltok::kw_sanitize_memory:
-            case lltok::kw_sanitize_thread:
-            case lltok::kw_speculative_load_hardening:
-            case lltok::kw_ssp:
-            case lltok::kw_sspreq:
-            case lltok::kw_sspstrong:
-            case lltok::kw_safestack:
-            case lltok::kw_shadowcallstack:
-            case lltok::kw_strictfp:
-            case lltok::kw_uwtable:
+            case lltoken::kw_alignstack:
+            case lltoken::kw_alwaysinline:
+            case lltoken::kw_argmemonly:
+            case lltoken::kw_builtin:
+            case lltoken::kw_cold:
+            case lltoken::kw_inlinehint:
+            case lltoken::kw_jumptable:
+            case lltoken::kw_minsize:
+            case lltoken::kw_naked:
+            case lltoken::kw_nobuiltin:
+            case lltoken::kw_noduplicate:
+            case lltoken::kw_noimplicitfloat:
+            case lltoken::kw_noinline:
+            case lltoken::kw_nonlazybind:
+            case lltoken::kw_noredzone:
+            case lltoken::kw_noreturn:
+            case lltoken::kw_nocf_check:
+            case lltoken::kw_nounwind:
+            case lltoken::kw_optforfuzzing:
+            case lltoken::kw_optnone:
+            case lltoken::kw_optsize:
+            case lltoken::kw_returns_twice:
+            case lltoken::kw_sanitize_address:
+            case lltoken::kw_sanitize_hwaddress:
+            case lltoken::kw_sanitize_memtag:
+            case lltoken::kw_sanitize_memory:
+            case lltoken::kw_sanitize_thread:
+            case lltoken::kw_speculative_load_hardening:
+            case lltoken::kw_ssp:
+            case lltoken::kw_sspreq:
+            case lltoken::kw_sspstrong:
+            case lltoken::kw_safestack:
+            case lltoken::kw_shadowcallstack:
+            case lltoken::kw_strictfp:
+            case lltoken::kw_uwtable:
             {
                 INVALID("invalid use of function-only attribute")
                 return false;
             }
-            case lltok::kw_readnone:
-            case lltok::kw_readonly:
+            case lltoken::kw_readnone:
+            case lltoken::kw_readonly:
             {
                 INVALID("invalid use of attribute on return type")
                 return false;
@@ -1471,7 +1471,7 @@ bool LLVMIRParser::parseOptionalDerefAttrBytes()
 
 bool LLVMIRParser::parseOptionalAlignment()
 {
-    if (this->_lexer.getKind() != lltok::kw_align) {
+    if (this->_lexer.getKind() != lltoken::kw_align) {
         return true;
     }
     START_NODE(LLVMIRParserEventAlign)
@@ -1487,34 +1487,34 @@ bool LLVMIRParser::parseOptionalAlignment()
 
 bool LLVMIRParser::parseOptionalAddrSpace()
 {
-    if (this->_lexer.getKind() != lltok::kw_addrspace) {
+    if (this->_lexer.getKind() != lltoken::kw_addrspace) {
         return true;
     }
     START_NODE(LLVMIRParserEventAddrSpace)
     SEND_DATA(LLVMIRParserEventAddrSpace);
     this->readNextToken();
-    EXPECT(lltok::lparen, "(", "expected '(' in address space", LLVMIRParserEventPunctuation)
+    EXPECT(lltoken::lparen, "(", "expected '(' in address space", LLVMIRParserEventPunctuation)
     LLVMIRParserEvent outType = LLVMIRParserEventNone;
     this->parseValue(outType);
-    EXPECT(lltok::rparen, ")", "expected ')' in address space", LLVMIRParserEventPunctuation)
+    EXPECT(lltoken::rparen, ")", "expected ')' in address space", LLVMIRParserEventPunctuation)
     END_NODE
 }
 
 bool LLVMIRParser::parseParameterList()
 {
     START_NODE(LLVMIRParserEventParameterList);
-    EXPECT(lltok::lparen, "(", "expected '(' in call", LLVMIRParserEventPunctuation);
+    EXPECT(lltoken::lparen, "(", "expected '(' in call", LLVMIRParserEventPunctuation);
     bool done = false;
     while (!done) {
         done = true;
-        if (this->_lexer.getKind() == lltok::dotdotdot) {
+        if (this->_lexer.getKind() == lltoken::dotdotdot) {
             std::string errorMsg = "unexpected ellipsis in argument list for ";
             if (this->isMustTailCall()) {
                 ERROR((errorMsg+"non-musttail call").data())
             } else {
                 ERROR((errorMsg+"musttail call in non-varargs function").data())
             }
-            EXPECT(lltok::rparen, ")", "expected ')' at end of argument list", LLVMIRParserEventPunctuation);
+            EXPECT(lltoken::rparen, ")", "expected ')' at end of argument list", LLVMIRParserEventPunctuation);
             END_NODE
         }
         LLVMIRParserEvent outType = LLVMIRParserEventNone;
@@ -1534,13 +1534,13 @@ bool LLVMIRParser::parseParameterList()
         if (!valid) {
             CANCEL_NODE
         }
-        if (this->_lexer.getKind() == lltok::comma) {
+        if (this->_lexer.getKind() == lltoken::comma) {
             SEND_STR(LLVMIRParserEventPunctuation, ",")
             this->readNextToken();
             done = false;
         }
     }
-    EXPECT(lltok::rparen, ")", "expected ')' in call", LLVMIRParserEventPunctuation)
+    EXPECT(lltoken::rparen, ")", "expected ')' in call", LLVMIRParserEventPunctuation)
     END_NODE
 }
 
@@ -1551,12 +1551,12 @@ bool LLVMIRParser::parseFnAttributeValuePairs(bool inAttrGrp)
     while (!done) {
         done = true;
         switch (this->_lexer.getKind()) {
-            case lltok::AttrGrpID:
+            case lltoken::AttrGrpID:
             {
                 SEND_DATA(LLVMIRParserEventAttrGrpID)
                 break;
             }
-            case lltok::StringConstant:
+            case lltoken::StringConstant:
             {
                 bool valid = this->parseStringAttribute();
                 if (!valid) {
@@ -1565,12 +1565,12 @@ bool LLVMIRParser::parseFnAttributeValuePairs(bool inAttrGrp)
                 done = false;
                 break;
             }
-            case lltok::kw_align:
+            case lltoken::kw_align:
             {
                 SEND_DATA(LLVMIRParserEventAlign)
                 if (inAttrGrp) {
                     this->readNextToken();
-                    EXPECT(lltok::equal, "=", "expected '=' here", LLVMIRParserEventPunctuation);
+                    EXPECT(lltoken::equal, "=", "expected '=' here", LLVMIRParserEventPunctuation);
                     LLVMIRParserEvent outType = LLVMIRParserEventNone;
                     bool valid = this->parseValue(outType);
                     if (!valid) {
@@ -1582,10 +1582,10 @@ bool LLVMIRParser::parseFnAttributeValuePairs(bool inAttrGrp)
                 done = false;
                 break;
             }
-            case lltok::kw_alignstack:
+            case lltoken::kw_alignstack:
             {
                 SEND_DATA(LLVMIRParserEventAlignStack)
-                EXPECT(lltok::equal, "=", "expected '=' here", LLVMIRParserEventPunctuation)
+                EXPECT(lltoken::equal, "=", "expected '=' here", LLVMIRParserEventPunctuation)
                 LLVMIRParserEvent outType = LLVMIRParserEventNone;
                 bool valid = this->parseValue(outType);
                 if (!valid) {
@@ -1593,7 +1593,7 @@ bool LLVMIRParser::parseFnAttributeValuePairs(bool inAttrGrp)
                 }
                 break;
             }
-            case lltok::kw_allocsize:
+            case lltoken::kw_allocsize:
             {
                 SEND_DATA(LLVMIRParserEventAllocSize)
                 bool valid = this->parseAllocSizeArguments();
@@ -1612,7 +1612,7 @@ bool LLVMIRParser::parseFnAttributeValuePairs(bool inAttrGrp)
 
 bool LLVMIRParser::parseOptionalOperandBundles()
 {
-    if (this->_lexer.getKind() != lltok::lsquare) {
+    if (this->_lexer.getKind() != lltoken::lsquare) {
         return true;
     }
     START_NODE(LLVMIRParserEventOperandBundle)
@@ -1628,7 +1628,7 @@ bool LLVMIRParser::parseOptionalOperandBundles()
         if (!valid) {
             CANCEL_NODE
         }
-        EXPECT(lltok::lparen, "(", "expected '(' in operand bundle", LLVMIRParserEventPunctuation)
+        EXPECT(lltoken::lparen, "(", "expected '(' in operand bundle", LLVMIRParserEventPunctuation)
         bool done2 = false;
         while (!done2) {
             done2 = true;
@@ -1636,16 +1636,16 @@ bool LLVMIRParser::parseOptionalOperandBundles()
             this->parseType(outType);
             this->parseValue(outType);
             
-            if (this->_lexer.getKind() == lltok::comma) {
+            if (this->_lexer.getKind() == lltoken::comma) {
                 done2 = false;
             }
         }
-        EXPECT(lltok::rparen, ")", "expected ')' in operand bundle", LLVMIRParserEventPunctuation)
-        if (this->_lexer.getKind() == lltok::comma) {
+        EXPECT(lltoken::rparen, ")", "expected ')' in operand bundle", LLVMIRParserEventPunctuation)
+        if (this->_lexer.getKind() == lltoken::comma) {
             done = false;
         }
     }
-    EXPECT(lltok::rsquare, "]", "expected ']' in operand bundle", LLVMIRParserEventPunctuation)
+    EXPECT(lltoken::rsquare, "]", "expected ']' in operand bundle", LLVMIRParserEventPunctuation)
     END_NODE
 }
 
@@ -1662,7 +1662,7 @@ bool LLVMIRParser::parseOptionalParamAttrs()
     while (!done) {
         done = true;
         switch (this->_lexer.getKind()) {
-            case lltok::StringConstant:
+            case lltoken::StringConstant:
             {
                 valid = this->parseStringAttribute();
                 if (!valid) {
@@ -1671,7 +1671,7 @@ bool LLVMIRParser::parseOptionalParamAttrs()
                 done = false;
                 break;
             }
-            case lltok::kw_align:
+            case lltoken::kw_align:
             {
                 valid = this->parseOptionalAlignment();
                 if (!valid) {
@@ -1680,7 +1680,7 @@ bool LLVMIRParser::parseOptionalParamAttrs()
                 done = false;
                 break;
             }
-            case lltok::kw_byval:
+            case lltoken::kw_byval:
             {
                 valid = this->parseByValWithOptionalType();
                 if (!valid) {
@@ -1689,8 +1689,8 @@ bool LLVMIRParser::parseOptionalParamAttrs()
                 done = false;
                 break;
             }
-            case lltok::kw_dereferenceable:
-            case lltok::kw_dereferenceable_or_null:
+            case lltoken::kw_dereferenceable:
+            case lltoken::kw_dereferenceable_or_null:
             {
                 valid = this->parseOptionalDerefAttrBytes();
                 if (!valid) {
@@ -1699,121 +1699,121 @@ bool LLVMIRParser::parseOptionalParamAttrs()
                 done = false;
                 break;
             }
-            case lltok::kw_inalloca:
+            case lltoken::kw_inalloca:
             {
                 this->_receiver->receiveLLVMIRData(LLVMIRParserEventParamAttr, this->_lexer.getStrVal());
                 break;
             }
-            case lltok::kw_inreg:
+            case lltoken::kw_inreg:
             {
                 this->_receiver->receiveLLVMIRData(LLVMIRParserEventParamAttr, this->_lexer.getStrVal());
                 break;
             }
-            case lltok::kw_nest:
+            case lltoken::kw_nest:
             {
                 this->_receiver->receiveLLVMIRData(LLVMIRParserEventParamAttr, this->_lexer.getStrVal());
                 break;
             }
-            case lltok::kw_noalias:
+            case lltoken::kw_noalias:
             {
                 this->_receiver->receiveLLVMIRData(LLVMIRParserEventParamAttr, this->_lexer.getStrVal());
                 break;
             }
-            case lltok::kw_nocapture:
+            case lltoken::kw_nocapture:
             {
                 this->_receiver->receiveLLVMIRData(LLVMIRParserEventParamAttr, this->_lexer.getStrVal());
                 break;
             }
-            case lltok::kw_nonnull:
+            case lltoken::kw_nonnull:
             {
                 this->_receiver->receiveLLVMIRData(LLVMIRParserEventParamAttr, this->_lexer.getStrVal());
                 break;
             }
-            case lltok::kw_readnone:
+            case lltoken::kw_readnone:
             {
                 this->_receiver->receiveLLVMIRData(LLVMIRParserEventParamAttr, this->_lexer.getStrVal());
                 break;
             }
-            case lltok::kw_readonly:
+            case lltoken::kw_readonly:
             {
                 this->_receiver->receiveLLVMIRData(LLVMIRParserEventParamAttr, this->_lexer.getStrVal());
                 break;
             }
-            case lltok::kw_returned:
+            case lltoken::kw_returned:
             {
                 this->_receiver->receiveLLVMIRData(LLVMIRParserEventParamAttr, this->_lexer.getStrVal());
                 break;
             }
-            case lltok::kw_signext:
+            case lltoken::kw_signext:
             {
                 this->_receiver->receiveLLVMIRData(LLVMIRParserEventParamAttr, this->_lexer.getStrVal());
                 break;
             }
-            case lltok::kw_sret:
+            case lltoken::kw_sret:
             {
                 this->_receiver->receiveLLVMIRData(LLVMIRParserEventParamAttr, this->_lexer.getStrVal());
                 break;
             }
-            case lltok::kw_swifterror:
+            case lltoken::kw_swifterror:
             {
                 this->_receiver->receiveLLVMIRData(LLVMIRParserEventParamAttr, this->_lexer.getStrVal());
                 break;
             }
-            case lltok::kw_swiftself:
+            case lltoken::kw_swiftself:
             {
                 this->_receiver->receiveLLVMIRData(LLVMIRParserEventParamAttr, this->_lexer.getStrVal());
                 break;
             }
-            case lltok::kw_writeonly:
+            case lltoken::kw_writeonly:
             {
                 this->_receiver->receiveLLVMIRData(LLVMIRParserEventParamAttr, this->_lexer.getStrVal());
                 break;
             }
-            case lltok::kw_zeroext:
+            case lltoken::kw_zeroext:
             {
                 this->_receiver->receiveLLVMIRData(LLVMIRParserEventParamAttr, this->_lexer.getStrVal());
                 break;
             }
-            case lltok::kw_immarg:
+            case lltoken::kw_immarg:
             {
                 this->_receiver->receiveLLVMIRData(LLVMIRParserEventParamAttr, this->_lexer.getStrVal());
                 break;
             }
                 
-            case lltok::kw_alignstack:
-            case lltok::kw_alwaysinline:
-            case lltok::kw_argmemonly:
-            case lltok::kw_builtin:
-            case lltok::kw_inlinehint:
-            case lltok::kw_jumptable:
-            case lltok::kw_minsize:
-            case lltok::kw_naked:
-            case lltok::kw_nobuiltin:
-            case lltok::kw_noduplicate:
-            case lltok::kw_noimplicitfloat:
-            case lltok::kw_noinline:
-            case lltok::kw_nonlazybind:
-            case lltok::kw_noredzone:
-            case lltok::kw_noreturn:
-            case lltok::kw_nocf_check:
-            case lltok::kw_nounwind:
-            case lltok::kw_optforfuzzing:
-            case lltok::kw_optnone:
-            case lltok::kw_optsize:
-            case lltok::kw_returns_twice:
-            case lltok::kw_sanitize_address:
-            case lltok::kw_sanitize_hwaddress:
-            case lltok::kw_sanitize_memtag:
-            case lltok::kw_sanitize_memory:
-            case lltok::kw_sanitize_thread:
-            case lltok::kw_speculative_load_hardening:
-            case lltok::kw_ssp:
-            case lltok::kw_sspreq:
-            case lltok::kw_sspstrong:
-            case lltok::kw_safestack:
-            case lltok::kw_shadowcallstack:
-            case lltok::kw_strictfp:
-            case lltok::kw_uwtable:
+            case lltoken::kw_alignstack:
+            case lltoken::kw_alwaysinline:
+            case lltoken::kw_argmemonly:
+            case lltoken::kw_builtin:
+            case lltoken::kw_inlinehint:
+            case lltoken::kw_jumptable:
+            case lltoken::kw_minsize:
+            case lltoken::kw_naked:
+            case lltoken::kw_nobuiltin:
+            case lltoken::kw_noduplicate:
+            case lltoken::kw_noimplicitfloat:
+            case lltoken::kw_noinline:
+            case lltoken::kw_nonlazybind:
+            case lltoken::kw_noredzone:
+            case lltoken::kw_noreturn:
+            case lltoken::kw_nocf_check:
+            case lltoken::kw_nounwind:
+            case lltoken::kw_optforfuzzing:
+            case lltoken::kw_optnone:
+            case lltoken::kw_optsize:
+            case lltoken::kw_returns_twice:
+            case lltoken::kw_sanitize_address:
+            case lltoken::kw_sanitize_hwaddress:
+            case lltoken::kw_sanitize_memtag:
+            case lltoken::kw_sanitize_memory:
+            case lltoken::kw_sanitize_thread:
+            case lltoken::kw_speculative_load_hardening:
+            case lltoken::kw_ssp:
+            case lltoken::kw_sspreq:
+            case lltoken::kw_sspstrong:
+            case lltoken::kw_safestack:
+            case lltoken::kw_shadowcallstack:
+            case lltoken::kw_strictfp:
+            case lltoken::kw_uwtable:
             {
                 this->_receiver->receiveLLVMIRError("invalid use of function-only attribute", this->line, this->column);
                 break;
@@ -1856,17 +1856,17 @@ bool LLVMIRParser::parseCleanupRet()
     START_NODE(LLVMIRParserEventCatchRet)
     SEND_DATA_
     this->readNextToken();
-    EXPECT(lltok::kw_from, "from", "expected 'from' after cleanupret",LLVMIRParserEventKeyword)
+    EXPECT(lltoken::kw_from, "from", "expected 'from' after cleanupret",LLVMIRParserEventKeyword)
     LLVMIRParserEvent outType = LLVMIRParserEventNone;
     bool valid = this->parseValue(outType);
     if (!valid) {
         CANCEL_NODE
     }
-    EXPECT(lltok::kw_unwind, "unwind", "expected 'unwind' in cleanupret",LLVMIRParserEventKeyword)
-    if (this->_lexer.getKind() == lltok::kw_to) {
+    EXPECT(lltoken::kw_unwind, "unwind", "expected 'unwind' in cleanupret",LLVMIRParserEventKeyword)
+    if (this->_lexer.getKind() == lltoken::kw_to) {
         SEND_STR(LLVMIRParserEventKeyword, "to")
         this->readNextToken();
-        EXPECT(lltok::kw_caller, "caller", "expected 'caller' in cleanupret", LLVMIRParserEventKeyword)
+        EXPECT(lltoken::kw_caller, "caller", "expected 'caller' in cleanupret", LLVMIRParserEventKeyword)
     } else {
         bool valid = this->parseTypeAndValue(outType);
         if (!valid) {
@@ -1881,13 +1881,13 @@ bool LLVMIRParser::parseCatchRet()
     START_NODE(LLVMIRParserEventCatchRet)
     SEND_DATA_
     this->readNextToken();
-    EXPECT(lltok::kw_from, "from", "expected 'from' after catchret", LLVMIRParserEventKeyword)
+    EXPECT(lltoken::kw_from, "from", "expected 'from' after catchret", LLVMIRParserEventKeyword)
     LLVMIRParserEvent outType = LLVMIRParserEventNone;
     bool valid = this->parseValue(outType);
     if (!valid) {
         CANCEL_NODE
     }
-    EXPECT(lltok::kw_to, "to", "expected 'to' in catchret", LLVMIRParserEventKeyword)
+    EXPECT(lltoken::kw_to, "to", "expected 'to' in catchret", LLVMIRParserEventKeyword)
     valid = this->parseTypeAndValue(outType);
     if (!valid) {
         CANCEL_NODE
@@ -1900,10 +1900,10 @@ bool LLVMIRParser::parseCatchSwitch()
     START_NODE(LLVMIRParserEventCatchSwitch)
     SEND_DATA_
     this->readNextToken();
-    EXPECT(lltok::kw_within, "within", "expected 'within' after catchswitch", LLVMIRParserEventKeyword)
+    EXPECT(lltoken::kw_within, "within", "expected 'within' after catchswitch", LLVMIRParserEventKeyword)
     auto tokKind = this->_lexer.getKind();
-    if (tokKind != lltok::kw_none && tokKind != lltok::LocalVar &&
-        tokKind != lltok::LocalVarID){
+    if (tokKind != lltoken::kw_none && tokKind != lltoken::LocalVar &&
+        tokKind != lltoken::LocalVarID){
         ERROR("expected scope value for catchswitch")
     }
     LLVMIRParserEvent outType = LLVMIRParserEventNone;
@@ -1911,7 +1911,7 @@ bool LLVMIRParser::parseCatchSwitch()
     if (!valid) {
         CANCEL_NODE
     }
-    EXPECT(lltok::lsquare, "[", "expected '[' with catchswitch labels", LLVMIRParserEventPunctuation)
+    EXPECT(lltoken::lsquare, "[", "expected '[' with catchswitch labels", LLVMIRParserEventPunctuation)
     bool done = false;
     while (!done) {
         done = true;
@@ -1919,18 +1919,18 @@ bool LLVMIRParser::parseCatchSwitch()
         if (!valid) {
             CANCEL_NODE
         }
-        if (this->_lexer.getKind() == lltok::comma) {
+        if (this->_lexer.getKind() == lltoken::comma) {
             SEND_STR(LLVMIRParserEventPunctuation, ",")
             this->readNextToken();
             done = false;
         }
     }
-    EXPECT(lltok::rsquare, "]", "expected ']' after catchswitch labels", LLVMIRParserEventPunctuation)
-    EXPECT(lltok::kw_unwind, "unwind", "expected 'unwind' after catchswitch scope", LLVMIRParserEventKeyword)
-    if (this->_lexer.getKind() == lltok::kw_to) {
+    EXPECT(lltoken::rsquare, "]", "expected ']' after catchswitch labels", LLVMIRParserEventPunctuation)
+    EXPECT(lltoken::kw_unwind, "unwind", "expected 'unwind' after catchswitch scope", LLVMIRParserEventKeyword)
+    if (this->_lexer.getKind() == lltoken::kw_to) {
         SEND_DATA(LLVMIRParserEventKeyword)
         this->readNextToken();
-        EXPECT(lltok::kw_caller, "caller", "expected 'caller' in catchswitch", LLVMIRParserEventKeyword)
+        EXPECT(lltoken::kw_caller, "caller", "expected 'caller' in catchswitch", LLVMIRParserEventKeyword)
         
     } else {
         valid = this->parseTypeAndValue(outType);
@@ -1987,13 +1987,13 @@ bool LLVMIRParser::parseCallBr()
     if (!valid) {
         CANCEL_NODE
     }
-    EXPECT(lltok::kw_to, "to", "expected 'to' in callbr", LLVMIRParserEventKeyword)
+    EXPECT(lltoken::kw_to, "to", "expected 'to' in callbr", LLVMIRParserEventKeyword)
     valid = this->parseTypeAndValue(outType);
     if (!valid) {
         CANCEL_NODE
     }
 
-    EXPECT(lltok::lsquare, "[", "expected '[' in callbr", LLVMIRParserEventPunctuation)
+    EXPECT(lltoken::lsquare, "[", "expected '[' in callbr", LLVMIRParserEventPunctuation)
     bool done = false;
     while (!done) {
         done = true;
@@ -2001,12 +2001,12 @@ bool LLVMIRParser::parseCallBr()
         if (!valid) {
             CANCEL_NODE
         }
-        if (this->_lexer.getKind() == lltok::comma) {
+        if (this->_lexer.getKind() == lltoken::comma) {
             SEND_STR(LLVMIRParserEventPunctuation, ",")
             done = false;
         }
     }
-    EXPECT(lltok::rsquare, "]", "expected ']' at end of block list", LLVMIRParserEventPunctuation)
+    EXPECT(lltoken::rsquare, "]", "expected ']' at end of block list", LLVMIRParserEventPunctuation)
 
     END_NODE
 }
@@ -2031,19 +2031,19 @@ bool LLVMIRParser::parseCast()
 {
     START_NODE(LLVMIRParserEventCast)
     switch (this->_lexer.getKind()) {
-        case lltok::kw_trunc: SEND_STR(LLVMIRParserEventCast, "trunc"); break;
-        case lltok::kw_zext: SEND_STR(LLVMIRParserEventCast, "zext"); break;
-        case lltok::kw_sext: SEND_STR(LLVMIRParserEventCast, "sext"); break;
-        case lltok::kw_fptrunc: SEND_STR(LLVMIRParserEventCast, "fptrunc"); break;
-        case lltok::kw_fpext: SEND_STR(LLVMIRParserEventCast, "fpext"); break;
-        case lltok::kw_bitcast: SEND_STR(LLVMIRParserEventCast, "bitcast"); break;
-        case lltok::kw_addrspacecast: SEND_STR(LLVMIRParserEventCast, "addrspacecast"); break;
-        case lltok::kw_uitofp: SEND_STR(LLVMIRParserEventCast, "uitofp"); break;
-        case lltok::kw_sitofp: SEND_STR(LLVMIRParserEventCast, "sitofp"); break;
-        case lltok::kw_fptoui: SEND_STR(LLVMIRParserEventCast, "fptoui"); break;
-        case lltok::kw_fptosi: SEND_STR(LLVMIRParserEventCast, "fptosi"); break;
-        case lltok::kw_inttoptr: SEND_STR(LLVMIRParserEventCast, "inttoptr"); break;
-        case lltok::kw_ptrtoint: SEND_STR(LLVMIRParserEventCast, "ptrtoint"); break;
+        case lltoken::kw_trunc: SEND_STR(LLVMIRParserEventCast, "trunc"); break;
+        case lltoken::kw_zext: SEND_STR(LLVMIRParserEventCast, "zext"); break;
+        case lltoken::kw_sext: SEND_STR(LLVMIRParserEventCast, "sext"); break;
+        case lltoken::kw_fptrunc: SEND_STR(LLVMIRParserEventCast, "fptrunc"); break;
+        case lltoken::kw_fpext: SEND_STR(LLVMIRParserEventCast, "fpext"); break;
+        case lltoken::kw_bitcast: SEND_STR(LLVMIRParserEventCast, "bitcast"); break;
+        case lltoken::kw_addrspacecast: SEND_STR(LLVMIRParserEventCast, "addrspacecast"); break;
+        case lltoken::kw_uitofp: SEND_STR(LLVMIRParserEventCast, "uitofp"); break;
+        case lltoken::kw_sitofp: SEND_STR(LLVMIRParserEventCast, "sitofp"); break;
+        case lltoken::kw_fptoui: SEND_STR(LLVMIRParserEventCast, "fptoui"); break;
+        case lltoken::kw_fptosi: SEND_STR(LLVMIRParserEventCast, "fptosi"); break;
+        case lltoken::kw_inttoptr: SEND_STR(LLVMIRParserEventCast, "inttoptr"); break;
+        case lltoken::kw_ptrtoint: SEND_STR(LLVMIRParserEventCast, "ptrtoint"); break;
         default: CANCEL_NODE
     }
     this->readNextToken();
@@ -2052,7 +2052,7 @@ bool LLVMIRParser::parseCast()
     if (!valid) {
         CANCEL_NODE
     }
-    EXPECT(lltok::kw_to, "to", "expected 'to' after cast value", LLVMIRParserEventKeyword);
+    EXPECT(lltoken::kw_to, "to", "expected 'to' after cast value", LLVMIRParserEventKeyword);
     valid = this->parseType(outType);
     if (!valid) {
         CANCEL_NODE
@@ -2070,7 +2070,7 @@ bool LLVMIRParser::parseLogical()
     if (!valid) {
         CANCEL_NODE
     }
-    EXPECT(lltok::comma, ",", "expected ',' in logical operation", LLVMIRParserEventPunctuation)
+    EXPECT(lltoken::comma, ",", "expected ',' in logical operation", LLVMIRParserEventPunctuation)
     valid = this->parseValue(outType);
     if (!valid) {
         CANCEL_NODE
@@ -2090,7 +2090,7 @@ bool LLVMIRParser::parseCompare()
     if (!valid) {
         CANCEL_NODE
     }
-    EXPECT(lltok::comma, ",", "expected ',' after compare value", LLVMIRParserEventPunctuation)
+    EXPECT(lltoken::comma, ",", "expected ',' after compare value", LLVMIRParserEventPunctuation)
 
     valid = this->parseValue(outType);
     if (!valid) {
@@ -2102,9 +2102,9 @@ bool LLVMIRParser::parseCompare()
 bool LLVMIRParser::parseCmpPredicate()
 {
     auto tokenKind = this->_lexer.getKind();
-    if (tokenKind == lltok::kw_icmp) {
+    if (tokenKind == lltoken::kw_icmp) {
         this->_receiver->receiveLLVMIRData(LLVMIRParserEventCompare, "icmp");
-    } else if (tokenKind == lltok::kw_fcmp) {
+    } else if (tokenKind == lltoken::kw_fcmp) {
         this->_receiver->receiveLLVMIRData(LLVMIRParserEventCompare, "fcmp");
     } else {
         this->_receiver->receiveLLVMIRError("expected comparison keyword", this->line, this->column);
@@ -2117,38 +2117,38 @@ bool LLVMIRParser::parseCmpPredicate()
     //FIXME: should this 54 value come from llvm's instruction.h?
     if (opcode == 54) {
         switch (this->_lexer.getKind()) {
-            case lltok::kw_oeq: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "oeq"); break;
-            case lltok::kw_one: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "one"); break;
-            case lltok::kw_olt: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "olt"); break;
-            case lltok::kw_ogt: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "ogt"); break;
-            case lltok::kw_ole: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "ole"); break;
-            case lltok::kw_oge: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "oge"); break;
-            case lltok::kw_ord: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "ord"); break;
-            case lltok::kw_uno: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "uno"); break;
-            case lltok::kw_ueq: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "ueq"); break;
-            case lltok::kw_une: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "une"); break;
-            case lltok::kw_ult: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "ult"); break;
-            case lltok::kw_ugt: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "ugt"); break;
-            case lltok::kw_ule: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "ule"); break;
-            case lltok::kw_uge: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "uge"); break;
-            case lltok::kw_true: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "true"); break;
-            case lltok::kw_false: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "false"); break;
+            case lltoken::kw_oeq: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "oeq"); break;
+            case lltoken::kw_one: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "one"); break;
+            case lltoken::kw_olt: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "olt"); break;
+            case lltoken::kw_ogt: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "ogt"); break;
+            case lltoken::kw_ole: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "ole"); break;
+            case lltoken::kw_oge: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "oge"); break;
+            case lltoken::kw_ord: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "ord"); break;
+            case lltoken::kw_uno: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "uno"); break;
+            case lltoken::kw_ueq: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "ueq"); break;
+            case lltoken::kw_une: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "une"); break;
+            case lltoken::kw_ult: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "ult"); break;
+            case lltoken::kw_ugt: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "ugt"); break;
+            case lltoken::kw_ule: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "ule"); break;
+            case lltoken::kw_uge: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "uge"); break;
+            case lltoken::kw_true: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "true"); break;
+            case lltoken::kw_false: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "false"); break;
             default:
                 this->_receiver->receiveLLVMIRError("expected fcmp predicate (e.g. 'oeq')", this->line, this->column);
                 return false;
         }
     } else {
         switch (this->_lexer.getKind()) {
-            case lltok::kw_eq:  this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "eq"); break;
-            case lltok::kw_ne:  this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "ne"); break;
-            case lltok::kw_slt: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "slt"); break;
-            case lltok::kw_sgt: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "sgt"); break;
-            case lltok::kw_sle: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "sle"); break;
-            case lltok::kw_sge: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "sge"); break;
-            case lltok::kw_ult: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "ult"); break;
-            case lltok::kw_ugt: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "ugt"); break;
-            case lltok::kw_ule: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "ule"); break;
-            case lltok::kw_uge: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "uge"); break;
+            case lltoken::kw_eq:  this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "eq"); break;
+            case lltoken::kw_ne:  this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "ne"); break;
+            case lltoken::kw_slt: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "slt"); break;
+            case lltoken::kw_sgt: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "sgt"); break;
+            case lltoken::kw_sle: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "sle"); break;
+            case lltoken::kw_sge: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "sge"); break;
+            case lltoken::kw_ult: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "ult"); break;
+            case lltoken::kw_ugt: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "ugt"); break;
+            case lltoken::kw_ule: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "ule"); break;
+            case lltoken::kw_uge: this->_receiver->receiveLLVMIRData(LLVMIRParserEventCmpPredicate, "uge"); break;
             default:
                 this->_receiver->receiveLLVMIRError("expected icmp predicate (e.g. 'eq')", this->line, this->column);
                 return false;
@@ -2177,7 +2177,7 @@ bool LLVMIRParser::parseType(LLVMIRParserEvent & outType)
     START_NODE(LLVMIRParserEventType)
     switch (this->_lexer.getKind()) {
         // Type ::= 'float' | 'void' (etc)
-        case lltok::Type:
+        case lltoken::Type:
         {
             if (this->_lexer.getStrVal() == "label") {
                 outType = LLVMIRParserEventLabelType;
@@ -2189,7 +2189,7 @@ bool LLVMIRParser::parseType(LLVMIRParserEvent & outType)
             break;
         }
         // Type ::= StructType
-        case lltok::lbrace:
+        case lltoken::lbrace:
         {
             bool valid = this->parseAnonStructType();
             if (!valid) {
@@ -2198,7 +2198,7 @@ bool LLVMIRParser::parseType(LLVMIRParserEvent & outType)
             break;
         }
         // Type ::= '[' ... ']'
-        case lltok::lsquare:
+        case lltoken::lsquare:
         {
             SEND_STR(LLVMIRParserEventPunctuation, "[")
             this->readNextToken();
@@ -2210,16 +2210,16 @@ bool LLVMIRParser::parseType(LLVMIRParserEvent & outType)
         }
         // Either vector or packed struct.
         // Type ::= '<' ... '>'
-        case lltok::less:
+        case lltoken::less:
         {
             SEND_STR(LLVMIRParserEventPunctuation, "<")
             this->readNextToken();
-            if (this->_lexer.getKind() == lltok::lbrace) {
+            if (this->_lexer.getKind() == lltoken::lbrace) {
                 bool valid = this->parseAnonStructType();
                 if (!valid) {
                     CANCEL_NODE
                 }
-                EXPECT(lltok::greater, ">", "expected '>' at end of packed struct", LLVMIRParserEventPunctuation)
+                EXPECT(lltoken::greater, ">", "expected '>' at end of packed struct", LLVMIRParserEventPunctuation)
             } else {
                 bool valid = this->parseArrayVectorType(true);
                 if (!valid) {
@@ -2228,13 +2228,13 @@ bool LLVMIRParser::parseType(LLVMIRParserEvent & outType)
             }
             break;
         }
-        case lltok::LocalVar:
+        case lltoken::LocalVar:
         {
             SEND_STR(LLVMIRParserEventLocalVarType, "%" + this->_lexer.getStrVal())
             this->readNextToken();
             break;
         }
-        case lltok::LocalVarID:
+        case lltoken::LocalVarID:
         {
             SEND_STR(LLVMIRParserEventLocalVarIDType, "%" + this->_lexer.getStrVal())
             this->readNextToken();
@@ -2248,26 +2248,26 @@ bool LLVMIRParser::parseType(LLVMIRParserEvent & outType)
     while (!done) {
         done = true;
         switch (this->_lexer.getKind()) {
-            case lltok::star:
+            case lltoken::star:
             {
                 SEND_STR(LLVMIRParserEventPointerType, "*");
                 this->readNextToken();
                 done = false;
                 break;
             }
-            case lltok::kw_addrspace:
+            case lltoken::kw_addrspace:
             {
                 SEND_STR(LLVMIRParserEventAddrSpace, "addrspace")
                 this->readNextToken();
-                EXPECT(lltok::lparen, "(", "expected '(' in address space", LLVMIRParserEventPunctuation)
+                EXPECT(lltoken::lparen, "(", "expected '(' in address space", LLVMIRParserEventPunctuation)
                 LLVMIRParserEvent outType = LLVMIRParserEventNone;
                 this->parseValue(outType);
-                EXPECT(lltok::rparen, ")", "expected ')' in address space", LLVMIRParserEventPunctuation)
-                EXPECT(lltok::star, "*", "expected '*' in address space", LLVMIRParserEventPunctuation)
+                EXPECT(lltoken::rparen, ")", "expected ')' in address space", LLVMIRParserEventPunctuation)
+                EXPECT(lltoken::star, "*", "expected '*' in address space", LLVMIRParserEventPunctuation)
                 done = false;
                 break;
             }
-            case lltok::lparen:
+            case lltoken::lparen:
             {
                 std::cerr << "!!!!!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!\n";
                 CANCEL_NODE
@@ -2291,7 +2291,7 @@ bool LLVMIRParser::parseAnonStructType()
 bool LLVMIRParser::parseStructBody()
 {
     START_NODE(LLVMIRParserEventStructBody)
-    EXPECT(lltok::lbrace, "{", "expected '{' in struct body", LLVMIRParserEventPunctuation)
+    EXPECT(lltoken::lbrace, "{", "expected '{' in struct body", LLVMIRParserEventPunctuation)
     LLVMIRParserEvent outType = LLVMIRParserEventNone;
     bool valid = this->parseType(outType);
     if (!valid) {
@@ -2304,13 +2304,13 @@ bool LLVMIRParser::parseStructBody()
         if (!valid) {
             CANCEL_NODE
         }
-        if (this->_lexer.getKind() == lltok::comma) {
+        if (this->_lexer.getKind() == lltoken::comma) {
             SEND_STR(LLVMIRParserEventPunctuation, ",")
             this->readNextToken();
             done = false;
         }
     }
-    EXPECT(lltok::rbrace, "}", "expected '}' at end of struct", LLVMIRParserEventPunctuation)
+    EXPECT(lltoken::rbrace, "}", "expected '}' at end of struct", LLVMIRParserEventPunctuation)
     END_NODE
 }
 
@@ -2325,12 +2325,12 @@ bool LLVMIRParser::parseArrayVectorType(bool isVector)
     } else {
         __parserEvent = LLVMIRParserEventArrayType;
     }
-    if (isVector && this->_lexer.getKind() == lltok::kw_vscale) {
+    if (isVector && this->_lexer.getKind() == lltoken::kw_vscale) {
         SEND_STR(LLVMIRParserEventVscale, "vscale")
-        EXPECT(lltok::kw_x, "x", "expected 'x' after vscale", LLVMIRParserEventKeyword)
+        EXPECT(lltoken::kw_x, "x", "expected 'x' after vscale", LLVMIRParserEventKeyword)
     }
     if (
-        this->_lexer.getKind() != lltok::APSInt
+        this->_lexer.getKind() != lltoken::APSInt
         || this->_lexer.getAPSIntVal().isSigned()
         || this->_lexer.getAPSIntVal().getBitWidth() > 64)
     {
@@ -2341,7 +2341,7 @@ bool LLVMIRParser::parseArrayVectorType(bool isVector)
     SEND_DATA_
     this->readNextToken();
 
-    EXPECT(lltok::kw_x, "x", "expected 'x' after element count", LLVMIRParserEventKeyword)
+    EXPECT(lltoken::kw_x, "x", "expected 'x' after element count", LLVMIRParserEventKeyword)
 
     LLVMIRParserEvent outType = LLVMIRParserEventNone;
     bool valid = this->parseType(outType);
@@ -2350,10 +2350,10 @@ bool LLVMIRParser::parseArrayVectorType(bool isVector)
     }
 
     if (isVector) {
-        EXPECT(lltok::greater, ">", "expected end of sequential type", LLVMIRParserEventPunctuation)
+        EXPECT(lltoken::greater, ">", "expected end of sequential type", LLVMIRParserEventPunctuation)
         
     } else {
-        EXPECT(lltok::rsquare, "]", "expected end of sequential type", LLVMIRParserEventPunctuation)
+        EXPECT(lltoken::rsquare, "]", "expected end of sequential type", LLVMIRParserEventPunctuation)
     }
     if (isVector) {
         if (size == 0) {
@@ -2369,7 +2369,7 @@ bool LLVMIRParser::parseArrayVectorType(bool isVector)
 bool LLVMIRParser::parseValue(LLVMIRParserEvent & outType)
 {
     switch (this->_lexer.getKind()) {
-        case lltok::GlobalID:
+        case lltoken::GlobalID:
         {
             START_NODE(LLVMIRParserEventGlobalID)
             outType = __parserEvent;
@@ -2377,7 +2377,7 @@ bool LLVMIRParser::parseValue(LLVMIRParserEvent & outType)
             this->readNextToken();
             END_NODE
         }
-        case lltok::GlobalVar:
+        case lltoken::GlobalVar:
         {
             START_NODE(LLVMIRParserEventGlobalVar)
             outType = __parserEvent;
@@ -2385,7 +2385,7 @@ bool LLVMIRParser::parseValue(LLVMIRParserEvent & outType)
             this->readNextToken();
             END_NODE
         }
-        case lltok::LocalVarID:
+        case lltoken::LocalVarID:
         {
             START_NODE(LLVMIRParserEventLocalVarID)
             outType = __parserEvent;
@@ -2393,7 +2393,7 @@ bool LLVMIRParser::parseValue(LLVMIRParserEvent & outType)
             this->readNextToken();
             END_NODE
         }
-        case lltok::LocalVar:
+        case lltoken::LocalVar:
         {
             START_NODE(LLVMIRParserEventLocalVar)
             outType = __parserEvent;
@@ -2401,7 +2401,7 @@ bool LLVMIRParser::parseValue(LLVMIRParserEvent & outType)
             this->readNextToken();
             END_NODE
         }
-        case lltok::APSInt:
+        case lltoken::APSInt:
         {
             START_NODE(LLVMIRParserEventAPSInt)
             outType = __parserEvent;
@@ -2409,7 +2409,7 @@ bool LLVMIRParser::parseValue(LLVMIRParserEvent & outType)
             this->readNextToken();
             END_NODE
         }
-        case lltok::APFloat:
+        case lltoken::APFloat:
         {
             START_NODE(LLVMIRParserEventAPSFloat)
             outType = __parserEvent;
@@ -2417,7 +2417,7 @@ bool LLVMIRParser::parseValue(LLVMIRParserEvent & outType)
             this->readNextToken();
             END_NODE
         }
-        case lltok::StringConstant:
+        case lltoken::StringConstant:
         {
             START_NODE(LLVMIRParserEventStringConstant)
             outType = __parserEvent;
@@ -2425,8 +2425,8 @@ bool LLVMIRParser::parseValue(LLVMIRParserEvent & outType)
             this->readNextToken();
             END_NODE
         }
-        case lltok::kw_true:
-        case lltok::kw_false:
+        case lltoken::kw_true:
+        case lltoken::kw_false:
         {
             START_NODE(LLVMIRParserEventBoolConstant)
             outType = __parserEvent;
@@ -2434,7 +2434,7 @@ bool LLVMIRParser::parseValue(LLVMIRParserEvent & outType)
             this->readNextToken();
             END_NODE
         }
-        case lltok::kw_null:
+        case lltoken::kw_null:
         {
             START_NODE(LLVMIRParserEventNull)
             outType = __parserEvent;
@@ -2442,7 +2442,7 @@ bool LLVMIRParser::parseValue(LLVMIRParserEvent & outType)
             this->readNextToken();
             END_NODE
         }
-        case lltok::kw_undef:
+        case lltoken::kw_undef:
         {
             START_NODE(LLVMIRParserEventUndef)
             outType = __parserEvent;
@@ -2450,7 +2450,7 @@ bool LLVMIRParser::parseValue(LLVMIRParserEvent & outType)
             this->readNextToken();
             END_NODE
         }
-        case lltok::kw_zeroinitializer:
+        case lltoken::kw_zeroinitializer:
         {
             START_NODE(LLVMIRParserEventZero)
             outType = __parserEvent;
@@ -2458,7 +2458,7 @@ bool LLVMIRParser::parseValue(LLVMIRParserEvent & outType)
             this->readNextToken();
             END_NODE
         }
-        case lltok::kw_none:
+        case lltoken::kw_none:
         {
             START_NODE(LLVMIRParserEventNoneKw)
             outType = __parserEvent;
@@ -2466,12 +2466,12 @@ bool LLVMIRParser::parseValue(LLVMIRParserEvent & outType)
             this->readNextToken();
             END_NODE
         }
-        case lltok::lbrace:
+        case lltoken::lbrace:
         {
             std::cerr << "!!!!!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!\n";
             return false;
         }
-        case lltok::less:
+        case lltoken::less:
         {
             SEND_STR(LLVMIRParserEventPunctuation, "<")
             this->readNextToken();
@@ -2480,7 +2480,7 @@ bool LLVMIRParser::parseValue(LLVMIRParserEvent & outType)
             size_t __startIndex = this->index;
             LLVMIRParserEvent __parserEvent;
             bool isPackedStruct = false;
-            if (this->_lexer.getKind() == lltok::lbrace) {
+            if (this->_lexer.getKind() == lltoken::lbrace) {
                 __parserEvent = LLVMIRParserEventPackedStruct;
                 isPackedStruct = true;
                 this->readNextToken();
@@ -2496,127 +2496,127 @@ bool LLVMIRParser::parseValue(LLVMIRParserEvent & outType)
                 CANCEL_NODE
             }
             if (isPackedStruct) {
-                EXPECT(lltok::rbrace, "}", "expected end of packed struct", LLVMIRParserEventPunctuation)
+                EXPECT(lltoken::rbrace, "}", "expected end of packed struct", LLVMIRParserEventPunctuation)
             }
-            EXPECT(lltok::greater, ">", "expected end of constant", LLVMIRParserEventPunctuation)
+            EXPECT(lltoken::greater, ">", "expected end of constant", LLVMIRParserEventPunctuation)
             END_NODE
         }
-        case lltok::lsquare:
+        case lltoken::lsquare:
         {
             std::cerr << "!!!!!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!\n";
             return false;
         }
-        case lltok::kw_c:
+        case lltoken::kw_c:
         {
             std::cerr << "!!!!!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!\n";
             return false;
         }
-        case lltok::kw_asm:
+        case lltoken::kw_asm:
         {
             START_NODE(LLVMIRParserEventAsm)
             outType = __parserEvent;
             SEND_DATA_
             this->readNextToken();
-            OPTIONAL(lltok::kw_sideeffect, LLVMIRParserEventSideEffect)
-            OPTIONAL(lltok::kw_alignstack, LLVMIRParserEventAlignStack)
-            OPTIONAL(lltok::kw_inteldialect, LLVMIRParserEventIntelDialect)
+            OPTIONAL(lltoken::kw_sideeffect, LLVMIRParserEventSideEffect)
+            OPTIONAL(lltoken::kw_alignstack, LLVMIRParserEventAlignStack)
+            OPTIONAL(lltoken::kw_inteldialect, LLVMIRParserEventIntelDialect)
             LLVMIRParserEvent localOutType = LLVMIRParserEventNone;
             this->parseValue(localOutType);
-            EXPECT(lltok::comma, ",", "expected comma in inline asm expression", LLVMIRParserEventPunctuation)
+            EXPECT(lltoken::comma, ",", "expected comma in inline asm expression", LLVMIRParserEventPunctuation)
             this->parseValue(localOutType);
             END_NODE
         }
-        case lltok::kw_blockaddress:
+        case lltoken::kw_blockaddress:
         {
             START_NODE(LLVMIRParserEventBlockAddress)
             outType = __parserEvent;
             SEND_DATA_;
             this->readNextToken();
-            EXPECT(lltok::lparen, "(", "expected '(' in block address expression", LLVMIRParserEventPunctuation)
+            EXPECT(lltoken::lparen, "(", "expected '(' in block address expression", LLVMIRParserEventPunctuation)
             LLVMIRParserEvent localOutType = LLVMIRParserEventNone;
             this->parseValue(localOutType);
-            EXPECT(lltok::comma, ",", "expected comma in block address expression", LLVMIRParserEventPunctuation)
+            EXPECT(lltoken::comma, ",", "expected comma in block address expression", LLVMIRParserEventPunctuation)
             this->parseValue(localOutType);
-            EXPECT(lltok::rparen, ")", "expected ')' in block address expression", LLVMIRParserEventPunctuation)
+            EXPECT(lltoken::rparen, ")", "expected ')' in block address expression", LLVMIRParserEventPunctuation)
             END_NODE
         }
-        case lltok::kw_trunc:
-        case lltok::kw_zext:
-        case lltok::kw_sext:
-        case lltok::kw_fptrunc:
-        case lltok::kw_fpext:
-        case lltok::kw_bitcast:
-        case lltok::kw_addrspacecast:
-        case lltok::kw_uitofp:
-        case lltok::kw_sitofp:
-        case lltok::kw_fptoui:
-        case lltok::kw_fptosi:
-        case lltok::kw_inttoptr:
-        case lltok::kw_ptrtoint:
+        case lltoken::kw_trunc:
+        case lltoken::kw_zext:
+        case lltoken::kw_sext:
+        case lltoken::kw_fptrunc:
+        case lltoken::kw_fpext:
+        case lltoken::kw_bitcast:
+        case lltoken::kw_addrspacecast:
+        case lltoken::kw_uitofp:
+        case lltoken::kw_sitofp:
+        case lltoken::kw_fptoui:
+        case lltoken::kw_fptosi:
+        case lltoken::kw_inttoptr:
+        case lltoken::kw_ptrtoint:
         {
             std::cerr << "!!!!!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!\n";
             return false;
         }
-        case lltok::kw_extractvalue:
+        case lltoken::kw_extractvalue:
         {
             std::cerr << "!!!!!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!\n";
             return false;
         }
-        case lltok::kw_insertvalue:
+        case lltoken::kw_insertvalue:
         {
             std::cerr << "!!!!!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!\n";
             return false;
         }
-        case lltok::kw_icmp:
-        case lltok::kw_fcmp:
+        case lltoken::kw_icmp:
+        case lltoken::kw_fcmp:
         {
             std::cerr << "!!!!!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!\n";
             return false;
         }
-        case lltok::kw_fneg:
+        case lltoken::kw_fneg:
         {
             std::cerr << "!!!!!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!\n";
             return false;
         }
-        case lltok::kw_add:
-        case lltok::kw_sub:
-        case lltok::kw_mul:
-        case lltok::kw_shl:
+        case lltoken::kw_add:
+        case lltoken::kw_sub:
+        case lltoken::kw_mul:
+        case lltoken::kw_shl:
         {
             return this->parseBinaryOp(false, true, false);
         }
-        case lltok::kw_fadd:
-        case lltok::kw_fsub:
-        case lltok::kw_fmul:
-        case lltok::kw_fdiv:
-        case lltok::kw_frem:
+        case lltoken::kw_fadd:
+        case lltoken::kw_fsub:
+        case lltoken::kw_fmul:
+        case lltoken::kw_fdiv:
+        case lltoken::kw_frem:
         {
             return this->parseBinaryOp(true, false, false);
         }
-        case lltok::kw_sdiv:
-        case lltok::kw_udiv:
-        case lltok::kw_lshr:
-        case lltok::kw_ashr:
+        case lltoken::kw_sdiv:
+        case lltoken::kw_udiv:
+        case lltoken::kw_lshr:
+        case lltoken::kw_ashr:
         {
             return this->parseBinaryOp(true, false, true);
         }
-        case lltok::kw_urem:
-        case lltok::kw_srem:
+        case lltoken::kw_urem:
+        case lltoken::kw_srem:
         {
             return this->parseArithmetic();
         }
-        case lltok::kw_and:
-        case lltok::kw_or:
-        case lltok::kw_xor:
+        case lltoken::kw_and:
+        case lltoken::kw_or:
+        case lltoken::kw_xor:
         {
             std::cerr << "!!!!!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!\n";
             return false;
         }
-        case lltok::kw_getelementptr:
-        case lltok::kw_shufflevector:
-        case lltok::kw_insertelement:
-        case lltok::kw_extractelement:
-        case lltok::kw_select:
+        case lltoken::kw_getelementptr:
+        case lltoken::kw_shufflevector:
+        case lltoken::kw_insertelement:
+        case lltoken::kw_extractelement:
+        case lltoken::kw_select:
         {
             std::cerr << "!!!!!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!\n";
             return false;
@@ -2638,12 +2638,12 @@ bool LLVMIRParser::parseSelect()
     if (!valid) {
         CANCEL_NODE
     }
-    EXPECT(lltok::comma, ",", "expected ',' after select condition", LLVMIRParserEventPunctuation)
+    EXPECT(lltoken::comma, ",", "expected ',' after select condition", LLVMIRParserEventPunctuation)
     valid = this->parseTypeAndValue(outType);
     if (!valid) {
         CANCEL_NODE
     }
-    EXPECT(lltok::comma, ",", "expected ',' after select value", LLVMIRParserEventPunctuation)
+    EXPECT(lltoken::comma, ",", "expected ',' after select value", LLVMIRParserEventPunctuation)
     valid = this->parseTypeAndValue(outType);
     if (!valid) {
         CANCEL_NODE
@@ -2657,56 +2657,56 @@ bool LLVMIRParser::parseOptionalFastMathFlags()
     while (!done) {
         done = true;
         switch (this->_lexer.getKind()) {
-            case lltok::kw_fast:
+            case lltoken::kw_fast:
             {
                 SEND_STR(LLVMIRParserEventFast, "fast");
                 this->readNextToken();
                 done = false;
                 break;
             }
-            case lltok::kw_nnan:
+            case lltoken::kw_nnan:
             {
                 SEND_STR(LLVMIRParserEventNnan, "nnan");
                 this->readNextToken();
                 done = false;
                 break;
             }
-            case lltok::kw_ninf:
+            case lltoken::kw_ninf:
             {
                 SEND_STR(LLVMIRParserEventNinf, "ninf");
                 this->readNextToken();
                 done = false;
                 break;
             }
-            case lltok::kw_nsz:
+            case lltoken::kw_nsz:
             {
                 SEND_STR(LLVMIRParserEventNsz, "nsz");
                 this->readNextToken();
                 done = false;
                 break;
             }
-            case lltok::kw_arcp:
+            case lltoken::kw_arcp:
             {
                 SEND_STR(LLVMIRParserEventArcp, "arcp");
                 this->readNextToken();
                 done = false;
                 break;
             }
-            case lltok::kw_contract:
+            case lltoken::kw_contract:
             {
                 SEND_STR(LLVMIRParserEventContract, "contract");
                 this->readNextToken();
                 done = false;
                 break;
             }
-            case lltok::kw_reassoc:
+            case lltoken::kw_reassoc:
             {
                 SEND_STR(LLVMIRParserEventReassoc, "reassoc");
                 this->readNextToken();
                 done = false;
                 break;
             }
-            case lltok::kw_afn:
+            case lltoken::kw_afn:
             {
                 SEND_STR(LLVMIRParserEventAfn, "afn");
                 this->readNextToken();
@@ -2740,28 +2740,28 @@ bool LLVMIRParser::parseBinaryOp(bool isFP, bool allowWrap, bool allowExact)
     LLVMIRParserEvent __parserEvent = LLVMIRParserEventNone;
     if (isFP) {
         switch (this->_lexer.getKind()) {
-            case lltok::kw_fadd:
+            case lltoken::kw_fadd:
             {
                 __parserEvent = LLVMIRParserEventFAdd;
                 break;
             }
-            case lltok::kw_fsub:
+            case lltoken::kw_fsub:
             {
                 __parserEvent = LLVMIRParserEventFSub;
                 break;
             }
-            case lltok::kw_fmul:
-            case lltok::kw_mul:
+            case lltoken::kw_fmul:
+            case lltoken::kw_mul:
             {
                 __parserEvent = LLVMIRParserEventFMul;
                 break;
             }
-            case lltok::kw_fdiv:
+            case lltoken::kw_fdiv:
             {
                 __parserEvent = LLVMIRParserEventFDiv;
                 break;
             }
-            case lltok::kw_frem:
+            case lltoken::kw_frem:
             {
                 __parserEvent = LLVMIRParserEventFRem;
                 break;
@@ -2775,42 +2775,42 @@ bool LLVMIRParser::parseBinaryOp(bool isFP, bool allowWrap, bool allowExact)
 
     } else {
         switch (this->_lexer.getKind()) {
-            case lltok::kw_add:
+            case lltoken::kw_add:
             {
                 __parserEvent = LLVMIRParserEventAdd;
                 break;
             }
-            case lltok::kw_sub:
+            case lltoken::kw_sub:
             {
                 __parserEvent = LLVMIRParserEventSub;
                 break;
             }
-            case lltok::kw_mul:
+            case lltoken::kw_mul:
             {
                 __parserEvent = LLVMIRParserEventMul;
                 break;
             }
-            case lltok::kw_shl:
+            case lltoken::kw_shl:
             {
                 __parserEvent = LLVMIRParserEventShl;
                 break;
             }
-            case lltok::kw_sdiv:
+            case lltoken::kw_sdiv:
             {
                 __parserEvent = LLVMIRParserEventSDiv;
                 break;
             }
-            case lltok::kw_udiv:
+            case lltoken::kw_udiv:
             {
                 __parserEvent = LLVMIRParserEventUDiv;
                 break;
             }
-            case lltok::kw_lshr:
+            case lltoken::kw_lshr:
             {
                 __parserEvent = LLVMIRParserEventLShr;
                 break;
             }
-            case lltok::kw_ashr:
+            case lltoken::kw_ashr:
             {
                 __parserEvent = LLVMIRParserEventAShr;
                 break;
@@ -2821,17 +2821,17 @@ bool LLVMIRParser::parseBinaryOp(bool isFP, bool allowWrap, bool allowExact)
         SEND_DATA_
         this->readNextToken();
         if (allowWrap) {
-            if (this->_lexer.getKind() == lltok::kw_nuw) {
+            if (this->_lexer.getKind() == lltoken::kw_nuw) {
                 SEND_STR(LLVMIRParserEventNuw, "nuw")
                 this->readNextToken();
             }
-            if (this->_lexer.getKind() == lltok::kw_nsw) {
+            if (this->_lexer.getKind() == lltoken::kw_nsw) {
                 SEND_STR(LLVMIRParserEventNsw, "nsw")
                 this->readNextToken();
             }
         }
         if (allowExact) {
-            if (this->_lexer.getKind() == lltok::kw_exact) {
+            if (this->_lexer.getKind() == lltoken::kw_exact) {
                 SEND_STR(LLVMIRParserEventExact, "exact")
                 this->readNextToken();
             }
@@ -2852,7 +2852,7 @@ bool LLVMIRParser::parseArithmetic()
     if (!valid) {
         return false;
     }
-    if (this->_lexer.getKind() != lltok::comma) {
+    if (this->_lexer.getKind() != lltoken::comma) {
         this->_receiver->receiveLLVMIRError("expected ',' in arithmetic operation", this->line, this->column);
         return false;
     } else {
@@ -2871,10 +2871,10 @@ bool LLVMIRParser::parseGlobalValueVector(bool wantsInRange, bool & outIsInRange
     //empty list
     auto tokKind = this->_lexer.getKind();
     if (
-        tokKind == lltok::rbrace
-        || tokKind == lltok::rsquare
-        || tokKind == lltok::greater
-        || tokKind == lltok::rparen
+        tokKind == lltoken::rbrace
+        || tokKind == lltoken::rsquare
+        || tokKind == lltoken::greater
+        || tokKind == lltoken::rparen
     ) {
         return false;
     }
@@ -2883,7 +2883,7 @@ bool LLVMIRParser::parseGlobalValueVector(bool wantsInRange, bool & outIsInRange
     while (!done) {
         done = true;
         
-        if (wantsInRange && this->_lexer.getKind() == lltok::kw_inrange) {
+        if (wantsInRange && this->_lexer.getKind() == lltoken::kw_inrange) {
             outIsInRange = true;
             SEND_DATA(LLVMIRParserEventInRange)
         }
@@ -2892,7 +2892,7 @@ bool LLVMIRParser::parseGlobalValueVector(bool wantsInRange, bool & outIsInRange
         if (!valid) {
             return false;
         }
-        if (this->_lexer.getKind() == lltok::comma) {
+        if (this->_lexer.getKind() == lltoken::comma) {
             done = false;
             SEND_STR(LLVMIRParserEventPunctuation, ",")
             this->readNextToken();
@@ -2935,7 +2935,7 @@ bool LLVMIRParser::parseExtractElement()
     if (!valid) {
         CANCEL_NODE
     }
-    EXPECT(lltok::comma, ",", "expected ',' after extract value", LLVMIRParserEventPunctuation)
+    EXPECT(lltoken::comma, ",", "expected ',' after extract value", LLVMIRParserEventPunctuation)
     valid = this->parseTypeAndValue(ignoreType);
     if (!valid) {
         CANCEL_NODE
@@ -2953,12 +2953,12 @@ bool LLVMIRParser::parseInsertElement()
     if (!valid) {
         CANCEL_NODE
     }
-    EXPECT(lltok::comma, ",", "expected ',' after insertelement value", LLVMIRParserEventPunctuation)
+    EXPECT(lltoken::comma, ",", "expected ',' after insertelement value", LLVMIRParserEventPunctuation)
     valid = this->parseTypeAndValue(ignoreType);
     if (!valid) {
         CANCEL_NODE
     }
-    EXPECT(lltok::comma, ",", "expected ',' after insertelement value", LLVMIRParserEventPunctuation)
+    EXPECT(lltoken::comma, ",", "expected ',' after insertelement value", LLVMIRParserEventPunctuation)
     valid = this->parseTypeAndValue(ignoreType);
     if (!valid) {
         CANCEL_NODE
@@ -2976,12 +2976,12 @@ bool LLVMIRParser::parseShuffleVector()
     if (!valid) {
         CANCEL_NODE
     }
-    EXPECT(lltok::comma, ",", "expected ',' after shuffle mask", LLVMIRParserEventPunctuation)
+    EXPECT(lltoken::comma, ",", "expected ',' after shuffle mask", LLVMIRParserEventPunctuation)
     valid = this->parseTypeAndValue(ignoreType);
     if (!valid) {
         CANCEL_NODE
     }
-    EXPECT(lltok::comma, ",", "expected ',' after shuffle value", LLVMIRParserEventPunctuation)
+    EXPECT(lltoken::comma, ",", "expected ',' after shuffle value", LLVMIRParserEventPunctuation)
     valid = this->parseTypeAndValue(ignoreType);
     if (!valid) {
         CANCEL_NODE
@@ -2998,43 +2998,43 @@ bool LLVMIRParser::parsePhi(bool & outAteExtraComma)
     if (!valid) {
         CANCEL_NODE
     }
-    EXPECT(lltok::lsquare, "[", "expected '[' in phi value list", LLVMIRParserEventPunctuation)
+    EXPECT(lltoken::lsquare, "[", "expected '[' in phi value list", LLVMIRParserEventPunctuation)
     valid = this->parseValue(ignoreType);
     if (!valid) {
         CANCEL_NODE
     }
-    EXPECT(lltok::comma, ",", "expected ',' after insertelement value", LLVMIRParserEventPunctuation)
+    EXPECT(lltoken::comma, ",", "expected ',' after insertelement value", LLVMIRParserEventPunctuation)
     valid = this->parseValue(ignoreType);
     if (!valid) {
         CANCEL_NODE
     }
-    EXPECT(lltok::rsquare, "]", "expected ']' in phi value list", LLVMIRParserEventPunctuation)
+    EXPECT(lltoken::rsquare, "]", "expected ']' in phi value list", LLVMIRParserEventPunctuation)
     
-    if (this->_lexer.getKind() == lltok::comma) {
+    if (this->_lexer.getKind() == lltoken::comma) {
         SEND_STR(LLVMIRParserEventPunctuation, ",")
         this->readNextToken();
         
         bool done = false;
         while (!done) {
             done = true;
-            if (this->_lexer.getKind() == lltok::MetadataVar) {
+            if (this->_lexer.getKind() == lltoken::MetadataVar) {
                 outAteExtraComma = true;
                 break;
             }
             
-            EXPECT(lltok::lsquare, "[", "expected '[' in phi value list", LLVMIRParserEventPunctuation)
+            EXPECT(lltoken::lsquare, "[", "expected '[' in phi value list", LLVMIRParserEventPunctuation)
             valid = this->parseValue(ignoreType);
             if (!valid) {
                 CANCEL_NODE
             }
-            EXPECT(lltok::comma, ",", "expected ',' after insertelement value", LLVMIRParserEventPunctuation)
+            EXPECT(lltoken::comma, ",", "expected ',' after insertelement value", LLVMIRParserEventPunctuation)
             valid = this->parseValue(ignoreType);
             if (!valid) {
                 CANCEL_NODE
             }
-            EXPECT(lltok::rsquare, "]", "expected ']' in phi value list", LLVMIRParserEventPunctuation)
+            EXPECT(lltoken::rsquare, "]", "expected ']' in phi value list", LLVMIRParserEventPunctuation)
 
-            if (this->_lexer.getKind() == lltok::comma) {
+            if (this->_lexer.getKind() == lltoken::comma) {
                 SEND_STR(LLVMIRParserEventPunctuation, ",")
                 this->readNextToken();
                 done = false;
@@ -3117,7 +3117,7 @@ bool LLVMIRParser::parseInsertValue(bool & outAteExtraComma)
     if (!valid) {
         CANCEL_NODE
     }
-    EXPECT(lltok::comma, ",", "expected ',' after shuffle value", LLVMIRParserEventPunctuation)
+    EXPECT(lltoken::comma, ",", "expected ',' after shuffle value", LLVMIRParserEventPunctuation)
     valid = this->parseTypeAndValue(ignoreType);
     if (!valid) {
         CANCEL_NODE
@@ -3132,14 +3132,14 @@ bool LLVMIRParser::parseInsertValue(bool & outAteExtraComma)
 bool LLVMIRParser::parseIndexList(bool & outAteExtraComma)
 {
     START_NODE(LLVMIRParserEventIndexList)
-    EXPECT(lltok::comma, ",", "expected ',' as start of index list", LLVMIRParserEventPunctuation)
+    EXPECT(lltoken::comma, ",", "expected ',' as start of index list", LLVMIRParserEventPunctuation)
     
     bool done = false;
     bool hasIndices = false;
     bool valid = false;
     while (!done) {
         done = true;
-        if (this->_lexer.getKind() == lltok::MetadataVar) {
+        if (this->_lexer.getKind() == lltoken::MetadataVar) {
             if (!hasIndices) {
                 ERROR("expected index")
             }
@@ -3153,7 +3153,7 @@ bool LLVMIRParser::parseIndexList(bool & outAteExtraComma)
             CANCEL_NODE
         }
 
-        if (this->_lexer.getKind() == lltok::comma) {
+        if (this->_lexer.getKind() == lltoken::comma) {
             SEND_STR(LLVMIRParserEventPunctuation, ",");
             this->readNextToken();
             done = false;
@@ -3168,11 +3168,11 @@ bool LLVMIRParser::parseAlloca(bool & outAteExtraComma)
     START_NODE(LLVMIRParserEventAlloca)
     SEND_DATA_
     this->readNextToken();
-    if (this->_lexer.getKind() == lltok::kw_inalloca) {
+    if (this->_lexer.getKind() == lltoken::kw_inalloca) {
         SEND_STR(LLVMIRParserEventInalloca, "inalloca")
         this->readNextToken();
     }
-    if (this->_lexer.getKind() == lltok::kw_swifterror) {
+    if (this->_lexer.getKind() == lltoken::kw_swifterror) {
         SEND_STR(LLVMIRParserEventSwifterror, "swifterror")
         this->readNextToken();
     }
@@ -3181,11 +3181,11 @@ bool LLVMIRParser::parseAlloca(bool & outAteExtraComma)
     if (!valid) {
         CANCEL_NODE
     }
-    if (this->_lexer.getKind() == lltok::comma) {
+    if (this->_lexer.getKind() == lltoken::comma) {
         SEND_STR(LLVMIRParserEventPunctuation, ",")
         this->readNextToken();
         auto tokKind = this->_lexer.getKind();
-        if (tokKind == lltok::kw_align)
+        if (tokKind == lltoken::kw_align)
         {
             valid = this->parseOptionalAlignment();
             if (!valid) {
@@ -3196,22 +3196,22 @@ bool LLVMIRParser::parseAlloca(bool & outAteExtraComma)
                 CANCEL_NODE
             }
         }
-        else if (tokKind == lltok::kw_addrspace)
+        else if (tokKind == lltoken::kw_addrspace)
         {
             valid = this->parseOptionalAddrSpace();
             if (!valid) {
                 CANCEL_NODE
             }
-        } else if (tokKind == lltok::MetadataVar) {
+        } else if (tokKind == lltoken::MetadataVar) {
             outAteExtraComma = true;
         } else {
             this->parseTypeAndValue(ignoredType);
-            if (this->_lexer.getKind() == lltok::comma) {
+            if (this->_lexer.getKind() == lltoken::comma) {
                 SEND_STR(LLVMIRParserEventPunctuation, ",")
                 this->readNextToken();
 
                 tokKind = this->_lexer.getKind();
-                if (tokKind == lltok::kw_align)
+                if (tokKind == lltoken::kw_align)
                 {
                     valid = this->parseOptionalAlignment();
                     if (!valid) {
@@ -3221,12 +3221,12 @@ bool LLVMIRParser::parseAlloca(bool & outAteExtraComma)
                     if (!valid) {
                         CANCEL_NODE
                     }
-                } else if (tokKind == lltok::kw_addrspace) {
+                } else if (tokKind == lltoken::kw_addrspace) {
                     valid = this->parseOptionalAddrSpace();
                     if (!valid) {
                         CANCEL_NODE
                     }
-                } else if (tokKind == lltok::MetadataVar) {
+                } else if (tokKind == lltoken::MetadataVar) {
                     outAteExtraComma = true;
                 }
             }
@@ -3242,11 +3242,11 @@ bool LLVMIRParser::parseOptionalCommaAddrSpace(bool & outAteExtraComma)
     while (!done) {
         done = true;
         //metadata at the end is an early exit.
-        if (this->_lexer.getKind() == lltok::MetadataVar) {
+        if (this->_lexer.getKind() == lltoken::MetadataVar) {
             outAteExtraComma = true;
             return false;
         }
-        if (this->_lexer.getKind() != lltok::kw_addrspace) {
+        if (this->_lexer.getKind() != lltoken::kw_addrspace) {
             this->_receiver->receiveLLVMIRError("expected metadata or 'addrspace'", this->line, this->column);
             return false;
         }
@@ -3254,7 +3254,7 @@ bool LLVMIRParser::parseOptionalCommaAddrSpace(bool & outAteExtraComma)
         if (!valid) {
             return false;
         }
-        if (this->_lexer.getKind() == lltok::comma) {
+        if (this->_lexer.getKind() == lltoken::comma) {
             done = false;
             SEND_STR(LLVMIRParserEventPunctuation, ",")
             this->readNextToken();
@@ -3266,17 +3266,17 @@ bool LLVMIRParser::parseOptionalCommaAddrSpace(bool & outAteExtraComma)
 bool LLVMIRParser::parseOptionalCommaAlign(bool & outAteExtraComma)
 {
     outAteExtraComma = false;
-    while (this->_lexer.getKind() == lltok::comma) {
+    while (this->_lexer.getKind() == lltoken::comma) {
         SEND_STR(LLVMIRParserEventPunctuation, ",")
         this->readNextToken();
 
         //metadata at the end is an early exit.
-        if (this->_lexer.getKind() == lltok::MetadataVar) {
+        if (this->_lexer.getKind() == lltoken::MetadataVar) {
             outAteExtraComma = true;
             return false;
         }
 
-        if (this->_lexer.getKind() != lltok::kw_align) {
+        if (this->_lexer.getKind() != lltoken::kw_align) {
             this->_receiver->receiveLLVMIRError("expected metadata or 'align'", this->line, this->column);
             return false;
         }
@@ -3296,12 +3296,12 @@ bool LLVMIRParser::parseLoad(bool & outAteExtraComma)
     this->readNextToken();
     bool isAtomic = false;
     
-    if (this->_lexer.getKind() == lltok::kw_atomic) {
+    if (this->_lexer.getKind() == lltoken::kw_atomic) {
         SEND_STR(LLVMIRParserEventAtomic, "atomic")
         this->readNextToken();
         isAtomic = true;
     }
-    if (this->_lexer.getKind() == lltok::kw_volatile) {
+    if (this->_lexer.getKind() == lltoken::kw_volatile) {
         SEND_STR(LLVMIRParserEventVolatile, "volatile")
         this->readNextToken();
     }
@@ -3310,7 +3310,7 @@ bool LLVMIRParser::parseLoad(bool & outAteExtraComma)
     if (!valid) {
         CANCEL_NODE
     }
-    EXPECT(lltok::comma, ",", "expected comma after load's type", LLVMIRParserEventPunctuation)
+    EXPECT(lltoken::comma, ",", "expected comma after load's type", LLVMIRParserEventPunctuation)
     valid = this->parseTypeAndValue(ignoredType);
     if (!valid) {
         CANCEL_NODE
@@ -3332,12 +3332,12 @@ bool LLVMIRParser::parseStore(bool & outAteExtraComma)
     this->readNextToken();
     bool isAtomic = false;
     
-    if (this->_lexer.getKind() == lltok::kw_atomic) {
+    if (this->_lexer.getKind() == lltoken::kw_atomic) {
         SEND_STR(LLVMIRParserEventAtomic, "atomic")
         this->readNextToken();
         isAtomic = true;
     }
-    if (this->_lexer.getKind() == lltok::kw_volatile) {
+    if (this->_lexer.getKind() == lltoken::kw_volatile) {
         SEND_STR(LLVMIRParserEventVolatile, "volatile")
         this->readNextToken();
     }
@@ -3346,7 +3346,7 @@ bool LLVMIRParser::parseStore(bool & outAteExtraComma)
     if (!valid) {
         CANCEL_NODE
     }
-    EXPECT(lltok::comma, ",", "expected ',' after store operand", LLVMIRParserEventPunctuation)
+    EXPECT(lltoken::comma, ",", "expected ',' after store operand", LLVMIRParserEventPunctuation)
     valid = this->parseTypeAndValue(ignoredType);
     if (!valid) {
         CANCEL_NODE
@@ -3376,14 +3376,14 @@ bool LLVMIRParser::parseScopeAndOrdering()
 
 bool LLVMIRParser::parseScope()
 {
-    if (this->_lexer.getKind() == lltok::kw_syncscope) {
+    if (this->_lexer.getKind() == lltoken::kw_syncscope) {
         START_NODE(LLVMIRParserEventScope)
         SEND_STR(LLVMIRParserEventSyncscope, "syncscope")
         this->readNextToken();
-        EXPECT(lltok::lparen, "(", "Expected '(' in syncscope", LLVMIRParserEventPunctuation);
+        EXPECT(lltoken::lparen, "(", "Expected '(' in syncscope", LLVMIRParserEventPunctuation);
         LLVMIRParserEvent ignoredType;
         this->parseValue(ignoredType);
-        EXPECT(lltok::rparen, ")", "Expected ')' in syncscope", LLVMIRParserEventPunctuation)
+        EXPECT(lltoken::rparen, ")", "Expected ')' in syncscope", LLVMIRParserEventPunctuation)
         END_NODE
     }
     return true;
@@ -3392,36 +3392,36 @@ bool LLVMIRParser::parseScope()
 bool LLVMIRParser::parseOrdering()
 {
     switch (this->_lexer.getKind()) {
-        case lltok::kw_unordered:
+        case lltoken::kw_unordered:
         {
             SEND_STR(LLVMIRParserEventUnordered, "unordered")
             this->readNextToken();
             break;
         }
-        case lltok::kw_monotonic:
+        case lltoken::kw_monotonic:
         {
             SEND_STR(LLVMIRParserEventMonotonic, "monotonic")
             this->readNextToken();
             break;
         }
-        case lltok::kw_acquire:
+        case lltoken::kw_acquire:
         {
             SEND_STR(LLVMIRParserEventAcquire, "acquire")
             this->readNextToken();
             break;
         }
-        case lltok::kw_release:
+        case lltoken::kw_release:
         {
             SEND_STR(LLVMIRParserEventRelease, "release")
             this->readNextToken();
             break;
         }
-        case lltok::kw_acq_rel:
+        case lltoken::kw_acq_rel:
         {
             SEND_STR(LLVMIRParserEventAcqRel, "acq_rel")
             this->readNextToken();
             break;
-        }case lltok::kw_seq_cst:
+        }case lltoken::kw_seq_cst:
         {
             SEND_STR(LLVMIRParserEventSeqCst, "seq_cst")
             this->readNextToken();
@@ -3439,11 +3439,11 @@ bool LLVMIRParser::parseCmpXchng(bool & outAteExtraComma)
     START_NODE(LLVMIRParserEventCmpXchng)
     SEND_DATA_
     this->readNextToken();
-    if (this->_lexer.getKind() == lltok::kw_weak) {
+    if (this->_lexer.getKind() == lltoken::kw_weak) {
         SEND_STR(LLVMIRParserEventWeak, "weak")
         this->readNextToken();
     }
-    if (this->_lexer.getKind() == lltok::kw_volatile) {
+    if (this->_lexer.getKind() == lltoken::kw_volatile) {
         SEND_STR(LLVMIRParserEventVolatile, "volatile")
         this->readNextToken();
     }
@@ -3452,12 +3452,12 @@ bool LLVMIRParser::parseCmpXchng(bool & outAteExtraComma)
     if (!valid) {
         CANCEL_NODE
     }
-    EXPECT(lltok::comma, ",", "expected ',' after cmpxchg address", LLVMIRParserEventPunctuation)
+    EXPECT(lltoken::comma, ",", "expected ',' after cmpxchg address", LLVMIRParserEventPunctuation)
     valid = this->parseTypeAndValue(ignoredType);
     if (!valid) {
         CANCEL_NODE
     }
-    EXPECT(lltok::comma, ",", "expected ',' after cmpxchg cmp operand", LLVMIRParserEventPunctuation)
+    EXPECT(lltoken::comma, ",", "expected ',' after cmpxchg cmp operand", LLVMIRParserEventPunctuation)
     valid = this->parseTypeAndValue(ignoredType);
     if (!valid) {
         CANCEL_NODE
@@ -3479,23 +3479,23 @@ bool LLVMIRParser::parseAtomicRMW(bool & outAteExtraComma)
     SEND_DATA_
     this->readNextToken();
     
-    if (this->_lexer.getKind() == lltok::kw_volatile) {
+    if (this->_lexer.getKind() == lltoken::kw_volatile) {
         SEND_DATA(LLVMIRParserEventVolatile)
     }
     switch (this->_lexer.getKind()) {
-        case lltok::kw_xchg:
-        case lltok::kw_add:
-        case lltok::kw_sub:
-        case lltok::kw_and:
-        case lltok::kw_nand:
-        case lltok::kw_or:
-        case lltok::kw_xor:
-        case lltok::kw_max:
-        case lltok::kw_min:
-        case lltok::kw_umax:
-        case lltok::kw_umin:
-        case lltok::kw_fadd:
-        case lltok::kw_fsub:
+        case lltoken::kw_xchg:
+        case lltoken::kw_add:
+        case lltoken::kw_sub:
+        case lltoken::kw_and:
+        case lltoken::kw_nand:
+        case lltoken::kw_or:
+        case lltoken::kw_xor:
+        case lltoken::kw_max:
+        case lltoken::kw_min:
+        case lltoken::kw_umax:
+        case lltoken::kw_umin:
+        case lltoken::kw_fadd:
+        case lltoken::kw_fsub:
         {
             SEND_DATA(LLVMIRParserEventAtomicRMWInst)
             this->readNextToken();
@@ -3509,7 +3509,7 @@ bool LLVMIRParser::parseAtomicRMW(bool & outAteExtraComma)
     if (!valid) {
         CANCEL_NODE
     }
-    EXPECT(lltok::comma, ",", "expected ',' after atomicrmw address", LLVMIRParserEventPunctuation)
+    EXPECT(lltoken::comma, ",", "expected ',' after atomicrmw address", LLVMIRParserEventPunctuation)
     valid = this->parseTypeAndValue(ignoreType);
     if (!valid) {
         CANCEL_NODE
@@ -3539,7 +3539,7 @@ bool LLVMIRParser::parseGetElementPtr(bool & outAteExtraComma)
     START_NODE(LLVMIRParserEventGetElementPtr)
     SEND_DATA_
     this->readNextToken();
-    if (this->_lexer.getKind() == lltok::kw_inbounds) {
+    if (this->_lexer.getKind() == lltoken::kw_inbounds) {
         SEND_DATA(LLVMIRParserEventInbounds)
         this->readNextToken();
     }
@@ -3548,20 +3548,20 @@ bool LLVMIRParser::parseGetElementPtr(bool & outAteExtraComma)
     if (!valid) {
         CANCEL_NODE
     }
-    EXPECT(lltok::comma, ",", "expected comma after getelementptr's type", LLVMIRParserEventPunctuation)
+    EXPECT(lltoken::comma, ",", "expected comma after getelementptr's type", LLVMIRParserEventPunctuation)
     valid = this->parseTypeAndValue(ignoreType);
     if (!valid) {
         CANCEL_NODE
     }
     
-    if (this->_lexer.getKind() == lltok::comma) {
+    if (this->_lexer.getKind() == lltoken::comma) {
         SEND_STR(LLVMIRParserEventPunctuation, ",")
         this->readNextToken();
 
         bool done = false;
         while (!done) {
             done = true;
-            if (this->_lexer.getKind() == lltok::MetadataVar) {
+            if (this->_lexer.getKind() == lltoken::MetadataVar) {
                 outAteExtraComma = true;
                 break;
             }
@@ -3571,7 +3571,7 @@ bool LLVMIRParser::parseGetElementPtr(bool & outAteExtraComma)
                 CANCEL_NODE
             }
             
-            if (this->_lexer.getKind() == lltok::comma) {
+            if (this->_lexer.getKind() == lltoken::comma) {
                 SEND_STR(LLVMIRParserEventPunctuation, ",")
                 this->readNextToken();
                 done = false;
