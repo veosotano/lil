@@ -388,3 +388,27 @@ void LILType::setTmplParams(const std::vector<std::shared_ptr<LILNode>> && value
 {
     this->_tmplParams = std::move(values);
 }
+
+size_t LILType::getBitWidth() const
+{
+    size_t ret = 0;
+    auto name = this->getName();
+    if (name == "bool") {
+        ret = 1;
+    } else if (name == "i8") {
+        ret = 8;
+    } else if (name == "i16") {
+        ret = 16;
+    } else if (name == "i32") {
+        ret = 32;
+    } else if (name == "i64") {
+        ret = 64;
+    } else if (name == "i128") {
+        ret = 128;
+    } else if (name == "f32") {
+        ret = 32;
+    } else if (name == "f64") {
+        ret = 64;
+    }
+    return ret;
+}

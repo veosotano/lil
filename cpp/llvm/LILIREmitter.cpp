@@ -4674,25 +4674,7 @@ size_t LILIREmitter::getSizeOfType(std::shared_ptr<LILType> ty) const
     switch (ty->getTypeType()) {
         case TypeTypeSingle:
         {
-            auto name = ty->getName();
-            if (name == "bool") {
-                ret = 1;
-            } else if (name == "i8") {
-                ret = 8;
-            } else if (name == "i16") {
-                ret = 16;
-            } else if (name == "i32") {
-                ret = 32;
-            } else if (name == "i64") {
-                ret = 64;
-            } else if (name == "i128") {
-                ret = 128;
-            } else if (name == "f32") {
-                ret = 32;
-            } else if (name == "f64") {
-                ret = 64;
-            }
-            break;
+            return ty->getBitWidth();
         }
 
         case TypeTypePointer:

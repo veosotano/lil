@@ -62,6 +62,8 @@ namespace LIL
         void addTmplParam(std::shared_ptr<LILNode> value);
         void setTmplParams(const std::vector<std::shared_ptr<LILNode>> && values);
 
+        size_t getBitWidth() const;
+
     protected:
         virtual std::shared_ptr<LILClonable> cloneImpl() const override;
 
