@@ -13,7 +13,7 @@
  *
  ********************************************************************/
 
-#include "LILShared.h"
+#include "../shared/LILShared.h"
 #include "LILCodeParser.h"
 #include "LILForeignLangToken.h"
 #include "LILLexer.h"

@@ -13,7 +13,7 @@
  ********************************************************************/
 
 
-#include "LILShared.h"
+#include "../shared/LILShared.h"
 #include "LILStringToken.h"
 
 using namespace LIL;

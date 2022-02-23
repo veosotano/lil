@@ -15,8 +15,8 @@
 #ifndef LILABSTRACTPARSERRECEIVER_H
 #define LILABSTRACTPARSERRECEIVER_H
 
-#include "LILTypeEnums.h"
-#include "LILString.h"
+#include "../shared/LILTypeEnums.h"
+#include "../shared/LILString.h"
 
 namespace LIL
 {

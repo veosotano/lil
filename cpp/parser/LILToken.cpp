@@ -13,7 +13,7 @@
  ********************************************************************/
 
 
-#include "LILShared.h"
+#include "../shared/LILShared.h"
 #include "LILToken.h"
 
 using namespace LIL;

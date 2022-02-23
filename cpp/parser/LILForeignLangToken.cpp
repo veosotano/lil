@@ -13,7 +13,7 @@
  ********************************************************************/
 
 
-#include "LILShared.h"
+#include "../shared/LILShared.h"
 #include "LILForeignLangToken.h"
 
 using namespace LIL;

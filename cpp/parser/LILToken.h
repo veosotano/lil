@@ -15,8 +15,8 @@
 #ifndef LILTOKEN_H
 #define LILTOKEN_H
 
-#include "LILTypeEnums.h"
-#include "LILBasicValues.h"
+#include "../shared/LILTypeEnums.h"
+#include "../shared/LILBasicValues.h"
 
 namespace LIL
 {

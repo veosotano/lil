@@ -13,7 +13,7 @@
  *
  ********************************************************************/
 
-#include "LILShared.h"
+#include "../shared/LILShared.h"
 #include "LILLexer.h"
 #include "../shared/utf8/utf8.h"
 

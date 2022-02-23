@@ -16,8 +16,8 @@
 #ifndef LILCODEPARSER_H
 #define LILCODEPARSER_H
 
-#include "LILBasicValues.h"
-#include "LILString.h"
+#include "../shared/LILBasicValues.h"
+#include "../shared/LILString.h"
 
 namespace LIL
 {
