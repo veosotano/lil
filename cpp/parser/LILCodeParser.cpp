@@ -5264,34 +5264,41 @@ bool LILCodeParser::readStandardFunctionCall(bool readIdentifier)
         LIL_CHECK_FOR_END
     }
     
-    if (!d->currentToken->isA(TokenTypeParenthesisClose)) {
-        //read the arguments
-        bool done = false;
-        while (!done)
+    //read the arguments
+    bool done = false;
+    while (!done)
+    {
+        if (d->currentToken->getType() == TokenTypeParenthesisClose) {
+            break;
+        }
+        done = true;
+        bool outIsSV = false;
+        NodeType svExpTy = NodeTypeInvalid;
+        bool valueValid = this->readExpression(outIsSV, svExpTy);
+        if (valueValid){
+            d->receiver->receiveNodeCommit();
+        } else {
+            LIL_CANCEL_NODE
+        }
+        
+        if (this->atEndOfSource()) {
+            LIL_END_NODE_SKIP(false)
+        }
+        
+        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+        
+        if (d->currentToken->isA(TokenTypeComma))
         {
-            done = true;
-            bool outIsSV = false;
-            NodeType svExpTy = NodeTypeInvalid;
-            bool valueValid = this->readExpression(outIsSV, svExpTy);
-            if (valueValid){
-                d->receiver->receiveNodeCommit();
-            } else {
-                LIL_CANCEL_NODE
-            }
-
-            if (this->atEndOfSource()) {
-                LIL_END_NODE_SKIP(false)
-            }
-            
+            done = false;
+            d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+            this->readNextToken();
             LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-            
-            if (d->currentToken->isA(TokenTypeComma))
-            {
-                done = false;
-                d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
-                this->readNextToken();
-                LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-            }
+        }
+        if (needsParenthesisClose && d->currentToken->isA(TokenTypeSemicolon)) {
+            done = false;
+            d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+            this->readNextToken();
+            LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
         }
     }
 
