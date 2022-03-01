@@ -540,6 +540,9 @@ void LILParameterSorter::_processArguments(LILFunctionCall * fc, LILFunctionDecl
             continue;
         }
         auto declVd = std::static_pointer_cast<LILVarDecl>(declArg);
+        if (declVd->getName() == "@self") {
+            continue;
+        }
         
         //find the argument in the call
         bool found = false;
