@@ -258,11 +258,6 @@ llvm::Value * LILIREmitter::emit(LILNode * node)
             LILStringLiteral * value = static_cast<LILStringLiteral *>(node);
             return this->_emit(value);
         }
-        case NodeTypeStringFunction:
-        {
-            LILStringFunction * value = static_cast<LILStringFunction *>(node);
-            return this->_emit(value);
-        }
         case NodeTypeNull:
         {
             LILNullLiteral * value = static_cast<LILNullLiteral *>(node);
@@ -948,12 +943,6 @@ llvm::Value * LILIREmitter::_emit(LILStringLiteral * value)
         return nullptr;
         
     }
-}
-
-llvm::Value * LILIREmitter::_emit(LILStringFunction * value)
-{
-    std::cerr << "!!!!!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!\n";
-    return nullptr;
 }
 
 llvm::Value * LILIREmitter::_emit(LILNullLiteral * value)

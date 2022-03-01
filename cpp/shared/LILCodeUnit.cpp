@@ -33,6 +33,7 @@
 #include "LILParameterSorter.h"
 #include "LILPassManager.h"
 #include "LILPathExpander.h"
+#include "LILStringFnLowerer.h"
 #include "LILStructureLowerer.h"
 #include "LILToStringVisitor.h"
 #include "LILTypeGuesser.h"
@@ -454,6 +455,15 @@ void LILCodeUnit::runPasses()
     //enum lowering
     auto enumLowerer = new LILEnumLowerer();
     passes.push_back(enumLowerer);
+    if (verbose) {
+        auto stringVisitor = new LILToStringVisitor();
+        stringVisitor->setPrintHeadline(false);
+        passes.push_back(stringVisitor);
+    }
+
+    //string function lowering
+    auto stringFnLowerer = new LILStringFnLowerer();
+    passes.push_back(stringFnLowerer);
     if (verbose) {
         auto stringVisitor = new LILToStringVisitor();
         stringVisitor->setPrintHeadline(false);
