@@ -3955,6 +3955,14 @@ llvm::Value * LILIREmitter::emitPointer(LILNode * node)
         {
             return this->_emit(static_cast<LILStringLiteral *>(node));
         }
+        case NodeTypeFunctionCall:
+        {
+            auto fc = static_cast<LILFunctionCall *>(node);
+            d->currentAlloca = d->irBuilder.CreateAlloca(this->llvmTypeFromLILType(fc->getReturnType().get()));
+            auto returnVal = this->_emit(fc);
+            d->irBuilder.CreateStore(returnVal, d->currentAlloca);
+            return d->currentAlloca;
+        }
         default:
             std::cerr << "!!!!!!!!!!EMIT POINTER FAIL!!!!!!!!!!!!!!!!\n";
             break;
