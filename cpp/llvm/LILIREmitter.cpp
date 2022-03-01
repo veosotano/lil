@@ -4300,6 +4300,37 @@ std::shared_ptr<LILFunctionDecl> LILIREmitter::chooseFnByType(std::vector<std::s
         }
         if (match) {
             return fd;
+        } else {
+            for (size_t i=0, j=fdTys.size(); i<j; i+=1) {
+                ty.reset();
+                auto arg = fdTys[i];
+                if (arg->isA(NodeTypeType)) {
+                    ty = std::static_pointer_cast<LILType>(arg);
+                } else if (arg->isA(NodeTypeVarDecl)) {
+                    ty = std::static_pointer_cast<LILVarDecl>(arg)->getType();
+                }
+                if (ty) {
+                    auto otherTy = types.at(i);
+                    if (ty->getIsWeakType() || otherTy->getIsWeakType()) {
+                        ty = LILType::merge(ty, otherTy);
+                    }
+                    if (ty->equalTo(otherTy)) {
+                        match = true;
+                    } else if (ty->isA(TypeTypePointer) && std::static_pointer_cast<LILPointerType>(ty)->getArgument()->equalTo(otherTy)) {
+                        match = true;
+                    } else if (otherTy->isA(TypeTypePointer) && std::static_pointer_cast<LILPointerType>(otherTy)->getArgument()->equalTo(ty)){
+                        match = true;
+                    } else if (LILType::isIntegerType(otherTy.get()) && LILType::isIntegerType(ty.get())) {
+                        match = (ty->getBitWidth() > otherTy->getBitWidth());
+                    } else {
+                        match = false;
+                        break;
+                    }
+                }
+            }
+        }
+        if (match) {
+            return fd;
         }
     }
     return nullptr;
