@@ -1137,7 +1137,7 @@ llvm::Value * LILIREmitter::_emit(LILClassDecl * value)
     }
     std::string name = value->getName().data();
 
-    d->classTypes[name] = this->extractStructFromClass(value);
+    this->extractStructFromClass(value);
 
     for (auto methodPair : value->getMethods()) {
         auto methodNode = methodPair.second;
@@ -4207,7 +4207,6 @@ llvm::Type * LILIREmitter::llvmTypeFromLILType(LILType * type)
                 return nullptr;
             }
             auto newClassTy = this->extractStructFromClass(classDecl.get());
-            d->classTypes[className] = newClassTy;
             classTy = newClassTy;
             
             if (type->getIsNullable()) {
@@ -4383,6 +4382,8 @@ llvm::StructType * LILIREmitter::extractStructFromClass(LILClassDecl * value)
     if (d->classTypes.count(name)) {
         return d->classTypes[name];
     }
+    auto structType = llvm::StructType::create(d->llvmContext, name);
+    d->classTypes[name] = structType;
     std::vector<llvm::Type*> types;
     for (auto & fld : value->getFields()) {
         auto vd = std::static_pointer_cast<LILVarDecl>(fld);
@@ -4393,7 +4394,8 @@ llvm::StructType * LILIREmitter::extractStructFromClass(LILClassDecl * value)
             }
         }
     }
-    return llvm::StructType::create(d->llvmContext, types, name);
+    structType->setBody(types);
+    return structType;
 }
 
 size_t LILIREmitter::extractSizeFromNumberLiteral(LILNumberLiteral * value) const
