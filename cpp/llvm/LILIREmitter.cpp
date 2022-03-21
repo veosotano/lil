@@ -66,18 +66,19 @@ namespace LIL
     {
         friend class LILIREmitter;
 
-        LILIREmitterPrivate()
+        LILIREmitterPrivate(LILString name)
         : llvmContext()
         , irBuilder(llvmContext)
         , needsReturnValue(false)
         , currentAlloca(nullptr)
         , returnAlloca(nullptr)
         , ruleCount(0)
+        , llvmModule(name.data(), llvmContext)
         {
         }
         llvm::LLVMContext llvmContext;
         llvm::IRBuilder<> irBuilder;
-        std::unique_ptr<llvm::Module> llvmModule;
+        llvm::Module llvmModule;
         std::unique_ptr<llvm::legacy::FunctionPassManager> functionPassManager;
         std::map<std::string, llvm::Value*> namedValues;
         std::vector<std::map<std::string, llvm::Value*>> hiddenLocals;
@@ -91,11 +92,10 @@ namespace LIL
 }
 
 LILIREmitter::LILIREmitter(LILString name)
-: d(new LILIREmitterPrivate)
+: d(new LILIREmitterPrivate(name))
 , _debug(false)
 {
-    d->llvmModule = std::make_unique<llvm::Module>(name.data(), d->llvmContext);
-    d->functionPassManager = std::make_unique<llvm::legacy::FunctionPassManager>(d->llvmModule.get());
+    d->functionPassManager = std::make_unique<llvm::legacy::FunctionPassManager>(&d->llvmModule);
     d->functionPassManager->add(llvm::createSROAPass());
     d->functionPassManager->add(llvm::createLICMPass());
     d->functionPassManager->add(llvm::createDeadCodeEliminationPass());
@@ -118,7 +118,7 @@ void LILIREmitter::reset()
 
 llvm::Module * LILIREmitter::getLLVMModule() const
 {
-    return d->llvmModule.get();
+    return &d->llvmModule;
 }
 
 void LILIREmitter::initializeVisit()
@@ -886,7 +886,7 @@ llvm::Value * LILIREmitter::_emit(LILStringLiteral * value)
 
     auto stringType = llvm::ArrayType::get(charType, chars.size());
     
-    auto globalDeclaration = new llvm::GlobalVariable(*(d->llvmModule.get()), stringType, true, llvm::GlobalVariable::ExternalLinkage, nullptr, "str");
+    auto globalDeclaration = new llvm::GlobalVariable(d->llvmModule, stringType, true, llvm::GlobalVariable::ExternalLinkage, nullptr, "str");
     
     globalDeclaration->setInitializer(llvm::ConstantArray::get(stringType, chars));
     globalDeclaration->setConstant(true);
@@ -926,7 +926,7 @@ llvm::Value * LILIREmitter::_emit(LILStringLiteral * value)
             auto ctorFd = std::static_pointer_cast<LILFunctionDecl>(ctor);
             auto fnTy = ctorFd->getFnType();
             LILString fnName = ctorFd->getName();
-            llvm::Function* fun = d->llvmModule->getFunction(fnName.data());
+            llvm::Function* fun = d->llvmModule.getFunction(fnName.data());
             if (!fun) {
                 fun = this->_emitFnSignature(fnName.data(), fnTy.get());
             }
@@ -1247,7 +1247,7 @@ llvm::Value * LILIREmitter::_emit(LILObjectDefinition * value)
     //call the constructor
     if (classValue->getMethodNamed("construct")) {
         LILString decoratedName = this->decorate("", className, "construct", nullptr);
-        llvm::Function* fun = d->llvmModule->getFunction(decoratedName.data());
+        llvm::Function* fun = d->llvmModule.getFunction(decoratedName.data());
         if (fun) {
             std::vector<llvm::Value *> argsvect;
             argsvect.push_back(alloca);
@@ -1777,7 +1777,7 @@ llvm::Value * LILIREmitter::_emit(LILValuePath * value)
                         auto fnTyWithoutSelf = fnTy->clone();
                         fnTyWithoutSelf->removeFirstArgument();
                         LILString newName = this->decorate("", classDecl->getName(), methodName, fnTyWithoutSelf);
-                        llvm::Function* fun = d->llvmModule->getFunction(newName.data());
+                        llvm::Function* fun = d->llvmModule.getFunction(newName.data());
                         if (!fun) {
                             fun = this->_emitFnSignature(newName.data(), fnTy.get());
                         }
@@ -2061,7 +2061,7 @@ llvm::Value * LILIREmitter::_emit(LILRule * value)
                 return nullptr;
             }
             auto fd = std::static_pointer_cast<LILFunctionDecl>(initializeMethod);
-            llvm::Function* fun = d->llvmModule->getFunction(fd->getName().data());
+            llvm::Function* fun = d->llvmModule.getFunction(fd->getName().data());
             if (fun) {
                 std::vector<llvm::Value *> argsvect;
                 //@self
@@ -2234,7 +2234,7 @@ llvm::Value * LILIREmitter::_emit(LILSelectorChain * value, bool & outIsId)
                             }
                             auto selectFn = std::static_pointer_cast<LILFunctionDecl>(selectFnNode);
                             auto selectFnTy = selectFn->getFnType();
-                            llvm::Function* selectFun = d->llvmModule->getFunction(selectFn->getName().data());
+                            llvm::Function* selectFun = d->llvmModule.getFunction(selectFn->getName().data());
                             std::vector<llvm::Value *> selectArgs;
                             selectArgs.push_back(nameId);
                             auto zeroLit = std::make_shared<LILNumberLiteral>();
@@ -2327,11 +2327,11 @@ llvm::Function * LILIREmitter::_emit(LILFunctionDecl * value)
 llvm::Function * LILIREmitter::_emitFnSignature(std::string name, LILFunctionType * fnTy)
 {
     auto ft = this->_emitLlvmFnType(fnTy);
-    auto existingFun = d->llvmModule->getFunction(name);
+    auto existingFun = d->llvmModule.getFunction(name);
     if (existingFun) {
         return existingFun;
     } else {
-        llvm::Function * fun = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, name, d->llvmModule.get());
+        llvm::Function * fun = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, name, &d->llvmModule);
         return fun;
     }
 }
@@ -2525,7 +2525,7 @@ void LILIREmitter::_emitDestructors(llvm::Value * ir, std::shared_ptr<LILClassDe
         auto fnName = fd->getName();
         auto fnTy = fd->getFnType();
         
-        llvm::Function* fun = d->llvmModule->getFunction(fnName.data());
+        llvm::Function* fun = d->llvmModule.getFunction(fnName.data());
         if (!fun) {
             fun = this->_emitFnSignature(fnName.data(), fnTy.get());
         }
@@ -2880,7 +2880,7 @@ llvm::Value * LILIREmitter::_emit(LILFunctionCall * value)
 llvm::Value * LILIREmitter::_emitFunctionCall(LILFunctionCall * value, LILString name, LILFunctionType * fnTy, llvm::Value * instance, bool skipArgument, size_t skipArgIndex)
 {
     bool isMethod = instance != nullptr;
-    llvm::Function* fun = d->llvmModule->getFunction(name.data());
+    llvm::Function* fun = d->llvmModule.getFunction(name.data());
     if (!fun) {
         fun = this->_emitFnSignature(name.data(), fnTy);
     }
@@ -3034,7 +3034,7 @@ llvm::Value * LILIREmitter::_emitFCArg(LILNode * value, LILType * ty)
 
 llvm::Value * LILIREmitter::_emitFunctionCallMT(LILFunctionCall *value, LILString name, std::vector<std::shared_ptr<LILType> > types, LILFunctionType * fnTy, llvm::Value * instance)
 {
-    llvm::Function* fun = d->llvmModule->getFunction(name.data());
+    llvm::Function* fun = d->llvmModule.getFunction(name.data());
     auto fcArgs = value->getArguments();
     if (!fun) {
         fun = this->_emitFnSignature(name.data(), fnTy);
@@ -3738,7 +3738,7 @@ llvm::Value * LILIREmitter::_emit(LILForeignLang * value)
                 llvm::ModuleSummaryIndex index(true);
                 auto buf = llvmBuf.get();
                 sourceMgr.AddNewSourceBuffer(std::move(llvmBuf), llvm::SMLoc());
-                llvm::parseAssemblyInto(*buf, d->llvmModule.get(), &index, err);
+                llvm::parseAssemblyInto(*buf, &d->llvmModule, &index, err);
                 break;
             }
             default:
@@ -3782,7 +3782,7 @@ llvm::Value * LILIREmitter::_emit(LILValueList * value)
                 return nullptr;
             }
             auto fd = std::static_pointer_cast<LILFunctionDecl>(ctor);
-            llvm::Function* fun = d->llvmModule->getFunction(fd->getName().data());
+            llvm::Function* fun = d->llvmModule.getFunction(fd->getName().data());
             if (fun) {
                 std::vector<llvm::Value *> argsvect;
                 argsvect.push_back(d->currentAlloca);
@@ -3843,7 +3843,7 @@ llvm::Value * LILIREmitter::_emit(LILValueList * value)
                                 return nullptr;
                             }
                             auto fd = std::static_pointer_cast<LILFunctionDecl>(initVal);
-                            llvm::Function* fun = d->llvmModule->getFunction(fd->getName().data());
+                            llvm::Function* fun = d->llvmModule.getFunction(fd->getName().data());
                             llvm::Value * pointer;
                             if (fun) {
                                 std::vector<llvm::Value *> argsvect;
@@ -3920,7 +3920,7 @@ llvm::Value * LILIREmitter::emitPointer(LILNode * node)
             //create global variable with the constant as initial value
             //mark variable as being constant
             //set linkage to private
-            auto globalDeclaration = new llvm::GlobalVariable(*(d->llvmModule.get()), this->llvmTypeFromLILType(node->getType().get()), true, llvm::GlobalVariable::PrivateLinkage, nullptr, "num");
+            auto globalDeclaration = new llvm::GlobalVariable(d->llvmModule, this->llvmTypeFromLILType(node->getType().get()), true, llvm::GlobalVariable::PrivateLinkage, nullptr, "num");
             
             auto constValue = this->_emit(static_cast<LILNumberLiteral *>(node));
             globalDeclaration->setInitializer(llvm::cast<llvm::Constant>(constValue));
@@ -4139,7 +4139,7 @@ llvm::Value * LILIREmitter::_emitPointer(LILValuePath * value)
 
 void LILIREmitter::printIR(llvm::raw_ostream & file) const
 {
-    d->llvmModule->print(file, nullptr);
+    d->llvmModule.print(file, nullptr);
 }
 
 llvm::Type * LILIREmitter::llvmTypeFromLILType(LILType * type)
