@@ -29,10 +29,7 @@
 #include "LILObjectType.h"
 #include "LILRootNode.h"
 #include "LILSelector.h"
-#include "LILSelectorChain.h"
 #include "LILStringLiteral.h"
-#include "LILTypeDecl.h"
-#include "LILVarDecl.h"
 #include "LILVarName.h"
 
 using namespace LIL;

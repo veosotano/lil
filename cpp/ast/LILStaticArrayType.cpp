@@ -21,15 +21,16 @@ LILStaticArrayType::LILStaticArrayType()
 : LILType(TypeTypeStaticArray)
 , _receivesType(false)
 {
-    
+
 }
 
 LILStaticArrayType::LILStaticArrayType(const LILStaticArrayType &other)
 : LILType(other)
+, _argument(other._argument)
+, _type(other._type)
+, _receivesType(other._receivesType)
 {
-    this->_argument = other._argument;
-    this->_type = other._type;
-    this->_receivesType = other._receivesType;
+
 }
 
 std::shared_ptr<LILStaticArrayType> LILStaticArrayType::clone() const

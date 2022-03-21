@@ -889,6 +889,7 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
             bl->receiveNodeData(data);
             break;
         }
+
         case BuilderStateNumber:
         {
             auto num = std::static_pointer_cast<LILNumberLiteral>(this->currentContainer.back());
@@ -906,7 +907,6 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
                         parentTy = cont->getType();
                     }
                 }
-                
                 if (parentTy)
                 {
                     if (parentTy->isA(TypeTypeMultiple)) {
@@ -978,6 +978,7 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
             }
             break;
         }
+
         case BuilderStatePercentage:
         {
             if (this->currentNode)
@@ -1055,6 +1056,7 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
             }
             break;
         }
+
         case BuilderStateStringFunction:
         {
             switch (eventType) {
@@ -1087,6 +1089,7 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
             }
             break;
         }
+
         case BuilderStateExpression:
         {
             if (eventType == ParserEventExpressionSign)
@@ -1189,7 +1192,7 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
             }
             break;
         }
-            
+
         case BuilderStateFlowControl:
         {
             std::shared_ptr<LILFlowControl> fc = std::static_pointer_cast<LILFlowControl>(this->currentContainer.back());
@@ -1383,6 +1386,7 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
             }
             break;
         }
+
         case BuilderStateIfInstruction:
         {
             auto instr = std::static_pointer_cast<LILIfInstruction>(this->currentContainer.back());
@@ -1394,7 +1398,7 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
             }
             break;
         }
-            
+
         case BuilderStateSnippetInstruction:
         {
             auto snInstr = std::static_pointer_cast<LILSnippetInstruction>(this->currentContainer.back());
@@ -1405,7 +1409,7 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
             }
             break;
         }
-            
+
         case BuilderStateVarDecl:
         {
             auto vd = std::static_pointer_cast<LILVarDecl>(this->currentContainer.back());
@@ -1430,7 +1434,7 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
             }
             break;
         }
-            
+
         case BuilderStateStaticArrayType:
         {
             auto saTy = std::static_pointer_cast<LILStaticArrayType>(this->currentContainer.back());
@@ -1439,7 +1443,7 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
             }
             break;
         }
-            
+
         case BuilderStateEnum:
         {
             if (eventType == ParserEventVarName) {

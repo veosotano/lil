@@ -296,6 +296,7 @@ void LILTypeGuesser::processChildren(const std::vector<std::shared_ptr<LILNode> 
 void LILTypeGuesser::process(LILNode * node)
 {
     if (LILNode::isContainerNode(node->getNodeType())) {
+        //we don't need to process extern classes
         if (!node->isA(NodeTypeClassDecl) || !static_cast<LILClassDecl *>(node)->getIsExtern()) {
             this->processChildren(node->getChildNodes());
         }
@@ -1552,7 +1553,6 @@ std::shared_ptr<LILType> LILTypeGuesser::getExpType(LILExpression * exp) const
         {
             return LILType::make("bool");
         }
-            
         default:
             break;
     }
@@ -2175,6 +2175,7 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForSelectorChain(LILSelectorCha
     return nullptr;
 }
 
+//fixme: not implemented yet
 std::shared_ptr<LILType> LILTypeGuesser::findTypeFromAssignments(std::vector<std::shared_ptr<LILNode>> nodes, LILVarDecl * vd) const
 {
     for (auto node : nodes) {
@@ -2191,6 +2192,7 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeFromAssignments(std::vector<std
     return nullptr;
 }
 
+//fixme: not implemented yet
 std::shared_ptr<LILType> LILTypeGuesser::findTypeFromFunctionCalls(std::vector<std::shared_ptr<LILNode>> nodes, LILVarDecl * vd) const
 {
     return nullptr;

@@ -64,10 +64,11 @@ LILExpression::LILExpression()
 
 LILExpression::LILExpression(const LILExpression &orig)
 : LILTypedNode(orig)
+, expressionType(orig.expressionType)
+, _leftNode(orig._leftNode)
+, _rightNode(orig._rightNode)
 {
-    this->expressionType = orig.expressionType;
-    this->_leftNode = orig._leftNode;
-    this->_rightNode = orig._rightNode;
+    
 }
 
 std::shared_ptr<LILExpression> LILExpression::clone() const
