@@ -901,10 +901,11 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
             {
                 std::shared_ptr<LILType> parentTy;
                 std::shared_ptr<LILType> type;
-                if (this->currentContainer.size() > 1) {
-                    auto cont = this->currentContainer[this->currentContainer.size()-2];
-                    if (cont->isA(NodeTypeVarDecl)) {
+                for (size_t i = this->currentContainer.size(); i > 1; i-=1) {
+                    auto cont = this->currentContainer[i-2];
+                    if (cont->getNodeType() == NodeTypeVarDecl) {
                         parentTy = cont->getType();
+                        break;
                     }
                 }
                 if (parentTy)
