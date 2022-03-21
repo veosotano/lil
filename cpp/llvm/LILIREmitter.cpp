@@ -47,6 +47,7 @@
 #include "llvm/Transforms/InstCombine/InstCombine.h"
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/Scalar/GVN.h"
+#include "llvm/Transforms/Utils/ModuleUtils.h"
 #include "llvm/AsmParser/Parser.h"
 #include "llvm/AsmParser/LLParser.h"
 
@@ -138,7 +139,11 @@ void LILIREmitter::performVisit(std::shared_ptr<LILRootNode> rootNode)
     
     std::vector<std::shared_ptr<LILNode>> nodes = rootNode->getNodes();
     for (const auto & node : nodes) {
-        this->emit(node.get());
+        auto nodeType = node->getNodeType();
+        //global vars have already been emitted in the hoisting step
+        if (nodeType != NodeTypeVarDecl) {
+            this->emit(node.get());
+        }
     }
     
     if (rootNode->hasRules()) {
@@ -171,38 +176,7 @@ void LILIREmitter::hoistDeclarations(std::shared_ptr<LILRootNode> rootNode)
             }
             case NodeTypeVarDecl:
             {
-                auto value = std::static_pointer_cast<LILVarDecl>(node);
-                auto ty = value->getType();
-                auto name = value->getName().data();
-                if (value->getIsExtern()) {
-                    if (ty->isA(TypeTypeFunction)) {
-                        auto fun = this->_emitFnSignature(name, static_cast<LILFunctionType *>(ty.get()));
-                        d->namedValues[name] = fun;
-                    } else {
-                        d->llvmModule->getOrInsertGlobal(name, this->llvmTypeFromLILType(ty.get()));
-                        auto globalVar = d->llvmModule->getNamedGlobal(name);
-                        globalVar->setLinkage(llvm::GlobalValue::ExternalLinkage);
-                        d->namedValues[name] = globalVar;
-                    }
-                } else {
-                    if (value->getIsConst()) {
-                        break;
-                    }
-                    auto llvmTy = this->llvmTypeFromLILType(ty.get());
-                    d->llvmModule->getOrInsertGlobal(name, llvmTy);
-                    auto globalVar = d->llvmModule->getNamedGlobal(name);
-                    globalVar->setLinkage(llvm::GlobalValue::ExternalLinkage);
-                    d->namedValues[name] = globalVar;
-                    auto initVal = value->getInitVal();
-                    if (initVal) {
-                        auto iv = this->emit(initVal.get());
-                        if (llvm::isa<llvm::Constant>(iv)) {
-                            globalVar->setInitializer(llvm::cast<llvm::Constant>(iv));
-                        }
-                    } else {
-                        globalVar->setInitializer(llvm::Constant::getNullValue(llvmTy));
-                    }
-                }
+                this->emit(node.get());
                 break;
             }
             default:
@@ -958,70 +932,126 @@ llvm::Value * LILIREmitter::_emit(LILVarDecl * value)
 {
     auto name = value->getName().data();
     auto ty = value->getType();
-    if (value->getIsExtern()) {
-        if (ty->isA(TypeTypeFunction)) {
+    if (!ty) {
+        std::cerr << "VAR DECL HAD NO TYPE FAIL!!!!\n\n";
+        return nullptr;
+    }
+    if (ty->isA(TypeTypeFunction)) {
+        if (value->getIsExtern()) {
             return this->_emitFnSignature(name, static_cast<LILFunctionType *>(ty.get()));
         } else {
-            d->llvmModule->getOrInsertGlobal(name, this->llvmTypeFromLILType(ty.get()));
-            auto globalVar = d->llvmModule->getNamedGlobal(name);
-            globalVar->setLinkage(llvm::GlobalValue::ExternalLinkage);
-            d->namedValues[name] = globalVar;
-            return globalVar;
+            auto initVal = value->getInitVal();
+            if (initVal) {
+                return this->emit(initVal.get());
+            } else {
+                return nullptr;
+            }
         }
     } else {
-        if (value->getIsConst()) {
-            //FIXME: emit global
-            return nullptr;
-        }
-        
-        if (!ty->isA(TypeTypeFunction)) {
-            if (value->getParentNode()->isA(NodeTypeRoot)) {
-                return d->namedValues[name];
-            } else {
-                //backup if needed
-                llvm::Value * namedValue = nullptr;
-                if (d->namedValues.count(name)) {
-                    namedValue = d->namedValues[name];
-                }
-                if (namedValue) {
-                    d->hiddenLocals.back()[name] = namedValue;
-                }
-                
-                llvm::Function * fun = d->irBuilder.GetInsertBlock()->getParent();
-                d->hiddenLocals.back()[name] = d->namedValues[name];
-                d->currentAlloca = this->createEntryBlockAlloca(fun, name, this->llvmTypeFromLILType(ty.get()));
-                d->namedValues[name] = d->currentAlloca;
+        if (value->getParentNode()->isA(NodeTypeRoot)) {
+            if (value->getIsConst()) {
+                //fixme
+                return nullptr;
             }
-        }
+            
+            d->llvmModule.getOrInsertGlobal(name, this->llvmTypeFromLILType(ty.get()));
+            auto globalVar = d->llvmModule.getNamedGlobal(name);
+            globalVar->setLinkage( (value->getIsExtern() || value->getIsExported())  ? llvm::GlobalValue::ExternalLinkage : llvm::GlobalValue::InternalLinkage);
+            d->namedValues[name] = globalVar;
 
-        auto initVal = value->getInitVal();
-        if (initVal) {
-            llvm::Value * llvmValue;
-            if (ty->isA(TypeTypeMultiple))
-            {
-                auto multiTy = std::static_pointer_cast<LILMultipleType>(ty);
-                llvmValue = this->emitForMultipleType(initVal.get(), multiTy);
-            }
-            else if (ty->getIsNullable())
-            {
-                llvmValue = this->emitNullable(initVal.get(), ty.get());
-            }
-            else
-            {
-                llvmValue = this->emit(initVal.get());
-            }
-            if (llvmValue) {
-                this->_convertLlvmValueIfNeeded(&llvmValue, ty.get(), initVal->getType().get());
-                if (
-                    !ty->isA(TypeTypePointer)
-                    && initVal->getType()->isA(TypeTypePointer)
-                    ) {
-                    llvmValue = d->irBuilder.CreateLoad(llvmValue);
+            if (!value->getIsExtern()) {
+                auto initVal = value->getInitVal();
+                if (initVal) {
+                    switch (initVal->getNodeType()) {
+                        case NodeTypeNumberLiteral:
+                        {
+                            auto iv = this->emit(initVal.get());
+                            if (llvm::isa<llvm::Constant>(iv)) {
+                                globalVar->setInitializer(llvm::cast<llvm::Constant>(iv));
+                            }
+                            break;
+                        }
+                        case NodeTypeStringLiteral:
+                        case NodeTypeObjectDefinition:
+                        case NodeTypeValueList:
+                        case NodeTypeVarName:
+                        case NodeTypeValuePath:
+                        case NodeTypeFunctionCall:
+                        {
+                            globalVar->setInitializer(llvm::Constant::getNullValue(this->llvmTypeFromLILType(ty.get())));
+                            
+                            //create the global initializator fn
+                            auto ft = llvm::FunctionType::get(llvm::Type::getVoidTy(d->llvmContext), false);
+                            llvm::Function * fun = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, "", d->llvmModule);
+                            llvm::BasicBlock * bb = llvm::BasicBlock::Create(d->llvmContext, "entry", fun);
+                            d->irBuilder.SetInsertPoint(bb);
+                            d->currentAlloca = globalVar;
+                            auto iv = this->emit(initVal.get());
+                            if (iv) {
+                                d->irBuilder.CreateStore(iv, globalVar);
+                            }
+                            d->irBuilder.CreateRetVoid();
+                            d->currentAlloca = nullptr;
+                            llvm::appendToGlobalCtors(d->llvmModule, fun, 0);
+                            break;
+                        }
+                        default:
+                        {
+                            globalVar->setInitializer(llvm::Constant::getNullValue(this->llvmTypeFromLILType(ty.get())));
+                            break;
+                        }
+                    }
+                } else {
+                    globalVar->setInitializer(llvm::Constant::getNullValue(this->llvmTypeFromLILType(ty.get())));
                 }
-                d->irBuilder.CreateStore(llvmValue, d->currentAlloca);
             }
+            return globalVar;
+        } else {
+            //backup if needed
+            llvm::Value * namedValue = nullptr;
+            if (d->namedValues.count(name)) {
+                namedValue = d->namedValues[name];
+            }
+            if (namedValue) {
+                d->hiddenLocals.back()[name] = namedValue;
+            }
+            
+            llvm::Function * fun = d->irBuilder.GetInsertBlock()->getParent();
+            d->hiddenLocals.back()[name] = d->namedValues[name];
+            auto localVarAlloca = this->createEntryBlockAlloca(fun, name, this->llvmTypeFromLILType(ty.get()));
+            d->currentAlloca = localVarAlloca;
+            d->namedValues[name] = localVarAlloca;
+            
+            auto initVal = value->getInitVal();
+            if (initVal) {
+                llvm::Value * llvmValue;
+                if (ty->isA(TypeTypeMultiple))
+                {
+                    auto multiTy = std::static_pointer_cast<LILMultipleType>(ty);
+                    llvmValue = this->emitForMultipleType(initVal.get(), multiTy);
+                }
+                else if (ty->getIsNullable())
+                {
+                    llvmValue = this->emitNullable(initVal.get(), ty.get());
+                }
+                else
+                {
+                    llvmValue = this->emit(initVal.get());
+                }
+                if (llvmValue) {
+                    this->_convertLlvmValueIfNeeded(&llvmValue, ty.get(), initVal->getType().get());
+                    if (
+                        !ty->isA(TypeTypePointer)
+                        && initVal->getType()->isA(TypeTypePointer)
+                        ) {
+                        llvmValue = d->irBuilder.CreateLoad(llvmValue);
+                    }
+                    d->irBuilder.CreateStore(llvmValue, d->currentAlloca);
+                }
+            }
+            d->currentAlloca = nullptr;
+            return localVarAlloca;
         }
-        d->currentAlloca = nullptr;
     }
     return nullptr;
 }

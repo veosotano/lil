@@ -23,6 +23,7 @@
 #include "LILRootNode.h"
 #include "LILFunctionDecl.h"
 #include "LILFunctionType.h"
+#include "LILIndexAccessor.h"
 #include "LILMultipleType.h"
 #include "LILNumberLiteral.h"
 #include "LILObjectType.h"
@@ -168,48 +169,54 @@ std::shared_ptr<LILNode> LILVisitor::findNodeForPropertyName(LILPropertyName * n
 std::shared_ptr<LILNode> LILVisitor::findNodeForValuePath(LILValuePath * vp) const
 {
     auto nodes = vp->getNodes();
-    std::shared_ptr<LILNode> firstNode;
+    std::shared_ptr<LILNode> currentNode;
+    std::shared_ptr<LILType> currentTy;
     if (nodes.size() == 1) {
-        firstNode = nodes.front();
-        if (firstNode->isA(NodeTypeVarName)) {
-            return this->recursiveFindNode(firstNode);
+        currentNode = nodes.front();
+        if (currentNode->isA(NodeTypeVarName)) {
+            return this->recursiveFindNode(currentNode);
         }
     } else if (nodes.size() > 1){
-        firstNode = nodes.front();
-        std::shared_ptr<LILClassDecl> classDecl;
-        
-        if (firstNode->isA(NodeTypeVarName)) {
-            auto localNode = this->recursiveFindNode(firstNode);
+        currentNode = nodes.front();
+
+        if (currentNode->isA(NodeTypeVarName)) {
+            auto localNode = this->recursiveFindNode(currentNode);
             if (localNode) {
-                auto subjTy = localNode->getType();
-                if (!subjTy) {
+                currentNode = localNode;
+                currentTy = localNode->getType();
+                if (!currentTy) {
                     std::cerr << "CANNOT TRAVERSE VALUE PATH IF SUBJECT TYPE IS NULL FAIL !!!!!!!\n\n";
                     return nullptr;
                 }
-                if (!this->inhibitSearchingForIfCastType && subjTy->isA(TypeTypeMultiple)) {
+                if (!this->inhibitSearchingForIfCastType && currentTy->isA(TypeTypeMultiple)) {
                     size_t outStartIndex = 0;
                     auto ifCastTy = this->findIfCastType(vp, outStartIndex);
                     if (ifCastTy) {
-                        subjTy = ifCastTy;
+                        currentTy = ifCastTy;
                     }
-                }
-                if (subjTy->isA(TypeTypeObject)) {
-                    auto objTy = std::static_pointer_cast<LILObjectType>(subjTy);
-                    classDecl = this->findClassWithName(objTy->getName().data());
                 }
             }
         }
-        else if (firstNode->isA(SelectorTypeSelfSelector)) {
-            classDecl = this->findAncestorClass(firstNode);
-        }
-        if (!classDecl) {
-            return nullptr;
+        else if (currentNode->isA(SelectorTypeSelfSelector)) {
+            auto classDecl = this->findAncestorClass(currentNode);
+            currentTy = classDecl->getType();
         }
         for (size_t i=1, j=nodes.size(); i<j; ++i) {
+            bool isLast = i==j-1;
             auto node = nodes[i];
             switch (node->getNodeType()) {
                 case NodeTypeFunctionCall:
                 {
+                    if (!currentTy->isA(TypeTypeObject)) {
+                        std::cerr << "!!!!!!!!!!NODE DOES NOT POINT TO OBJECT FAIL !!!!!!!!!!!!!!!!\n";
+                        return nullptr;
+                    }
+                    std::shared_ptr<LILClassDecl> classDecl = this->findClassWithName(currentTy->getName());
+                    if (!classDecl) {
+                        std::cerr << "!!!!!!!!!!CLASS NOT FOUND FAIL !!!!!!!!!!!!!!!!\n";
+                        return nullptr;
+                    }
+
                     auto fc = std::static_pointer_cast<LILFunctionCall>(node);
                     auto method = classDecl->getMethodNamed(fc->getName());
                     if (!method->isA(NodeTypeFunctionDecl)) {
@@ -219,29 +226,68 @@ std::shared_ptr<LILNode> LILVisitor::findNodeForValuePath(LILValuePath * vp) con
                     auto fd = std::static_pointer_cast<LILFunctionDecl>(method);
                     auto fnTy = fd->getFnType();
                     auto retTy = fnTy->getReturnType();
-                    if (!retTy->isA(TypeTypeObject)) {
-                        std::cerr << "!!!!!!!!!!NODE DOES NOT POINT TO OBJECT FAIL !!!!!!!!!!!!!!!!\n";
-                        return nullptr;
-                    }
-                    classDecl = this->findClassWithName(retTy->getName());
-                    if (!classDecl) {
-                        std::cerr << "!!!!!!!!!!CLASS NOT FOUND FAIL !!!!!!!!!!!!!!!!\n";
-                        return nullptr;
+                    if (isLast) {
+                        return method;
+                    } else {
+                        currentNode = method;
+                        currentTy = retTy;
                     }
                     break;
                 }
                 case NodeTypePropertyName:
                 {
+                    if (!currentTy->isA(TypeTypeObject)) {
+                        std::cerr << "!!!!!!!!!!NODE DOES NOT POINT TO OBJECT FAIL !!!!!!!!!!!!!!!!\n";
+                        return nullptr;
+                    }
+                    std::shared_ptr<LILClassDecl> classDecl = this->findClassWithName(currentTy->getName());
+                    if (!classDecl) {
+                        std::cerr << "!!!!!!!!!!CLASS NOT FOUND FAIL !!!!!!!!!!!!!!!!\n";
+                        return nullptr;
+                    }
+
                     auto pn = std::static_pointer_cast<LILPropertyName>(node);
                     auto pnName = pn->getName();
                     auto field = classDecl->getFieldNamed(pnName);
-                    if (i==j-1) {
+                    if (isLast) {
                         return field;
                     } else {
-                        auto fieldTy = field->getType();
-                        if (fieldTy && fieldTy->isA(TypeTypeObject)) {
-                            auto fieldObjTy = std::static_pointer_cast<LILObjectType>(fieldTy);
-                            classDecl = this->findClassWithName(fieldObjTy->getName().data());
+                        currentNode = field;
+                        currentTy = field->getType();
+                    }
+                    break;
+                }
+                case NodeTypeIndexAccessor:
+                {
+                    auto ia = std::static_pointer_cast<LILIndexAccessor>(node);
+                    if (currentTy->getTypeType() == TypeTypeObject) {
+                        std::shared_ptr<LILClassDecl> classDecl = this->findClassWithName(currentTy->getName());
+                        if (!classDecl) {
+                            std::cerr << "!!!!!!!!!!CLASS NOT FOUND FAIL !!!!!!!!!!!!!!!!\n";
+                            return nullptr;
+                        }
+                        auto method = classDecl->getMethodNamed("at");
+                        if (!method->isA(NodeTypeFunctionDecl)) {
+                            std::cerr << "AT METHOD NOT FOUND FAIL !!!!!!!!!!!!!!!!\n";
+                            return nullptr;
+                        }
+                        auto fd = std::static_pointer_cast<LILFunctionDecl>(method);
+                        auto fnTy = fd->getFnType();
+                        auto retTy = fnTy->getReturnType();
+                        if (isLast) {
+                            return method;
+                        } else {
+                            currentNode = method;
+                            currentTy = retTy;
+                        }
+                        
+                    } else if (currentTy->getTypeType() == TypeTypeStaticArray) {
+                        if (isLast) {
+                            //we can't return a node
+                            return nullptr;
+                        } else {
+                            auto saTy = std::static_pointer_cast<LILStaticArrayType>(currentTy);
+                            currentTy = saTy->getType();
                         }
                     }
                     break;
