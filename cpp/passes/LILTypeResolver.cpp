@@ -167,10 +167,12 @@ std::shared_ptr<LILType> LILTypeResolver::_process(std::shared_ptr<LILType> valu
                 if (childNode->isA(NodeTypeVarDecl)) {
                     auto vd = std::static_pointer_cast<LILVarDecl>(childNode);
                     ty = vd->getType();
-                    auto newTy = this->_process(ty);
-                    if (newTy) {
-                        vd->setType(newTy);
-                        changed = true;
+                    if (ty) {
+                        auto newTy = this->_process(ty);
+                        if (newTy) {
+                            vd->setType(newTy);
+                            changed = true;
+                        }
                     }
                     newArgs.push_back(vd);
                 } else if (childNode->isA(NodeTypeType)) {
