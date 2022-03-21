@@ -41,6 +41,9 @@ namespace LIL
         void setType(std::shared_ptr<LILType> value) override;
         std::shared_ptr<LILType> getType() const override;
 
+        std::shared_ptr<LILType> getElementType() const;
+        void setElementType(std::shared_ptr<LILType> value);
+
     protected:
         std::shared_ptr<LILClonable> cloneImpl() const override;
         std::shared_ptr<LILNode> _leftNode;
@@ -48,6 +51,7 @@ namespace LIL
 
     private:
         ExpressionType expressionType;
+        std::shared_ptr<LILType> _elementType;
     };
 }
 

@@ -610,65 +610,33 @@ void LILTypeGuesser::_processCast(LILExpression * value)
 
 void LILTypeGuesser::_process(LILExpression * value)
 {
-    auto existingTy = value->getType();
-    if (existingTy) {
-        return;
+    auto ty = value->getType();
+    if (!ty) {
+        ty = this->getExpType(value);
+        value->setType(ty);
     }
-    
-    switch (value->getExpressionType()) {
-        case ExpressionTypeSmallerComparison:
-        case ExpressionTypeSmallerOrEqualComparison:
-        case ExpressionTypeBiggerComparison:
-        case ExpressionTypeBiggerOrEqualComparison:
-        case ExpressionTypeEqualComparison:
-        case ExpressionTypeNotEqualComparison:
-        case ExpressionTypeLogicalOr:
-        case ExpressionTypeLogicalAnd:
-        {
-            auto boolTy = LILType::make("bool");
-            value->setType(boolTy);
+    auto elementTy = this->getExpElementType(value);
+    if (elementTy) {
+        value->setElementType(elementTy);
+
+        std::shared_ptr<LILNode> left = value->getLeft();
+        std::shared_ptr<LILNode> right = value->getRight();
+        auto leftTy = left->getType();
+        auto rightTy = right->getType();
+
+        if (!left || !right) {
             return;
         }
 
-        default:
-            break;
+        if (left->isTypedNode() && leftTy && leftTy->getIsWeakType()) {
+            const auto & leftTN = std::static_pointer_cast<LILTypedNode>(left);
+            leftTN->setType(elementTy);
+        }
+        if (right->isTypedNode() && rightTy && rightTy->getIsWeakType()) {
+            const auto & rightTN = std::static_pointer_cast<LILTypedNode>(right);
+            rightTN->setType(elementTy);
+        }
     }
-
-    std::shared_ptr<LILNode> left = value->getLeft();
-    std::shared_ptr<LILNode> right = value->getRight();
-
-    if (!left || !right) {
-        return;
-    }
-
-    std::shared_ptr<LILType> leftTy;
-    std::shared_ptr<LILType> rightTy;
-    if (left->isTypedNode())
-    {
-        const auto & leftTN = std::static_pointer_cast<LILTypedNode>(left);
-        leftTy = leftTN->getType();
-    } else {
-        leftTy = this->getNodeType(left);
-    }
-    if (right->isTypedNode())
-    {
-        const auto & rightTN = std::static_pointer_cast<LILTypedNode>(right);
-        rightTy = rightTN->getType();
-    } else {
-        rightTy = this->getNodeType(right);
-    }
-
-    auto ty = LILType::merge(leftTy, rightTy);
-
-    if (left->isTypedNode() && leftTy && leftTy->getIsWeakType()) {
-        const auto & leftTN = std::static_pointer_cast<LILTypedNode>(left);
-        leftTN->setType(ty);
-    }
-    if (right->isTypedNode() && rightTy && rightTy->getIsWeakType()) {
-        const auto & rightTN = std::static_pointer_cast<LILTypedNode>(right);
-        rightTN->setType(ty);
-    }
-    value->setType(ty);
 }
 
 void LILTypeGuesser::_process(LILUnaryExpression * value)
@@ -1267,6 +1235,12 @@ std::shared_ptr<LILType> LILTypeGuesser::recursiveFindTypeFromAncestors(LILNode 
                 
                 break;
             }
+                
+            case NodeTypeExpression:
+            {
+                auto exp = static_cast<LILExpression *>(parent.get());
+                return this->getExpElementType(exp);
+            }
 
             default:
             {
@@ -1556,7 +1530,11 @@ std::shared_ptr<LILType> LILTypeGuesser::getExpType(LILExpression * exp) const
         default:
             break;
     }
+    return this->getExpElementType(exp);
+}
 
+std::shared_ptr<LILType> LILTypeGuesser::getExpElementType(LILExpression * exp) const
+{
     //try to find from contents
     auto left = exp->getLeft().get();
     std::shared_ptr<LILType> leftType = this->getNodeType(left);

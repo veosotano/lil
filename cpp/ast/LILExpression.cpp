@@ -67,6 +67,7 @@ LILExpression::LILExpression(const LILExpression &orig)
 , expressionType(orig.expressionType)
 , _leftNode(orig._leftNode)
 , _rightNode(orig._rightNode)
+, _elementType(orig._elementType)
 {
     
 }
@@ -92,6 +93,9 @@ std::shared_ptr<LILClonable> LILExpression::cloneImpl() const
     //clone LILTypedNode
     if (this->_type) {
         clone->setType(this->_type->clone());
+    }
+    if (this->_elementType) {
+        clone->setElementType(this->_elementType->clone());
     }
     return clone;
 }
@@ -163,4 +167,14 @@ std::shared_ptr<LILType> LILExpression::getType() const
         return std::dynamic_pointer_cast<LILType>(this->_rightNode);
     }
     return LILTypedNode::getType();
+}
+
+std::shared_ptr<LILType> LILExpression::getElementType() const
+{
+    return this->_elementType;
+}
+
+void LILExpression::setElementType(std::shared_ptr<LILType> value)
+{
+    this->_elementType = value;
 }

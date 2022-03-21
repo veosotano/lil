@@ -350,7 +350,12 @@ LILToStrInfo LILToStringVisitor::_stringify(LILExpression * value)
     LILNode * type = value->getType().get();
     LILString typestr;
     if (type) {
-        typestr = " (" + LILNodeToString::stringify(type) + ")";
+        typestr = " (";
+        auto elementType = value->getElementType();
+        if (elementType) {
+            typestr += LILNodeToString::stringify(elementType.get()) + "=>";
+        }
+        typestr += LILNodeToString::stringify(type) + ")";
     }
     LILString expstr = LILString("Expression"+ typestr +": ") + LILExpression::expressionTypeToString(value->getExpressionType());
     ret.value = expstr;
