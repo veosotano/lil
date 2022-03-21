@@ -295,6 +295,13 @@ void LILTypeGuesser::processChildren(const std::vector<std::shared_ptr<LILNode> 
 
 void LILTypeGuesser::process(LILNode * node)
 {
+    if ((node->getNodeType() == NodeTypeRule) && !node->getType()) {
+        auto rule = static_cast<LILRule *>(node);
+        auto ruleTy = this->getNodeType(rule);
+        if (ruleTy) {
+            rule->setType(ruleTy);
+        }
+    }
     if (LILNode::isContainerNode(node->getNodeType())) {
         //we don't need to process extern classes
         if (!node->isA(NodeTypeClassDecl) || !static_cast<LILClassDecl *>(node)->getIsExtern()) {
@@ -745,19 +752,7 @@ void LILTypeGuesser::_process(LILPropertyName * value)
 void LILTypeGuesser::_process(LILRule * value)
 {
     if (!value->getType()) {
-        const auto & instrNode = value->getInstruction();
-        if (instrNode && instrNode->getNodeType() == NodeTypeInstruction) {
-            auto instr = std::static_pointer_cast<LILInstruction>(instrNode);
-            if (instr->getInstructionType() == InstructionTypeNew) {
-                auto instrTy = instr->getType();
-                if (instrTy) {
-                    value->setType(instrTy);
-                }
-            }
-        }
-    }
-    if (!value->getType()) {
-        auto ty = this->findTypeForSelectorChain(std::static_pointer_cast<LILSelectorChain>(value->getSelectorChain()));
+        auto ty = this->getNodeType(value);
         if (ty) {
             value->setType(ty);
         }
@@ -1427,6 +1422,21 @@ std::shared_ptr<LILType> LILTypeGuesser::getNodeType(LILNode * node) const
                 }
             }
             return ty;
+        }
+        case NodeTypeRule:
+        {
+            auto value = static_cast<LILRule *>(node);
+            const auto & instrNode = value->getInstruction();
+            if (instrNode && instrNode->getNodeType() == NodeTypeInstruction) {
+                auto instr = std::static_pointer_cast<LILInstruction>(instrNode);
+                if (instr->getInstructionType() == InstructionTypeNew) {
+                    auto instrTy = instr->getType();
+                    if (instrTy) {
+                        return instrTy;
+                    }
+                }
+            }
+            return this->findTypeForSelectorChain(static_cast<LILSelectorChain *>(value->getSelectorChain().get()));
         }
         default:
             return nullptr;
