@@ -301,24 +301,6 @@ namespace LIL
         FlagFunctionTypeReplaceFlag,
     };
 
-    enum RuleState
-    {
-        RuleStateOff = 0,
-        RuleStateOn = 1,
-        RuleStateActivate,
-        RuleStatePurge,
-    };
-
-    enum ShapeType
-    {
-        ShapeTypeNone = 0,
-        ShapeTypeRectangle,
-        ShapeTypeRoundedRect,
-        ShapeTypeCircle,
-        ShapeTypePolygon,
-        ShapeTypeStar,
-    };
-
     enum EventType
     {
         EventTypeNone = 0,
@@ -344,60 +326,11 @@ namespace LIL
         EventTypeError,
     };
 
-    enum BorderType
-    {
-        BorderTypeNone = 0,
-        BorderTypeLine,
-    };
-
-    enum BorderPosition
-    {
-        BorderPositionNone = 0,
-        BorderPositionInside,
-        BorderPositionCenter,
-        BorderPositionOutside,
-    };
-
     enum SelectionType
     {
         SelectionTypeNone = 0,
         SelectionTypeSimpleSelection,
         SelectionTypeMultipleSelection,
-    };
-
-    enum GradientType
-    {
-        GradientTypeNone = 0,
-        GradientTypeLinear,
-        GradientTypeRadial,
-    };
-
-    enum DirectionValue
-    {
-        DirectionLeftToRight,
-        DirectionRightToLeft,
-        DirectionTopToBottom,
-        DirectionBottomToTop,
-    };
-
-    enum PathCommandType
-    {
-        PathCommandNone,
-        PathCommandTypeMoveTo,
-        PathCommandTypeLineTo,
-        PathCommandTypeArcTo,
-        PathCommandTypeSubtract,
-        PathCommandTypeCloseSubpath,
-        PathCommandTypeAddPolygon,
-        PathCommandTypeAddEllipse,
-    };
-
-    enum FlowMode
-    {
-        FlowModeRunOnce,
-        FlowModeRepeat,
-        FlowModeBreak,
-        FlowModeContinue,
     };
 
     enum ParserEvent
@@ -477,60 +410,6 @@ namespace LIL
         ParserEventForeignLang,
         ParserEventDocumentation,
         ParserEventInvalid,
-    };
-
-    enum TextTransformType
-    {
-        TextTransformTypeNone = 0,
-        TextTransformTypeLowercase,
-        TextTransformTypeUppercase,
-        TextTransformTypeCapitalize,
-        TextTransformTypeHumanize,
-    };
-
-    enum TextAlignType
-    {
-        TextAlignTypeNone = 0,
-        TextAlignTypeLeft,
-        TextAlignTypeRight,
-        TextAlignTypeCenter,
-        TextAlignTypeJustify,
-    };
-
-    enum LoggerChannel
-    {
-        LoggerChannelNone = 0,
-        LoggerChannelUserError = 1 << 0,
-        LoggerChannelUserWarning = 1 << 1,
-        LoggerChannelOverview = 1 << 2,
-        LoggerChannelGeneral = 1 << 3,
-        LoggerChannelGeneralSpecific = 1 << 4,
-        LoggerChannelIO = 1 << 5,
-        LoggerChannelNetwork = 1 << 6,
-        LoggerChannelLogFunction = 1 << 7,
-        LoggerChannelParser = 1 << 8,
-        LoggerChannelLexer = 1 << 9,
-        LoggerChannelLayout = 1 << 10,
-        LoggerChannelRendering = 1 << 11,
-        LoggerChannelObserving = 1 << 12,
-        LoggerChannelEvents = 1 << 13,
-        LoggerChannelEventsSpecific = 1 << 14,
-        LoggerChannelDocument = 1 << 15,
-        LoggerChannelDocumentSpecific = 1 << 16,
-        LoggerChannelMax = 1 << 30,
-        LoggerChannelAll = 0x7fffffff,
-    };
-
-    enum VisitorFilterFlags
-    {
-        LILVisitorFilterNone = 0,
-        LILVisitorFilterAll = 0x01,
-        LILVisitorFilterSkip = 0x02,
-        LILVisitorFilterRendering = 0x04,
-        LILVisitorFilterDiagnostic = 0x08,
-        LILVisitorFilterCascading = 0x10,
-        LILVisitorFilterLayout = 0x20,
-        LILVisitorFilterTraverse = 0x100,
     };
 }
 
