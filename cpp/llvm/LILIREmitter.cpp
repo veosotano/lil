@@ -506,7 +506,7 @@ llvm::Value * LILIREmitter::_emit(LILExpression * value)
         return nullptr;
     }
     if (leftTy->isA(TypeTypePointer) || rightTy->isA(TypeTypePointer)) {
-        static auto numLlvmTy = this->llvmTypeFromLILType(LILType::make("i64").get());
+        auto numLlvmTy = this->llvmTypeFromLILType(LILType::make("i64").get());
         if (leftTy->isA(TypeTypePointer) && LILType::isNumberType(rightTy.get())) {
             auto ptrTy = std::static_pointer_cast<LILPointerType>(leftTy);
             auto ptrArgTy = ptrTy->getArgument();
