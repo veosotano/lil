@@ -68,6 +68,7 @@ namespace LIL
         void initializeVisit() override;
         void visit(LILNode * node) override;
         void performVisit(std::shared_ptr<LILRootNode> rootNode) override;
+        void nullsToNullables(std::shared_ptr<LILNode> node);
         void connectCallsWithDecls(std::shared_ptr<LILNode> node);
         void propagateStrongTypes(std::shared_ptr<LILNode> node);
         void _propagateStrongType(std::shared_ptr<LILNode> node, std::shared_ptr<LILType> ty);

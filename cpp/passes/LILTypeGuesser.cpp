@@ -50,6 +50,9 @@ void LILTypeGuesser::performVisit(std::shared_ptr<LILRootNode> rootNode)
     this->setRootNode(rootNode);
     auto nodes = rootNode->getNodes();
     for (const auto & node : nodes) {
+        this->nullsToNullables(node);
+    }
+    for (const auto & node : nodes) {
         this->connectCallsWithDecls(node);
     }
     for (const auto & node : nodes) {
@@ -66,6 +69,23 @@ void LILTypeGuesser::performVisit(std::shared_ptr<LILRootNode> rootNode)
     }
     for (const auto & node : nodes) {
         this->process(node.get());
+    }
+}
+
+void LILTypeGuesser::nullsToNullables(std::shared_ptr<LILNode> node)
+{
+    for (auto childNode : node->getChildNodes()) {
+        this->nullsToNullables(childNode);
+    }
+    if (node->isTypedNode()) {
+        auto tyNode = std::static_pointer_cast<LILTypedNode>(node);
+        auto ty = tyNode->getType();
+        if (ty) {
+            auto newTy = this->nullsToNullableTypes(ty);
+            if (newTy.get() != ty.get()) {
+                tyNode->setType(newTy);
+            }
+        }
     }
 }
 
@@ -495,17 +515,6 @@ void LILTypeGuesser::process(LILNode * node)
         default:
             std::cerr << "Error: unkonwn node type to process\n";
             break;
-    }
-
-    if (node->isTypedNode()) {
-        auto tyNode = static_cast<LILTypedNode *>(node);
-        auto ty = tyNode->getType();
-        if (ty) {
-            auto newTy = this->nullsToNullableTypes(ty);
-            if (newTy.get() != ty.get()) {
-                tyNode->setType(newTy);
-            }
-        }
     }
 }
 
