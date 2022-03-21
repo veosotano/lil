@@ -434,6 +434,11 @@ bool LILPreprocessor::processIfInstr(std::shared_ptr<LILNode> node)
             auto value = std::static_pointer_cast<LILSimpleSelector>(node);
             return this->_processIfInstr(value);
         }
+        case NodeTypeEnum:
+        {
+            auto value = std::static_pointer_cast<LILEnum>(node);
+            return this->_processIfInstr(value);
+        }
     }
     return false;
 }
@@ -834,6 +839,12 @@ bool LILPreprocessor::processPasteInstr(std::shared_ptr<LILNode> node)
                     break;
             }
             ret = false;
+            break;
+        }
+        case NodeTypeEnum:
+        {
+            auto value = std::static_pointer_cast<LILEnum>(node);
+            ret = this->_processPasteInstr(value);
             break;
         }
     }
@@ -1864,6 +1875,30 @@ bool LILPreprocessor::_processIfInstr(std::shared_ptr<LILConversionDecl> value)
     return false;
 }
 
+bool LILPreprocessor::_processIfInstr(std::shared_ptr<LILEnum> value)
+{
+    bool hasChanges = false;
+    std::vector<std::shared_ptr<LILNode>> resultValues;
+    for (auto value : value->getValues()) {
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processIfInstr(value);
+        if (!remove && this->_nodeBuffer.back().size() == 0) {
+            resultValues.push_back(value);
+        } else {
+            hasChanges = true;
+            for (auto newValue : this->_nodeBuffer.back()) {
+                resultValues.push_back(newValue);
+            }
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    if (hasChanges) {
+        this->_needsAnotherPass = true;
+        value->setValues(resultValues);
+    }
+    return false;
+}
+
 bool LILPreprocessor::_evaluate(std::shared_ptr<LILNode> node)
 {
     switch (node->getNodeType()) {
@@ -2713,6 +2748,30 @@ bool LILPreprocessor::_processPasteInstr(std::shared_ptr<LILStaticArrayType> val
     const auto & type = value->getType();
     if (type) {
         this->processPasteInstr(type);
+    }
+    return false;
+}
+
+bool LILPreprocessor::_processPasteInstr(std::shared_ptr<LILEnum> value)
+{
+    bool hasChanges = false;
+    std::vector<std::shared_ptr<LILNode>> resultNodes;
+    for (auto node : value->getValues()) {
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processPasteInstr(node);
+        if (!remove && this->_nodeBuffer.back().size() == 0) {
+            resultNodes.push_back(node);
+        } else {
+            hasChanges = true;
+            for (auto newNode : this->_nodeBuffer.back()) {
+                resultNodes.push_back(newNode);
+            }
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    if (hasChanges) {
+        this->_needsAnotherPass = true;
+        value->setValues(resultNodes);
     }
     return false;
 }

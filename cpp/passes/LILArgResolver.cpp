@@ -201,6 +201,11 @@ bool LILArgResolver::processArgInstr(std::shared_ptr<LILNode> node)
             auto value = std::static_pointer_cast<LILSimpleSelector>(node);
             return this->_processArgInstr(value);
         }
+        case NodeTypeEnum:
+        {
+            auto value = std::static_pointer_cast<LILEnum>(node);
+            return this->_processArgInstr(value);
+        }
     }
     return false;
 }
@@ -847,6 +852,29 @@ bool LILArgResolver::_processArgInstr(std::shared_ptr<LILConversionDecl> value)
     }
     if (hasChangesBody) {
         value->setBody(std::move(resultNodes));
+    }
+    return false;
+}
+
+bool LILArgResolver::_processArgInstr(std::shared_ptr<LILEnum> value)
+{
+    bool hasChanges = false;
+    std::vector<std::shared_ptr<LILNode>> resultNodes;
+    for (auto node : value->getValues()) {
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processArgInstr(node);
+        if (!remove && this->_nodeBuffer.back().size() == 0) {
+            resultNodes.push_back(node);
+        } else {
+            hasChanges = true;
+            for (auto newNode : this->_nodeBuffer.back()) {
+                resultNodes.push_back(newNode);
+            }
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    if (hasChanges) {
+        value->setValues(resultNodes);
     }
     return false;
 }

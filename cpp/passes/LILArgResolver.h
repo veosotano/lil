@@ -21,6 +21,7 @@
 #include "LILConversionDecl.h"
 #include "LILExpression.h"
 #include "LILDocumentation.h"
+#include "LILEnum.h"
 #include "LILFlowControl.h"
 #include "LILFlowControlCall.h"
 #include "LILFunctionCall.h"
@@ -88,6 +89,7 @@ namespace LIL
         bool _processArgInstr(std::shared_ptr<LILValueList> value);
         bool _processArgInstr(std::shared_ptr<LILIndexAccessor> value);
         bool _processArgInstr(std::shared_ptr<LILConversionDecl> value);
+        bool _processArgInstr(std::shared_ptr<LILEnum> value);
     };
 }
 

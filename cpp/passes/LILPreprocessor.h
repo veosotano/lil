@@ -20,6 +20,7 @@
 #include "LILAssignment.h"
 #include "LILClassDecl.h"
 #include "LILConversionDecl.h"
+#include "LILEnum.h"
 #include "LILExpression.h"
 #include "LILDocumentation.h"
 #include "LILFlowControl.h"
@@ -125,6 +126,7 @@ namespace LIL
         bool _processIfInstr(std::shared_ptr<LILValueList> value);
         bool _processIfInstr(std::shared_ptr<LILIndexAccessor> value);
         bool _processIfInstr(std::shared_ptr<LILConversionDecl> value);
+        bool _processIfInstr(std::shared_ptr<LILEnum> value);
         bool _evaluate(std::shared_ptr<LILNode> node);
 
         bool _processPasteInstr(std::shared_ptr<LILExpression> value);
@@ -156,6 +158,7 @@ namespace LIL
         bool _processPasteInstr(std::shared_ptr<LILFunctionType> value);
         bool _processPasteInstr(std::shared_ptr<LILPointerType> value);
         bool _processPasteInstr(std::shared_ptr<LILStaticArrayType> value);
+        bool _processPasteInstr(std::shared_ptr<LILEnum> value);
 
         void _processMainMenuRule(std::shared_ptr<LILSnippetInstruction> snippet, std::shared_ptr<LILRule> rule);
         void _processAppMenuRule(std::shared_ptr<LILSnippetInstruction> snippet, std::shared_ptr<LILRule> rule);
