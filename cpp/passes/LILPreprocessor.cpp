@@ -310,6 +310,7 @@ bool LILPreprocessor::processIfInstr(std::shared_ptr<LILNode> node)
         case NodeTypeObjectType:
         case NodeTypePointerType:
         case NodeTypeStaticArrayType:
+        case NodeTypeSIMDType:
         case NodeTypeFlag:
         case NodeTypeFilter:
         case NodeTypeSelector:
@@ -803,6 +804,7 @@ bool LILPreprocessor::processPasteInstr(std::shared_ptr<LILNode> node)
         case NodeTypeObjectType:
         case NodeTypePointerType:
         case NodeTypeStaticArrayType:
+        case NodeTypeSIMDType:
         {
             auto ty = std::static_pointer_cast<LILType>(node);
             this->_processPasteInstr(ty);
@@ -830,6 +832,11 @@ bool LILPreprocessor::processPasteInstr(std::shared_ptr<LILNode> node)
                 {
                     auto value = std::static_pointer_cast<LILFunctionType>(node);
                     ret = this->_processPasteInstr(value);
+                    break;
+                }
+                case TypeTypeSIMD:
+                {
+                    //do nothing
                     break;
                 }
                 default:

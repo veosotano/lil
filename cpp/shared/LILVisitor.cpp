@@ -30,9 +30,11 @@
 #include "LILPointerType.h"
 #include "LILPropertyName.h"
 #include "LILRule.h"
+#include "LILSIMDType.h"
 #include "LILStaticArrayType.h"
 #include "LILStringLiteral.h"
 #include "LILValuePath.h"
+#include "LILVaLueList.h"
 #include "LILVarDecl.h"
 
 using namespace LIL;
@@ -428,6 +430,12 @@ LILString LILVisitor::typeToString(std::shared_ptr<LILType> type) const
             }
             break;
         }
+        case TypeTypeSIMD:
+        {
+            auto simdTy = std::static_pointer_cast<LILSIMDType>(type);
+            ret += simdTy->getName() + "x" + LILString::number((LILUnitI32) simdTy->getWidth());
+            break;
+        }
         case TypeTypeNone:
             //do nothing;
             break;
@@ -558,6 +566,36 @@ std::shared_ptr<LILNode> LILVisitor::findExpandedField(std::shared_ptr<LILClassD
                 }
             }
         }
+    }
+    return ret;
+}
+
+std::shared_ptr<LILType> LILVisitor::findTypeForValueList(LILValueList * value) const
+{
+    std::shared_ptr<LILType> ret;
+    std::vector<std::shared_ptr<LILType>> types;
+    for (const auto & val : value->getValues()) {
+        const auto & ty = val->getType();
+        bool found = false;
+        for (const auto existingTy : types) {
+            if (existingTy->equalTo(ty)) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            types.push_back(ty);
+        }
+    }
+    if (types.size() == 1) {
+        ret = *(types.begin());
+    } else if (types.size() > 0) {
+        auto mTy = std::make_shared<LILMultipleType>();
+        for (const auto ty : types) {
+            mTy->addType(ty);
+        }
+        
+        ret = mTy;
     }
     return ret;
 }

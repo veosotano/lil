@@ -997,6 +997,10 @@ LILToStrInfo LILToStringVisitor::_stringify(LILValueList * value)
 {
     LILToStrInfo ret;
     ret.value = "Value list";
+    auto type = value->getType().get();
+    if (type) {
+        ret.value += " (" + LILNodeToString::stringify(type) + ")";
+    }
     this->stringifyChildren(value->getValues(), ret);
     return ret;
 }

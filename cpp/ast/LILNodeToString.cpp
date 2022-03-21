@@ -44,6 +44,7 @@
 #include "LILRule.h"
 #include "LILSelector.h"
 #include "LILSelectorChain.h"
+#include "LILSIMDType.h"
 #include "LILSimpleSelector.h"
 #include "LILStaticArrayType.h"
 #include "LILStringFunction.h"
@@ -355,6 +356,17 @@ LILString LILNodeToString::stringify(LILNode * node)
                     } else {
                         return tempstr;
                     }
+                }
+                case TypeTypeSIMD:
+                {
+                    auto simdTy = static_cast<LILSIMDType *>(node);
+                    LILString ret = simdTy->getType()->getName();
+                    ret += "x";
+                    ret += LILString::number((LILUnitI32)simdTy->getWidth());
+                    if (value->getIsNullable()) {
+                        ret += "|null";
+                    }
+                    return ret;
                 }
                 case TypeTypeNone:
                     break;

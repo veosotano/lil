@@ -490,6 +490,31 @@ void LILASTValidator::_validate(const std::shared_ptr<LILType> & value)
             }
             break;
         }
+        case TypeTypeSIMD:
+        {
+            auto elementTy = value->getType();
+            if (!elementTy) {
+                LILErrorMessage ei;
+                ei.message =  "SIMD type had no element type";
+                LILNode::SourceLocation sl = value->getSourceLocation();
+                ei.file = sl.file;
+                ei.line = sl.line;
+                ei.column = sl.column;
+                this->errors.push_back(ei);
+                break;
+            }
+            auto name = elementTy->getName();
+            if (!LILType::isBuiltInType(elementTy.get())) {
+                LILErrorMessage ei;
+                ei.message =  "Invalid type name "+name;
+                LILNode::SourceLocation sl = value->getSourceLocation();
+                ei.file = sl.file;
+                ei.line = sl.line;
+                ei.column = sl.column;
+                this->errors.push_back(ei);
+            }
+            break;
+        }
             
         default:
             if (this->getDebug() && !this->hasErrors()) {

@@ -23,6 +23,7 @@
 #include "LILNodeToString.h"
 #include "LILPointerType.h"
 #include "LILRootNode.h"
+#include "LILSIMDType.h"
 #include "LILStaticArrayType.h"
 #include "LILTypeDecl.h"
 
@@ -581,10 +582,14 @@ llvm::Value * LILIREmitter::_emit(LILExpression * value)
 
 llvm::Value * LILIREmitter::_emitExpression(ExpressionType expType, llvm::Value * leftV, llvm::Value * rightV)
 {
+    auto llvmTy = leftV->getType();
+    if (llvmTy->getTypeID() == llvm::Type::VectorTyID) {
+        llvmTy = llvmTy->getContainedType(0);
+    }
     switch (expType) {
         case ExpressionTypeSum:
         {
-            switch (leftV->getType()->getTypeID()) {
+            switch (llvmTy->getTypeID()) {
                 case llvm::Type::FloatTyID:
                 case llvm::Type::DoubleTyID:
                 {
@@ -605,7 +610,7 @@ llvm::Value * LILIREmitter::_emitExpression(ExpressionType expType, llvm::Value 
 
         case ExpressionTypeSubtraction:
         {
-            switch (leftV->getType()->getTypeID()) {
+            switch (llvmTy->getTypeID()) {
                 case llvm::Type::FloatTyID:
                 case llvm::Type::DoubleTyID:
                 {
@@ -626,7 +631,7 @@ llvm::Value * LILIREmitter::_emitExpression(ExpressionType expType, llvm::Value 
 
         case ExpressionTypeMultiplication:
         {
-            switch (leftV->getType()->getTypeID()) {
+            switch (llvmTy->getTypeID()) {
                 case llvm::Type::FloatTyID:
                 case llvm::Type::DoubleTyID:
                 {
@@ -647,7 +652,7 @@ llvm::Value * LILIREmitter::_emitExpression(ExpressionType expType, llvm::Value 
 
         case ExpressionTypeDivision:
         {
-            switch (leftV->getType()->getTypeID()) {
+            switch (llvmTy->getTypeID()) {
                 case llvm::Type::FloatTyID:
                 case llvm::Type::DoubleTyID:
                 {
@@ -668,7 +673,7 @@ llvm::Value * LILIREmitter::_emitExpression(ExpressionType expType, llvm::Value 
 
         case ExpressionTypeBiggerComparison:
         {
-            switch (leftV->getType()->getTypeID()) {
+            switch (llvmTy->getTypeID()) {
                 case llvm::Type::IntegerTyID:
                     return d->irBuilder.CreateICmpSGT(leftV, rightV);
                 case llvm::Type::FloatTyID:
@@ -683,7 +688,7 @@ llvm::Value * LILIREmitter::_emitExpression(ExpressionType expType, llvm::Value 
 
         case ExpressionTypeBiggerOrEqualComparison:
         {
-            switch (leftV->getType()->getTypeID()) {
+            switch (llvmTy->getTypeID()) {
                 case llvm::Type::IntegerTyID:
                     return d->irBuilder.CreateICmpSGE(leftV, rightV);
                 case llvm::Type::FloatTyID:
@@ -698,7 +703,7 @@ llvm::Value * LILIREmitter::_emitExpression(ExpressionType expType, llvm::Value 
 
         case ExpressionTypeSmallerComparison:
         {
-            switch (leftV->getType()->getTypeID()) {
+            switch (llvmTy->getTypeID()) {
                 case llvm::Type::IntegerTyID:
                     return d->irBuilder.CreateICmpSLT(leftV, rightV);
                 case llvm::Type::FloatTyID:
@@ -713,7 +718,7 @@ llvm::Value * LILIREmitter::_emitExpression(ExpressionType expType, llvm::Value 
 
         case ExpressionTypeSmallerOrEqualComparison:
         {
-            switch (leftV->getType()->getTypeID()) {
+            switch (llvmTy->getTypeID()) {
                 case llvm::Type::IntegerTyID:
                     return d->irBuilder.CreateICmpSLE(leftV, rightV);
                 case llvm::Type::FloatTyID:
@@ -728,7 +733,7 @@ llvm::Value * LILIREmitter::_emitExpression(ExpressionType expType, llvm::Value 
             
         case ExpressionTypeEqualComparison:
         {
-            switch (leftV->getType()->getTypeID()) {
+            switch (llvmTy->getTypeID()) {
                 case llvm::Type::IntegerTyID:
                     return d->irBuilder.CreateICmpEQ(leftV, rightV);
                 case llvm::Type::FloatTyID:
@@ -743,7 +748,7 @@ llvm::Value * LILIREmitter::_emitExpression(ExpressionType expType, llvm::Value 
             
         case ExpressionTypeNotEqualComparison:
         {
-            switch (leftV->getType()->getTypeID()) {
+            switch (llvmTy->getTypeID()) {
                 case llvm::Type::IntegerTyID:
                     return d->irBuilder.CreateICmpNE(leftV, rightV);
                 case llvm::Type::FloatTyID:
@@ -3912,6 +3917,14 @@ llvm::Value * LILIREmitter::_emit(LILValueList * value)
             }
             index += 1;
         }
+    } else if (ty->isA(TypeTypeSIMD)) {
+        std::vector<llvm::Constant *> values;
+        for (auto node : value->getValues()) {
+            auto irVal = this->emit(node.get());
+            values.push_back(llvm::cast<llvm::Constant>(irVal));
+        }
+        d->irBuilder.CreateStore(llvm::ConstantVector::get(values), d->currentAlloca);
+        
     }
     d->currentAlloca = allocaBackup;
     return nullptr;
@@ -4248,6 +4261,12 @@ llvm::Type * LILIREmitter::llvmTypeFromLILType(LILType * type)
     {
         auto fnTy = static_cast<LILFunctionType *>(type);
         return this->_emitLlvmFnType(fnTy);
+    }
+    else if (type->isA(TypeTypeSIMD))
+    {
+        auto simdTy = static_cast<LILSIMDType *>(type);
+        auto vectTy = llvm::VectorType::get(this->llvmTypeFromLILType(simdTy->getType().get()), simdTy->getWidth());
+        return vectTy;
     }
 
     LILString typestr = type->getName();
@@ -4785,6 +4804,13 @@ size_t LILIREmitter::getSizeOfType(std::shared_ptr<LILType> ty) const
             auto num = std::static_pointer_cast<LILNumberLiteral>(arg);
             size_t argNum = this->extractSizeFromNumberLiteral(num.get());
             ret = baseSize * argNum;
+            break;
+        }
+        case TypeTypeSIMD:
+        {
+            auto simdTy = std::static_pointer_cast<LILSIMDType>(ty);
+            auto baseSize = this->getSizeOfType(simdTy->getType());
+            ret = baseSize * simdTy->getWidth();
             break;
         }
 

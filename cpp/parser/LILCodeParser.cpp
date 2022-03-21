@@ -20,6 +20,7 @@
 #include "LILStringToken.h"
 #include "LILToken.h"
 #include "LILAbstractParserReceiver.h"
+#include <regex>
 
 #define LIL_START_NODE(node_type)\
     size_t __startCol = d->column;\
@@ -1394,6 +1395,7 @@ bool LILCodeParser::canHaveExpression(NodeType nodeType) const
         case NodeTypeCombinator:
         case NodeTypeObjectType:
         case NodeTypePointerType:
+        case NodeTypeSIMDType:
         case NodeTypeFlowControl:
         case NodeTypeForeignLang:
         case NodeTypeFunctionDecl:
@@ -1619,6 +1621,13 @@ bool LILCodeParser::readTypeSimple()
         } else if (tokenStr == "ptr"){
             return this->readPointerType();
         }
+        
+        std::regex regexStr("([a-z][0-9]+)(x)([0-9]+)");
+        std::smatch matches;
+        std::regex_match(tokenStr.data(), matches, regexStr);
+        if (matches.size() == 4) {
+            return this->readSIMDType(matches[1], matches[3]);
+        }
 
         LIL_START_NODE(NodeTypeType)
 
@@ -1810,6 +1819,30 @@ bool LILCodeParser::readStaticArrayType()
     d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
     this->readNextToken();
 
+    LIL_END_NODE_SKIP(false)
+}
+
+bool LILCodeParser::readSIMDType(std::string typeName, std::string numElements)
+{
+    LIL_START_NODE(NodeTypeSIMDType)
+    //make a type node
+    {
+        LIL_START_NODE(NodeTypeType)
+        d->receiver->receiveNodeData(ParserEventType, typeName);
+        LIL_END_NODE_NO_RETURN
+        d->receiver->receiveNodeCommit();
+    }
+    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+    d->receiver->receiveNodeData(ParserEventPunctuation, "x");
+    
+    //make a number node
+    {
+        LIL_START_NODE(NodeTypeNumberLiteral)
+        d->receiver->receiveNodeData(ParserEventNumberLiteral, numElements);
+        LIL_END_NODE_NO_RETURN
+        d->receiver->receiveNodeCommit();
+    }
+    this->readNextToken();
     LIL_END_NODE_SKIP(false)
 }
 

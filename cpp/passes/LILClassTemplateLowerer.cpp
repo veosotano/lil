@@ -76,7 +76,7 @@ void LILClassTemplateLowerer::performVisit(std::shared_ptr<LILRootNode> rootNode
                             auto vl = std::static_pointer_cast<LILValueList>(spNode);
                             vlTy = vl->getType();
                             if (!vlTy) {
-                                vlTy = this->findTypeForValueList(vl);
+                                vlTy = this->findTypeForValueList(vl.get());
                                 if (vlTy->getIsWeakType()) {
                                     auto intType = vlTy->getDefaultType();
                                     vlTy = intType;
@@ -216,13 +216,16 @@ std::vector<std::shared_ptr<LILNode>> LILClassTemplateLowerer::findArraySpeciali
             }
         } else if (node->isA(NodeTypeValueList)) {
             auto vl = std::static_pointer_cast<LILValueList>(node);
+            if (vl->getValues().size() == 0) {
+                break;
+            }
             auto vlParent = vl->getParentNode();
             switch (vlParent->getNodeType()) {
                 case NodeTypeVarDecl:
                 {
                     auto vlTy = vlParent->getType();
                     if (vlTy) {
-                        if (!vlTy->isA(TypeTypeStaticArray)) {
+                        if (vlTy->getName() == "array") {
                             ret.push_back(node);
                         }
                     } else {
@@ -492,6 +495,7 @@ std::shared_ptr<LILType> LILClassTemplateLowerer::replaceType(std::shared_ptr<LI
             }
             break;
         }
+        case TypeTypeSIMD:
         case TypeTypeNone:
         {
             //do nothing
@@ -502,32 +506,4 @@ std::shared_ptr<LILType> LILClassTemplateLowerer::replaceType(std::shared_ptr<LI
         ret->setIsNullable(true);
     }
     return ret;
-}
-
-//this is copied from LILTypeGuesser
-std::shared_ptr<LILType> LILClassTemplateLowerer::findTypeForValueList(std::shared_ptr<LILValueList> value) const
-{
-    std::vector<std::shared_ptr<LILType>> types;
-    for (const auto & val : value->getValues()) {
-        const auto & ty = val->getType();
-        bool found = false;
-        for (const auto existingTy : types) {
-            if (existingTy->equalTo(ty)) {
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            types.push_back(ty);
-        }
-    }
-    if (types.size() == 1) {
-        return *(types.begin());
-    }
-    auto mTy = std::make_shared<LILMultipleType>();
-    for (const auto ty : types) {
-        mTy->addType(ty);
-    }
-    
-    return mTy;
 }

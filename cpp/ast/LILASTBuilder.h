@@ -37,6 +37,7 @@ namespace LIL
         BuilderStatePointerType,
         BuilderStateStaticArrayType,
         BuilderStateObjectType,
+        BuilderStateSIMDType,
         BuilderStateVarDecl,
         BuilderStateConstDecl,
         BuilderStateAliasDecl,

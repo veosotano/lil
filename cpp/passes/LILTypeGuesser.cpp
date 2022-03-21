@@ -537,6 +537,9 @@ void LILTypeGuesser::_process(LILNumberLiteral * value)
         if (ty2 && ty2->isA(TypeTypePointer)) {
             isDefaultType = true;
         } else {
+            if (ty2 && ty2->getTypeType() == TypeTypeSIMD) {
+                ty2 = ty2->getType();
+            }
             auto ty3 = LILType::merge(ty1, ty2);
             if (ty3 && !ty3->getIsWeakType()) {
                 value->setType(ty3);
@@ -907,134 +910,9 @@ void LILTypeGuesser::_process(LILValueList * value)
 {
     auto ty = value->getType();
     if (!ty) {
-        auto vlTy = this->findTypeForValueList(std::static_pointer_cast<LILValueList>(value->shared_from_this()));
-        if (vlTy) {
-            if (vlTy->isA(TypeTypeMultiple)){
-                auto mt = std::static_pointer_cast<LILMultipleType>(vlTy);
-                if (mt->getTypes().size() > 0) {
-                    value->setType(vlTy);
-                    return;
-                } else {
-                    vlTy = nullptr;
-                }
-            } else {
-                auto vlParent = value->getParentNode();
-                if (vlParent) {
-                    switch (vlParent->getNodeType()) {
-                        case NodeTypeVarDecl:
-                        {
-                            if (!vlParent->getType()) {
-                                value->setType(vlTy);
-                            } else {
-                                auto parentTy = vlParent->getType();
-                                if (parentTy->isA(TypeTypeMultiple)) {
-                                    auto parentTyMtTys = std::static_pointer_cast<LILMultipleType>(parentTy)->getTypes();
-                                    for (auto parentTyMtTy : parentTyMtTys) {
-                                        if (parentTyMtTy->isA(TypeTypeStaticArray)) {
-                                            auto staticArrayTy = std::static_pointer_cast<LILStaticArrayType>(parentTyMtTy);
-                                            if (staticArrayTy->getType()->equalTo(vlTy)) {
-                                                value->setType(staticArrayTy);
-                                                return;
-                                            }
-                                        } else if (parentTyMtTy->isA(TypeTypeObject) && parentTyMtTy->getName() == "array"){
-                                            auto objTy = std::static_pointer_cast<LILObjectType>(parentTyMtTy);
-                                            auto paramTy = objTy->getTmplParams().front();
-                                            if (paramTy && paramTy->equalTo(vlTy)) {
-                                                value->setType(parentTyMtTy);
-                                                return;
-                                            }
-                                        }
-                                    }
-                                } else if (parentTy->isA(TypeTypeStaticArray)) {
-                                    auto staticArrayTy = std::static_pointer_cast<LILStaticArrayType>(parentTy);
-                                    if (staticArrayTy->getType()->equalTo(vlTy)) {
-                                        value->setType(staticArrayTy);
-                                        return;
-                                    }
-                                } else if (parentTy->isA(TypeTypeObject) && parentTy->getName() == "array"){
-                                    auto objTy = std::static_pointer_cast<LILObjectType>(parentTy);
-                                    auto paramTy = objTy->getTmplParams().front();
-                                    if (paramTy && paramTy->equalTo(vlTy)) {
-                                        value->setType(parentTy);
-                                        return;
-                                    }
-                                }
-                            }
-                            break;
-                        }
-                        case NodeTypeAssignment:
-                        {
-                            auto as = std::static_pointer_cast<LILAssignment>(vlParent);
-                            const auto & subj = as->getSubject();
-                            auto remoteNode = this->recursiveFindNode(subj);
-                            if (remoteNode) {
-                                auto asTy = remoteNode->getType();
-                                if (asTy) {
-                                    if (asTy->isA(TypeTypeMultiple)) {
-                                        auto asTyMtTys = std::static_pointer_cast<LILMultipleType>(asTy)->getTypes();
-                                        for (auto asTyMtTy : asTyMtTys) {
-                                            if (asTyMtTy->isA(TypeTypeStaticArray)) {
-                                                auto staticArrayTy = std::static_pointer_cast<LILStaticArrayType>(asTyMtTy);
-                                                if (staticArrayTy->getType()->equalTo(vlTy)) {
-                                                    value->setType(staticArrayTy);
-                                                    return;
-                                                }
-                                            } else if (asTyMtTy->isA(TypeTypeObject) && asTyMtTy->getName() == "array"){
-                                                auto objTy = std::static_pointer_cast<LILObjectType>(asTyMtTy);
-                                                auto paramTy = objTy->getTmplParams().front();
-                                                if (paramTy && paramTy->equalTo(vlTy)) {
-                                                    value->setType(asTyMtTy);
-                                                    return;
-                                                }
-                                            }
-                                        }
-                                    } else if (asTy->isA(TypeTypeStaticArray)) {
-                                        auto staticArrayTy = std::static_pointer_cast<LILStaticArrayType>(asTy);
-                                        if (staticArrayTy->getType()->equalTo(vlTy)) {
-                                            value->setType(staticArrayTy);
-                                            return;
-                                        }
-                                    } else if (asTy->isA(TypeTypeObject) && asTy->getName() == "array"){
-                                        auto objTy = std::static_pointer_cast<LILObjectType>(asTy);
-                                        auto paramTy = objTy->getTmplParams().front();
-                                        if (paramTy && paramTy->equalTo(vlTy)) {
-                                            value->setType(asTy);
-                                            return;
-                                        }
-                                    }
-                                }
-                            } else {
-                                std::cerr << "REMOTE NODE NOT FOUND FAIL!!!!!!!\n\n";
-                            }
-                            break;
-                        }
-                        default:
-                            std::cerr << "UNKNOWN PARENT TYPE FAIL!!!!!!!\n\n";
-                            return;
-                    }
-                    
-                }
-            }
-            if (!vlTy) {
-                auto ancestorTy = this->recursiveFindTypeFromAncestors(value->shared_from_this());
-                if (ancestorTy) {
-                    if (ancestorTy->isA(TypeTypeMultiple)) {
-                        for (auto ancestorMtTy : std::static_pointer_cast<LILMultipleType>(ancestorTy)->getTypes()) {
-                            if (ancestorMtTy->isA(TypeTypeStaticArray)) {
-                                auto staticArrayTy = std::static_pointer_cast<LILStaticArrayType>(ancestorMtTy);
-                                value->setType(staticArrayTy);
-                                return;
-                            } else if (ancestorMtTy->isA(TypeTypeObject) && ancestorMtTy->getName() == "array"){
-                                value->setType(ancestorMtTy);
-                                return;
-                            }
-                        }
-                    } else {
-                        value->setType(ancestorTy);
-                    }
-                    return;
-                }
-            }
+        ty = this->getNodeType(value);
+        if (ty) {
+            value->setType(ty);
         }
     }
 }
@@ -1486,14 +1364,57 @@ std::shared_ptr<LILType> LILTypeGuesser::getNodeType(LILNode * node) const
         }
         case NodeTypeValueList:
         {
-            auto vl = std::static_pointer_cast<LILValueList>(node);
-            auto ty = this->findTypeForValueList(vl);
-            if (ty && !ty->getIsWeakType()) {
-                auto objTy = LILObjectType::make("array");
-                objTy->addTmplParam(ty);
-                return objTy;
+            auto vl = static_cast<LILValueList *>(node);
+            auto ancestorTy = this->recursiveFindTypeFromAncestors(vl);
+            auto vlElementTy = this->findTypeForValueList(vl);
+            if (ancestorTy) {
+                if (ancestorTy->isA(TypeTypeMultiple)) {
+                    auto mtTys = std::static_pointer_cast<LILMultipleType>(ancestorTy)->getTypes();
+                    for (auto mtTy : mtTys) {
+                        if (mtTy->isA(TypeTypeStaticArray)) {
+                            auto staticArrayTy = std::static_pointer_cast<LILStaticArrayType>(mtTy);
+                            if (vlElementTy) {
+                                if (staticArrayTy->getType()->equalTo(vlElementTy)) {
+                                    return staticArrayTy;
+                                }
+                            } else {
+                                //no type for value list, take first array parameter
+                                return staticArrayTy;
+                            }
+                            
+                        } else if (mtTy->isA(TypeTypeObject) && mtTy->getName() == "array"){
+                            auto objTy = std::static_pointer_cast<LILObjectType>(mtTy);
+                            auto paramTy = objTy->getTmplParams().front();
+                            if (vlElementTy) {
+                                if (paramTy && paramTy->equalTo(vlElementTy)) {
+                                    return mtTy;
+                                }
+                            } else {
+                                //no type for value list, take first array parameter
+                                return mtTy;
+                            }
+                        }
+                    }
+                } else if (ancestorTy->isA(TypeTypeStaticArray)) {
+                    auto staticArrayTy = std::static_pointer_cast<LILStaticArrayType>(ancestorTy);
+                    if (!vlElementTy || staticArrayTy->getType()->equalTo(vlElementTy)) {
+                        return staticArrayTy;
+                    }
+                } else if (ancestorTy->isA(TypeTypeObject) && ancestorTy->getName() == "array"){
+                    auto objTy = std::static_pointer_cast<LILObjectType>(ancestorTy);
+                    auto paramTy = objTy->getTmplParams().front();
+                    if (paramTy && paramTy->equalTo(vlElementTy)) {
+                        return ancestorTy;
+                    }
+                } else if (ancestorTy->getTypeType() == TypeTypeSIMD) {
+                    return ancestorTy;
+                }
             }
-            return nullptr;
+
+            auto ret = LILObjectType::make("array");
+            ret->addTmplParam(vlElementTy);
+            return ret;
+            
         }
         case NodeTypeEnum:
         {
@@ -1766,6 +1687,7 @@ void LILTypeGuesser::addTypeToReturnTypes(std::vector<std::shared_ptr<LILType>> 
         case TypeTypeObject:
         case TypeTypePointer:
         case TypeTypeStaticArray:
+        case TypeTypeSIMD:
         {
             returnTypes.push_back(ty);
             break;
@@ -2317,33 +2239,6 @@ std::shared_ptr<LILType> LILTypeGuesser::nullsToNullableTypes(std::shared_ptr<LI
         }
     }
     return ty;
-}
-
-std::shared_ptr<LILType> LILTypeGuesser::findTypeForValueList(std::shared_ptr<LILValueList> value) const
-{
-    std::vector<std::shared_ptr<LILType>> types;
-    for (const auto & val : value->getValues()) {
-        const auto & ty = val->getType();
-        bool found = false;
-        for (const auto existingTy : types) {
-            if (existingTy->equalTo(ty)) {
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            types.push_back(ty);
-        }
-    }
-    if (types.size() == 1) {
-        return *(types.begin());
-    }
-    auto mTy = std::make_shared<LILMultipleType>();
-    for (const auto ty : types) {
-        mTy->addType(ty);
-    }
-    
-    return mTy;
 }
 
 

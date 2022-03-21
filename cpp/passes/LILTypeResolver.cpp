@@ -16,6 +16,7 @@
 #include "LILAliasDecl.h"
 #include "LILNodeToString.h"
 #include "LILObjectType.h"
+#include "LILSIMDType.h"
 #include "LILStaticArrayType.h"
 #include "LILTypeDecl.h"
 #include "LILVarNode.h"
@@ -329,6 +330,15 @@ std::shared_ptr<LILType> LILTypeResolver::_process(std::shared_ptr<LILType> valu
                 if (processedSaChildTy) {
                     saTy->setType(processedSaChildTy);
                 }
+            }
+            break;
+        }
+        case TypeTypeSIMD:
+        {
+            auto simdTy = std::static_pointer_cast<LILSIMDType>(value);
+            auto innerTy = simdTy->getType();
+            if (this->_process(innerTy)) {
+                simdTy->setType(innerTy);
             }
             break;
         }

@@ -134,7 +134,6 @@ namespace LIL
         std::shared_ptr<LILType> findTypeFromExpressions(std::vector<std::shared_ptr<LILNode>> nodes, LILVarDecl * vd) const;
         std::shared_ptr<LILType> findTypeFromCallers(const std::vector<std::shared_ptr<LILNode>> & nodes, LILVarDecl * vd, size_t argCount) const;
         std::shared_ptr<LILType> nullsToNullableTypes(std::shared_ptr<LILType> ty) const;
-        std::shared_ptr<LILType> findTypeForValueList(std::shared_ptr<LILValueList> value) const;
         std::shared_ptr<LILType> findTypeForEnum(LILEnum * value) const;
     };
 }

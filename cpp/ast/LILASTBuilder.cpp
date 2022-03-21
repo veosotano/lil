@@ -46,6 +46,7 @@
 #include "LILRule.h"
 #include "LILSelector.h"
 #include "LILSelectorChain.h"
+#include "LILSIMDType.h"
 #include "LILSimpleSelector.h"
 #include "LILSnippetInstruction.h"
 #include "LILStaticArrayType.h"
@@ -184,6 +185,12 @@ void LILASTBuilder::receiveNodeStart(NodeType nodeType)
         {
             this->state.push_back(BuilderStateObjectType);
             this->currentContainer.push_back(std::make_shared<LILObjectType>());
+            break;
+        }
+        case NodeTypeSIMDType:
+        {
+            this->state.push_back(BuilderStateSIMDType);
+            this->currentContainer.push_back(std::make_shared<LILSIMDType>());
             break;
         }
         case NodeTypeVarDecl:
@@ -528,6 +535,19 @@ void LILASTBuilder::receiveNodeCommit()
                     }
                 } else {
                     ty->setArgument(this->currentNode);
+                }
+            }
+            break;
+        }
+        case BuilderStateSIMDType:
+        {
+            if (this->currentNode) {
+                auto ty = std::static_pointer_cast<LILSIMDType>(this->currentContainer.back());
+                if (this->currentNode->getNodeType() == NodeTypeType) {
+                    ty->setType(std::static_pointer_cast<LILType>(this->currentNode));
+                } else if (this->currentNode->getNodeType() == NodeTypeNumberLiteral) {
+                    auto numLit = std::static_pointer_cast<LILNumberLiteral>(this->currentNode);
+                    ty->setWidth(numLit->getValue().toInt());
                 }
             }
             break;
@@ -939,6 +959,10 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
                             type = parentTy;
                         }
                     }
+                }
+                
+                if (type && type->getTypeType() == TypeTypeSIMD) {
+                    type = type->getType();
                 }
                 
                 if (type) {

@@ -76,6 +76,7 @@ namespace LIL
         bool readFunctionType(bool readFnKw);
         bool readPointerType();
         bool readStaticArrayType();
+        bool readSIMDType(std::string typeName, std::string numElements);
         bool readVarDecl();
         bool readConstDecl();
         bool readAliasDecl();

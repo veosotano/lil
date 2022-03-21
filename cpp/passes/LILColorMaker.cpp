@@ -95,6 +95,7 @@ bool LILColorMaker::processColorInstr(std::shared_ptr<LILNode> node)
         case NodeTypeObjectType:
         case NodeTypePointerType:
         case NodeTypeStaticArrayType:
+        case NodeTypeSIMDType:
         case NodeTypeFlag:
         case NodeTypeFilter:
         case NodeTypeSelector:

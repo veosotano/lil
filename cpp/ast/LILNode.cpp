@@ -68,6 +68,7 @@ bool LILNode::isContainerNode(NodeType nodeType)
         case NodeTypePointerType:
         case NodeTypeObjectType:
         case NodeTypeStaticArrayType:
+        case NodeTypeSIMDType:
         case NodeTypeVarDecl:
         case NodeTypeConstDecl:
         case NodeTypeAliasDecl:

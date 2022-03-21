@@ -35,7 +35,6 @@ namespace LIL
         std::shared_ptr<LILClassDecl> makeSpecializedClass(std::shared_ptr<LILClassDecl> cd, std::shared_ptr<LILType> specializedType) const;
         void replaceTypeWithSpecializedType(const std::vector<std::shared_ptr<LILNode>> & nodes, std::shared_ptr<LILType> templateType, std::shared_ptr<LILType> specializedType) const;
         std::shared_ptr<LILType> replaceType(std::shared_ptr<LILType> sourceTy, std::shared_ptr<LILType> templateTy, std::shared_ptr<LILType> specializedTy) const;
-        std::shared_ptr<LILType> findTypeForValueList(std::shared_ptr<LILValueList> value) const;
     };
 }
 

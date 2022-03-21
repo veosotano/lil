@@ -86,6 +86,7 @@ namespace LIL
         NodeTypePointerType,
         NodeTypeStaticArrayType,
         NodeTypeObjectType,
+        NodeTypeSIMDType,
         //---
         NodeTypeVarName,
         NodeTypeVarDecl,
@@ -130,6 +131,7 @@ namespace LIL
         TypeTypePointer,
         TypeTypeObject,
         TypeTypeStaticArray,
+        TypeTypeSIMD,
     };
 
     enum ExpressionType
