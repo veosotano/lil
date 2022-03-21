@@ -105,6 +105,16 @@ std::shared_ptr<LILType> LILMultipleType::getIntegerType() const
     return nullptr;
 }
 
+std::shared_ptr<LILType> LILMultipleType::getFloatType() const
+{
+    for (auto ty : this->_types) {
+        if (LILType::isFloatType(ty.get())) {
+            return ty;
+        }
+    }
+    return nullptr;
+}
+
 void LILMultipleType::sortTypes()
 {
     std::sort(this->_types.begin(), this->_types.end(), LILType::sortTyAlphabeticallyCompare);

@@ -347,6 +347,10 @@ std::shared_ptr<LILType> LILType::getDefaultType() const
         if (intTy) {
             return intTy;
         }
+        auto floatTy = this->getFloatType();
+        if (floatTy) {
+            return floatTy;
+        }
     }
     static auto intType = std::make_shared<LILType>();
     intType->setName("i64");
@@ -354,6 +358,11 @@ std::shared_ptr<LILType> LILType::getDefaultType() const
 }
 
 std::shared_ptr<LILType> LILType::getIntegerType() const
+{
+    return nullptr;
+}
+
+std::shared_ptr<LILType> LILType::getFloatType() const
 {
     return nullptr;
 }
