@@ -77,31 +77,11 @@ void LILRootNode::add(std::shared_ptr<LILNode> node, bool addToNodeTree)
         case NodeTypeVarDecl:
         {
             auto vd = std::static_pointer_cast<LILVarDecl>(node);
-            auto ty = vd->getType();
-            if (
-                vd->getIsExtern()
-                || vd->getIsExported()
-                || vd->getIsConst()
-            ) {
-                if (addToNodeTree) {
-                    this->addNode(node);
-                }
-                //local variables on root are globals
-                this->setLocalVariable(vd->getName(), vd);
-                
+            if (addToNodeTree) {
+                this->addNode(node);
             }
-            else if (ty && ty->isA(TypeTypeFunction))
-            {
-                if (addToNodeTree) {
-                    this->addNode(node);
-                }
-                //local variables on root are globals
-                this->setLocalVariable(vd->getName(), node);
-            }
-            else
-            {
-                this->addEvaluable(node);
-            }
+            //local variables on root are globals
+            this->setLocalVariable(vd->getName(), node);
             break;
         }
         case NodeTypeFunctionDecl:
