@@ -4273,7 +4273,7 @@ llvm::Type * LILIREmitter::llvmTypeFromLILType(LILType * type)
     } else if (typestr == "null") {
         return llvm::Type::getVoidTy(d->llvmContext);
     }
-    //if we get here it's a number type
+
     if (type->getIsNullable()) {
         std::vector<llvm::Type*> types;
         types.push_back(ret);
