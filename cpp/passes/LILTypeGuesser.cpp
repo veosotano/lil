@@ -108,7 +108,7 @@ void LILTypeGuesser::connectCallsWithDecls(std::shared_ptr<LILNode> node)
             }
         } else if (fc->isA(FunctionCallTypeValuePath)){
             auto vp = fc->getSubject();
-            auto ty = this->findTypeForValuePath(vp);
+            auto ty = this->findTypeForValuePath(vp.get());
             if (ty && ty->isA(TypeTypeFunction)) {
                 auto fnTy = std::static_pointer_cast<LILFunctionType>(ty);
                 fnTy->addCaller(node);
@@ -202,7 +202,7 @@ void LILTypeGuesser::searchForTypesFromInitVal(std::shared_ptr<LILNode> node)
             if (!ty) {
                 if (initVal->isA(NodeTypeValueList)) {
                     auto vl = std::static_pointer_cast<LILValueList>(initVal);
-                    auto vlTy = this->findTypeForValueList(vl);
+                    auto vlTy = this->findTypeForValueList(vl.get());
                     std::shared_ptr<LILType> baseTy;
                     if (vlTy->getIsWeakType()) {
                         baseTy = vlTy->getDefaultType();
@@ -212,7 +212,7 @@ void LILTypeGuesser::searchForTypesFromInitVal(std::shared_ptr<LILNode> node)
                     auto arrTy = LILObjectType::make("lil_array_"+this->typeToString(baseTy));
                     vd->setType(arrTy);
                 } else {
-                    auto ivTy = this->getNodeType(initVal);
+                    auto ivTy = this->getNodeType(initVal.get());
                     if (ivTy && !ivTy->getIsWeakType()) {
                         vd->setType(ivTy);
                     }
@@ -239,7 +239,7 @@ void LILTypeGuesser::searchForTypesFromAssignments(std::shared_ptr<LILNode> node
                     return;
                 }
                 auto fd = std::static_pointer_cast<LILFunctionDecl>(parent);
-                auto type = this->findTypeFromAssignments(fd->getBody(), vd);
+                auto type = this->findTypeFromAssignments(fd->getBody(), vd.get());
                 if (type) {
                     vd->setType(type);
                 }
@@ -271,7 +271,7 @@ void LILTypeGuesser::searchForTypesForArguments(std::shared_ptr<LILNode> node)
             }
             auto vd = std::static_pointer_cast<LILVarDecl>(arg);
             if (!arg->getType()) {
-                auto argType = this->findTypeForArg(vd, fd, argCount);
+                auto argType = this->findTypeForArg(vd.get(), fd.get(), argCount);
                 if (argType) {
                     vd->setType(argType);
                 }
@@ -526,9 +526,8 @@ void LILTypeGuesser::_process(LILBoolLiteral * value)
 void LILTypeGuesser::_process(LILNumberLiteral * value)
 {
     std::shared_ptr<LILType> ty1 = value->getType();
-    auto sharedVal = value->shared_from_this();
     if (ty1 && ty1->getIsWeakType()) {
-        std::shared_ptr<LILType>ty2 = this->recursiveFindTypeFromAncestors(sharedVal);
+        std::shared_ptr<LILType>ty2 = this->recursiveFindTypeFromAncestors(value);
         if (ty2 && ty2->getIsNullable()) {
             ty2 = ty2->clone();
             ty2->setIsNullable(false);
@@ -540,7 +539,7 @@ void LILTypeGuesser::_process(LILNumberLiteral * value)
             auto ty3 = LILType::merge(ty1, ty2);
             if (ty3 && !ty3->getIsWeakType()) {
                 value->setType(ty3);
-                this->setTypeOnAncestorIfNeeded(sharedVal, ty3);
+                this->setTypeOnAncestorIfNeeded(value, ty3);
             }
             else if (ty1->getIsWeakType())
             {
@@ -553,7 +552,7 @@ void LILTypeGuesser::_process(LILNumberLiteral * value)
             value->setType(intType);
         }
     } else if (!ty1) {
-        std::shared_ptr<LILType>ty2 = this->recursiveFindTypeFromAncestors(sharedVal);
+        std::shared_ptr<LILType>ty2 = this->recursiveFindTypeFromAncestors(value);
         if (ty2) {
             value->setType(ty2);
         }
@@ -563,9 +562,8 @@ void LILTypeGuesser::_process(LILNumberLiteral * value)
 void LILTypeGuesser::_process(LILPercentageLiteral * value)
 {
     std::shared_ptr<LILType> ty1 = value->getType();
-    auto sharedVal = value->shared_from_this();
     if (ty1 && ty1->getIsWeakType()) {
-        std::shared_ptr<LILType>ty2 = this->recursiveFindTypeFromAncestors(sharedVal);
+        std::shared_ptr<LILType>ty2 = this->recursiveFindTypeFromAncestors(value);
         if (ty2 && ty2->getIsNullable()) {
             ty2 = ty2->clone();
             ty2->setIsNullable(false);
@@ -576,10 +574,10 @@ void LILTypeGuesser::_process(LILPercentageLiteral * value)
                 auto multiTy = std::static_pointer_cast<LILMultipleType>(ty3);
                 auto ret = multiTy->getTypes().front();
                 value->setType(ret);
-                this->setTypeOnAncestorIfNeeded(sharedVal, ret);
+                this->setTypeOnAncestorIfNeeded(value, ret);
             } else {
                 value->setType(ty3);
-                this->setTypeOnAncestorIfNeeded(sharedVal, ty3);
+                this->setTypeOnAncestorIfNeeded(value, ty3);
             }
         }
         else
@@ -588,7 +586,7 @@ void LILTypeGuesser::_process(LILPercentageLiteral * value)
             auto intType = std::make_shared<LILType>();
             intType->setName("i64%");
             value->setType(intType);
-            this->setTypeOnAncestorIfNeeded(sharedVal, intType);
+            this->setTypeOnAncestorIfNeeded(value, intType);
         }
     }
 }
@@ -691,7 +689,7 @@ void LILTypeGuesser::_process(LILUnaryExpression * value)
         const auto & valTN = std::static_pointer_cast<LILTypedNode>(val);
         valTy = valTN->getType();
     } else {
-        valTy = this->getNodeType(val);
+        valTy = this->getNodeType(val.get());
     }
     value->setType(valTy);
 }
@@ -718,7 +716,7 @@ void LILTypeGuesser::_process(LILVarDecl * value)
         if (initValue) {
             auto type = initValue->getType();
             if (!type) {
-                type = this->getNodeType(initValue);
+                type = this->getNodeType(initValue.get());
             }
             if(type)
                 value->setType(type);
@@ -749,11 +747,11 @@ void LILTypeGuesser::_process(LILObjectDefinition * value)
 void LILTypeGuesser::_process(LILAssignment * value)
 {
     if (!value->getType()) {
-        auto subjTy = this->getNodeType(value->getSubject());
+        auto subjTy = this->getNodeType(value->getSubject().get());
         if (subjTy) {
             value->setType(subjTy->clone());
         } else {
-            auto type = this->getNodeType(value->getValue());
+            auto type = this->getNodeType(value->getValue().get());
             if(type)
                 value->setType(type);
         }
@@ -762,7 +760,7 @@ void LILTypeGuesser::_process(LILAssignment * value)
 
 void LILTypeGuesser::_process(LILValuePath * value)
 {
-    auto ty = this->findTypeForValuePath(std::static_pointer_cast<LILValuePath>(value->shared_from_this()));
+    auto ty = this->findTypeForValuePath(value);
     if (ty) {
         value->setType(ty);
     }
@@ -822,7 +820,7 @@ void LILTypeGuesser::_process(LILFlag * value)
 
 void LILTypeGuesser::_process(LILVarName * value)
 {
-    auto ty = this->findTypeForVarName(std::static_pointer_cast<LILVarName>(value->shared_from_this()));
+    auto ty = this->findTypeForVarName(value);
     if (ty) {
         value->setType(ty);
     }
@@ -832,7 +830,7 @@ void LILTypeGuesser::_process(LILFunctionDecl * value)
 {
     auto ty = value->getType();
     if (!ty || !ty->isA(TypeTypeFunction)) {
-        std::shared_ptr<LILNode> type = this->getNodeType(value->shared_from_this());
+        std::shared_ptr<LILNode> type = this->getNodeType(value);
         if(type && type->isA(NodeTypeType)){
             std::shared_ptr<LILFunctionType> ft = std::dynamic_pointer_cast<LILFunctionType>(type);
             if (ft) {
@@ -887,9 +885,8 @@ void LILTypeGuesser::_process(LILFunctionDecl * value)
 void LILTypeGuesser::_process(LILFunctionCall * value)
 {
     std::vector<std::shared_ptr<LILType>> newTypes;
-    std::shared_ptr<LILFunctionCall> sharedValue = std::static_pointer_cast<LILFunctionCall>(value->shared_from_this());
     for (auto arg : value->getArguments()) {
-        auto ty = this->getNodeType(arg);
+        auto ty = this->getNodeType(arg.get());
         if (ty) {
             if (ty->isA(TypeTypeFunction)) {
                 auto returnTy = std::static_pointer_cast<LILFunctionType>(ty)->getReturnType();
@@ -904,7 +901,7 @@ void LILTypeGuesser::_process(LILFunctionCall * value)
     }
     value->setArgumentTypes(newTypes);
     
-    value->setReturnType(this->findReturnTypeForFunctionCall(sharedValue));
+    value->setReturnType(this->findReturnTypeForFunctionCall(value));
 }
 
 void LILTypeGuesser::_process(LILFlowControl * value)
@@ -1077,7 +1074,7 @@ void LILTypeGuesser::_process(LILIndexAccessor * value)
 {
 }
 
-std::shared_ptr<LILType> LILTypeGuesser::recursiveFindTypeFromAncestors(std::shared_ptr<LILNode> value) const
+std::shared_ptr<LILType> LILTypeGuesser::recursiveFindTypeFromAncestors(LILNode * value) const
 {
     std::shared_ptr<LILNode> parent = value->getParentNode();
     if (parent) {
@@ -1086,7 +1083,7 @@ std::shared_ptr<LILType> LILTypeGuesser::recursiveFindTypeFromAncestors(std::sha
             {
                 std::shared_ptr<LILType> parentTy = parent->getType();
                 if (!parentTy) {
-                    parentTy = this->getNodeType(parent);
+                    parentTy = this->getNodeType(parent.get());
                 }
                 std::shared_ptr<LILFunctionType> fnTy = std::dynamic_pointer_cast<LILFunctionType>(parentTy);
                 if (fnTy) {
@@ -1102,14 +1099,14 @@ std::shared_ptr<LILType> LILTypeGuesser::recursiveFindTypeFromAncestors(std::sha
                     case FunctionCallTypeNone:
                     case FunctionCallTypeValuePath:
                     {
-                        auto fnTy = this->findFnTypeForFunctionCall(fc);
+                        auto fnTy = this->findFnTypeForFunctionCall(fc.get());
                         if (!fnTy) {
                             std::cerr << "FUNCTION TYPE NOT FOUND FAIL!!!!\n\n";
                             return nullptr;
                         }
                         auto args = fnTy->getArguments();
                         if (value->isA(NodeTypeVarDecl)) {
-                            auto callArgVd = std::static_pointer_cast<LILVarDecl>(value);
+                            auto callArgVd = static_cast<LILVarDecl *>(value);
                             
                             for (auto arg : args) {
                                 if (!arg->LILNode::isA(NodeTypeVarDecl)) {
@@ -1125,7 +1122,7 @@ std::shared_ptr<LILType> LILTypeGuesser::recursiveFindTypeFromAncestors(std::sha
                             //get index of element in the decl
                             auto callArgs = fc->getArguments();
                             for (size_t i=0, j=callArgs.size(); i<j; ++i) {
-                                if (callArgs[i].get() == value.get()) {
+                                if (callArgs[i].get() == value) {
                                     auto argsIndex = i;
                                     if (fcType == FunctionCallTypeValuePath) {
                                         auto firstArg = args[0];
@@ -1160,7 +1157,7 @@ std::shared_ptr<LILType> LILTypeGuesser::recursiveFindTypeFromAncestors(std::sha
                             return nullptr;
                         }
                         auto firstArg = args[0];
-                        auto firstTy = this->getNodeType(firstArg);
+                        auto firstTy = this->getNodeType(firstArg.get());
                         if (firstTy && firstTy->isA(TypeTypePointer)) {
                             auto ptrTy = std::static_pointer_cast<LILPointerType>(firstTy);
                             return ptrTy->getArgument();
@@ -1178,7 +1175,7 @@ std::shared_ptr<LILType> LILTypeGuesser::recursiveFindTypeFromAncestors(std::sha
                 std::shared_ptr<LILFlowControlCall> fc = std::static_pointer_cast<LILFlowControlCall>(parent);
                 if (fc->getFlowControlCallType() == FlowControlCallTypeReturn)
                 {
-                    auto fun = this->recursiveFindFunctionDecl(fc);
+                    auto fun = this->recursiveFindFunctionDecl(fc.get());
                     if(fun){
                         std::shared_ptr<LILFunctionType> funTy = std::static_pointer_cast<LILFunctionType>(fun->getType());
                         if (funTy) {
@@ -1191,7 +1188,7 @@ std::shared_ptr<LILType> LILTypeGuesser::recursiveFindTypeFromAncestors(std::sha
                 } else {
                     std::shared_ptr<LILType> parentTy = parent->getType();
                     if (!parentTy) {
-                        return this->getNodeType(parent);
+                        return this->getNodeType(parent.get());
                     } else {
                         return parentTy;
                     }
@@ -1257,13 +1254,13 @@ std::shared_ptr<LILType> LILTypeGuesser::recursiveFindTypeFromAncestors(std::sha
                 }
                 else
                 {
-                    auto subject = asgmt->getSubject();
+                    auto subject = asgmt->getSubject().get();
                     if (subject->isA(NodeTypeVarName)) {
-                        return this->findTypeForVarName(std::static_pointer_cast<LILVarName>(subject));
+                        return this->findTypeForVarName(static_cast<LILVarName *>(subject));
                     } else if (subject->isA(NodeTypeValuePath)) {
-                        return this->findTypeForValuePath(std::static_pointer_cast<LILValuePath>(subject));
+                        return this->findTypeForValuePath(static_cast<LILValuePath *>(subject));
                     } else if (subject->isA(NodeTypePropertyName)) {
-                        return this->findTypeForPropertyName(std::static_pointer_cast<LILPropertyName>(subject));
+                        return this->findTypeForPropertyName(static_cast<LILPropertyName *>(subject));
                     }
                 }
                 
@@ -1274,7 +1271,7 @@ std::shared_ptr<LILType> LILTypeGuesser::recursiveFindTypeFromAncestors(std::sha
             {
                 std::shared_ptr<LILType> parentTy = parent->getType();
                 if (!parentTy) {
-                    return this->getNodeType(parent);
+                    return this->getNodeType(parent.get());
                 } else {
                     return parentTy;
                 }
@@ -1288,7 +1285,7 @@ std::shared_ptr<LILType> LILTypeGuesser::recursiveFindTypeFromAncestors(std::sha
     return nullptr;
 }
 
-std::shared_ptr<LILFunctionType> LILTypeGuesser::findFnTypeForFunctionCall(std::shared_ptr<LILFunctionCall> fc) const
+std::shared_ptr<LILFunctionType> LILTypeGuesser::findFnTypeForFunctionCall(LILFunctionCall * fc) const
 {
     switch (fc->getFunctionCallType()) {
         case FunctionCallTypeNone:
@@ -1312,7 +1309,7 @@ std::shared_ptr<LILFunctionType> LILTypeGuesser::findFnTypeForFunctionCall(std::
         case FunctionCallTypeValuePath:
         {
             auto vp = fc->getSubject();
-            auto subjTy = this->findTypeForValuePath(vp);
+            auto subjTy = this->findTypeForValuePath(vp.get());
             if (!subjTy || !subjTy->isA(TypeTypeObject)) {
                 std::cerr << "VAR PATH DOES NOT POINT TO OBJECT FAIL!!!!\n\n";
                 return nullptr;
@@ -1343,7 +1340,7 @@ std::shared_ptr<LILFunctionType> LILTypeGuesser::findFnTypeForFunctionCall(std::
     return nullptr;
 }
 
-void LILTypeGuesser::setTypeOnAncestorIfNeeded(std::shared_ptr<LILNode> value, std::shared_ptr<LILType> ty)
+void LILTypeGuesser::setTypeOnAncestorIfNeeded(LILNode * value, std::shared_ptr<LILType> ty)
 {
     auto parent = value->getParentNode();
     if (parent) {
@@ -1357,7 +1354,7 @@ void LILTypeGuesser::setTypeOnAncestorIfNeeded(std::shared_ptr<LILNode> value, s
                 auto expTy = exp->getType();
                 if (!expTy || expTy->getIsWeakType()) {
                     exp->setType(ty);
-                    this->setTypeOnAncestorIfNeeded(exp, ty);
+                    this->setTypeOnAncestorIfNeeded(exp.get(), ty);
                 }
                 break;
             }
@@ -1377,14 +1374,14 @@ void LILTypeGuesser::setTypeOnAncestorIfNeeded(std::shared_ptr<LILNode> value, s
     }
 }
 
-std::shared_ptr<LILFunctionDecl> LILTypeGuesser::recursiveFindFunctionDecl(std::shared_ptr<LILNode> node) const
+std::shared_ptr<LILFunctionDecl> LILTypeGuesser::recursiveFindFunctionDecl(LILNode * node) const
 {
     std::shared_ptr<LILNode> parent = node->getParentNode();
     if (parent) {
         if (parent->isA(NodeTypeFunctionDecl)) {
             return std::static_pointer_cast<LILFunctionDecl>(parent);
         } else {
-            return this->recursiveFindFunctionDecl(parent);
+            return this->recursiveFindFunctionDecl(parent.get());
         }
     } else {
         std::cerr << "Error: node has no parent\n";
@@ -1392,7 +1389,7 @@ std::shared_ptr<LILFunctionDecl> LILTypeGuesser::recursiveFindFunctionDecl(std::
     return nullptr;
 }
 
-std::shared_ptr<LILType> LILTypeGuesser::getNodeType(std::shared_ptr<LILNode> node) const
+std::shared_ptr<LILType> LILTypeGuesser::getNodeType(LILNode * node) const
 {
     switch (node->getNodeType())
     {
@@ -1404,7 +1401,7 @@ std::shared_ptr<LILType> LILTypeGuesser::getNodeType(std::shared_ptr<LILNode> no
         }
         case NodeTypeNumberLiteral:
         {
-            const auto & tyNode = std::static_pointer_cast<LILNumberLiteral>(node)->getType();
+            const auto & tyNode = static_cast<LILNumberLiteral *>(node)->getType();
             if (tyNode) {
                 return std::static_pointer_cast<LILType>(tyNode);
             } else {
@@ -1431,7 +1428,7 @@ std::shared_ptr<LILType> LILTypeGuesser::getNodeType(std::shared_ptr<LILNode> no
         }
         case NodeTypeObjectDefinition:
         {
-            std::shared_ptr<LILObjectDefinition> objdef = std::static_pointer_cast<LILObjectDefinition>(node);
+            auto objdef = static_cast<LILObjectDefinition *>(node);
             std::shared_ptr<LILType> objdefType = objdef->getType();
             if (objdefType)
             {
@@ -1441,7 +1438,7 @@ std::shared_ptr<LILType> LILTypeGuesser::getNodeType(std::shared_ptr<LILNode> no
         }
         case NodeTypeExpression:
         {
-            std::shared_ptr<LILExpression> exp = std::static_pointer_cast<LILExpression>(node);
+            auto exp = static_cast<LILExpression *>(node);
             if (exp->isA(ExpressionTypeCast)) {
                 auto right = exp->getRight();
                 if (right && right->isA(NodeTypeType)) {
@@ -1452,7 +1449,7 @@ std::shared_ptr<LILType> LILTypeGuesser::getNodeType(std::shared_ptr<LILNode> no
         }
         case NodeTypeFunctionDecl:
         {
-            std::shared_ptr<LILFunctionDecl> fd = std::static_pointer_cast<LILFunctionDecl>(node);
+            auto fd = static_cast<LILFunctionDecl *>(node);
             switch (fd->getFunctionDeclType()) {
                 case FunctionDeclTypeFn:
                 {
@@ -1471,16 +1468,16 @@ std::shared_ptr<LILType> LILTypeGuesser::getNodeType(std::shared_ptr<LILNode> no
         }
         case NodeTypeValuePath:
         {
-            std::shared_ptr<LILValuePath> vp = std::static_pointer_cast<LILValuePath>(node);
+            auto vp = static_cast<LILValuePath *>(node);
             return this->findTypeForValuePath(vp);
         }
         case NodeTypeVarName:
         {
-            return this->findTypeForVarName(std::static_pointer_cast<LILVarName>(node));
+            return this->findTypeForVarName(static_cast<LILVarName *>(node));
         }
         case NodeTypeVarDecl:
         {
-            std::shared_ptr<LILVarDecl> vd = std::static_pointer_cast<LILVarDecl>(node);
+            auto vd = static_cast<LILVarDecl *>(node);
             std::shared_ptr<LILNode> vdTy = vd->getType();
             if (vdTy && vdTy->isA(NodeTypeType)) {
                 return std::static_pointer_cast<LILType>(vdTy);
@@ -1489,7 +1486,7 @@ std::shared_ptr<LILType> LILTypeGuesser::getNodeType(std::shared_ptr<LILNode> no
         }
         case NodeTypeFunctionCall:
         {
-            std::shared_ptr<LILFunctionCall> fc = std::static_pointer_cast<LILFunctionCall>(node);
+            auto fc = static_cast<LILFunctionCall *>(node);
             std::shared_ptr<LILType> ty = fc->getReturnType();
             if(!ty) {
                 ty = this->findReturnTypeForFunctionCall(fc);
@@ -1525,10 +1522,10 @@ std::shared_ptr<LILType> LILTypeGuesser::getNodeType(std::shared_ptr<LILNode> no
         }
         case NodeTypeEnum:
         {
-            auto enm = std::static_pointer_cast<LILEnum>(node);
+            auto enm = static_cast<LILEnum *>(node);
             auto ty = enm->getType();
             if (!ty) {
-                ty = this->findTypeForEnum(enm.get());
+                ty = this->findTypeForEnum(enm);
                 if (ty) {
                     enm->setType(ty);
                 }
@@ -1541,7 +1538,7 @@ std::shared_ptr<LILType> LILTypeGuesser::getNodeType(std::shared_ptr<LILNode> no
     return nullptr;
 }
 
-std::shared_ptr<LILType> LILTypeGuesser::getExpType(std::shared_ptr<LILExpression> exp) const
+std::shared_ptr<LILType> LILTypeGuesser::getExpType(LILExpression * exp) const
 {
     switch (exp->getExpressionType()) {
         case ExpressionTypeSmallerComparison:
@@ -1561,15 +1558,15 @@ std::shared_ptr<LILType> LILTypeGuesser::getExpType(std::shared_ptr<LILExpressio
     }
 
     //try to find from contents
-    std::shared_ptr<LILNode> left = exp->getLeft();
+    auto left = exp->getLeft().get();
     std::shared_ptr<LILType> leftType = this->getNodeType(left);
     if (left->isA(NodeTypeExpression)) {
-        leftType = this->getExpType(std::static_pointer_cast<LILExpression>(left));
+        leftType = this->getExpType(static_cast<LILExpression *>(left));
     }
-    std::shared_ptr<LILNode> right = exp->getRight();
+    auto right = exp->getRight().get();
     std::shared_ptr<LILType> rightType = this->getNodeType(right);
     if (right->isA(NodeTypeExpression)) {
-        rightType = this->getExpType(std::static_pointer_cast<LILExpression>(right));
+        rightType = this->getExpType(static_cast<LILExpression *>(right));
     }
     if (leftType && rightType){
         if( leftType->equalTo(rightType)) {
@@ -1605,7 +1602,7 @@ std::shared_ptr<LILType> LILTypeGuesser::getExpType(std::shared_ptr<LILExpressio
     return nullptr;
 }
 
-std::shared_ptr<LILType> LILTypeGuesser::findTypeForArg(std::shared_ptr<LILVarDecl> vd, std::shared_ptr<LILFunctionDecl> fd, size_t argCount) const
+std::shared_ptr<LILType> LILTypeGuesser::findTypeForArg(LILVarDecl * vd, LILFunctionDecl * fd, size_t argCount) const
 {
     auto ret = this->getNodeType(vd);
     if (!ret) {
@@ -1631,7 +1628,7 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForArg(std::shared_ptr<LILVarDe
     return ret;
 }
 
-std::shared_ptr<LILType> LILTypeGuesser::getFnType(std::shared_ptr<LILFunctionDecl> fd) const
+std::shared_ptr<LILType> LILTypeGuesser::getFnType(LILFunctionDecl * fd) const
 {
     std::shared_ptr<LILFunctionType> ret = std::make_shared<LILFunctionType>();
     auto ty = std::static_pointer_cast<LILFunctionType>(fd->getType());
@@ -1643,7 +1640,7 @@ std::shared_ptr<LILType> LILTypeGuesser::getFnType(std::shared_ptr<LILFunctionDe
             continue;
         }
         std::shared_ptr<LILVarDecl> vd = std::static_pointer_cast<LILVarDecl>(arg);
-        auto argType = this->findTypeForArg(vd, fd, argCount);
+        auto argType = this->findTypeForArg(vd.get(), fd, argCount);
         if (argType) {
             argType = this->nullsToNullableTypes(argType);
             ret->addArgument(argType);
@@ -1726,7 +1723,7 @@ void LILTypeGuesser::recursiveFindReturnTypes(std::vector<std::shared_ptr<LILTyp
                         }
                         case NodeTypeExpression:
                         {
-                            std::shared_ptr<LILType> type = this->getExpType(std::static_pointer_cast<LILExpression>(arg));
+                            std::shared_ptr<LILType> type = this->getExpType(static_cast<LILExpression *>(arg.get()));
                             if (type) {
                                 this->addTypeToReturnTypes(returnTypes, type);
                             }
@@ -1734,8 +1731,7 @@ void LILTypeGuesser::recursiveFindReturnTypes(std::vector<std::shared_ptr<LILTyp
                         }
                         case NodeTypeVarName:
                         {
-                            std::shared_ptr<LILVarName> vn = std::static_pointer_cast<LILVarName>(arg);
-                            auto type = this->findTypeForVarName(vn);
+                            auto type = this->findTypeForVarName(static_cast<LILVarName *>(arg.get()));
                             if (type) {
                                 this->addTypeToReturnTypes(returnTypes, type);
                             }
@@ -1743,8 +1739,7 @@ void LILTypeGuesser::recursiveFindReturnTypes(std::vector<std::shared_ptr<LILTyp
                         }
                         case NodeTypeValuePath:
                         {
-                            std::shared_ptr<LILValuePath> vp = std::static_pointer_cast<LILValuePath>(arg);
-                            auto vpTy = this->findTypeForValuePath(vp);
+                            auto vpTy = this->findTypeForValuePath(static_cast<LILValuePath *>(arg.get()));
                             if (vpTy) {
                                 this->addTypeToReturnTypes(returnTypes, vpTy);
                             }
@@ -1752,7 +1747,7 @@ void LILTypeGuesser::recursiveFindReturnTypes(std::vector<std::shared_ptr<LILTyp
                         }
                         case NodeTypeFunctionCall:
                         {
-                            std::shared_ptr<LILType> type = this->findReturnTypeForFunctionCall(std::static_pointer_cast<LILFunctionCall>(arg));
+                            std::shared_ptr<LILType> type = this->findReturnTypeForFunctionCall(static_cast<LILFunctionCall *>(arg.get()));
                             if (type) {
                                 this->addTypeToReturnTypes(returnTypes, type);
                             }
@@ -1823,7 +1818,7 @@ void LILTypeGuesser::addTypeToReturnTypes(std::vector<std::shared_ptr<LILType>> 
     }
 }
 
-std::shared_ptr<LILType> LILTypeGuesser::findReturnTypeForFunctionCall(std::shared_ptr<LILFunctionCall> fc) const
+std::shared_ptr<LILType> LILTypeGuesser::findReturnTypeForFunctionCall(LILFunctionCall * fc) const
 {
     switch (fc->getFunctionCallType()) {
         case FunctionCallTypeNone:
@@ -1850,7 +1845,7 @@ std::shared_ptr<LILType> LILTypeGuesser::findReturnTypeForFunctionCall(std::shar
         {
             auto parent = fc->getParentNode();
             if (parent && parent->isA(NodeTypeValuePath)) {
-                return this->getNodeType(parent);
+                return this->getNodeType(parent.get());
             }
             break;
         }
@@ -1858,7 +1853,7 @@ std::shared_ptr<LILType> LILTypeGuesser::findReturnTypeForFunctionCall(std::shar
         case FunctionCallTypeValueOf:
         {
             auto firstArg = fc->getArguments().front();
-            auto firstArgType = this->getNodeType(firstArg);
+            auto firstArgType = this->getNodeType(firstArg.get());
             if (firstArgType->isA(TypeTypePointer)) {
                 auto pointerTy = std::static_pointer_cast<LILPointerType>(firstArgType);
                 return pointerTy->getArgument();
@@ -1875,7 +1870,7 @@ std::shared_ptr<LILType> LILTypeGuesser::findReturnTypeForFunctionCall(std::shar
         case FunctionCallTypePointerTo:
         {
             auto firstArg = fc->getArguments().front();
-            auto firstArgType = this->getNodeType(firstArg);
+            auto firstArgType = this->getNodeType(firstArg.get());
             auto newPtrTy = std::make_shared<LILPointerType>();
             newPtrTy->setName("ptr");
             newPtrTy->setArgument(firstArgType);
@@ -1888,7 +1883,7 @@ std::shared_ptr<LILType> LILTypeGuesser::findReturnTypeForFunctionCall(std::shar
     return nullptr;
 }
 
-std::shared_ptr<LILType> LILTypeGuesser::findTypeForVarName(std::shared_ptr<LILVarName> name) const
+std::shared_ptr<LILType> LILTypeGuesser::findTypeForVarName(LILVarName * name) const
 {
     std::shared_ptr<LILNode> parent = name->getParentNode();
     LILString nameStr = name->getName();
@@ -1898,7 +1893,7 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForVarName(std::shared_ptr<LILV
             std::shared_ptr<LILVarNode> vn = std::static_pointer_cast<LILVarNode>(parent);
             std::shared_ptr<LILNode> localVar = vn->getLocalVariable(nameStr);
             if (localVar) {
-                ret = this->getNodeType(localVar);
+                ret = this->getNodeType(localVar.get());
                 break;
             }
         }
@@ -1925,7 +1920,7 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForVarName(std::shared_ptr<LILV
     return ret;
 }
 
-std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(std::shared_ptr<LILValuePath> vp) const
+std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(LILValuePath * vp) const
 {
     auto nodes = vp->getNodes();
     std::shared_ptr<LILNode> currentNode;
@@ -1935,14 +1930,14 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(std::shared_ptr<LI
         if (currentNode->isA(NodeTypeVarName)) {
             auto remoteNode = this->recursiveFindNode(currentNode);
             if (remoteNode) {
-                return this->getNodeType(remoteNode);
+                return this->getNodeType(remoteNode.get());
             }
         }
     } else if (nodes.size() > 1){
         size_t startIndex = 1;
         std::shared_ptr<LILType> ifCastType;
         if (!this->inhibitSearchingForIfCastType) {
-            ifCastType = this->findIfCastType(vp.get(), startIndex);
+            ifCastType = this->findIfCastType(vp, startIndex);
         }
         if (ifCastType) {
             currentTy = ifCastType;
@@ -1957,7 +1952,7 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(std::shared_ptr<LI
                 if (currentNode) {
                     currentTy = currentNode->getType();
                     if (!currentTy) {
-                        currentTy = this->getNodeType(currentNode);
+                        currentTy = this->getNodeType(currentNode.get());
                     }
                 }
                 if (!currentTy) {
@@ -2032,7 +2027,7 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(std::shared_ptr<LI
                                 }
                             }
                         }
-                        auto fieldTy = this->getNodeType(field);
+                        auto fieldTy = this->getNodeType(field.get());
                         currentTy = fieldTy;
                         
                     } else if (currentNode->getNodeType() == NodeTypeEnum) {
@@ -2143,16 +2138,16 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(std::shared_ptr<LI
     return nullptr;
 }
 
-std::shared_ptr<LILType> LILTypeGuesser::findTypeForPropertyName(std::shared_ptr<LILPropertyName> name) const
+std::shared_ptr<LILType> LILTypeGuesser::findTypeForPropertyName(LILPropertyName * name) const
 {
-    auto remoteNode = this->findNodeForPropertyName(name.get());
+    auto remoteNode = this->findNodeForPropertyName(name);
     if (remoteNode) {
         return remoteNode->getType();
     }
     return nullptr;
 }
 
-std::shared_ptr<LILType> LILTypeGuesser::findTypeForSelectorChain(std::shared_ptr<LILSelectorChain> selCh) const
+std::shared_ptr<LILType> LILTypeGuesser::findTypeForSelectorChain(LILSelectorChain * selCh) const
 {
     const auto & selNodes = selCh->getNodes();
     if (selNodes.size() == 1) {
@@ -2180,7 +2175,7 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForSelectorChain(std::shared_pt
     return nullptr;
 }
 
-std::shared_ptr<LILType> LILTypeGuesser::findTypeFromAssignments(std::vector<std::shared_ptr<LILNode>> nodes, const std::shared_ptr<LILVarDecl> & vd) const
+std::shared_ptr<LILType> LILTypeGuesser::findTypeFromAssignments(std::vector<std::shared_ptr<LILNode>> nodes, LILVarDecl * vd) const
 {
     for (auto node : nodes) {
         if (!node->isA(NodeTypeAssignment)) {
@@ -2188,7 +2183,7 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeFromAssignments(std::vector<std
         }
         auto asgmt = std::static_pointer_cast<LILAssignment>(node);
         auto value = asgmt->getValue();
-        auto ty = this->getNodeType(value);
+        auto ty = this->getNodeType(value.get());
         if (ty) {
             return ty;
         }
@@ -2196,12 +2191,12 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeFromAssignments(std::vector<std
     return nullptr;
 }
 
-std::shared_ptr<LILType> LILTypeGuesser::findTypeFromFunctionCalls(std::vector<std::shared_ptr<LILNode>> nodes, const std::shared_ptr<LILVarDecl> & vd) const
+std::shared_ptr<LILType> LILTypeGuesser::findTypeFromFunctionCalls(std::vector<std::shared_ptr<LILNode>> nodes, LILVarDecl * vd) const
 {
     return nullptr;
 }
 
-std::shared_ptr<LILType> LILTypeGuesser::findTypeFromExpressions(std::vector<std::shared_ptr<LILNode>> nodes, const std::shared_ptr<LILVarDecl> & vd) const
+std::shared_ptr<LILType> LILTypeGuesser::findTypeFromExpressions(std::vector<std::shared_ptr<LILNode>> nodes, LILVarDecl * vd) const
 {
     std::vector<std::shared_ptr<LILType>> types;
     for (const auto & node : nodes)
@@ -2235,7 +2230,7 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeFromExpressions(std::vector<std
                         }
                     }
                 } else {
-                    leftType = this->getNodeType(left);
+                    leftType = this->getNodeType(left.get());
                 }
                 std::shared_ptr<LILNode> right = exp->getRight();
                 std::shared_ptr<LILType> rightType;
@@ -2252,7 +2247,7 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeFromExpressions(std::vector<std
                         }
                     }
                 } else {
-                    rightType = this->getNodeType(right);
+                    rightType = this->getNodeType(right.get());
                 }
 
                 if (isTypeGiver) {
@@ -2279,7 +2274,7 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeFromExpressions(std::vector<std
     return nullptr;
 }
 
-std::shared_ptr<LILType> LILTypeGuesser::findTypeFromCallers(const std::vector<std::shared_ptr<LILNode>> & nodes, const std::shared_ptr<LILVarDecl> & vd, size_t argCount) const
+std::shared_ptr<LILType> LILTypeGuesser::findTypeFromCallers(const std::vector<std::shared_ptr<LILNode>> & nodes, LILVarDecl * vd, size_t argCount) const
 {
     std::shared_ptr<LILType> ret;
     for (auto & node : nodes) {
@@ -2297,10 +2292,10 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeFromCallers(const std::vector<s
                 }
                 auto vn = std::static_pointer_cast<LILVarName>(subj);
                 if (vd->getName() == vn->getName()) {
-                    ret = this->getNodeType(asgmt->getValue());
+                    ret = this->getNodeType(asgmt->getValue().get());
                 }
             } else if (i == argCount) {
-                ret = this->getNodeType(arg);
+                ret = this->getNodeType(arg.get());
             }
             ++i;
         }
@@ -2378,7 +2373,7 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForEnum(LILEnum * value) const
     for (const auto & val : value->getValues()) {
         auto ty = val->getType();
         if (!ty) {
-            auto valTy = this->getNodeType(val);
+            auto valTy = this->getNodeType(val.get());
             if (valTy) {
                 ty = valTy;
             }
