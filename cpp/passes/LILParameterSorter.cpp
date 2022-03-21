@@ -567,7 +567,7 @@ void LILParameterSorter::_processArguments(LILFunctionCall * fc, LILFunctionDecl
             newVn->setSourceLocation(fc->getSourceLocation());
             auto callArg = plainArgs[plainArgCount];
             auto callArgTy = callArg->getType();
-            if (!callArg) {
+            if (!callArg || !callArgTy) {
                 std::cerr << "!!!!!!!!!!CALL ARG HAD NO TYPE FAIL!!!!!!!!!!!!!!!!\n";
                 return;
             }
