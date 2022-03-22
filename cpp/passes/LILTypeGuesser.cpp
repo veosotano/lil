@@ -300,9 +300,16 @@ void LILTypeGuesser::process(LILNode * node)
         auto ruleTy = this->getNodeType(rule);
         if (ruleTy) {
             rule->setType(ruleTy);
+            
+            if (
+                ruleTy->getName() != "mainMenu"
+                && ruleTy->getName() != "menu"
+                && ruleTy->getName() != "menuItem"
+            ) {
+                this->processChildren(node->getChildNodes());
+            }
         }
-    }
-    if (LILNode::isContainerNode(node->getNodeType())) {
+    } else if (LILNode::isContainerNode(node->getNodeType())) {
         //we don't need to process extern classes
         if (!node->isA(NodeTypeClassDecl) || !static_cast<LILClassDecl *>(node)->getIsExtern()) {
             this->processChildren(node->getChildNodes());
