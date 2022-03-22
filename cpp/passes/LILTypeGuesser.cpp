@@ -1446,6 +1446,14 @@ std::shared_ptr<LILType> LILTypeGuesser::getNodeType(LILNode * node) const
 
 std::shared_ptr<LILType> LILTypeGuesser::getExpType(LILExpression * exp) const
 {
+    if (exp->getExpressionType() == ExpressionTypeCast) {
+        auto right = exp->getRight();
+        if (right->getNodeType() != NodeTypeType) {
+            std::cerr << "!! RIGHT NODE OF CAST IS NOT TYPE FAIL !!!!!!\n";
+            return nullptr;
+        }
+        return std::static_pointer_cast<LILType>(right);
+    }
     switch (exp->getExpressionType()) {
         case ExpressionTypeSmallerComparison:
         case ExpressionTypeSmallerOrEqualComparison:
