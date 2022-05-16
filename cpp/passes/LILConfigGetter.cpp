@@ -261,6 +261,12 @@ bool LILConfigGetter::processGetConfigInstr(std::shared_ptr<LILNode> node)
             }
             break;
         }
+        case NodeTypeEnum:
+        {
+            auto value = std::static_pointer_cast<LILEnum>(node);
+            ret = this->_processGetConfigInstr(value);
+            break;
+        }
     }
     if (node->isTypedNode()) {
         auto tyNode = std::static_pointer_cast<LILTypedNode>(node);
@@ -952,6 +958,29 @@ bool LILConfigGetter::_processGetConfigInstr(std::shared_ptr<LILFunctionType> va
             }
         }
         this->_nodeBuffer.pop_back();
+    }
+    return false;
+}
+
+bool LILConfigGetter::_processGetConfigInstr(std::shared_ptr<LILEnum> value)
+{
+    bool hasChanges = false;
+    std::vector<std::shared_ptr<LILNode>> resultNodes;
+    for (auto node : value->getValues()) {
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processGetConfigInstr(node);
+        if (!remove && this->_nodeBuffer.back().size() == 0) {
+            resultNodes.push_back(node);
+        } else {
+            hasChanges = true;
+            for (auto newNode : this->_nodeBuffer.back()) {
+                resultNodes.push_back(newNode);
+            }
+        }
+        this->_nodeBuffer.pop_back();
+    }
+    if (hasChanges) {
+        value->setValues(resultNodes);
     }
     return false;
 }

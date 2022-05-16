@@ -19,6 +19,7 @@
 #include "LILAssignment.h"
 #include "LILClassDecl.h"
 #include "LILConversionDecl.h"
+#include "LILEnum.h"
 #include "LILExpression.h"
 #include "LILDocumentation.h"
 #include "LILFlowControl.h"
@@ -94,6 +95,7 @@ namespace LIL
         bool _processGetConfigInstr(std::shared_ptr<LILMultipleType> value);
         bool _processGetConfigInstr(std::shared_ptr<LILFunctionType> value);
         bool _processGetConfigInstr(std::shared_ptr<LILPointerType> value);
+        bool _processGetConfigInstr(std::shared_ptr<LILEnum> value);
     };
 }
 
