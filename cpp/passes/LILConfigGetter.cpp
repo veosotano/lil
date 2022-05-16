@@ -399,22 +399,15 @@ bool LILConfigGetter::_processGetConfigInstr(std::shared_ptr<LILAssignment> valu
 {
     auto val = value->getValue();
     if (val) {
-        if (val->isA(InstructionTypeArg))
-        {
-            this->_nodeBuffer.emplace_back();
-            bool remove = this->processGetConfigInstr(val);
-            if (remove) {
-                value->clearValue();
-            }
-            if (this->_nodeBuffer.back().size() > 0) {
-                value->setValue(this->_nodeBuffer.back().back());
-            }
-            this->_nodeBuffer.pop_back();
+        this->_nodeBuffer.emplace_back();
+        bool remove = this->processGetConfigInstr(val);
+        if (remove) {
+            value->clearValue();
         }
-        else
-        {
-            this->processGetConfigInstr(val);
+        if (this->_nodeBuffer.back().size() > 0) {
+            value->setValue(this->_nodeBuffer.back().back());
         }
+        this->_nodeBuffer.pop_back();
     }
     return false;
 }
