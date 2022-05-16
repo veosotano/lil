@@ -42,7 +42,7 @@ namespace LIL
         void parseNext();
 
         bool isBool() const;
-        bool isAssignment() const;
+        bool isAssignment(bool allowPropertyGrouping = true) const;
         bool isRule() const;
         bool isInstructionRule() const;
         bool isValuePath() const;

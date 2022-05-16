@@ -600,9 +600,8 @@ bool LILCodeParser::isObjectSelector() const
     return false;
 }
 
-bool LILCodeParser::isAssignment() const
+bool LILCodeParser::isAssignment(bool allowPropertyGrouping) const
 {
-
     bool ret = false;
 
     std::shared_ptr<LILToken> peekToken;
@@ -671,6 +670,10 @@ bool LILCodeParser::isAssignment() const
         //either property grouping or a rule
         else if (peekToken->isA(TokenTypeComma))
         {
+            if (!allowPropertyGrouping) {
+                d->lexer->resetPeek();
+                return false;
+            }
             peekToken = d->lexer->peekNextToken();
             //skip all whitespace and comments
             while (peekToken && (peekToken->isA(TokenTypeWhitespace) || peekToken->isA(TokenTypeBlockComment) || peekToken->isA(TokenTypeLineComment)))
@@ -2201,7 +2204,7 @@ bool LILCodeParser::readEnum()
             break;
         }
 
-        if (this->isAssignment()) {
+        if (this->isAssignment(false)) {
             bool asgmtValid = this->readAssignment(false, false);
             if (asgmtValid) {
                 d->receiver->receiveNodeCommit();
