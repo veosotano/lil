@@ -2641,7 +2641,7 @@ bool LILCodeParser::readBasicValue(NodeType &nodeType)
 
             nodeType = __nodeType;
             bool hasType = false;
-            if (d->currentToken->isA(TokenTypeIdentifier)) {
+            if (d->currentToken && d->currentToken->isA(TokenTypeIdentifier)) {
                 bool tyValid = this->readType();
                 if (tyValid) {
                     d->receiver->receiveNodeCommit();
@@ -2662,7 +2662,7 @@ bool LILCodeParser::readBasicValue(NodeType &nodeType)
             nodeType = __nodeType;
             
             bool hasType = false;
-            if (d->currentToken->isA(TokenTypeIdentifier)) {
+            if (d->currentToken && d->currentToken->isA(TokenTypeIdentifier)) {
                 bool tyValid = this->readType();
                 if (tyValid) {
                     d->receiver->receiveNodeCommit();
@@ -2683,7 +2683,7 @@ bool LILCodeParser::readBasicValue(NodeType &nodeType)
             nodeType = __nodeType;
             
             bool hasType = false;
-            if (d->currentToken->isA(TokenTypeIdentifier)) {
+            if (d->currentToken && d->currentToken->isA(TokenTypeIdentifier)) {
                 bool tyValid = this->readType();
                 if (tyValid) {
                     d->receiver->receiveNodeCommit();
@@ -2703,7 +2703,7 @@ bool LILCodeParser::readBasicValue(NodeType &nodeType)
             nodeType = __nodeType;
             
             bool hasType = false;
-            if (d->currentToken->isA(TokenTypeIdentifier)) {
+            if (d->currentToken && d->currentToken->isA(TokenTypeIdentifier)) {
                 bool tyValid = this->readType();
                 if (tyValid) {
                     d->receiver->receiveNodeCommit();
