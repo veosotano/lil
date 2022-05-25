@@ -3800,6 +3800,7 @@ llvm::Value * LILIREmitter::_emit(LILValueList * value)
             auto ir = this->emit(node.get());
             if (ir != nullptr) {
                 auto gep = this->_emitGEP(allocaBackup, this->llvmTypeFromLILType(ty.get()), false, 0, "", true, true, i);
+                this->_convertLlvmValueIfNeeded(&ir, ty->getType().get(), node->getType().get());
                 d->irBuilder.CreateStore(ir, gep);
             }
             i += 1;
