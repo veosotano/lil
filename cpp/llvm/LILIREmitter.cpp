@@ -2376,7 +2376,7 @@ llvm::FunctionType * LILIREmitter::_emitLlvmFnType(LILFunctionType * fnTy)
     std::vector<llvm::Type*> types;
     auto arguments = fnTy->getArguments();
     for (auto & arg : arguments) {
-        llvm::Type * llvmTy;
+        llvm::Type * llvmTy = nullptr;
         std::shared_ptr<LILType> ty;
         if (arg->isA(NodeTypeType)) {
             ty = std::static_pointer_cast<LILType>(arg);
