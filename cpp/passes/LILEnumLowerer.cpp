@@ -77,6 +77,7 @@ void LILEnumLowerer::_process(LILEnum * enm)
                 auto numLit = std::static_pointer_cast<LILNumberLiteral>(value);
                 auto numLitValue = numLit->getValue().toLong();
                 if (values.count(numLitValue) == 0) {
+                    newNodes.push_back(asgmt);
                     values[numLitValue] = true;
                 } else {
                     LILErrorMessage ei;
