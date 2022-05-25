@@ -2506,7 +2506,7 @@ bool LILCodeParser::readExpression(bool &outIsSingleValue, NodeType & outType)
             }
         }
         if (atEndOfSource())
-            return false;
+            return valid;
     }
     outIsSingleValue = isSingleValue;
     if (isSingleValue)
