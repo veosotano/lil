@@ -1399,7 +1399,13 @@ std::shared_ptr<LILType> LILTypeGuesser::getNodeType(LILNode * node) const
                     }
                 } else if (ancestorTy->isA(TypeTypeStaticArray)) {
                     auto staticArrayTy = std::static_pointer_cast<LILStaticArrayType>(ancestorTy);
-                    if (!vlElementTy || staticArrayTy->getType()->equalTo(vlElementTy)) {
+                    auto staticArraySubtype = staticArrayTy->getType();
+                    if (
+                        !vlElementTy
+                        || staticArraySubtype->equalTo(vlElementTy)
+                        || LILType::typesCompatible(staticArraySubtype.get(), vlElementTy.get())
+                        || vlElementTy->getIsWeakType()
+                    ) {
                         return staticArrayTy;
                     }
                 } else if (ancestorTy->isA(TypeTypeObject) && ancestorTy->getName() == "array"){
