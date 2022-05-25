@@ -86,6 +86,7 @@ bool LILConfigGetter::processGetConfigInstr(std::shared_ptr<LILNode> node)
         case NodeTypeComment:
         case NodeTypeInvalid:
         case NodeTypeDocumentation:
+        case NodeTypeSIMDType:
             //do nothing
             break;
             

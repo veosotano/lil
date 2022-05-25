@@ -108,10 +108,10 @@ bool LILStringFnLowerer::processStringFn(std::shared_ptr<LILNode> node)
         case NodeTypeInvalid:
         case NodeTypeDocumentation:
         case NodeTypeNegation:
+        case NodeTypeSIMDType:
             //do nothing
             break;
-        
-            
+    
         case NodeTypeStringFunction:
         {
             auto value = std::static_pointer_cast<LILStringFunction>(node);
