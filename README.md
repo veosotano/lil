@@ -1,9 +1,15 @@
 # LIL is a Language
 
-Hi there! LIL is a new programming language targeted at creating native apps and games, on desktop and mobile platforms, maybe even on consoles.
+WARNING: Work In Progress!!!
 
-Programming in LIL will be somewhat familiar to developers coming from the web development world, since the original inspiration for its design was
-to provide a better alternative to CSS, but then grew into a full blown language of its own, taking inspirations from many sources.
+LIL aims to be a programming language which:
+
+- has a nice syntax, trying to be intuitive, readable and consistent
+- is very low level but still feels quite high level
+- focuses on performance to create 60fps games
+- gives high control over memory management
+- is aimed at two audiences: general users and library implementors
+- is an all-in-one solution: build system, compiler and shader language all in the same language
 
 ## Mini tutorial
 
