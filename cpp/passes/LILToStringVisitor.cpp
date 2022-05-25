@@ -15,6 +15,7 @@
 #include "LILToStringVisitor.h"
 #include "LILNodeToString.h"
 #include "LILIfInstruction.h"
+#include "LILRootNode.h"
 #include "LILSnippetInstruction.h"
 
 using namespace LIL;
@@ -50,6 +51,21 @@ void LILToStringVisitor::initializeVisit()
             std::cerr << "============================\n\n";
         } else {
             std::cerr << "\n";
+        }
+    }
+}
+
+void LILToStringVisitor::performVisit(std::shared_ptr<LILRootNode> rootNode)
+{
+    this->setRootNode(rootNode);
+    for (const auto & node : rootNode->getNodes()) {
+        this->visit(node.get());
+    }
+    const auto & initializers = rootNode->getInitializers();
+    if (initializers.size() > 0) {
+        std::cerr << "\n--- Initializers ---\n";
+        for (const auto & node : initializers) {
+            this->visit(node.get());
         }
     }
 }

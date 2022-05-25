@@ -62,8 +62,9 @@ namespace LIL
     public:
         LILToStringVisitor();
         virtual ~LILToStringVisitor();
-        void initializeVisit();
-        void visit(LILNode * node);
+        void initializeVisit() override;
+        void performVisit(std::shared_ptr<LILRootNode> rootNode) override;
+        void visit(LILNode * node) override;
         void printInfo(LILToStrInfo info, size_t indents, std::vector<size_t> moreItems);
         LILToStrInfo stringify(LILNode * node);
         LILToStrInfo _stringify(LILBoolLiteral * value);
