@@ -1363,9 +1363,9 @@ std::shared_ptr<LILType> LILTypeGuesser::getNodeType(LILNode * node) const
             if (ty) {
                 return ty;
             } else {
-                return this->recursiveFindTypeFromAncestors(fc);
+                std::cerr << "COULD NOT GET RETURN TYPE FROM CALL FAIL !!!!!!\n";
+                return nullptr;
             }
-
             break;
         }
         case NodeTypeFlowControl:
