@@ -813,6 +813,11 @@ void LILASTBuilder::receiveNodeCommit()
                     instr->addNode(this->currentNode);
                     break;
                 }
+                case InstructionTypeGPU:
+                {
+                    instr->addNode(this->currentNode);
+                    break;
+                }
                 default:
                     std::cerr << "UNIMPLEMENTED FAIL !!!! \n\n";
                     break;
@@ -1373,6 +1378,8 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
                         instr->setInstructionType(InstructionTypeArg);
                     } else if (data == "expand") {
                         instr->setInstructionType(InstructionTypeExpand);
+                    } else if (data == "gpu") {
+                        instr->setInstructionType(InstructionTypeGPU);
                     }
                     break;
                 }

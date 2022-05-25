@@ -82,6 +82,9 @@ namespace LIL {
         void addConfigureInstr(const std::shared_ptr<LILInstruction> & instr);
         const std::vector<std::shared_ptr<LILNode>> & getConfigure() const;
 
+        void addGPUNode(const std::shared_ptr<LILNode> & node);
+        const std::vector<std::shared_ptr<LILNode>> & getGPUNodes() const;
+
     private:
         std::map<LILString, std::shared_ptr<LILNode>> _localVars;
         std::vector<std::shared_ptr<LILClassDecl>> _classes;
@@ -95,6 +98,7 @@ namespace LIL {
         std::vector<std::shared_ptr<LILRule>> _rules;
         std::vector<std::shared_ptr<LILNode>> _mainMenu;
         std::vector<std::shared_ptr<LILNode>> _config;
+        std::vector<std::shared_ptr<LILNode>> _gpuNodes;
     };
 }
 

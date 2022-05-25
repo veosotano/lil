@@ -3682,6 +3682,10 @@ bool LILCodeParser::readInstruction()
         {
             return this->readExpandInstr();
         }
+        else if (currentval == "gpu")
+        {
+            return this->readGPUInstr();
+        }
         else
         {
             d->receiver->receiveError("Error: unknown instruction type "+currentval, d->file, d->line, d->column);
@@ -4221,9 +4225,43 @@ bool LILCodeParser::readExpandInstr()
         LIL_EXPECT(TokenTypeBlockClose, "block close")
         d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
         this->readNextToken();
-        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
     }
+
+    LIL_END_NODE
+}
+
+bool LILCodeParser::readGPUInstr()
+{
+    LIL_START_NODE(NodeTypeInstruction)
+    //skip the instruction sign
+    d->receiver->receiveNodeData(ParserEventInstruction, d->currentToken->getString());
+    this->readNextToken();
+    if (atEndOfSource())
+        return false;
     
+    d->receiver->receiveNodeData(ParserEventInstruction, d->currentToken->getString());
+    
+    this->readNextToken();
+    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+
+    bool needsBlockClose  = false;
+    if (d->currentToken->isA(TokenTypeBlockOpen)){
+        needsBlockClose = true;
+        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+        this->readNextToken();
+        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+        
+        while (!this->atEndOfSource() && !d->currentToken->isA(TokenTypeBlockClose)) {
+            this->parseNext();
+        }
+    } else {
+        this->parseNext();
+    }
+    if (needsBlockClose){
+        LIL_EXPECT(TokenTypeBlockClose, "block close")
+        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+        this->readNextToken();
+    }
     LIL_END_NODE
 }
 

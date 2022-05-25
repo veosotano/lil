@@ -186,6 +186,13 @@ void LILRootNode::add(std::shared_ptr<LILNode> node, bool addToNodeTree)
                     }
                     break;
                 }
+                case InstructionTypeGPU:
+                {
+                    for (auto instrNode : instr->getChildNodes()) {
+                        this->addGPUNode(instrNode);
+                    }
+                    break;
+                }
             }
             break;
         }
@@ -439,4 +446,14 @@ void LILRootNode::addConfigureInstr(const std::shared_ptr<LILInstruction> & inst
 const std::vector<std::shared_ptr<LILNode>> & LILRootNode::getConfigure() const
 {
     return this->_config;
+}
+
+void LILRootNode::addGPUNode(const std::shared_ptr<LILNode> & node)
+{
+    this->_gpuNodes.push_back(node);
+}
+
+const std::vector<std::shared_ptr<LILNode>> & LILRootNode::getGPUNodes() const
+{
+    return this->_gpuNodes;
 }

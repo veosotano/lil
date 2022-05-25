@@ -68,6 +68,13 @@ void LILToStringVisitor::performVisit(std::shared_ptr<LILRootNode> rootNode)
             this->visit(node.get());
         }
     }
+    const auto & gpuNodes = rootNode->getGPUNodes();
+    if (gpuNodes.size() > 0) {
+        std::cerr << "\n--- GPU Nodes ---\n";
+        for (const auto & node : gpuNodes) {
+            this->visit(node.get());
+        }
+    }
 }
 
 void LILToStringVisitor::visit(LILNode *node)
