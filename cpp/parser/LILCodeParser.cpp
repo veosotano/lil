@@ -3640,28 +3640,6 @@ bool LILCodeParser::readInstruction()
         {
             return this->readNewInstr();
         }
-        else if (currentval == "move")
-        {
-//            ret = std::shared_ptr<LILInstruction>(new LILInstruction(LILMoveInstruction, this));
-//            if (d->notifiesReceiver)
-//            {
-//                //notify the receiver
-//                d->receiver->receiveNodeData(ParserEventInstruction, ret);
-//            }
-//            this->readNextToken();
-        }
-        else if (currentval == "delete")
-        {
-
-//            this->readNextToken();
-//            this->skip(TokenTypeWhitespace);
-//            ret = std::shared_ptr<LILInstruction>(new LILInstruction(LILDeleteInstruction, this));
-//            if (d->notifiesReceiver)
-//            {
-//                //notify the receiver
-//                d->receiver->receiveNodeData(ParserEventInstruction, ret);
-//            }
-        }
         else if (currentval == "configure")
         {
             return this->readConfigureInstr();
