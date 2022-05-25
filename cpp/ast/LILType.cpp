@@ -14,6 +14,7 @@
 
 #include "LILType.h"
 #include "LILMultipleType.h"
+#include "LILPointerType.h"
 
 using namespace LIL;
 
@@ -241,6 +242,68 @@ bool LILType::combinesWithPointer(LILType * ty)
         || name == "i128"
         ) {
         return true;
+    }
+    return false;
+}
+
+bool LILType::typesCompatible(LILType * ty1, LILType * ty2)
+{
+    switch (ty1->getTypeType())
+    {
+        case TypeTypePointer:
+        {
+            auto ty1p = static_cast<LILPointerType *>(ty1);
+            if (!ty2->isA(TypeTypePointer)) {
+                return ty2->equalTo(ty1p->getArgument());
+            }
+            auto arg = ty1p->getArgument();
+            if (arg) {
+                if (arg->getName() == "any") {
+                    return true;
+                } else {
+                    auto ty2p = static_cast<LILPointerType *>(ty2);
+                    auto arg2 = ty2p->getArgument();
+                    if (arg2->getName() == "any") {
+                        return true;
+                    }
+
+                    return ty1->equalTo(ty2->shared_from_this());
+                }
+            }
+            break;
+        }
+            
+        case TypeTypeSingle:
+        {
+            if (LILType::isNumberType(ty1) && LILType::isNumberType(ty2)) {
+                if (ty1->equalTo(ty2->shared_from_this())) {
+                    return true;
+                } else {
+                    auto dstName = ty1->getName();
+                    auto srcName = ty2->getName();
+                    if (dstName == "i16") {
+                        return srcName == "i8";
+                    } else if (dstName == "i32") {
+                        return srcName == "i8" || srcName == "i16";
+                    } else if (dstName == "i64") {
+                        return srcName == "i8" || srcName == "i16" || srcName == "i32";
+                    } else if (dstName == "i128") {
+                        return srcName == "i8" || srcName == "i16" || srcName == "i32" || srcName == "i64";
+                    }
+                    
+                }
+            }
+            return ty1->equalTo(ty2->shared_from_this());
+        }
+            
+        default:
+        {
+            if (ty2->isA(TypeTypePointer)) {
+                auto ptrTy = static_cast<LILPointerType *>(ty2);
+                return ty1->equalTo(ptrTy->getArgument());
+            }
+            return ty1->equalTo(ty2->shared_from_this());
+        }
     }
     return false;
 }

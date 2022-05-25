@@ -421,7 +421,7 @@ void LILTypeValidator::_validateFCArguments(std::shared_ptr<LILFunctionType> fnT
                         fcArgTy->setIsNullable(false);
                     }
                     for (auto mtArgTy : mtTy->getTypes()) {
-                        if (this->typesCompatible(mtArgTy, fcArgTy) || this->_isDefinitionOf(fcArgTy, mtArgTy)) {
+                        if (LILType::typesCompatible(mtArgTy.get(), fcArgTy.get()) || this->_isDefinitionOf(fcArgTy, mtArgTy)) {
                             i += 1;
                             found = true;
                             break;
@@ -449,7 +449,7 @@ void LILTypeValidator::_validateFCArguments(std::shared_ptr<LILFunctionType> fnT
                 auto mtTy = std::static_pointer_cast<LILMultipleType>(fcArgTy);
                 bool found = false;
                 for (auto mtArgTy : mtTy->getTypes()) {
-                    if (this->typesCompatible(argTy, mtArgTy) || this->_isDefinitionOf(mtArgTy, argTy)) {
+                    if (LILType::typesCompatible(argTy.get(), mtArgTy.get()) || this->_isDefinitionOf(mtArgTy, argTy)) {
                         i += 1;
                         found = true;
                         break;
@@ -470,7 +470,7 @@ void LILTypeValidator::_validateFCArguments(std::shared_ptr<LILFunctionType> fnT
             }
             else
             {
-                if (this->typesCompatible(argTy, fcArgTy) || this->_isDefinitionOf(fcArgTy, argTy)) {
+                if (LILType::typesCompatible(argTy.get(), fcArgTy.get()) || this->_isDefinitionOf(fcArgTy, argTy)) {
                     i += 1;
                     continue;
                 } else {
@@ -802,7 +802,7 @@ bool LILTypeValidator::_validateField(std::shared_ptr<LILType> vdTy, std::shared
         found = vdTy->equalTo(asTy);
         vdTy->setIsNullable(true);
     } else {
-        found = this->typesCompatible(vdTy, asTy);
+        found = LILType::typesCompatible(vdTy.get(), asTy.get());
     }
     
     return found;
@@ -872,7 +872,7 @@ void LILTypeValidator::_validate(std::shared_ptr<LILVarDecl> vd)
             found = ty->equalTo(ivTy);
             ty->setIsNullable(true);
         } else {
-            found = this->typesCompatible(ty, ivTy);
+            found = LILType::typesCompatible(ty.get(), ivTy.get());
         }
         if (!found) {
             LILErrorMessage ei;
@@ -919,67 +919,4 @@ void LILTypeValidator::validateChildren(const std::vector<std::shared_ptr<LILNod
     {
         this->validate((*it));
     };
-}
-
-bool LILTypeValidator::typesCompatible(const std::shared_ptr<LILType> & ty1, const std::shared_ptr<LILType> & ty2)
-{
-    switch (ty1->getTypeType())
-    {
-        case TypeTypePointer:
-        {
-            if (!ty2->isA(TypeTypePointer)) {
-                auto ptrTy = std::static_pointer_cast<LILPointerType>(ty1);
-                return ty2->equalTo(ptrTy->getArgument());
-            }
-            auto ty1p = std::static_pointer_cast<LILPointerType>(ty1);
-            auto arg = ty1p->getArgument();
-            if (arg) {
-                if (arg->getName() == "any") {
-                    return true;
-                } else {
-                    auto ty2p = std::static_pointer_cast<LILPointerType>(ty2);
-                    auto arg2 = ty2p->getArgument();
-                    if (arg2->getName() == "any") {
-                        return true;
-                    }
-
-                    return ty1->equalTo(ty2);
-                }
-            }
-            break;
-        }
-            
-        case TypeTypeSingle:
-        {
-            if (LILType::isNumberType(ty1.get()) && LILType::isNumberType(ty2.get())) {
-                if (ty1->equalTo(ty2)) {
-                    return true;
-                } else {
-                    auto dstName = ty1->getName();
-                    auto srcName = ty2->getName();
-                    if (dstName == "i16") {
-                        return srcName == "i8";
-                    } else if (dstName == "i32") {
-                        return srcName == "i8" || srcName == "i16";
-                    } else if (dstName == "i64") {
-                        return srcName == "i8" || srcName == "i16" || srcName == "i32";
-                    } else if (dstName == "i128") {
-                        return srcName == "i8" || srcName == "i16" || srcName == "i32" || srcName == "i64";
-                    }
-                    
-                }
-            }
-            return ty1->equalTo(ty2);
-        }
-            
-        default:
-        {
-            if (ty2->isA(TypeTypePointer)) {
-                auto ptrTy = std::static_pointer_cast<LILPointerType>(ty2);
-                return ty1->equalTo(ptrTy->getArgument());
-            }
-            return ty1->equalTo(ty2);
-        }
-    }
-    return false;
 }

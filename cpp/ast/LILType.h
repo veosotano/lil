@@ -32,6 +32,7 @@ namespace LIL
         static bool isIntegerType(LILType * ty);
         static bool isFloatType(LILType * ty);
         static bool combinesWithPointer(LILType * ty);
+        static bool typesCompatible(LILType * ty1, LILType * ty2);
 
         LILType();
         LILType(TypeType type);
