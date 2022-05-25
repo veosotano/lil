@@ -1781,7 +1781,16 @@ std::shared_ptr<LILType> LILTypeGuesser::findReturnTypeForFunctionCall(LILFuncti
                     break;
                 }
                 auto fnTy = std::static_pointer_cast<LILFunctionType>(ty);
-                return fnTy->getReturnType();
+                auto fnReturnTy = fnTy->getReturnType();
+                if (!fnReturnTy && localNode->isA(NodeTypeFunctionDecl)) {
+                    auto fd = std::static_pointer_cast<LILFunctionDecl>(localNode);
+                    auto returnTy = this->getFnReturnType(fd->getBody());
+                    if (returnTy) {
+                        return returnTy;
+                    }
+                } else {
+                    return fnReturnTy;
+                }
             }
             break;
         }
