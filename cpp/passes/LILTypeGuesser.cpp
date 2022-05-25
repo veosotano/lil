@@ -1334,8 +1334,21 @@ std::shared_ptr<LILType> LILTypeGuesser::getNodeType(LILNode * node) const
         {
             auto vd = static_cast<LILVarDecl *>(node);
             std::shared_ptr<LILNode> vdTy = vd->getType();
+            if (!vdTy) {
+                std::shared_ptr<LILNode> initValue = vd->getInitVal();
+                if (initValue) {
+                    vdTy = initValue->getType();
+                    if (!vdTy) {
+                        vdTy = this->getNodeType(initValue.get());
+                    }
+                }
+            }
             if (vdTy && vdTy->isA(NodeTypeType)) {
-                return std::static_pointer_cast<LILType>(vdTy);
+                auto ty = std::static_pointer_cast<LILType>(vdTy);
+                if (ty->getIsWeakType()) {
+                    ty = ty->getDefaultType();
+                }
+                return ty;
             }
             break;
         }
