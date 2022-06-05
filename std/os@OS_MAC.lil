@@ -6,22 +6,26 @@ var.id LIL__applicationDelegate extern;
 
     fn LIL__addMenu(var.cstr label) {
         var.SEL addMenuSel: sel_registerName(`addMenu:`);
-        objc_msgSend(LIL__applicationDelegate, addMenuSel, label);
+		var.ptr(fn(id,SEL,cstr)=>id) castedPtr: (pointerTo(objc_msgSend) => ptr(fn(id,SEL,cstr)=>id));
+        castedPtr(LIL__applicationDelegate, addMenuSel, label);
     }
 
     fn LIL__addMenuItem(var.cstr label; var.cstr shortcut; var.ptr(fn) fnPtr) {
         var.SEL addItemSel: sel_registerName(`addMenuItem:key:fnPtr:`);
-        objc_msgSend(LIL__applicationDelegate, addItemSel, label, shortcut, fnPtr);
+		var.ptr(fn(id,SEL,cstr,cstr,ptr(fn))=>id) castedPtr: (pointerTo(objc_msgSend) => ptr(fn(id,SEL,cstr,cstr,ptr(fn))=>id));
+        castedPtr(LIL__applicationDelegate, addItemSel, label, shortcut, fnPtr);
     }
 
     fn LIL__addMenuSeparator {
         var.SEL addSeparatorSel: sel_registerName(`addMenuSeparator`);
-        objc_msgSend(LIL__applicationDelegate, addSeparatorSel);
+		var.ptr(fn(id,SEL)=>id) castedPtr: (pointerTo(objc_msgSend) => ptr(fn(id,SEL)=>id));
+        castedPtr(LIL__applicationDelegate, addSeparatorSel);
     }
 
     fn LIL__exitMenu {
         var.SEL exitSel: sel_registerName(`exitMenu`);
-        objc_msgSend(LIL__applicationDelegate, exitSel);
+		var.ptr(fn(id,SEL)=>id) castedPtr: (pointerTo(objc_msgSend) => ptr(fn(id,SEL)=>id));
+        castedPtr(LIL__applicationDelegate, exitSel);
     }
     
     fn LIL__setWindowBgColor(var.f32 red; var.f32 green; var.f32 blue; var.f32 alpha) {

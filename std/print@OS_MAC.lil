@@ -16,42 +16,48 @@
             }
             var.Class stringClass: objc_lookUpClass(`NSString`);
             var.SEL strCreateSel: sel_registerName(`stringWithUTF8String:`);
-            var.id nsStrInstance: objc_msgSend(stringClass=>id, strCreateSel, cStr);
+			var.ptr(fn(id,SEL,cstr)=>id) castedPtr: (pointerTo(objc_msgSend) => ptr(fn(id,SEL,cstr)=>id));
+			var.id nsStrInstance: castedPtr(stringClass=>id, strCreateSel, cStr);
             NSLog(nsStrInstance=>ptr(@__CFString));
         }
         if value => i64 {
             var cStr: `%li`;
             var.Class stringClass: objc_lookUpClass(`NSString`);
             var.SEL strCreateSel: sel_registerName(`stringWithUTF8String:`);
-            var.id nsStrInstance: objc_msgSend(stringClass=>id, strCreateSel, cStr);
+			var.ptr(fn(id,SEL,cstr)=>id) castedPtr: (pointerTo(objc_msgSend) => ptr(fn(id,SEL,cstr)=>id));
+			var.id nsStrInstance: castedPtr(stringClass=>id, strCreateSel, cStr);
             NSLog(nsStrInstance=>ptr(@__CFString), value);
         }
         if value => f64 {
             var cStr: `%lf`;
             var.Class stringClass: objc_lookUpClass(`NSString`);
             var.SEL strCreateSel: sel_registerName(`stringWithUTF8String:`);
-            var.id nsStrInstance: objc_msgSend(stringClass=>id, strCreateSel, cStr);
+			var.ptr(fn(id,SEL,cstr)=>id) castedPtr: (pointerTo(objc_msgSend) => ptr(fn(id,SEL,cstr)=>id));
+			var.id nsStrInstance: castedPtr(stringClass=>id, strCreateSel, cStr);
             NSLog(nsStrInstance=>ptr(@__CFString), value);
         }
         if value => ptr(i8) {
             var cStr: value;
             var.Class stringClass: objc_lookUpClass(`NSString`);
             var.SEL strCreateSel: sel_registerName(`stringWithUTF8String:`);
-            var.id nsStrInstance: objc_msgSend(stringClass=>id, strCreateSel, cStr);
+			var.ptr(fn(id,SEL,cstr)=>id) castedPtr: (pointerTo(objc_msgSend) => ptr(fn(id,SEL,cstr)=>id));
+			var.id nsStrInstance: castedPtr(stringClass=>id, strCreateSel, cStr);
             NSLog(nsStrInstance=>ptr(@__CFString));
         }
         if value => ptr(@string) {
             var cStr: value.cstr();
             var.Class stringClass: objc_lookUpClass(`NSString`);
             var.SEL strCreateSel: sel_registerName(`stringWithUTF8String:`);
-            var.id nsStrInstance: objc_msgSend(stringClass=>id, strCreateSel, cStr);
+			var.ptr(fn(id,SEL,cstr)=>id) castedPtr: (pointerTo(objc_msgSend) => ptr(fn(id,SEL,cstr)=>id));
+			var.id nsStrInstance: castedPtr(stringClass=>id, strCreateSel, cStr);
             NSLog(nsStrInstance=>ptr(@__CFString));
         }
         if value => null {
             var.ptr(i8) cStr: `null`;
             var.Class stringClass: objc_lookUpClass(`NSString`);
             var.SEL strCreateSel: sel_registerName(`stringWithUTF8String:`);
-            var.id nsStrInstance: objc_msgSend(stringClass=>id, strCreateSel, cStr);
+			var.ptr(fn(id,SEL,cstr)=>id) castedPtr: (pointerTo(objc_msgSend) => ptr(fn(id,SEL,cstr)=>id));
+			var.id nsStrInstance: castedPtr(stringClass=>id, strCreateSel, cStr);
             NSLog(nsStrInstance=>ptr(@__CFString));
         }
     };
