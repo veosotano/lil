@@ -198,17 +198,17 @@ llvm::Value * LILIREmitter::emit(LILNode * node)
         case NodeTypeBoolLiteral:
         {
             LILBoolLiteral * value = static_cast<LILBoolLiteral *>(node);
-            return this->_emit(value);
+            return this->_emitBool(value);
         }
         case NodeTypeNumberLiteral:
         {
             LILNumberLiteral * value = static_cast<LILNumberLiteral *>(node);
-            return this->_emit(value);
+            return this->_emitNum(value);
         }
         case NodeTypePercentage:
         {
             LILPercentageLiteral * value = static_cast<LILPercentageLiteral *>(node);
-            return this->_emit(value);
+            return this->_emitPercent(value);
         }
         case NodeTypeExpression:
         {
@@ -216,7 +216,7 @@ llvm::Value * LILIREmitter::emit(LILNode * node)
             if (value->isA(ExpressionTypeCast)) {
                 return this->_emitCast(value);
             } else {
-                return this->_emit(value);
+                return this->_emitExp(value);
             }
         }
         case NodeTypeUnaryExpression:
@@ -225,23 +225,23 @@ llvm::Value * LILIREmitter::emit(LILNode * node)
             if (value->getUnaryExpressionType() == UnaryExpressionTypeNot) {
                 return this->_emitNotExp(value);
             } else {
-                return this->_emit(value);
+                return this->_emitUExp(value);
             }
         }
         case NodeTypeStringLiteral:
         {
             LILStringLiteral * value = static_cast<LILStringLiteral *>(node);
-            return this->_emit(value);
+            return this->_emitStr(value);
         }
         case NodeTypeNull:
         {
             LILNullLiteral * value = static_cast<LILNullLiteral *>(node);
-            return this->_emit(value);
+            return this->_emitNull(value);
         }
         case NodeTypeVarDecl:
         {
             LILVarDecl * value = static_cast<LILVarDecl *>(node);
-            return this->_emit(value);
+            return this->_emitVarDecl(value);
         }
         case NodeTypeAliasDecl:
         case NodeTypeTypeDecl:
@@ -253,97 +253,97 @@ llvm::Value * LILIREmitter::emit(LILNode * node)
         case NodeTypeConversionDecl:
         {
             LILConversionDecl * value = static_cast<LILConversionDecl *>(node);
-            return this->_emit(value);
+            return this->_emitConvDecl(value);
         }
         case NodeTypeClassDecl:
         {
             LILClassDecl * value = static_cast<LILClassDecl *>(node);
-            return this->_emit(value);
+            return this->_emitClassDecl(value);
         }
         case NodeTypeObjectDefinition:
         {
             LILObjectDefinition * value = static_cast<LILObjectDefinition *>(node);
-            return this->_emit(value);
+            return this->_emitObjDef(value);
         }
         case NodeTypeAssignment:
         {
             LILAssignment * value = static_cast<LILAssignment *>(node);
-            return this->_emit(value);
+            return this->_emitAsgmt(value);
         }
         case NodeTypeValuePath:
         {
             LILValuePath * value = static_cast<LILValuePath *>(node);
-            return this->_emit(value);
+            return this->_emitVP(value);
         }
         case NodeTypePropertyName:
         {
             LILPropertyName * value = static_cast<LILPropertyName *>(node);
-            return this->_emit(value);
+            return this->_emitPN(value);
         }
         case NodeTypeVarName:
         {
             LILVarName * value = static_cast<LILVarName *>(node);
-            return this->_emit(value);
+            return this->_emitVN(value);
         }
         case NodeTypeRule:
         {
             LILRule * value = static_cast<LILRule *>(node);
-            this->_emit(value);
+            this->_emitRule(value);
             
             for (auto child : value->getChildRules()) {
-                this->emit(child.get());
+                this->_emitRule(child.get());
             }
             return nullptr;
         }
         case NodeTypeSimpleSelector:
         {
             LILSimpleSelector * value = static_cast<LILSimpleSelector *>(node);
-            return this->_emit(value);
+            return this->_emitSSel(value);
         }
         case NodeTypeSelector:
         {
             LILSelector * value = static_cast<LILSelector *>(node);
-            return this->_emit(value);
+            return this->_emitSel(value);
         }
         case NodeTypeCombinator:
         {
             LILCombinator * value = static_cast<LILCombinator *>(node);
-            return this->_emit(value);
+            return this->_emitComb(value);
         }
         case NodeTypeFilter:
         {
             LILFilter * value = static_cast<LILFilter *>(node);
-            return this->_emit(value);
+            return this->_emitFlt(value);
         }
         case NodeTypeFlag:
         {
             LILFlag * value = static_cast<LILFlag *>(node);
-            return this->_emit(value);
+            return this->_emitFlag(value);
         }
         case NodeTypeFunctionDecl:
         {
             LILFunctionDecl * value = static_cast<LILFunctionDecl *>(node);
-            return this->_emit(value);
+            return this->_emitFnDecl(value);
         }
         case NodeTypeFunctionCall:
         {
             LILFunctionCall * value = static_cast<LILFunctionCall *>(node);
-            return this->_emit(value);
+            return this->_emitFC(value);
         }
         case NodeTypeFlowControl:
         {
             LILFlowControl * value = static_cast<LILFlowControl *>(node);
-            return this->_emit(value);
+            return this->_emitFlowC(value);
         }
         case NodeTypeFlowControlCall:
         {
             LILFlowControlCall * value = static_cast<LILFlowControlCall *>(node);
-            return this->_emit(value);
+            return this->_emitFlowCCall(value);
         }
         case NodeTypeInstruction:
         {
             LILInstruction * value = static_cast<LILInstruction *>(node);
-            return this->_emit(value);
+            return this->_emitInstr(value);
         }
         case NodeTypeIfInstruction:
         case NodeTypeDocumentation:
@@ -354,12 +354,12 @@ llvm::Value * LILIREmitter::emit(LILNode * node)
         case NodeTypeForeignLang:
         {
             LILForeignLang * value = static_cast<LILForeignLang *>(node);
-            return this->_emit(value);
+            return this->_emitForeignLang(value);
         }
         case NodeTypeValueList:
         {
             LILValueList * value = static_cast<LILValueList *>(node);
-            return this->_emit(value);
+            return this->_emitValList(value);
         }
         case NodeTypeSnippetInstruction:
         {
@@ -375,12 +375,12 @@ llvm::Value * LILIREmitter::emit(LILNode * node)
     }
 }
 
-llvm::Value * LILIREmitter::_emit(LILBoolLiteral * value)
+llvm::Value * LILIREmitter::_emitBool(LILBoolLiteral * value)
 {
     return llvm::ConstantInt::get(d->llvmContext, llvm::APInt(1, value->getValue(), false));
 }
 
-llvm::Value * LILIREmitter::_emit(LILNumberLiteral * value)
+llvm::Value * LILIREmitter::_emitNum(LILNumberLiteral * value)
 {
     const auto & tyNode = value->getType();
     if (!tyNode) {
@@ -404,7 +404,7 @@ llvm::Value * LILIREmitter::_emit(LILNumberLiteral * value)
     return nullptr;
 }
 
-llvm::Value * LILIREmitter::_emit(LILPercentageLiteral * value)
+llvm::Value * LILIREmitter::_emitPercent(LILPercentageLiteral * value)
 {
     const auto & tyNode = value->getType();
     if (!tyNode) {
@@ -480,7 +480,7 @@ llvm::Value * LILIREmitter::_emitCast(LILExpression * value)
     }
 }
 
-llvm::Value * LILIREmitter::_emit(LILExpression * value)
+llvm::Value * LILIREmitter::_emitExp(LILExpression * value)
 {
     std::shared_ptr<LILNode> left = value->getLeft();
     std::shared_ptr<LILNode> right = value->getRight();
@@ -803,7 +803,7 @@ llvm::Value * LILIREmitter::_emitExpression(ExpressionType expType, llvm::Value 
 
 }
 
-llvm::Value * LILIREmitter::_emit(LILUnaryExpression * value)
+llvm::Value * LILIREmitter::_emitUExp(LILUnaryExpression * value)
 {
     std::shared_ptr<LILNode> val = value->getValue();
     llvm::Value * subject = this->emitPointer(value->getSubject().get());
@@ -847,7 +847,7 @@ llvm::Value * LILIREmitter::_emitNotExp(LILUnaryExpression * value)
     return nullptr;
 }
 
-llvm::Value * LILIREmitter::_emit(LILStringLiteral * value)
+llvm::Value * LILIREmitter::_emitStr(LILStringLiteral * value)
 {
     LILString stringLiteral = value->getValue();
     LILString stringWithoutQuotes = stringLiteral.stripQuotes();
@@ -924,7 +924,7 @@ llvm::Value * LILIREmitter::_emit(LILStringLiteral * value)
     }
 }
 
-llvm::Value * LILIREmitter::_emit(LILNullLiteral * value)
+llvm::Value * LILIREmitter::_emitNull(LILNullLiteral * value)
 {
     auto zeroLit = std::make_shared<LILNumberLiteral>();
     zeroLit->setValue("0");
@@ -933,7 +933,7 @@ llvm::Value * LILIREmitter::_emit(LILNullLiteral * value)
     return this->emit(zeroLit.get());
 }
 
-llvm::Value * LILIREmitter::_emit(LILVarDecl * value)
+llvm::Value * LILIREmitter::_emitVarDecl(LILVarDecl * value)
 {
     auto name = value->getName().data();
     auto ty = value->getType();
@@ -1104,7 +1104,7 @@ void LILIREmitter::_convertLlvmValueIfNeeded(llvm::Value ** llvmValue, LILType *
     }
 }
 
-llvm::Value * LILIREmitter::_emit(LILConversionDecl * value)
+llvm::Value * LILIREmitter::_emitConvDecl(LILConversionDecl * value)
 {
     auto vd = value->getVarDecl();
     auto encodedName = value->encodedName();
@@ -1135,7 +1135,7 @@ llvm::Value * LILIREmitter::_emit(LILConversionDecl * value)
     return nullptr;
 }
 
-llvm::Value * LILIREmitter::_emit(LILClassDecl * value)
+llvm::Value * LILIREmitter::_emitClassDecl(LILClassDecl * value)
 {
     if (value->isTemplate()) {
         return nullptr;
@@ -1158,7 +1158,7 @@ llvm::Value * LILIREmitter::_emit(LILClassDecl * value)
     return nullptr;
 }
 
-llvm::Value * LILIREmitter::_emit(LILObjectDefinition * value)
+llvm::Value * LILIREmitter::_emitObjDef(LILObjectDefinition * value)
 {
     if (d->currentAlloca == nullptr) {
         std::cerr << "CURRENT ALLOCA WAS NULL FAIL !!!!!!!!\n\n";
@@ -1293,7 +1293,7 @@ llvm::Value * LILIREmitter::_emit(LILObjectDefinition * value)
     return nullptr;
 }
 
-llvm::Value * LILIREmitter::_emit(LILAssignment * value)
+llvm::Value * LILIREmitter::_emitAsgmt(LILAssignment * asgmt)
 {
     auto allocaBackup = d->currentAlloca;
     auto theValue = value->getValue();
@@ -1637,7 +1637,7 @@ llvm::Value * LILIREmitter::_emit(LILAssignment * value)
     return nullptr;
 }
 
-llvm::Value * LILIREmitter::_emit(LILValuePath * value)
+llvm::Value * LILIREmitter::_emitVP(LILValuePath * value)
 {
     const auto & childNodes = value->getNodes();
     if (childNodes.size() == 1)
@@ -1963,13 +1963,13 @@ llvm::Value * LILIREmitter::_emitGEP(llvm::Value * llvmValue, llvm::Type * llvmT
     return llvm::GetElementPtrInst::Create(llvmType, llvmValue, idList, fieldName.data(), d->irBuilder.GetInsertBlock());
 }
 
-llvm::Value * LILIREmitter::_emit(LILPropertyName * value)
+llvm::Value * LILIREmitter::_emitPN(LILPropertyName * value)
 {
     std::cerr << "!!!!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!\n";
     return nullptr;
 }
 
-llvm::Value * LILIREmitter::_emit(LILRule * value)
+llvm::Value * LILIREmitter::_emitRule(LILRule * value)
 {
     auto ty = value->getType();
     if (!ty) {
@@ -2016,7 +2016,7 @@ llvm::Value * LILIREmitter::_emit(LILRule * value)
                         as->setSubject(vp);
                         as->setValue(asgmt->getValue()->clone());
                         as->setParentNode(value->shared_from_this());
-                        this->_emit(as.get());
+                        this->_emitAsgmt(as.get());
                         break;
                     }
                     case NodeTypeValuePath:
@@ -2034,7 +2034,7 @@ llvm::Value * LILIREmitter::_emit(LILRule * value)
                         as->setSubject(vp);
                         as->setValue(asgmt->getValue()->clone());
                         as->setParentNode(value->shared_from_this());
-                        this->_emit(as.get());
+                        this->_emitAsgmt(as.get());
                         break;
                     }
                         
@@ -2119,7 +2119,7 @@ llvm::Value * LILIREmitter::_emit(LILRule * value)
     }
 
     bool outIsId = false;
-    auto selection = this->_emit(selCh.get(), outIsId);
+    auto selection = this->_emitSelCh(selCh.get(), outIsId);
     auto llvmTy = this->llvmTypeFromLILType(ty.get());
     if (outIsId) {
         d->currentAlloca = d->irBuilder.CreateAlloca(llvmTy, 0, "");
@@ -2202,7 +2202,7 @@ llvm::Value* LILIREmitter::_getContainerNameFromSelectorChain(std::shared_ptr<LI
             auto stringLit = std::make_shared<LILStringLiteral>();
             stringLit->setValue(name);
             stringLit->setIsCString(true);
-            return this->_emit(stringLit.get());
+            return this->_emitStr(stringLit.get());
         }
     }
     return ret;
@@ -2215,14 +2215,14 @@ LILString LILIREmitter::_newRuleFnName()
     return ret;
 }
 
-llvm::Value * LILIREmitter::_emit(LILSimpleSelector * value)
+llvm::Value * LILIREmitter::_emitSSel(LILSimpleSelector * value)
 {
     std::cerr << "!!!!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!\n";
     return nullptr;
 
 }
 
-llvm::Value * LILIREmitter::_emit(LILSelectorChain * value, bool & outIsId)
+llvm::Value * LILIREmitter::_emitSelCh(LILSelectorChain * value, bool & outIsId)
 {
     if (value->getNodes().size() == 1) {
         auto sChNode = value->getNodes().front();
@@ -2292,31 +2292,31 @@ llvm::Value * LILIREmitter::_emit(LILSelectorChain * value, bool & outIsId)
     return nullptr;
 }
 
-llvm::Value * LILIREmitter::_emit(LILSelector * value)
+llvm::Value * LILIREmitter::_emitSel(LILSelector * value)
 {
     std::cerr << "!!!!!!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!\n";
     return nullptr;
 }
 
-llvm::Value * LILIREmitter::_emit(LILCombinator * value)
+llvm::Value * LILIREmitter::_emitComb(LILCombinator * value)
 {
     std::cerr << "!!!!!!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!\n";
     return nullptr;
 }
 
-llvm::Value * LILIREmitter::_emit(LILFilter * value)
+llvm::Value * LILIREmitter::_emitFlt(LILFilter * value)
 {
     std::cerr << "!!!!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!!\n";
     return nullptr;
 }
 
-llvm::Value * LILIREmitter::_emit(LILFlag * value)
+llvm::Value * LILIREmitter::_emitFlag(LILFlag * value)
 {
     std::cerr << "!!!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!!\n";
     return nullptr;
 }
 
-llvm::Value * LILIREmitter::_emit(LILVarName * value)
+llvm::Value * LILIREmitter::_emitVN(LILVarName * value)
 {
     auto remoteNode = recursiveFindNode(value->shared_from_this());
     if (remoteNode && remoteNode->isA(NodeTypeVarDecl)) {
@@ -2335,7 +2335,7 @@ llvm::Value * LILIREmitter::_emit(LILVarName * value)
     return d->irBuilder.CreateLoad(val, namestr);
 }
 
-llvm::Function * LILIREmitter::_emit(LILFunctionDecl * value)
+llvm::Function * LILIREmitter::_emitFnDecl(LILFunctionDecl * value)
 {
     switch (value->getFunctionDeclType()) {
         case FunctionDeclTypeFn:
@@ -2345,7 +2345,7 @@ llvm::Function * LILIREmitter::_emit(LILFunctionDecl * value)
             }
             if (value->getHasMultipleImpls()) {
                 for (auto impl : value->getImpls()) {
-                    this->_emit(impl.get());
+                    this->_emitFnDecl(impl.get());
                 }
                 return nullptr;
             }
@@ -2746,7 +2746,7 @@ llvm::Value * LILIREmitter::_emitFCMultipleValues(std::vector<std::shared_ptr<LI
     return nullptr;
 }
 
-llvm::Value * LILIREmitter::_emit(LILFunctionCall * value)
+llvm::Value * LILIREmitter::_emitFC(LILFunctionCall * value)
 {
     switch (value->getFunctionCallType()) {
         case FunctionCallTypeNone:
@@ -3243,7 +3243,7 @@ llvm::Value * LILIREmitter::_emitFunctionCallPointer(llvm::Value * fun, LILFunct
     return d->irBuilder.CreateCall(static_cast<llvm::FunctionType *>(llvmTy), fun, argsvect);
 }
 
-llvm::Value * LILIREmitter::_emit(LILFlowControl * value)
+llvm::Value * LILIREmitter::_emitFlowC(LILFlowControl * value)
 {
     switch (value->getFlowControlType()) {
         case FlowControlTypeIf:
@@ -3666,7 +3666,7 @@ llvm::Value * LILIREmitter::_emitLoop(LILFlowControl * value)
     return nullptr;
 }
 
-llvm::Value * LILIREmitter::_emit(LILFlowControlCall * value)
+llvm::Value * LILIREmitter::_emitFlowCCall(LILFlowControlCall * value)
 {
     switch (value->getFlowControlCallType()) {
         case FlowControlCallTypeReturn:
@@ -3738,12 +3738,12 @@ llvm::Value * LILIREmitter::_emitRepeat(LILFlowControlCall * value)
     return this->emit(asgmt.get());
 }
 
-llvm::Value * LILIREmitter::_emit(LILInstruction * value)
+llvm::Value * LILIREmitter::_emitInstr(LILInstruction * value)
 {
     return nullptr;
 }
 
-llvm::Value * LILIREmitter::_emit(LILForeignLang * value)
+llvm::Value * LILIREmitter::_emitForeignLang(LILForeignLang * value)
 {
     if (value->getLanguage() == "llvm") {
         llvm::StringRef llvmStr = value->getContent().data().c_str();
@@ -3784,7 +3784,7 @@ llvm::Value * LILIREmitter::_emit(LILForeignLang * value)
     return nullptr;
 }
 
-llvm::Value * LILIREmitter::_emit(LILValueList * value)
+llvm::Value * LILIREmitter::_emitValList(LILValueList * value)
 {
     if (d->currentAlloca == nullptr) {
         std::cerr << "CURRENT ALLOCA WAS NULL FAIL !!!!!!!!\n\n";
@@ -3966,7 +3966,7 @@ llvm::Value * LILIREmitter::emitPointer(LILNode * node)
             //set linkage to private
             auto globalDeclaration = new llvm::GlobalVariable(d->llvmModule, this->llvmTypeFromLILType(node->getType().get()), true, llvm::GlobalVariable::PrivateLinkage, nullptr, "num");
             
-            auto constValue = this->_emit(static_cast<LILNumberLiteral *>(node));
+            auto constValue = this->_emitNum(static_cast<LILNumberLiteral *>(node));
             globalDeclaration->setInitializer(llvm::cast<llvm::Constant>(constValue));
             globalDeclaration->setConstant(true);
             globalDeclaration->setLinkage(llvm::GlobalValue::LinkageTypes::PrivateLinkage);
@@ -3986,13 +3986,13 @@ llvm::Value * LILIREmitter::emitPointer(LILNode * node)
         }
         case NodeTypeStringLiteral:
         {
-            return this->_emit(static_cast<LILStringLiteral *>(node));
+            return this->_emitStr(static_cast<LILStringLiteral *>(node));
         }
         case NodeTypeFunctionCall:
         {
             auto fc = static_cast<LILFunctionCall *>(node);
             d->currentAlloca = d->irBuilder.CreateAlloca(this->llvmTypeFromLILType(fc->getReturnType().get()));
-            auto returnVal = this->_emit(fc);
+            auto returnVal = this->_emitFC(fc);
             d->irBuilder.CreateStore(returnVal, d->currentAlloca);
             return d->currentAlloca;
         }
