@@ -13,6 +13,7 @@ const DEBUG: false;
         fn construct {
             #if DEBUG {
                 puts `Constructing string`;
+				printf(`Length is %li\n`, @self.length);
             }
         };
     
@@ -34,11 +35,13 @@ const DEBUG: false;
             }
             if (@self.length > 55){
                 #if DEBUG {
+					printf(`Length is %li\n`, @self.length);
                     printf(`Long version: Returning string at %li\n`, valueOf(pointerTo(@self.buffer) => ptr(i64)));
                 }
                 return valueOf(pointerTo(@self.buffer) => ptr(cstr));
             } else {
                 #if DEBUG {
+					printf(`Length is %li\n`, @self.length);
                     printf(`Short version: Returning string at %li\n`, pointerTo(@self.buffer) => i64);
                 }
                 return pointerTo(@self.buffer) => cstr;

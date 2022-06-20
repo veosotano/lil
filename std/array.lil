@@ -143,13 +143,25 @@ const DEBUG: false;
             @self.size: 0;
 
             if newCapacity <= #paste SMALL_BUFFER_SIZE {
+	            #if DEBUG {
+	                printf(`newCapacity was smaller or equal to %li\n`, #paste SMALL_BUFFER_SIZE);
+	            }
                 @self.buffer: [];
                 @self.capacity: #paste SMALL_BUFFER_SIZE;
+	            #if DEBUG {
+	                printf(`returning pointer to internal buffer: %li\n`, pointerTo(@self.buffer) => i64);
+	            }
                 return pointerTo(@self.buffer) => ptr(@subtype);
             } else {
+	            #if DEBUG {
+	                printf(`newCapacity was bigger than %li\n`, #paste SMALL_BUFFER_SIZE);
+	            }
                 var.ptr(@subtype) pointer: malloc(sizeOf(type @subtype) * newCapacity) => ptr(@subtype);
                 @self.capacity: newCapacity;
                 @self.buffer: pointer;
+	            #if DEBUG {
+	                printf(`returning malloc'd pointer: %li\n`, pointer => i64);
+	            }
                 return pointer;
             }
         };
