@@ -376,7 +376,6 @@ typedef struct
 
 - (void)loadTextureForFile:(NSString *)filename
 {
-    NSLog(@"Loading texture");
     NSURL * textureUrl = [[NSBundle mainBundle] URLForResource:filename withExtension:nil];
     if (textureUrl != nil) {
         MTKTextureLoader * loader = [[MTKTextureLoader alloc] initWithDevice: device];
@@ -387,7 +386,6 @@ typedef struct
         textures[textureCount] = [loader newTextureWithContentsOfURL: textureUrl options: textureOptions error: nil ];
         if(textures[textureCount])
         {
-            NSLog(@"Created texture from %@", textureUrl.absoluteString);
         }
         else
         {
