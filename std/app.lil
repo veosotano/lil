@@ -11,6 +11,8 @@ fn LIL__setWindowBgColor(var.f32 red; var.f32 green; var.f32 blue; var.f32 alpha
 
 #export {
     #needs "cstd.lil";
+	#needs "events.lil";
+	#needs "msg.lil";
     #needs "string.lil";
 
     //default entity types:
@@ -42,6 +44,7 @@ fn LIL__setWindowBgColor(var.f32 red; var.f32 green; var.f32 blue; var.f32 alpha
         var.i64 typeId;
         var.i64 componentId;
         var.i64 resourceId;
+		var.i64 actionId;
     };
     class @pos2d {
         var.f32 x;
@@ -91,6 +94,7 @@ fn LIL__setWindowBgColor(var.f32 red; var.f32 green; var.f32 blue; var.f32 alpha
         var.i64 id: 0;
         
         vvar.@selectable selectable;
+		vvar.ptr(any)|null action;
         
         fn getSelectable => @selectable {
             return app.selectables[@self.id];
@@ -102,7 +106,32 @@ fn LIL__setWindowBgColor(var.f32 red; var.f32 green; var.f32 blue; var.f32 alpha
             var selectable: @self.selectable;
             return app.getName(selectable.nameId);
         }
+
+		fn getAction => ptr(any)|null {
+			var actionId: app.selectables[@self.id].actionId;
+			if actionId >= 0 {
+				return app.actions[actionId].ptr;
+			} else {
+				return null;
+			}
+		}
+		fn setAction(var.ptr(any) ptr) {
+			var existingAction: @self.getAction();
+			if existingAction => null {
+				var actionId: app.newActionId();
+				app.selectables[@self.id].actionId: actionId;
+				app.actions[actionId]: @action {
+					elementId: @self.id;
+					ptr: ptr;
+				};
+			}
+		}
     };
+	class @action
+	{
+		var.i64 elementId;
+		var.ptr(any) ptr;
+	}
     class @container
     {
         //this class MUST only be an i64
@@ -293,6 +322,45 @@ fn LIL__setWindowBgColor(var.f32 red; var.f32 green; var.f32 blue; var.f32 alpha
             return app.imgClips[@self.componentId].y;
         };
     }
+	
+	fn LIL__mouseClickListener(var.ptr(any) data) {
+		var.ptr(@mouseEvent) event: data;
+		var mouseX: event.x => f32;
+		var mouseY: event.y => f32;
+		#if DEBUG {
+			printf(`mouse listener: x:%lf y:%lf\n`, mouseX, mouseY);	
+		}
+		for (var.i64 i: 0; i<app.actionCount; i +: 1) {
+			var action: app.actions[i];
+			var elem: app.selectables[action.elementId];
+			var componentId: elem.componentId;
+			var.bool result: false;
+			if elem.typeId = 0 {
+				var pos: app.boxPositions[componentId];
+				var box: app.box2ds[componentId];
+				result:
+					(mouseX >= pos.x) AND (mouseX < (pos.x + box.width))
+					AND (mouseY >= pos.y) AND (mouseY < (pos.y + box.height))
+				;
+			} else if ((elem.typeId = 1) OR (elem.typeId = 2)) {
+				var pos: app.imgPositions[componentId];
+				var img: app.imgs[componentId];
+				var width: img.width;
+				var height: img.height;
+				if width = 0 { width: img.textureWidth }
+				if height = 0 { height: img.textureHeight }
+				result:
+					(mouseX >= pos.x) AND (mouseX < (pos.x + width))
+					AND (mouseY >= pos.y) AND (mouseY < (pos.y + height))
+				;
+			}
+			if result {
+				//FIXME: conversion from any ptr to fn pointer should be implicit
+				var.ptr(fn(ptr(any))) callback: action.ptr => ptr(fn(ptr(any)));
+				callback(data);
+			}
+		}
+	}
 
     class @app {
         var.[#paste entitiesSize x @selectable] selectables: [];
@@ -319,11 +387,17 @@ fn LIL__setWindowBgColor(var.f32 red; var.f32 green; var.f32 blue; var.f32 alpha
         var.[#paste entitiesSize x @resource] resources: [];
         var.i64 resourceCount: 0;
         var.i64 lastFrameTime: 0;
+		//actions
+		var.[#paste entitiesSize x @action] actions: [];
+		var.i64 actionCount: 0;
+		
 		fn initialize {
             //get root's background color
 			//fixme: use selection system instead of hardcoded to 0
             var bgColor: app.box2ds[0].bgColor;
             LIL__setWindowBgColor(bgColor.red, bgColor.green, bgColor.blue, bgColor.alpha);
+			//install the mouse listener
+			msgSub(`onClick`, LIL__mouseClickListener);
 		};
 
         fn newEntity => i64 {
@@ -404,6 +478,7 @@ fn LIL__setWindowBgColor(var.f32 red; var.f32 green; var.f32 blue; var.f32 alpha
                 typeId: typeId;
                 componentId: componentId;
 				resourceId: (0-1);
+				actionId: (0-1);
             });
             return id;
         };
@@ -429,6 +504,14 @@ fn LIL__setWindowBgColor(var.f32 red; var.f32 green; var.f32 blue; var.f32 alpha
             @self.resourceIds[@self.resourceCount]: id;
             @self.resourceCount +: 1;
         }
+		fn newActionId => i64 {
+            #if DEBUG {
+                puts `Creating new action id`;
+            }
+            var currentCount: @self.actionCount;
+            @self.actionCount +: 1;
+            return currentCount;
+		}
     };
 
     fn LIL__nameToNameId(var.cstr name) => i64 {

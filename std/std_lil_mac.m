@@ -34,6 +34,9 @@ extern void LIL__makeTextureVertices(void * vertexBuffer, long int * vertexCount
 extern long int LIL__getResourceCount();
 extern LIL__resourceStruct * LIL__getResorceById(long int id);
 extern void LIL__setTextureSize(long int imgId, float width, float height);
+extern void LIL__setMouseDown(long int buttonNumber, double x, double y);
+extern void LIL__setMouseDragged(long int buttonNumber, double x, double y);
+extern void LIL__setMouseUp(long int buttonNumber, double x, double y, long int clickCount);
 extern void LIL__setKeyDown(int keyCode);
 extern void LIL__setKeyUp(int keyCode);
 extern CGSize LIL__getWindowSize();
@@ -597,10 +600,32 @@ long int LIL__ticksTonanoseconds(long int ticks) {
     return YES;
 }
 - (void)mouseDown:(NSEvent *)anEvent {
-    puts("mousedown!");
+	NSPoint loc = [anEvent locationInWindow];
+	CGFloat scaleFactor = self.window.screen.backingScaleFactor;
+    LIL__setMouseDown(
+		0,
+		loc.x * scaleFactor,
+		loc.y * scaleFactor
+	);
 }
 - (void)mouseDragged:(NSEvent *)anEvent {
-    puts("mousemoved!");
+	NSPoint loc = [anEvent locationInWindow];
+	CGFloat scaleFactor = self.window.screen.backingScaleFactor;
+    LIL__setMouseDragged(
+		0,
+		loc.x * scaleFactor,
+		loc.y * scaleFactor
+	);
+}
+- (void)mouseUp:(NSEvent *)anEvent {
+	NSPoint loc = [anEvent locationInWindow];
+	CGFloat scaleFactor = self.window.screen.backingScaleFactor;
+    LIL__setMouseUp(
+		0,
+		loc.x * scaleFactor,
+		loc.y * scaleFactor,
+		[anEvent clickCount]
+	);
 }
 - (void)keyDown:(NSEvent *)anEvent {
     LIL__setKeyDown(anEvent.keyCode);

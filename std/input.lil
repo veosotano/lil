@@ -1,4 +1,6 @@
 #needs "cstd.lil";
+#needs "msg.lil";
+#needs "events.lil";
 
 #snippet HID_VENDORS_TABLE_LENGTH { 4 };
 #snippet HID_PRODUCTS_TABLE_LENGTH { 20 };
@@ -60,10 +62,16 @@
         var.f64 x2: 0.0;
         var.f64 y2: 0.0;
     };
+	class @mouseState {
+		var.f64 x: 0.0;
+		var.f64 y: 0.0;
+		var.bool pressed: false;
+	}
     class @input {
         var.[65536 x bool] keyStates: [];
         var.[8 x @gamepad] gamepads: [];
         var.i64 gamepadCount: 0;
+		var.[8 x @mouseState] mouseStates: [];
 
         fn isKeyDown (var.i16 keyCode) => bool {
             return @self.keyStates[keyCode];
@@ -92,7 +100,45 @@
         fn setGamepadY2 (var.i64 gamepadId; var.f64 value) {
             @self.gamepads[gamepadId].y2: value;
         };
+		fn getMouseX (var.i64 num: 0) => f64 {
+			return @self.mouseStates[num].x;
+		};
+		fn getMouseY (var.i64 num: 0) => f64 {
+			return @self.mouseStates[num].y;
+		};
+		fn getMousePressed (var.i64 num: 0) => bool {
+			return @self.mouseStates[num].pressed;
+		};
+		fn setMousePosition (var.i64 num; var.f64 x; var.f64 y) {
+			@self.mouseStates[num].x: x;
+			@self.mouseStates[num].y: y;
+		};
     };
+	fn LIL__setMouseDown(var.i64 buttonNumber; var.f64 x; var.f64 y) {
+		input.mouseStates[buttonNumber]: @mouseState {
+			x: x;
+			y: y;
+			pressed: true;
+		};
+	};
+	fn LIL__setMouseDragged(var.i64 buttonNumber; var.f64 x; var.f64 y) {
+		input.setMousePosition(buttonNumber, x, y);
+	};
+	fn LIL__setMouseUp(var.i64 buttonNumber; var.f64 x; var.f64 y; var.i64 clickCount) {
+		input.mouseStates[buttonNumber]: @mouseState {
+			x: x;
+			y: y;
+			pressed: false;
+		};
+		if clickCount > 0 {
+			var event: @mouseEvent {
+				clickCount: clickCount;
+				x: x => f32;
+				y: y => f32;
+			}
+			msgEmit(`onClick`, pointerTo event);
+		}
+	};
     fn LIL__setKeyDown(var.i16 keyCode) {
         input.setKeyDown(keyCode, true);
     };
