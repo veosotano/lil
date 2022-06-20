@@ -5868,7 +5868,7 @@ bool LILCodeParser::readSwitchFlowControl()
             d->receiver->receiveNodeCommit();
         }
 
-        LIL_CHECK_FOR_END
+        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
 
         if (d->currentToken->isA(TokenTypeSemicolon))
         {
