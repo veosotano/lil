@@ -113,11 +113,6 @@ void LILOutputEmitter::run(std::shared_ptr<LILRootNode> rootNode)
     LLVMInitializeAArch64TargetMC();
     LLVMInitializeAArch64AsmPrinter();
 
-    LLVMInitializePowerPCTargetInfo();
-    LLVMInitializePowerPCTarget();
-    LLVMInitializePowerPCTargetMC();
-    LLVMInitializePowerPCAsmPrinter();
-
     std::string error;
     auto target = llvm::TargetRegistry::lookupTarget(targetTriple, error);
     if (!target) {
