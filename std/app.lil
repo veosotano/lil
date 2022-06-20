@@ -233,7 +233,9 @@ fn LIL__setWindowBgColor(var.f32 red; var.f32 green; var.f32 blue; var.f32 alpha
         }
 
         fn initialize(var.cstr name; var.i64 parentId: 0) => i64 {
-            puts `created image!`;
+			#if DEBUG {
+				puts `created image!`;
+			}
             var componentId: app.newImg();
             @self.id: app.newElement(name, parentId, 1, componentId);
             return @self.id;
@@ -302,7 +304,9 @@ fn LIL__setWindowBgColor(var.f32 red; var.f32 green; var.f32 blue; var.f32 alpha
         vvar.f32 clipY;
         
         fn initialize(var.cstr name; var.i64 parentId: 0) => i64 {
-            puts `created sprite!`;
+			#if DEBUG {
+				puts `created sprite!`;
+			}
             var componentId: app.newImg();
             @self.id: app.newElement(name, parentId, 2, componentId);
 			app.imgs[componentId].useClip: true;
