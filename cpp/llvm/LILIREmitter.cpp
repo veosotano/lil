@@ -1916,14 +1916,12 @@ llvm::Value * LILIREmitter::_emitVP(LILValuePath * value)
                                 std::cerr << "CLASS " + className.data() + " HAD NOT at METHOD FAIL!!!!\n\n";
                                 return nullptr;
                             }
-                            auto vd = std::static_pointer_cast<LILVarDecl>(method);
-                            auto methodVal = vd->getInitVal();
-                            if (!methodVal || !methodVal->isA(NodeTypeFunctionDecl)) {
+                            if (!method->isA(NodeTypeFunctionDecl)) {
                                 std::cerr << "BAD METHOD FAIL!!!!!!!\n\n";
                                 return nullptr;
                             }
-                            auto fd = std::static_pointer_cast<LILFunctionDecl>(methodVal);
-                            auto fc = std::make_shared<LILFunctionCall>();
+                            auto fd = std::static_pointer_cast<LILFunctionDecl>(method);
+                            auto fc = std::make_shared<LILFunctionCall>();  
                             fc->setFunctionCallType(FunctionCallTypeValuePath);
                             fc->setName(fd->getName());
                             fc->addArgument(ia->getArgument());
@@ -3937,17 +3935,11 @@ llvm::Value * LILIREmitter::_emitValList(LILValueList * value)
                     {
                         auto initializeMethod = cd->getMethodNamed("initialize");
                         if (initializeMethod) {
-                            if (!initializeMethod->isA(NodeTypeVarDecl)) {
-                                std::cerr << "NODE WAS NOT VAR DECL FAIL!!!!!!!!!!!!!!!!\n\n";
-                                return nullptr;
-                            }
-                            auto vd = std::static_pointer_cast<LILVarDecl>(initializeMethod);
-                            auto initVal = vd->getInitVal();
-                            if (!initVal->isA(NodeTypeFunctionDecl)) {
+                            if (!initializeMethod->isA(NodeTypeFunctionDecl)) {
                                 std::cerr << "NODE WAS NOT FUNCTION DECL FAIL!!!!!!!!!!!!!!!!\n\n";
                                 return nullptr;
                             }
-                            auto fd = std::static_pointer_cast<LILFunctionDecl>(initVal);
+                            auto fd = std::static_pointer_cast<LILFunctionDecl>(initializeMethod);
                             llvm::Function* fun = d->llvmModule.getFunction(fd->getName().data());
                             llvm::Value * pointer;
                             if (fun) {
