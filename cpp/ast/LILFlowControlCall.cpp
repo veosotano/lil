@@ -106,6 +106,7 @@ std::shared_ptr<LILType> LILFlowControlCall::getType() const
                 auto fnTy = std::static_pointer_cast<LILFunctionType>(parentTy);
                 return fnTy->getReturnType();
             }
+            break;
         } else {
             parent = parent->getParentNode();
         }
