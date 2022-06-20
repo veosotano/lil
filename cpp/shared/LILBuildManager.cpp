@@ -475,6 +475,14 @@ void LILBuildManager::build()
                         std::cerr << "ERROR: popen() failed while trying to execute resource build step! \n";
                         return;
                     }
+                    std::array<char, 128> stepBuffer;
+                    std::string stepResult;
+                    while (fgets(stepBuffer.data(), stepBuffer.size(), stepPipe.get()) != nullptr) {
+                        stepResult += stepBuffer.data();
+                    }
+                    if (stepResult.length() > 0) {
+                        std::cerr << stepResult;
+                    }
                 }
             }
             
