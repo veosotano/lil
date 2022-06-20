@@ -865,12 +865,12 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
 
 - (void)menuItemSelected:(NSMenuItem *) menuItem
 {
-    void(*fnPtr)() = (void(*)())[menuItem tag];
+    void(*fnPtr)(void *) = (void(*)())[menuItem tag];
     if ((NSUInteger)fnPtr == 0) {
         NSLog(@"Null pointer encountered");
         return;
     }
-    fnPtr();
+    fnPtr(NULL);
 }
 
 - (void)setWindowBackgroundRed:(float)red green:(float)green blue:(float)blue alpha:(float)alpha

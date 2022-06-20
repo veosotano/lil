@@ -8,7 +8,7 @@ var.id LIL__applicationDelegate extern;
         
     }
 
-    fn LIL__addMenuItem(var.cstr label; var.cstr shortcut; var.ptr(fn) fnPtr) {
+    fn LIL__addMenuItem(var.cstr label; var.cstr shortcut; var.ptr(fn(ptr(any))) fnPtr) {
 
     }
 

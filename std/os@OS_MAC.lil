@@ -10,9 +10,9 @@ var.id LIL__applicationDelegate extern;
         castedPtr(LIL__applicationDelegate, addMenuSel, label);
     }
 
-    fn LIL__addMenuItem(var.cstr label; var.cstr shortcut; var.ptr(fn) fnPtr) {
+    fn LIL__addMenuItem(var.cstr label; var.cstr shortcut; var.ptr(fn(ptr(any))) fnPtr) {
         var.SEL addItemSel: sel_registerName(`addMenuItem:key:fnPtr:`);
-		var.ptr(fn(id,SEL,cstr,cstr,ptr(fn))=>id) castedPtr: (pointerTo(objc_msgSend) => ptr(fn(id,SEL,cstr,cstr,ptr(fn))=>id));
+		var.ptr(fn(id,SEL,cstr,cstr,ptr(fn(ptr(any))))=>id) castedPtr: (pointerTo(objc_msgSend) => ptr(fn(id,SEL,cstr,cstr,ptr(fn(ptr(any))))=>id));
         castedPtr(LIL__applicationDelegate, addItemSel, label, shortcut, fnPtr);
     }
 
