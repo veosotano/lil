@@ -238,6 +238,10 @@ std::shared_ptr<LILNode> LILVisitor::findNodeForValuePath(LILValuePath * vp) con
                 }
                 case NodeTypePropertyName:
                 {
+                    if (currentTy->getTypeType() == TypeTypePointer) {
+                        auto ptrTy = std::static_pointer_cast<LILPointerType>(currentTy);
+                        currentTy = ptrTy->getArgument();
+                    }
                     if (!currentTy->isA(TypeTypeObject)) {
                         std::cerr << "!!!!!!!!!!NODE DOES NOT POINT TO OBJECT FAIL !!!!!!!!!!!!!!!!\n";
                         return nullptr;
