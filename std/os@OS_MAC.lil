@@ -39,4 +39,10 @@ var.id LIL__applicationDelegate extern;
         var.bool value: #getConfig(automaticFullScreen);
         return value;
     }
+	
+	fn LIL__quit {
+        var.SEL selector: sel_registerName(`quit`);
+        var.ptr(fn(id,SEL)=>id) castedPtr: (pointerTo(objc_msgSend) => ptr(fn(id,SEL)=>id));
+        castedPtr(LIL__applicationDelegate, selector);
+	}
 }

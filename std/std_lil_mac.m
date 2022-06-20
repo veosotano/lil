@@ -730,6 +730,7 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
 - (void)menuItemSelected:(NSMenuItem *) menuItem;
 - (void)setWindowBackgroundRed:(float)red green:(float)green blue:(float)blue alpha:(float)alpha;
 - (LILMainView *)getMainView;
+- (void)quit;
 @end
 @implementation LILAppDelegate
 - (id)init {
@@ -881,6 +882,11 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
 - (LILMainView *)getMainView
 {
     return mainView;
+}
+
+- (void)quit
+{
+    [[NSApplication  sharedApplication] terminate:self];
 }
 
 @end
