@@ -3712,6 +3712,7 @@ llvm::Value * LILIREmitter::_emitLoop(LILFlowControl * value)
     condVd->setParentNode(value->shared_from_this());
     LILString condName("_lil_loop_repeat");
     condVd->setName(condName);
+    value->setLocalVariable(condName, condVd);
     auto boolVal = std::make_shared<LILBoolLiteral>();
     boolVal->setValue(false);
     auto boolTy = std::make_shared<LILType>();
