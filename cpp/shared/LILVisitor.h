@@ -21,6 +21,7 @@ namespace LIL
 {
     class LILClassDecl;
     class LILErrorMessage;
+    class LILFlowControl;
     class LILValuePath;
     class LILVarName;
     class LILPropertyName;
@@ -63,6 +64,7 @@ namespace LIL
         std::shared_ptr<LILClassDecl> findClassWithName(const LILString & name) const;
         std::shared_ptr<LILClassDecl> findAncestorClass(std::shared_ptr<LILNode> node) const;
         std::shared_ptr<LILRule> findAncestorRule(std::shared_ptr<LILNode> node) const;
+        std::shared_ptr<LILFlowControl> findAncestorFor(std::shared_ptr<LILNode> node) const;
         std::shared_ptr<LILType> findIfCastType(LILValuePath * vp, size_t & outStartIndex) const;
         std::shared_ptr<LILNode> findExpandedField(std::shared_ptr<LILClassDecl> classDecl, const LILString & pnName) const;
         std::shared_ptr<LILType> findTypeForValueList(LILValueList * value) const;

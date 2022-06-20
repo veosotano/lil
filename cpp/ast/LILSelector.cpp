@@ -76,6 +76,14 @@ void LILSelector::receiveNodeData(const LIL::LILString &data)
     {
         this->setSelectorType(SelectorTypeMainMenu);
     }
+    else if (data == "@key")
+    {
+        this->setSelectorType(SelectorTypeKey);
+    }
+    else if (data == "@value")
+    {
+        this->setSelectorType(SelectorTypeValue);
+    }
     else
     {
         this->setSelectorType(SelectorTypeNameSelector);

@@ -491,6 +491,20 @@ std::shared_ptr<LILRule> LILVisitor::findAncestorRule(std::shared_ptr<LILNode> n
     }
 }
 
+std::shared_ptr<LILFlowControl> LILVisitor::findAncestorFor(std::shared_ptr<LILNode> node) const
+{
+    auto parent = node->getParentNode();
+    if (parent) {
+        if (parent->isA(NodeTypeFlowControl) && parent->getFlowControlType() == FlowControlTypeFor) {
+            return std::static_pointer_cast<LILFlowControl>(parent);
+        } else {
+            return this->findAncestorFor(parent);
+        }
+    } else {
+        return nullptr;
+    }
+}
+
 std::shared_ptr<LILType> LILVisitor::findIfCastType(LILValuePath * vp, size_t & outStartIndex) const
 {
     std::shared_ptr<LILType> ret;

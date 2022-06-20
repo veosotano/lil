@@ -2297,6 +2297,64 @@ llvm::Value * LILIREmitter::_emitSelCh(LILSelectorChain * value, bool & outIsId)
 
 llvm::Value * LILIREmitter::_emitSel(LILSelector * value)
 {
+    LILString name = value->getName();
+    auto namestr = name.data();
+    
+    if (namestr == "@key")
+    {
+        auto vn = std::make_shared<LILVarName>();
+        vn->setName(namestr);
+        vn->setParentNode(value->getParentNode());
+        return this->_emitVN(vn.get());
+    }
+    else if (namestr == "@value")
+    {
+        auto forBlock = this->findAncestorFor(value->shared_from_this());
+        auto subjectNode = forBlock->getSubject();
+        auto subjTy = subjectNode->getType();
+        if (!subjTy) {
+            std::cerr << "SUBJECT HAD NO TYPE FAIL!!!!!!!!!!!!!!\n";
+            return nullptr;
+        }
+        if (subjTy->getTypeType() == TypeTypeObject) {
+            auto cd = this->findClassWithName(subjTy->getName());
+            if (!cd) {
+                std::cerr << "CLASS " + subjTy->getName().data() +  " NOT FOUND FAIL!!!!!!!!!!!!!!\n";
+                return nullptr;
+            }
+            auto meth = cd->getMethodNamed("value");
+            if (meth) {
+                if (!meth->isA(NodeTypeFunctionDecl)) {
+                    std::cerr << "VALUE METHOD NODE WAS NOT FUNCTION DECL FAIL!!!\n\n";
+                    return nullptr;
+                }
+                auto fd = std::static_pointer_cast<LILFunctionDecl>(meth);
+                llvm::Function* fun = d->llvmModule.getFunction(fd->getName().data());
+                if (fun) {
+                    auto vn = std::make_shared<LILVarName>();
+                    vn->setName("@key");
+                    vn->setParentNode(value->getParentNode());
+                    auto keyVal = this->_emitVN(vn.get());
+                    
+                    std::vector<llvm::Value *> argsvect;
+                    argsvect.push_back(this->emitPointer(subjectNode.get()));
+                    argsvect.push_back(keyVal);
+                    return d->irBuilder.CreateCall(fun, argsvect);
+                } else {
+                    std::cerr << "COULD NOT CALL VALUE METHOD FAIL!!!!\n\n";
+                    return nullptr;
+                }
+            }
+            
+            
+        } else {
+            auto vn = std::make_shared<LILVarName>();
+            vn->setName(namestr);
+            vn->setParentNode(value->getParentNode());
+            return this->_emitVN(vn.get());
+        }
+    }
+
     std::cerr << "!!!!!!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!\n";
     return nullptr;
 }

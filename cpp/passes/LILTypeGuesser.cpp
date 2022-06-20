@@ -1885,6 +1885,47 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(LILValuePath * vp)
             if (remoteNode) {
                 return this->getNodeType(remoteNode.get());
             }
+        } else if (currentNode->isA(NodeTypeSelector)){
+            auto selector = std::static_pointer_cast<LILSelector>(currentNode);
+            switch (selector->getSelectorType()) {
+                case SelectorTypeValue:
+                {
+                    //FIXME: broken when iterating over array values
+                    auto forBlock = this->findAncestorFor(selector);
+                    if (!forBlock) {
+                        std::cerr << "COULD NOT FIND FOR BLOCK FAIL!!!!!!!!!!!\n";
+                        break;
+                    }
+                    auto forArg = forBlock->getArguments().front();
+                    if (!forArg) {
+                        std::cerr << "FOR BLOCK HAD NO ARGUMENT FAIL!!!!!!!!!!!\n";
+                        break;
+                    }
+                    return forArg->getType();
+                }
+                case SelectorTypeKey:
+                {
+                    auto forBlock = this->findAncestorFor(selector);
+                    if (!forBlock) {
+                        std::cerr << "COULD NOT FIND FOR BLOCK FAIL!!!!!!!!!!!\n";
+                        break;
+                    }
+                    auto forArg = forBlock->getArguments().front();
+                    if (!forArg) {
+                        std::cerr << "FOR BLOCK HAD NO ARGUMENT FAIL!!!!!!!!!!!\n";
+                        break;
+                    }
+                    return forArg->getType();
+                }
+                case SelectorTypeSelfSelector:
+                {
+                    //FIXME: implement this
+                    break;
+                }
+                default:
+                    std::cerr << "!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!\n";
+                    break;
+            }
         }
     } else if (nodes.size() > 1){
         size_t startIndex = 1;

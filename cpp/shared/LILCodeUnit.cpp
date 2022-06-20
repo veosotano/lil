@@ -26,6 +26,7 @@
 #include "LILConstantFolder.h"
 #include "LILEnumLowerer.h"
 #include "LILFieldSorter.h"
+#include "LILForLowerer.h"
 #include "LILTypeValidator.h"
 #include "LILMethodInserter.h"
 #include "LILNameLowerer.h"
@@ -464,6 +465,15 @@ void LILCodeUnit::runPasses()
     //string function lowering
     auto stringFnLowerer = new LILStringFnLowerer();
     passes.push_back(stringFnLowerer);
+    if (verbose) {
+        auto stringVisitor = new LILToStringVisitor();
+        stringVisitor->setPrintHeadline(false);
+        passes.push_back(stringVisitor);
+    }
+
+    //for lowering
+    auto forLowerer = new LILForLowerer();
+    passes.push_back(forLowerer);
     if (verbose) {
         auto stringVisitor = new LILToStringVisitor();
         stringVisitor->setPrintHeadline(false);

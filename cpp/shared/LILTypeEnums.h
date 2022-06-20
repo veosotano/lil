@@ -260,6 +260,8 @@ namespace LIL
         SelectorTypeCombinator,
         SelectorTypeSimpleSelector,
         SelectorTypeMainMenu,
+        SelectorTypeKey,
+        SelectorTypeValue,
     };
 
     enum CombinatorType

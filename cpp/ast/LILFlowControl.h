@@ -51,7 +51,9 @@ namespace LIL
         FlowControlType getFlowControlType() const override;
         void setFlowControlType(FlowControlType newType);
 
-        
+        void setSubject(std::shared_ptr<LILNode> node);
+        const std::shared_ptr<LILNode> & getSubject() const;
+
     protected:
         virtual std::shared_ptr<LILClonable> cloneImpl() const override;
         
@@ -59,6 +61,7 @@ namespace LIL
         std::vector<std::shared_ptr<LILNode>> _arguments;
         std::vector<std::shared_ptr<LILNode>> _then;
         std::vector<std::shared_ptr<LILNode>> _else;
+        std::shared_ptr<LILNode> _subjectNode;
         bool _receivesFunctionBody;
         bool _receivesElse;
         FlowControlType _flowControlType;

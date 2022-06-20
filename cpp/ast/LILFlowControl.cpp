@@ -34,6 +34,7 @@ LILFlowControl::LILFlowControl(const LILFlowControl &other)
     this->_receivesFunctionBody = other._receivesFunctionBody;
     this->_receivesElse = other._receivesElse;
     this->_flowControlType = other._flowControlType;
+    this->_subjectNode = other._subjectNode;
 }
 
 std::shared_ptr<LILFlowControl> LILFlowControl::clone() const
@@ -63,6 +64,10 @@ std::shared_ptr<LILClonable> LILFlowControl::cloneImpl() const
     {
         clone->addElse((*it)->clone());
     }
+    if (this->_subjectNode) {
+        clone->setSubject(this->_subjectNode->clone());
+    }
+
     return clone;
 }
 
@@ -255,4 +260,18 @@ FlowControlType LILFlowControl::getFlowControlType() const
 void LILFlowControl::setFlowControlType(FlowControlType newType)
 {
     this->_flowControlType = newType;
+}
+
+void LILFlowControl::setSubject(std::shared_ptr<LILNode> node)
+{
+    if (this->_subjectNode) {
+        this->removeNode(this->_subjectNode);
+    }
+    this->_subjectNode = node;
+    this->addNode(node);
+}
+
+const std::shared_ptr<LILNode> & LILFlowControl::getSubject() const
+{
+    return this->_subjectNode;
 }
