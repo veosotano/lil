@@ -513,7 +513,7 @@ long int LIL__ticksTonanoseconds(long int ticks) {
     return (double)ticks * (double)LIL__machTimebase.numer / (double)LIL__machTimebase.denom;
 }
 
-@interface LILMainView : NSView <CALayerDelegate>
+@interface LILMainView : NSView <CALayerDelegate,NSWindowDelegate>
 @property(retain) LILMetalRenderer * renderer;
 @end
 @implementation LILMainView
@@ -568,9 +568,9 @@ long int LIL__ticksTonanoseconds(long int ticks) {
     }
 }
 
-- (void)resizeDrawable:(CGFloat)scaleFactor
+- (void)resizeDrawable:(NSSize) bounds scaleFactor:(CGFloat)scaleFactor
 {
-    CGSize newSize = self.bounds.size;
+    NSSize newSize = bounds;
     newSize.width *= scaleFactor;
     newSize.height *= scaleFactor;
 
@@ -637,6 +637,7 @@ long int LIL__ticksTonanoseconds(long int ticks) {
 - (void)viewDidMoveToWindow
 {
     [super viewDidMoveToWindow];
+	[self.window setDelegate: self];
     
     id<MTLDevice> device = MTLCreateSystemDefaultDevice();
 
@@ -649,7 +650,7 @@ long int LIL__ticksTonanoseconds(long int ticks) {
     self.renderer = [[LILMetalRenderer alloc] initWithMetalDevice:device drawablePixelFormat:metalLayer.pixelFormat];
     [self setupDisplayLink];
 
-    [self resizeDrawable:self.window.screen.backingScaleFactor];
+    [self resizeDrawable:self.bounds.size scaleFactor:self.window.screen.backingScaleFactor];
 }
 
 - (void)setupDisplayLink
@@ -682,6 +683,13 @@ long int LIL__ticksTonanoseconds(long int ticks) {
     {
         CVDisplayLinkStop(displayLink);
     }
+}
+
+- (NSSize)windowWillResize:(NSWindow *)sender 
+                    toSize:(NSSize)frameSize
+{
+	[self resizeDrawable:frameSize scaleFactor:sender.screen.backingScaleFactor];
+	return frameSize;
 }
 
 static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTimeStamp* now, const CVTimeStamp* outputTime, CVOptionFlags flagsIn, CVOptionFlags* flagsOut, void* displayLinkContext)
