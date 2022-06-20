@@ -15,7 +15,7 @@
 #ifndef LILBUILDMANAGER
 #define LILBUILDMANAGER
 
-#include "LILNode.h"
+#include "../ast/LILNode.h"
 
 namespace LIL {
     class LILCodeUnit;

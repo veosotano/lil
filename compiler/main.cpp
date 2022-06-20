@@ -12,11 +12,11 @@
  *
  ********************************************************************/
 
-#include "LILShared.h"
-#include "LILBuildManager.h"
-#include "LILCodeUnit.h"
-#include "LILPlatformSupport.h"
-#include "LILRootNode.h"
+#include "shared/LILShared.h"
+#include "shared/LILBuildManager.h"
+#include "shared/LILCodeUnit.h"
+#include "shared/LILPlatformSupport.h"
+#include "ast/LILRootNode.h"
 
 using namespace LIL;
 

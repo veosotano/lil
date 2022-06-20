@@ -15,9 +15,9 @@
 #ifndef LILNODE_H
 #define LILNODE_H
 
-#include "LILTypeEnums.h"
-#include "LILBasicValues.h"
-#include "LILString.h"
+#include "../shared/LILTypeEnums.h"
+#include "../shared/LILBasicValues.h"
+#include "../shared/LILString.h"
 #include "LILClonable.h"
 
 namespace LIL {
