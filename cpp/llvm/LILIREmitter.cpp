@@ -167,6 +167,12 @@ void LILIREmitter::hoistDeclarations(std::shared_ptr<LILRootNode> rootNode)
         }
         
         switch (node->getNodeType()) {
+            case NodeTypeClassDecl:
+            {
+                LILClassDecl * value = std::static_pointer_cast<LILClassDecl>(node).get();
+                this->_emitClassDecl(value);
+                break;
+            }
             case NodeTypeFunctionDecl:
             {
                 auto fd = std::static_pointer_cast<LILFunctionDecl>(node);
@@ -257,8 +263,8 @@ llvm::Value * LILIREmitter::emit(LILNode * node)
         }
         case NodeTypeClassDecl:
         {
-            LILClassDecl * value = static_cast<LILClassDecl *>(node);
-            return this->_emitClassDecl(value);
+            //ignore, has already been emitted in the hoistin stage
+            return nullptr;
         }
         case NodeTypeObjectDefinition:
         {
