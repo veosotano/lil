@@ -87,6 +87,16 @@ void LILTypeGuesser::nullsToNullables(std::shared_ptr<LILNode> node)
             }
         }
     }
+    if (node->getNodeType() == NodeTypeFunctionDecl) {
+        auto fnDecl = std::static_pointer_cast<LILFunctionDecl>(node);
+        auto returnTy = fnDecl->getReturnType();
+        if (returnTy) {
+            auto newRetTy = this->nullsToNullableTypes(returnTy);
+            if (newRetTy.get() != returnTy.get()) {
+                fnDecl->setReturnType(newRetTy);
+            }
+        }
+    }
 }
 
 void LILTypeGuesser::connectCallsWithDecls(std::shared_ptr<LILNode> node)
