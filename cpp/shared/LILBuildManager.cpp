@@ -444,7 +444,10 @@ void LILBuildManager::build()
                 } else {
                     outEmitter->compileToO(codeUnit->getRootNode());
                 }
-                linkFiles.push_back(oDir + "/" + oFile);
+                std::string linkFileStr = oDir + "/" + oFile;
+                if (std::find(linkFiles.begin(), linkFiles.end(), linkFileStr) == linkFiles.end()) {
+                    linkFiles.push_back(linkFileStr);
+                }
             } //for
             
             std::string outFileName = buildPath + "/" + out;

@@ -187,9 +187,9 @@ void LILPreprocessor::processImportingInstr(const std::shared_ptr<LILRootNode> &
                                 newNodes.push_back(node);
                             }
                         }
-                        for (const auto & path : codeUnit->getNeededFilesForBuild()) {
-                            this->addNeededFileForBuild(path.first, path.second);
-                        }
+                    }
+                    for (const auto & path : codeUnit->getNeededFilesForBuild()) {
+                        this->addNeededFileForBuild(path.first, path.second);
                     }
                 }
                 if (this->getVerbose() && instr->getVerbose()) {
@@ -903,7 +903,10 @@ void LILPreprocessor::addAlreadyImportedFile(LILString path, std::vector<std::sh
 
 void LILPreprocessor::addNeededFileForBuild(const LILString & path, bool verbose)
 {
-    this->_buildFiles.push_back( { path, verbose } );
+    std::pair<LILString, bool> item = { path, verbose };
+    if (std::find(this->_buildFiles.begin(), this->_buildFiles.end(), item) == this->_buildFiles.end()) {
+        this->_buildFiles.push_back( item );
+    }
 }
 
 const std::vector<std::pair<LILString, bool>> & LILPreprocessor::getNeededFilesForBuild() const

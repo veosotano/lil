@@ -858,7 +858,10 @@ bool LILCodeUnit::isAlreadyImported(const LILString & path, bool isNeeds)
 
 void LILCodeUnit::addNeededFileForBuild(const LILString & path, bool verbose)
 {
-    d->neededFiles.push_back( { path, verbose } );
+    std::pair<LILString, bool> item = { path, verbose };
+    if (std::find(d->neededFiles.begin(), d->neededFiles.end(), item) == d->neededFiles.end()) {
+        d->neededFiles.push_back( item );
+    }
 }
 const std::vector<std::pair<LILString, bool>> & LILCodeUnit::getNeededFilesForBuild() const
 {
