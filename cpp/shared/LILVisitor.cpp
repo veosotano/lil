@@ -605,14 +605,48 @@ std::shared_ptr<LILType> LILVisitor::findTypeForValueList(LILValueList * value) 
             types.push_back(ty);
         }
     }
+
     if (types.size() == 1) {
         ret = *(types.begin());
     } else if (types.size() > 0) {
         auto mTy = std::make_shared<LILMultipleType>();
-        for (const auto ty : types) {
-            mTy->addType(ty);
+        for (const auto & ty : types) {
+            if (ty->getIsWeakType()) {
+                mTy->addType(ty->getDefaultType());
+            } else {
+                mTy->addType(ty);
+            }
         }
-        
+        bool intFound = false;
+        bool onlyIntTypes = true;
+        bool floatFound = false;
+        bool onlyFloatTypes = true;
+        for (const auto & mTyTy : mTy->getTypes()) {
+            if (LILType::isIntegerType(mTyTy.get())) {
+                intFound = true;
+            } else {
+                onlyIntTypes = false;
+            }
+            if (LILType::isFloatType(mTyTy.get())) {
+                floatFound = true;
+            } else {
+                onlyFloatTypes = false;
+            }
+        }
+        if (
+            (intFound && onlyIntTypes)
+            || (floatFound && onlyFloatTypes)
+        ){
+            std::shared_ptr<LILType> biggestType = nullptr;
+            for (const auto & mTyTy : mTy->getTypes()) {
+                if (!biggestType || (biggestType->getBitWidth() < mTyTy->getBitWidth())) {
+                    biggestType = mTyTy;
+                }
+            }
+            if (biggestType) {
+                return biggestType;
+            }
+        }
         ret = mTy;
     }
     return ret;
