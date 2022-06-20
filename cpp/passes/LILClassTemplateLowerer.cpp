@@ -72,20 +72,29 @@ void LILClassTemplateLowerer::performVisit(std::shared_ptr<LILRootNode> rootNode
                     for (auto spNode : specializations) {
                         std::shared_ptr<LILType> spTy;
                         if (spNode->isA(NodeTypeValueList)) {
-                            std::shared_ptr<LILType> vlTy;
-                            auto vl = std::static_pointer_cast<LILValueList>(spNode);
-                            vlTy = vl->getType();
-                            if (!vlTy) {
-                                vlTy = this->findTypeForValueList(vl.get());
-                                if (vlTy->getIsWeakType()) {
-                                    auto intType = vlTy->getDefaultType();
-                                    vlTy = intType;
-                                }
-                                if (vlTy) {
-                                    spTy = LILObjectType::make("array");
-                                    spTy->addTmplParam(vlTy);
-                                } else {
-                                    std::cerr << "COULD NOT MAKE SPECIALIZATION TYPE FROM VALUE LIST FAIL !!!!!!! \n\n";
+                            std::shared_ptr<LILType> parentTy;
+                            auto parent = spNode->getParentNode();
+                            if (parent) {
+                                parentTy = parent->getType();
+                            }
+                            if (parentTy) {
+                                spTy = parentTy;
+                            } else {
+                                std::shared_ptr<LILType> vlTy;
+                                auto vl = std::static_pointer_cast<LILValueList>(spNode);
+                                vlTy = vl->getType();
+                                if (!vlTy) {
+                                    vlTy = this->findTypeForValueList(vl.get());
+                                    if (vlTy->getIsWeakType()) {
+                                        auto intType = vlTy->getDefaultType();
+                                        vlTy = intType;
+                                    }
+                                    if (vlTy) {
+                                        spTy = LILObjectType::make("array");
+                                        spTy->addTmplParam(vlTy);
+                                    } else {
+                                        std::cerr << "COULD NOT MAKE SPECIALIZATION TYPE FROM VALUE LIST FAIL !!!!!!! \n\n";
+                                    }
                                 }
                             }
                         } else {
