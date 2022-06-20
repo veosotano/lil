@@ -896,6 +896,10 @@ void LILTypeGuesser::_process(LILFlowControl * value)
             this->process(arg.get());
         }
         this->inhibitSearchingForIfCastType = false;
+    } else {
+        for (auto arg : value->getArguments()) {
+            this->process(arg.get());
+        }
     }
 }
 
