@@ -3911,26 +3911,27 @@ llvm::Value * LILIREmitter::_emitValList(LILValueList * value)
                 auto vd = std::static_pointer_cast<LILVarDecl>(field);
                 auto fldName = vd->getName();
                 if (fldName == "buffer") {
+                    if (!fldTy->isA(TypeTypeMultiple)) {
+                        std::cerr << "BUFFER FIELD WAS NOT MULTIPLE TYPE FAIL!!!! \n\n";
+                        return nullptr;
+                    }
+                    auto mtTy = std::static_pointer_cast<LILMultipleType>(fldTy);
+                    std::shared_ptr<LILType> saTy;
+                    bool saTyFound = false;
+                    for (auto mtTyTy : mtTy->getTypes()) {
+                        if (mtTyTy->isA(TypeTypeStaticArray)) {
+                            saTy = mtTyTy;
+                            saTyFound = true;
+                            break;
+                        }
+                    }
+                    if (!saTyFound) {
+                        std::cerr << "STATIC ARRAY TYPE NOT FOUND FAIL!!!! \n\n";
+                        return nullptr;
+                    }
+
                     if (valuesSize <= LIL_ARRAY_SMALL_BUFFER_SIZE) {
-                        d->currentAlloca = this->_emitGEP(d->currentAlloca, nullptr, true, index, fldName, true, false, 0);
-                        if (!fldTy->isA(TypeTypeMultiple)) {
-                            std::cerr << "BUFFER FIELD WAS NOT MULTIPLE TYPE FAIL!!!! \n\n";
-                            return nullptr;
-                        }
-                        auto mtTy = std::static_pointer_cast<LILMultipleType>(fldTy);
-                        std::shared_ptr<LILType> saTy;
-                        bool found = false;
-                        for (auto mtTyTy : mtTy->getTypes()) {
-                            if (mtTyTy->isA(TypeTypeStaticArray)) {
-                                saTy = mtTyTy;
-                                found = true;
-                                break;
-                            }
-                        }
-                        if (!found) {
-                            std::cerr << "STATIC ARRAY TYPE NOT FOUND FAIL!!!! \n\n";
-                            return nullptr;
-                        }
+                        d->currentAlloca = this->_emitGEP(d->currentAlloca, llvmTy, true, index, fldName, true, false, 0);
                         value->setType(saTy);
                         this->emitForMultipleType(value, std::static_pointer_cast<LILMultipleType>(fldTy));
                         value->setType(ty);
