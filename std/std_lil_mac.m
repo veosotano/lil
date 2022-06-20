@@ -460,7 +460,7 @@ typedef struct
         [renderEncoder setVertexBytes:&uniforms length:sizeof(uniforms) atIndex:LILVertexInputIndexUniforms ];
         [renderEncoder setFragmentTexture:textures[i] atIndex:0];
 
-        long int vtxStart = self.boxVertexCount + (i * 6);
+        long int vtxStart = i * 6;
         
         [renderEncoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:vtxStart vertexCount:6];
     }
