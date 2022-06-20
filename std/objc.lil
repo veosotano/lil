@@ -1,3 +1,5 @@
+#needs "cstd.lil";
+
 #export {
     class @objc_class {};
     alias Class => ptr(@objc_class);
