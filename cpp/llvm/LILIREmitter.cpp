@@ -2279,7 +2279,7 @@ llvm::Value * LILIREmitter::_emitSelCh(LILSelectorChain * value, bool & outIsId)
                             zeroLit->setValue("0");
                             auto zeroTy = LILType::make("i64");
                             zeroLit->setType(zeroTy);
-                            selectArgs.push_back(this->_emit(zeroLit.get()));
+                            selectArgs.push_back(this->_emitNum(zeroLit.get()));
                             return d->irBuilder.CreateCall(selectFun, selectArgs, "selection");
                         }
                         default:
