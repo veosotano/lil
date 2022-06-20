@@ -7,12 +7,17 @@ const DEBUG: false;
 #snippet componentsSize { 32 };
 
 fn onUpdate(var.f64 deltaTime) extern;
+fn LIL__setWindowBgColor(var.f32 red; var.f32 green; var.f32 blue; var.f32 alpha) extern;
 
 #export {
     #needs "cstd.lil";
     #needs "string.lil";
-    
-    var.@app app;
+
+    //default entity types:
+    //0: @container
+    //1: @image
+    //2: @sprite
+    var.@app app: @app { selectables: []; entityCount: 0; typeCount: 3};
 
     class @size {
         var.f64 width;
@@ -311,6 +316,12 @@ fn onUpdate(var.f64 deltaTime) extern;
         var.[#paste entitiesSize x @resource] resources: [];
         var.i64 resourceCount: 0;
         var.i64 lastFrameTime: 0;
+		fn initialize {
+            //get root's background color
+			//fixme: use selection system instead of hardcoded to 0
+            var bgColor: app.box2ds[0].bgColor;
+            LIL__setWindowBgColor(bgColor.red, bgColor.green, bgColor.blue, bgColor.alpha);
+		};
 
         fn newEntity => i64 {
             #if DEBUG {
