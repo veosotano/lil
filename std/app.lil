@@ -60,7 +60,9 @@ fn LIL__setWindowBgColor(var.f32 red; var.f32 green; var.f32 blue; var.f32 alpha
     class @img {
         var.f32 width;
         var.f32 height;
-        var.i64 textureId;
+		var.f32 textureWidth;
+		var.f32 textureHeight;
+		var.bool useClip;
     };
     class @resource {
         var.[1024 x i8] path;
@@ -274,6 +276,7 @@ fn LIL__setWindowBgColor(var.f32 red; var.f32 green; var.f32 blue; var.f32 alpha
             puts `created sprite!`;
             var componentId: app.newImg();
             @self.id: app.newElement(name, parentId, 2, componentId);
+			app.imgs[componentId].useClip: true;
             return @self.id;
         }
         
@@ -311,7 +314,7 @@ fn LIL__setWindowBgColor(var.f32 red; var.f32 green; var.f32 blue; var.f32 alpha
         var.[#paste namesSize x cstr] names: [];
         var.i64 nameCount: 0;
         var.i64 typeCount: 0;
-
+		//resources
         var.[#paste entitiesSize x i64] resourceIds: [];
         var.[#paste entitiesSize x @resource] resources: [];
         var.i64 resourceCount: 0;
@@ -400,6 +403,7 @@ fn LIL__setWindowBgColor(var.f32 red; var.f32 green; var.f32 blue; var.f32 alpha
                 parentId: parentId;
                 typeId: typeId;
                 componentId: componentId;
+				resourceId: (0-1);
             });
             return id;
         };
@@ -477,7 +481,12 @@ fn LIL__setWindowBgColor(var.f32 red; var.f32 green; var.f32 blue; var.f32 alpha
             onUpdate(deltaTime);
         }
         LIL__runSystems(deltaTime);
-    }
+    };
+	
+	fn LIL__setTextureSize(var.i64 imgId; var.f32 width; var.f32 height) {
+		app.imgs[imgId].textureWidth: width;
+		app.imgs[imgId].textureHeight: height;
+	};
     
     fn LIL__makeBoxVertices(var.ptr(any) vertexBuffer; var.ptr(i64) vertexCount) {
 
@@ -555,54 +564,81 @@ fn LIL__setWindowBgColor(var.f32 red; var.f32 green; var.f32 blue; var.f32 alpha
             var color: #F00;
 
             var.i64 triIdx: i*6;
+			
+			var.f32 minX;
+			var.f32 maxX;
+			var.f32 minY;
+			var.f32 maxY;
+			
+			var.f32 width: img.width;
+			var.f32 height: img.height;
+			if width = 0 {
+				width: img.textureWidth;
+			}
+			if height = 0 {
+				height: img.textureHeight;
+			}
+			
+			
+			if img.useClip {
+				minX: clip.x / img.textureWidth;
+				maxX: (clip.x + width) / img.textureWidth;
+				minY: clip.y / img.textureHeight;
+				maxY: (clip.y + height) / img.textureHeight;
+			} else {
+				minX: 0;
+				maxX: 1;
+				minY: 0;
+				maxY: 1;
+			}
             
             vertices[triIdx]: @vertex {
-                x: pos.x + img.width;
+                x: pos.x + width;
                 y: pos.y;
                 color: color;
-                textureX: clip.x + img.width;
-                textureY: clip.y + img.height;
+                textureX: maxX;
+                textureY: maxY;
             };
 
             vertices[triIdx+1]: @vertex {
                 x: pos.x;
                 y: pos.y;
                 color: color;
-                textureX: clip.x;
-                textureY: clip.y + img.height;
+                textureX: minX;
+                textureY: maxY;
             };
 
             vertices[triIdx+2]: @vertex {
                 x: pos.x;
-                y: pos.y + img.height;
+                y: pos.y + height;
                 color: color;
-                textureX: clip.x;
-                textureY: clip.y;
+                textureX: minX;
+                textureY: minY;
             };
 
 
             vertices[triIdx+3]: @vertex {
-                x: pos.x + img.width;
+                x: pos.x + width;
                 y: pos.y;
                 color: color;
-                textureX: clip.x + img.width;
-                textureY: clip.y + img.height;
+                textureX: maxX;
+                textureY: maxY;
             };
 
             vertices[triIdx+4]: @vertex {
                 x: pos.x;
-                y: pos.y + img.height;
+                y: pos.y + height;
                 color: color;
-                textureX: clip.x;
-                textureY: clip.y;
+                textureX: minX;
+                textureY: minY;
             };
 
             vertices[triIdx+5]: @vertex {
-                x: pos.x + img.width;
-                y: pos.y + img.height;
+                x: pos.x + width;
+                y: pos.y + height;
                 color: color;
-                textureX: clip.x + img.width;
-                textureY: clip.y;
+                textureX: maxX;
+                textureY: minY;
             };
         }
 

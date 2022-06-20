@@ -33,6 +33,7 @@ extern void LIL__makeBoxVertices(void * vertexBuffer, long int * vertexCount);
 extern void LIL__makeTextureVertices(void * vertexBuffer, long int * vertexCount);
 extern long int LIL__getResourceCount();
 extern LIL__resourceStruct * LIL__getResorceById(long int id);
+extern void LIL__setTextureSize(long int imgId, float width, float height);
 extern void LIL__setKeyDown(int keyCode);
 extern void LIL__setKeyUp(int keyCode);
 extern CGSize LIL__getWindowSize();
@@ -386,6 +387,8 @@ typedef struct
         textures[textureCount] = [loader newTextureWithContentsOfURL: textureUrl options: textureOptions error: nil ];
         if(textures[textureCount])
         {
+			id<MTLTexture> theTexture = textures[textureCount];
+			LIL__setTextureSize(textureCount, theTexture.width, theTexture.height);
         }
         else
         {
