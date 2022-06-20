@@ -158,7 +158,7 @@ namespace LIL
         llvm::Value * emitNullableToMultiTyConversion(LILNode * node, LILMultipleType * multiTy, const LILString & name);
         llvm::Value * emitMultiTyToMultiTyConversion(LILNode * node, LILMultipleType * multiTy, const LILString & name);
         llvm::Value * emitUnwrappedFromMT(LILNode * node, LILType * targetTy);
-        llvm::Value * emitUnwrappedPointerFromMT(llvm::Value * val, LILType *targetTy);
+        llvm::Value * emitUnwrappedPointerFromMT(llvm::Value * val, LILType *targetTy, LILMultipleType * multiTy);
         
         std::shared_ptr<LILType> getMostAlignedType(const std::vector<std::shared_ptr<LILType>> & types) const;
         size_t getSizeOfType(std::shared_ptr<LILType> ty) const;

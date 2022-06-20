@@ -25,7 +25,7 @@
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/Host.h"
 #include "llvm/Support/raw_ostream.h"
-#include "llvm/Support/TargetRegistry.h"
+#include "llvm/MC/TargetRegistry.h"
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Target/TargetMachine.h"
 #include "llvm/Target/TargetOptions.h"
@@ -162,7 +162,7 @@ void LILOutputEmitter::compileToO(std::shared_ptr<LILRootNode> rootNode)
     }
     
     llvm::legacy::PassManager emitPassMngr;
-    auto fileType = llvm::TargetMachine::CGFT_ObjectFile;
+    auto fileType = llvm::CGFT_ObjectFile;
     
     if (d->targetMachine->addPassesToEmitFile(emitPassMngr, dest, nullptr, fileType)) {
         std::cerr << "Error: could not create file type for emitting code.\n";

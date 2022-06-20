@@ -583,7 +583,7 @@ llvm::Value * LILIREmitter::_emitExp(LILExpression * value)
 llvm::Value * LILIREmitter::_emitExpression(ExpressionType expType, llvm::Value * leftV, llvm::Value * rightV)
 {
     auto llvmTy = leftV->getType();
-    if (llvmTy->getTypeID() == llvm::Type::VectorTyID) {
+    if (llvmTy->getTypeID() == llvm::Type::FixedVectorTyID) {
         llvmTy = llvmTy->getContainedType(0);
     }
     switch (expType) {
@@ -806,13 +806,14 @@ llvm::Value * LILIREmitter::_emitExpression(ExpressionType expType, llvm::Value 
 llvm::Value * LILIREmitter::_emitUExp(LILUnaryExpression * value)
 {
     std::shared_ptr<LILNode> val = value->getValue();
-    llvm::Value * subject = this->emitPointer(value->getSubject().get());
+    auto subject = value->getSubject();
+    llvm::Value * subjectV = this->emitPointer(subject.get());
     llvm::Value * valV = this->emit(val.get());
     if (!valV) {
         std::cerr << "!!!!!!!!!!VALUE EMIT FAIL!!!!!!!!!!!!!!!!\n";
         return nullptr;
     }
-    auto temp = d->irBuilder.CreateLoad(subject);
+    auto temp = d->irBuilder.CreateLoad(this->llvmTypeFromLILType(subject->getType().get()), subjectV);
     auto expTy = temp->getType();
     if (
         valV->getType()->isIntegerTy()
@@ -823,7 +824,7 @@ llvm::Value * LILIREmitter::_emitUExp(LILUnaryExpression * value)
     }
     llvm::Value * expVal = this->_emitExpression(LILUnaryExpression::uexpToExpType(value->getUnaryExpressionType()), temp, valV);
     if (expVal) {
-        d->irBuilder.CreateStore(expVal, subject);
+        d->irBuilder.CreateStore(expVal, subjectV);
     }
     return nullptr;
 }
@@ -888,7 +889,7 @@ llvm::Value * LILIREmitter::_emitStr(LILStringLiteral * value)
         auto bufferGep = this->_emitGEP(d->currentAlloca, stringTy, true, 1, "buffer", true, false, 0);
         auto castedBuffer = d->irBuilder.CreatePointerCast(bufferGep, i8PtrTy);
         //length is +1 because we want the \0 too
-        d->irBuilder.CreateMemCpy(castedBuffer, 1, castedGlobal, 1, strLength+1);
+        d->irBuilder.CreateMemCpy(castedBuffer, llvm::MaybeAlign(), castedGlobal, llvm::MaybeAlign(), strLength+1);
 
         auto cd = this->findClassWithName("string");
         if (!cd) {
@@ -987,7 +988,7 @@ llvm::Value * LILIREmitter::_emitVarDecl(LILVarDecl * value)
                             
                             //create the global initializator fn
                             auto ft = llvm::FunctionType::get(llvm::Type::getVoidTy(d->llvmContext), false);
-                            llvm::Function * fun = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, "", d->llvmModule);
+                            llvm::Function * fun = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, name, d->llvmModule);
                             llvm::BasicBlock * bb = llvm::BasicBlock::Create(d->llvmContext, "entry", fun);
                             d->irBuilder.SetInsertPoint(bb);
                             d->currentAlloca = globalVar;
@@ -1049,7 +1050,8 @@ llvm::Value * LILIREmitter::_emitVarDecl(LILVarDecl * value)
                         !ty->isA(TypeTypePointer)
                         && initVal->getType()->isA(TypeTypePointer)
                         ) {
-                        llvmValue = d->irBuilder.CreateLoad(llvmValue);
+                            auto valPtrTy = std::static_pointer_cast<LILPointerType>(initVal->getType());
+                            llvmValue = d->irBuilder.CreateLoad(this->llvmTypeFromLILType(valPtrTy->getArgument().get()), llvmValue);
                     }
                     d->irBuilder.CreateStore(llvmValue, d->currentAlloca);
                 }
@@ -1296,10 +1298,10 @@ llvm::Value * LILIREmitter::_emitObjDef(LILObjectDefinition * value)
 llvm::Value * LILIREmitter::_emitAsgmt(LILAssignment * asgmt)
 {
     auto allocaBackup = d->currentAlloca;
-    auto theValue = value->getValue();
+    auto theValue = asgmt->getValue();
     if (theValue) {
-        auto ty = value->getType();
-        auto subjectVal = value->getSubject();
+        auto ty = asgmt->getType();
+        auto subjectVal = asgmt->getSubject();
         if (subjectVal->isA(NodeTypeVarName)) {
             auto vd = std::static_pointer_cast<LILVarName>(subjectVal);
             d->currentAlloca = d->namedValues[vd->getName().data()];
@@ -1316,7 +1318,7 @@ llvm::Value * LILIREmitter::_emitAsgmt(LILAssignment * asgmt)
                 if (
                     ty->isA(TypeTypePointer)
                     && llvmValue->getType()->getTypeID() != llvm::Type::PointerTyID
-                    ){
+                ){
                     auto ptrTy = std::static_pointer_cast<LILPointerType>(ty);
                     auto argTy = ptrTy->getArgument();
                     if (this->_isAnyPtrTy(ptrTy.get())) {
@@ -1324,7 +1326,8 @@ llvm::Value * LILIREmitter::_emitAsgmt(LILAssignment * asgmt)
                     } else {
                         this->_convertLlvmValueIfNeeded(&llvmValue, argTy.get(), theValue->getType().get());
                     }
-                    d->currentAlloca = d->irBuilder.CreateLoad(d->currentAlloca);
+                    auto vdTy = vd->getType();
+                    d->currentAlloca = d->irBuilder.CreateLoad(this->llvmTypeFromLILType(vdTy.get()), d->currentAlloca);
                     d->irBuilder.CreateStore(llvmValue, d->currentAlloca);
                 } else {
                     this->_convertLlvmValueIfNeeded(&llvmValue, ty.get(), theValue->getType().get());
@@ -1374,17 +1377,20 @@ llvm::Value * LILIREmitter::_emitAsgmt(LILAssignment * asgmt)
             switch (sel->getSelectorType()) {
                 case SelectorTypeSelfSelector:
                 {
-                    auto selfPtr = d->namedValues["@self"];
-                    d->currentAlloca = d->irBuilder.CreateLoad(selfPtr);
-                    auto classDecl = this->findAncestorClass(value->shared_from_this());
+                    auto ptrToSelf = d->namedValues["@self"];
+                    auto classDecl = this->findAncestorClass(asgmt->shared_from_this());
                     currentTy = classDecl->getType();
+                    auto ptrTy = std::make_shared<LILPointerType>();
+                    ptrTy->setName("ptr");
+                    ptrTy->setArgument(currentTy);
+                    d->currentAlloca = d->irBuilder.CreateLoad(this->llvmTypeFromLILType(ptrTy.get()), ptrToSelf);
                     stringRep = "@self";
                     break;
                 }
                 case SelectorTypeThisSelector:
                 {
                     d->currentAlloca = d->namedValues["@this"];
-                    auto rule = this->findAncestorRule(value->shared_from_this());
+                    auto rule = this->findAncestorRule(asgmt->shared_from_this());
                     currentTy = rule->getType();
                     stringRep = "@this";
                     break;
@@ -1462,9 +1468,9 @@ llvm::Value * LILIREmitter::_emitAsgmt(LILAssignment * asgmt)
                     stringRep += "." + pnName;
 
                     if (currentTy->isA(TypeTypePointer)) {
+                        d->currentAlloca = d->irBuilder.CreateLoad(this->llvmTypeFromLILType(currentTy.get()), d->currentAlloca);
                         auto ptrTy = std::static_pointer_cast<LILPointerType>(currentTy);
                         currentTy = ptrTy->getArgument();
-                        d->currentAlloca = d->irBuilder.CreateLoad(d->currentAlloca);
                     }
                     auto classDecl = this->findClassWithName(currentTy->getName());
                     if (!classDecl) {
@@ -1493,7 +1499,7 @@ llvm::Value * LILIREmitter::_emitAsgmt(LILAssignment * asgmt)
                         auto fd = std::static_pointer_cast<LILFunctionDecl>(methodNode);
                         auto fnTy = fd->getFnType();
                         auto fc = std::make_shared<LILFunctionCall>();
-                        fc->setParentNode(value->shared_from_this());
+                        fc->setParentNode(asgmt->shared_from_this());
                         fc->setName(methodName);
                         if (isLastNode) {
                             fc->addArgument(theValue);
@@ -1543,19 +1549,12 @@ llvm::Value * LILIREmitter::_emitAsgmt(LILAssignment * asgmt)
                                 if (
                                     ty->isA(TypeTypePointer)
                                     && llvmValue->getType()->getTypeID() != llvm::Type::PointerTyID
-                                    ){
-                                    d->currentAlloca = d->irBuilder.CreateLoad(d->currentAlloca);
+                                ){
                                     auto ptrTy = std::static_pointer_cast<LILPointerType>(ty);
                                     ty = ptrTy->getArgument();
+                                    d->currentAlloca = d->irBuilder.CreateLoad(this->llvmTypeFromLILType(ty.get()), d->currentAlloca);
                                 }
-                                auto allocaTy = d->currentAlloca->getType()->getPointerElementType();
-                                if (
-                                    llvmValue->getType()->isIntegerTy()
-                                    && allocaTy->isIntegerTy()
-                                    && (allocaTy->getIntegerBitWidth() > llvmValue->getType()->getIntegerBitWidth())
-                                ) {
-                                    llvmValue = d->irBuilder.CreateSExt(llvmValue, allocaTy);
-                                }
+                                this->_convertLlvmValueIfNeeded(&llvmValue, ty.get(), theValue->getType().get());
                                 d->irBuilder.CreateStore(llvmValue, d->currentAlloca);
                             }
                             d->currentAlloca = allocaBackup;
@@ -1569,7 +1568,7 @@ llvm::Value * LILIREmitter::_emitAsgmt(LILAssignment * asgmt)
                                 std::cerr << "!!!!!!!!!!WRONG VALUE PATH FAIL !!!!!!!!!!!!!!!!\n\n";
                                 return nullptr;
                             }
-                            d->currentAlloca = this->emitUnwrappedPointerFromMT(d->currentAlloca, ifCastTy.get());
+                            d->currentAlloca = this->emitUnwrappedPointerFromMT(d->currentAlloca, ifCastTy.get(), static_cast<LILMultipleType *>(vdTy.get()));
                             currentTy = ifCastTy;
                         }
                     }
@@ -1689,9 +1688,12 @@ llvm::Value * LILIREmitter::_emitVP(LILValuePath * value)
                 case SelectorTypeSelfSelector:
                 {
                     auto ptrToSelf = d->namedValues["@self"];
-                    llvmSubject = d->irBuilder.CreateLoad(ptrToSelf);
                     auto classDecl = this->findAncestorClass(value->shared_from_this());
                     currentTy = classDecl->getType();
+                    auto ptrTy = std::make_shared<LILPointerType>();
+                    ptrTy->setName("ptr");
+                    ptrTy->setArgument(currentTy);
+                    llvmSubject = d->irBuilder.CreateLoad(this->llvmTypeFromLILType(ptrTy.get()), ptrToSelf);
                     stringRep = "@self";
                     break;
                 }
@@ -1726,9 +1728,9 @@ llvm::Value * LILIREmitter::_emitVP(LILValuePath * value)
                 {
                     auto fc = std::static_pointer_cast<LILFunctionCall>(currentNode);
                     if (currentTy->isA(TypeTypePointer)) {
+                        llvmSubject = d->irBuilder.CreateLoad(this->llvmTypeFromLILType(currentTy.get()), llvmSubject);
                         auto ptrTy = std::static_pointer_cast<LILPointerType>(currentTy);
                         currentTy = ptrTy->getArgument();
-                        llvmSubject = d->irBuilder.CreateLoad(llvmSubject);
                     }
                     auto classDecl = this->findClassWithName(currentTy->getName());
                     if (!classDecl) {
@@ -1775,9 +1777,9 @@ llvm::Value * LILIREmitter::_emitVP(LILValuePath * value)
                     stringRep += "." + pnName;
 
                     if (currentTy->isA(TypeTypePointer)) {
+                        llvmSubject = d->irBuilder.CreateLoad(this->llvmTypeFromLILType(currentTy.get()), llvmSubject);
                         auto ptrTy = std::static_pointer_cast<LILPointerType>(currentTy);
                         currentTy = ptrTy->getArgument();
-                        llvmSubject = d->irBuilder.CreateLoad(llvmSubject);
                     }
                     if (!currentTy->isA(TypeTypeObject)) {
                         std::cerr << "CURRENT TYPE WAS NOT OBJECT TYPE FAIL !!!!!!!!!!!!!!!!\n";
@@ -1852,7 +1854,7 @@ llvm::Value * LILIREmitter::_emitVP(LILValuePath * value)
                                 std::cerr << "!!!!!!!!!!WRONG VALUE PATH FAIL !!!!!!!!!!!!!!!!\n\n";
                                 return nullptr;
                             }
-                            llvmSubject = this->emitUnwrappedPointerFromMT(llvmSubject, ifCastTy.get());
+                            llvmSubject = this->emitUnwrappedPointerFromMT(llvmSubject, ifCastTy.get(), static_cast<LILMultipleType *>(vdTy.get()));
                             currentTy = ifCastTy;
                         } else {
                             bool fieldFound = false;
@@ -1865,7 +1867,7 @@ llvm::Value * LILIREmitter::_emitVP(LILValuePath * value)
                             currentTy = vdTy;
                         }
                         if (isLastNode) {
-                            return d->irBuilder.CreateLoad(llvmSubject, name.data());
+                            return d->irBuilder.CreateLoad(this->llvmTypeFromLILType(currentTy.get()), llvmSubject, name.data());
                         }
                     }
                     break;
@@ -1892,7 +1894,8 @@ llvm::Value * LILIREmitter::_emitVP(LILValuePath * value)
                             idList.push_back(argIr);
                             llvmSubject = llvm::GetElementPtrInst::Create(this->llvmTypeFromLILType(currentTy.get()), llvmSubject, idList, "", d->irBuilder.GetInsertBlock());
                             if (isLastNode) {
-                                return d->irBuilder.CreateLoad(llvmSubject);
+                                auto elemTy = saTy->getType();
+                                return d->irBuilder.CreateLoad(this->llvmTypeFromLILType(elemTy.get()), llvmSubject);
                             } else {
                                 currentTy = saTy->getType();
                             }
@@ -2149,12 +2152,12 @@ llvm::Value * LILIREmitter::_emitRule(LILRule * value)
         std::vector<llvm::Value *> idList;
         idList.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
         idList.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
-        idList.push_back(d->irBuilder.CreateLoad(counter));
+        idList.push_back(d->irBuilder.CreateLoad(i64Ty, counter));
         auto selClassTy = d->classTypes["sel"];
         auto selAlloca = d->irBuilder.CreateAlloca(selClassTy);
         d->irBuilder.CreateStore(selection, selAlloca);
         auto idGep = llvm::GetElementPtrInst::Create(selClassTy, selAlloca, idList, "ids", d->irBuilder.GetInsertBlock());
-        auto currentId = d->irBuilder.CreateLoad(idGep);
+        auto currentId = d->irBuilder.CreateLoad(selClassTy, idGep);
         
         bool needsCast = tyName != "container";
         llvm::Type * containerTy;
@@ -2176,7 +2179,7 @@ llvm::Value * LILIREmitter::_emitRule(LILRule * value)
         
 
         //counter +: 1
-        auto counterVal = d->irBuilder.CreateLoad(counter);
+        auto counterVal = d->irBuilder.CreateLoad(i64Ty, counter);
         auto oneVal = llvm::ConstantInt::get(d->llvmContext, llvm::APInt(64, 1, true));
         auto increased = d->irBuilder.CreateAdd(counterVal, oneVal);
         d->irBuilder.CreateStore(increased, counter);
@@ -2332,7 +2335,7 @@ llvm::Value * LILIREmitter::_emitVN(LILVarName * value)
         std::cerr << "!!!!!!!!!!UNKNOWN VARIABLE " + namestr + " OMG ALKJDLFJA FAIL FAIL FAIL!!!!!!!!!!!!!!!!\n";
         return nullptr;
     }
-    return d->irBuilder.CreateLoad(val, namestr);
+    return d->irBuilder.CreateLoad(this->llvmTypeFromLILType(remoteNode->getType().get()), val, namestr);
 }
 
 llvm::Function * LILIREmitter::_emitFnDecl(LILFunctionDecl * value)
@@ -2442,9 +2445,9 @@ llvm::Function * LILIREmitter::_emitFn(LILFunctionDecl * value)
     d->hiddenLocals.push_back(scope);
 
     for (llvm::Value & arg : fun->args()) {
-        llvm::AllocaInst * alloca = this->createEntryBlockAlloca(fun, arg.getName(), arg.getType());
+        auto name = std::string(arg.getName());
+        llvm::AllocaInst * alloca = this->createEntryBlockAlloca(fun, name, arg.getType());
         d->irBuilder.CreateStore(&arg, alloca);
-        auto name = arg.getName();
         if (d->namedValues.count(name)) {
             d->hiddenLocals.back()[name] = d->namedValues[name];
         }
@@ -2455,7 +2458,8 @@ llvm::Function * LILIREmitter::_emitFn(LILFunctionDecl * value)
 
     //clear args from local values
     for (llvm::Value & arg : fun->args()) {
-        d->namedValues.erase(arg.getName());
+        auto name = std::string(arg.getName());
+        d->namedValues.erase(name);
     }
     //restore hidden locals
     const std::map<std::string, llvm::Value *> & hiddenLocals = d->hiddenLocals.back();
@@ -2506,7 +2510,7 @@ llvm::Function * LILIREmitter::_emitFnBody(llvm::Function * fun, LILFunctionDecl
     }
 
     if (d->needsReturnValue) {
-        llvm::Value * loadInstr = d->irBuilder.CreateLoad(d->returnAlloca);
+        llvm::Value * loadInstr = d->irBuilder.CreateLoad(fun->getReturnType(), d->returnAlloca);
         d->irBuilder.CreateRet(loadInstr);
     } else {
         d->irBuilder.CreateRetVoid();
@@ -2628,9 +2632,10 @@ llvm::Value * LILIREmitter::_emitFCMultipleValues(std::vector<std::shared_ptr<LI
             std::vector<llvm::Value *> gepIndices1;
             gepIndices1.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
             gepIndices1.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 1, false)));
-            auto gep = d->irBuilder.CreateGEP(llvmIr, gepIndices1);
+            auto argTy = this->llvmTypeFromLILType(argument->getType().get());
+            auto gep = d->irBuilder.CreateGEP(argTy, llvmIr, gepIndices1);
             
-            auto argVal = d->irBuilder.CreateLoad(gep, namestr + "_lil_type_index");
+            auto argVal = d->irBuilder.CreateLoad(argTy, gep, namestr + "_lil_type_index");
             
             llvm::BasicBlock * defaultBB = llvm::BasicBlock::Create(d->llvmContext, namestr+ ".null");
             llvm::SwitchInst * switchInstr = d->irBuilder.CreateSwitch(argVal, defaultBB);
@@ -2859,7 +2864,11 @@ llvm::Value * LILIREmitter::_emitFC(LILFunctionCall * value)
         {
             auto firstArg = value->getArguments().front();
             auto llvmValue = this->emit(firstArg.get());
-            return d->irBuilder.CreateLoad(llvmValue);
+            auto firstArgTy = firstArg->getType();
+            if (firstArgTy->getTypeType() == TypeTypePointer) {
+                firstArgTy = std::static_pointer_cast<LILPointerType>(firstArgTy)->getArgument();
+            }
+            return d->irBuilder.CreateLoad(this->llvmTypeFromLILType(firstArgTy.get()), llvmValue);
         }
         case FunctionCallTypeSizeOf:
         {
@@ -3018,8 +3027,8 @@ llvm::Value * LILIREmitter::_emitFCArg(LILNode * value, LILType * ty)
         && ty->isA(TypeTypePointer)
         && !value->getType()->isA(TypeTypePointer)
     ;
+    llvm::Type * allocaTy = nullptr;
     if (needsTempVar) {
-        llvm::Type * allocaTy;
         if (usesPointerConversion) {
             auto ptrTy = static_cast<LILPointerType *>(ty);
             allocaTy = this->llvmTypeFromLILType(ptrTy->getArgument().get());
@@ -3051,7 +3060,7 @@ llvm::Value * LILIREmitter::_emitFCArg(LILNode * value, LILType * ty)
         if (usesPointerConversion) {
             ret = d->currentAlloca;
         } else {
-            ret = d->irBuilder.CreateLoad(d->currentAlloca);
+            ret = d->irBuilder.CreateLoad(allocaTy, d->currentAlloca);
         }
     }
     if (
@@ -3059,7 +3068,7 @@ llvm::Value * LILIREmitter::_emitFCArg(LILNode * value, LILType * ty)
         && !ty->isA(TypeTypePointer)
         && value->getType()->isA(TypeTypePointer)
         ) {
-        ret = d->irBuilder.CreateLoad(ret);
+        ret = d->irBuilder.CreateLoad(this->llvmTypeFromLILType(ty), ret);
     }
     if (needsTempVar) {
         d->currentAlloca = allocaBackup;
@@ -3489,8 +3498,9 @@ llvm::Value * LILIREmitter::_emitIfCastConditionForMT(bool negated, LILType * ty
     std::vector<llvm::Value *> gepIndices2;
     gepIndices2.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
     gepIndices2.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 1, false)));
-    auto member2 = d->irBuilder.CreateGEP(llvmIr, gepIndices2);
-    auto member2Value = d->irBuilder.CreateLoad(member2);
+    auto i8Ty = llvm::Type::getInt8Ty(d->llvmContext);
+    auto member2 = d->irBuilder.CreateGEP(this->llvmTypeFromLILType(multiTy), llvmIr, gepIndices2);
+    auto member2Value = d->irBuilder.CreateLoad(i8Ty, member2);
     if (negated) {
         return d->irBuilder.CreateICmpNE(typeIndex, member2Value);
     } else {
@@ -3543,8 +3553,9 @@ llvm::Value * LILIREmitter::_emitIfCastConditionForNullable(bool negated, LILTyp
         std::vector<llvm::Value *> idList;
         idList.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
         idList.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 1, false)));
-        auto temp = llvm::GetElementPtrInst::Create(this->llvmTypeFromLILType(ty), llvmSubject, idList, "hasValue", d->irBuilder.GetInsertBlock());
-        auto temp2 = d->irBuilder.CreateLoad(temp);
+        auto llvmTy = this->llvmTypeFromLILType(ty);
+        auto temp = llvm::GetElementPtrInst::Create(llvmTy, llvmSubject, idList, "hasValue", d->irBuilder.GetInsertBlock());
+        auto temp2 = d->irBuilder.CreateLoad(llvmTy, temp);
         auto nullValue = llvm::ConstantInt::get(d->llvmContext, llvm::APInt(1, 0, false));
         if (negated) {
             ret = d->irBuilder.CreateICmpEQ(temp2, nullValue, "if.cond");
@@ -3705,14 +3716,7 @@ llvm::Value * LILIREmitter::_emitReturn(LILFlowControlCall * value)
             retVal = this->emit(arg.get());
         }
         if (retVal) {
-            auto allocaTy = d->returnAlloca->getType()->getPointerElementType();
-            if (
-                retVal->getType()->isIntegerTy()
-                && allocaTy->isIntegerTy()
-                && (allocaTy->getIntegerBitWidth() > retVal->getType()->getIntegerBitWidth())
-                ) {
-                retVal = d->irBuilder.CreateSExt(retVal, allocaTy);
-            }
+            this->_convertLlvmValueIfNeeded(&retVal, ty.get(), arg->getType().get());
             llvm::Value * theReturn = d->irBuilder.CreateStore(retVal, d->currentAlloca);
             d->currentAlloca = allocaBackup;
             return theReturn;
@@ -3792,14 +3796,15 @@ llvm::Value * LILIREmitter::_emitValList(LILValueList * value)
     }
     auto allocaBackup = d->currentAlloca;
     auto ty = value->getType();
+    auto llvmTy = this->llvmTypeFromLILType(ty.get());
     if (ty->isA(TypeTypeStaticArray)) {
         //FIXME: optimize this into a global and memcpy when profitable
         size_t i = 0;
         for (auto node : value->getValues()) {
-            d->currentAlloca = this->_emitGEP(allocaBackup, this->llvmTypeFromLILType(ty.get()), false, 0, "", true, true, i);
+            d->currentAlloca = this->_emitGEP(allocaBackup, llvmTy, false, 0, "", true, true, i);
             auto ir = this->emit(node.get());
             if (ir != nullptr) {
-                auto gep = this->_emitGEP(allocaBackup, this->llvmTypeFromLILType(ty.get()), false, 0, "", true, true, i);
+                auto gep = this->_emitGEP(allocaBackup, llvmTy, false, 0, "", true, true, i);
                 this->_convertLlvmValueIfNeeded(&ir, ty->getType().get(), node->getType().get());
                 d->irBuilder.CreateStore(ir, gep);
             }
@@ -3897,9 +3902,10 @@ llvm::Value * LILIREmitter::_emitValList(LILValueList * value)
                             }
                             size_t i = 0;
                             for (auto node : value->getValues()) {
-                                d->currentAlloca = this->_emitGEP(pointer, nullptr, false, 0, "", false, true, i);
+                                d->currentAlloca = this->_emitGEP(pointer, this->llvmTypeFromLILType(saTy.get()), false, 0, "", true, true, i);
                                 auto ir = this->emit(node.get());
                                 if (ir) {
+                                    this->_convertLlvmValueIfNeeded(&ir, saTy->getType().get(), node->getType().get());
                                     d->irBuilder.CreateStore(ir, d->currentAlloca);
                                 }
                                 d->currentAlloca = allocaBackup;
@@ -3911,7 +3917,7 @@ llvm::Value * LILIREmitter::_emitValList(LILValueList * value)
                         }
                     }
                 } else if (fldName == "size") {
-                    auto gep = this->_emitGEP(d->currentAlloca, nullptr, true, index, fldName, true, false, 0);
+                    auto gep = this->_emitGEP(d->currentAlloca, llvmTy, true, index, fldName, true, false, 0);
                     auto sizeVal = llvm::ConstantInt::get(d->llvmContext, llvm::APInt(64, valuesSize, false));
                     d->irBuilder.CreateStore(sizeVal, gep);
                 }
@@ -4058,9 +4064,12 @@ llvm::Value * LILIREmitter::_emitPointer(LILValuePath * value)
                 case SelectorTypeSelfSelector:
                 {
                     auto ptrToSelf = d->namedValues["@self"];
-                    llvmSubject = d->irBuilder.CreateLoad(ptrToSelf);
                     auto classDecl = this->findAncestorClass(value->shared_from_this());
                     currentTy = classDecl->getType();
+                    auto ptrTy = std::make_shared<LILPointerType>();
+                    ptrTy->setName("ptr");
+                    ptrTy->setArgument(currentTy);
+                    llvmSubject = d->irBuilder.CreateLoad(this->llvmTypeFromLILType(ptrTy.get()), ptrToSelf);
                     stringRep = "@self";
                     break;
                 }
@@ -4093,9 +4102,9 @@ llvm::Value * LILIREmitter::_emitPointer(LILValuePath * value)
                     
                     //get index of field into struct
                     if (currentTy->isA(TypeTypePointer)) {
+                        llvmSubject = d->irBuilder.CreateLoad(this->llvmTypeFromLILType(currentTy.get()), llvmSubject);
                         auto ptrTy = std::static_pointer_cast<LILPointerType>(currentTy);
                         currentTy = ptrTy->getArgument();
-                        llvmSubject = d->irBuilder.CreateLoad(llvmSubject);
                     }
                     if (!currentTy->isA(TypeTypeObject)) {
                         std::cerr << "CURRENT TYPE WAS NOT OBJECT TYPE FAIL !!!!!!!!!!!!!!!!\n";
@@ -4118,7 +4127,7 @@ llvm::Value * LILIREmitter::_emitPointer(LILValuePath * value)
                                 std::cerr << "!!!!!!!!!!WRONG VALUE PATH FAIL !!!!!!!!!!!!!!!!\n\n";
                                 return nullptr;
                             }
-                            llvmSubject = this->emitUnwrappedPointerFromMT(llvmSubject, ifCastTy.get());
+                            llvmSubject = this->emitUnwrappedPointerFromMT(llvmSubject, ifCastTy.get(), static_cast<LILMultipleType *>(fieldTy.get()));
                             currentTy = ifCastTy;
                         }
                     }
@@ -4266,7 +4275,7 @@ llvm::Type * LILIREmitter::llvmTypeFromLILType(LILType * type)
     else if (type->isA(TypeTypeSIMD))
     {
         auto simdTy = static_cast<LILSIMDType *>(type);
-        auto vectTy = llvm::VectorType::get(this->llvmTypeFromLILType(simdTy->getType().get()), simdTy->getWidth());
+        auto vectTy = llvm::FixedVectorType::get(this->llvmTypeFromLILType(simdTy->getType().get()), simdTy->getWidth());
         return vectTy;
     }
 
@@ -4489,17 +4498,19 @@ llvm::Value * LILIREmitter::emitForMultipleType(LIL::LILNode *node, std::shared_
         return this->emitNullableToMultiTyConversion(node, multiTy.get(), name);
     }
 
+    auto llvmTy = this->llvmTypeFromLILType(ty.get());
+    auto llvmMultiTy = this->llvmTypeFromLILType(multiTy.get());
     const auto & mtTypes = multiTy->getTypes();
     std::vector<llvm::Value *> gepIndices1;
     gepIndices1.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
     gepIndices1.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
-    auto member1 = d->irBuilder.CreateGEP(d->currentAlloca, gepIndices1);
+    auto member1 = d->irBuilder.CreateGEP(llvmMultiTy, d->currentAlloca, gepIndices1);
     d->currentAlloca = member1;
 
     if (!node->isA(NodeTypeNull)) {
         llvm::Value * llvmIr = this->emit(node);
         
-        auto destLlvmTy = this->llvmTypeFromLILType(ty.get())->getPointerTo();
+        auto destLlvmTy = llvmTy->getPointerTo();
         if (member1->getType() != destLlvmTy) {
             d->currentAlloca = d->irBuilder.CreateBitCast(member1, destLlvmTy);
         }
@@ -4540,7 +4551,7 @@ llvm::Value * LILIREmitter::emitForMultipleType(LIL::LILNode *node, std::shared_
     std::vector<llvm::Value *> gepIndices2;
     gepIndices2.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
     gepIndices2.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 1, false)));
-    auto member2 = d->irBuilder.CreateGEP(d->currentAlloca, gepIndices2);
+    auto member2 = d->irBuilder.CreateGEP(llvmMultiTy, d->currentAlloca, gepIndices2);
     d->irBuilder.CreateStore(typeIndex, member2);
     
     return nullptr;
@@ -4551,12 +4562,14 @@ llvm::Value * LILIREmitter::emitNullableToMultiTyConversion(LILNode * node, LILM
     auto allocaBackup = d->currentAlloca;
     auto namestr = name.data();
     auto ty = node->getType();
+    auto llvmTy = this->llvmTypeFromLILType(ty.get());
+    auto llvmMultiTy = this->llvmTypeFromLILType(multiTy);
     llvm::Function * fun = d->irBuilder.GetInsertBlock()->getParent();
 
     std::vector<llvm::Value *> gepIndices1;
     gepIndices1.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
     gepIndices1.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
-    auto member1 = d->irBuilder.CreateGEP(d->currentAlloca, gepIndices1);
+    auto member1 = d->irBuilder.CreateGEP(llvmMultiTy, d->currentAlloca, gepIndices1);
     d->currentAlloca = member1;
     auto nullableValue = this->emit(node);
     d->currentAlloca = allocaBackup;
@@ -4564,7 +4577,7 @@ llvm::Value * LILIREmitter::emitNullableToMultiTyConversion(LILNode * node, LILM
     std::vector<llvm::Value *> gepIndices2;
     gepIndices2.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
     gepIndices2.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 1, false)));
-    auto member2 = d->irBuilder.CreateGEP(d->currentAlloca, gepIndices2);
+    auto member2 = d->irBuilder.CreateGEP(llvmMultiTy, d->currentAlloca, gepIndices2);
     auto types2 = multiTy->getTypes();
     size_t index;
     ty->setIsNullable(false);
@@ -4580,7 +4593,7 @@ llvm::Value * LILIREmitter::emitNullableToMultiTyConversion(LILNode * node, LILM
     llvm::Value * cond;
     bool isPtr = ty->isA(TypeTypePointer);
     if (isPtr) {
-        auto ptrType = llvm::cast<llvm::PointerType>(this->llvmTypeFromLILType(ty.get()));
+        auto ptrType = llvm::cast<llvm::PointerType>(llvmTy);
         auto zeroVal = llvm::ConstantPointerNull::get(ptrType);
         cond = d->irBuilder.CreateICmpNE(nullableValue, zeroVal, namestr + ".not.null.cond");
     } else {
@@ -4639,16 +4652,19 @@ llvm::Value * LILIREmitter::emitMultiTyToMultiTyConversion(LILNode * node, LILMu
 {
     auto namestr = name.data();
     auto ty = node->getType();
+    auto llvmTy = this->llvmTypeFromLILType(ty.get());
+    auto llvmMultiTy = this->llvmTypeFromLILType(multiTy);
     llvm::Function * fun = d->irBuilder.GetInsertBlock()->getParent();
 
-    auto indexAlloca = d->irBuilder.CreateAlloca(llvm::Type::getInt8Ty(d->llvmContext));
+    auto i8Ty = llvm::Type::getInt8Ty(d->llvmContext);
+    auto indexAlloca = d->irBuilder.CreateAlloca(i8Ty);
 
     auto mtValue = this->emitPointer(node);
     std::vector<llvm::Value *> mtGepIndices;
     mtGepIndices.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
     mtGepIndices.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 1, false)));
-    auto mtValMember2 = d->irBuilder.CreateGEP(mtValue, mtGepIndices);
-    auto mtValIndex = d->irBuilder.CreateLoad(mtValMember2, namestr + "_lil_type_index");
+    auto mtValMember2 = d->irBuilder.CreateGEP(llvmMultiTy, mtValue, mtGepIndices);
+    auto mtValIndex = d->irBuilder.CreateLoad(i8Ty, mtValMember2, namestr + "_lil_type_index");
     
     llvm::BasicBlock * defaultBB = llvm::BasicBlock::Create(d->llvmContext, namestr + ".null");
     llvm::SwitchInst * switchInstr = d->irBuilder.CreateSwitch(mtValIndex, defaultBB);
@@ -4692,17 +4708,17 @@ llvm::Value * LILIREmitter::emitMultiTyToMultiTyConversion(LILNode * node, LILMu
     std::vector<llvm::Value *> gepIndices1;
     gepIndices1.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
     gepIndices1.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
-    auto member1 = d->irBuilder.CreateGEP(d->currentAlloca, gepIndices1);
+    auto member1 = d->irBuilder.CreateGEP(llvmTy, d->currentAlloca, gepIndices1);
 
-    auto mtValMember1 = d->irBuilder.CreateGEP(mtValue, gepIndices1);
-    auto mtValMember1Val = d->irBuilder.CreateLoad(mtValMember1);
+    auto mtValMember1 = d->irBuilder.CreateGEP(llvmMultiTy, mtValue, gepIndices1);
+    auto mtValMember1Val = d->irBuilder.CreateLoad(llvmTy, mtValMember1);
     d->irBuilder.CreateStore(mtValMember1Val, member1);
 
     std::vector<llvm::Value *> gepIndices2;
     gepIndices2.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
     gepIndices2.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 1, false)));
-    auto member2 = d->irBuilder.CreateGEP(d->currentAlloca, gepIndices2);
-    auto typeIndex = d->irBuilder.CreateLoad(indexAlloca);
+    auto member2 = d->irBuilder.CreateGEP(llvmMultiTy, d->currentAlloca, gepIndices2);
+    auto typeIndex = d->irBuilder.CreateLoad(i8Ty, indexAlloca);
     d->irBuilder.CreateStore(typeIndex, member2);
     return nullptr;
 }
@@ -4711,21 +4727,24 @@ llvm::Value * LILIREmitter::emitUnwrappedFromMT(LILNode *node, LILType *targetTy
 {
     auto wrappedVal = this->emitPointer(node);
     std::vector<llvm::Value *> gepIndices;
+    auto llvmTy = this->llvmTypeFromLILType(targetTy);
     gepIndices.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
     gepIndices.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
-    auto gep = d->irBuilder.CreateGEP(wrappedVal, gepIndices);
-    auto castedPtr = d->irBuilder.CreateBitCast(gep, this->llvmTypeFromLILType(targetTy)->getPointerTo());
-    auto innerVal = d->irBuilder.CreateLoad(castedPtr);
+    auto gep = d->irBuilder.CreateGEP(llvmTy, wrappedVal, gepIndices);
+    auto castedPtr = d->irBuilder.CreateBitCast(gep, llvmTy->getPointerTo());
+    auto innerVal = d->irBuilder.CreateLoad(llvmTy, castedPtr);
     return innerVal;
 }
 
-llvm::Value * LILIREmitter::emitUnwrappedPointerFromMT(llvm::Value * val, LILType *targetTy)
+llvm::Value * LILIREmitter::emitUnwrappedPointerFromMT(llvm::Value * val, LILType *targetTy, LILMultipleType * multiTy)
 {
+    auto llvmTy = this->llvmTypeFromLILType(targetTy);
+    auto llvmMultiTy = this->llvmTypeFromLILType(multiTy);
     std::vector<llvm::Value *> gepIndices;
     gepIndices.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
     gepIndices.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
-    auto gep = d->irBuilder.CreateGEP(val, gepIndices);
-    auto castedPtr = d->irBuilder.CreateBitCast(gep, this->llvmTypeFromLILType(targetTy)->getPointerTo());
+    auto gep = d->irBuilder.CreateGEP(llvmMultiTy, val, gepIndices);
+    auto castedPtr = d->irBuilder.CreateBitCast(gep, llvmTy->getPointerTo());
     return castedPtr;
 }
 
