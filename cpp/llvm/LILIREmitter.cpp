@@ -2035,7 +2035,7 @@ llvm::Value * LILIREmitter::_emitRule(LILRule * value)
                         thisSelector->setSelectorType(SelectorTypeThisSelector);
                         vp->addChild(thisSelector);
                         auto subjVp = std::static_pointer_cast<LILValuePath>(subj);
-                        for (const auto node : subjVp->getNodes()) {
+                        for (const auto & node : subjVp->getNodes()) {
                             vp->addChild(node->clone());
                         }
                         as->setSubject(vp);

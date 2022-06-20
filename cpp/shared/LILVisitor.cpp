@@ -591,7 +591,7 @@ std::shared_ptr<LILType> LILVisitor::findTypeForValueList(LILValueList * value) 
     for (const auto & val : value->getValues()) {
         const auto & ty = val->getType();
         bool found = false;
-        for (const auto existingTy : types) {
+        for (const auto & existingTy : types) {
             if (existingTy->equalTo(ty)) {
                 found = true;
                 break;
