@@ -664,21 +664,6 @@ void LILBuildManager::setDebugConfigureDefaults(bool value)
     this->_debugConfigureDefaults = value;
 }
 
-void LILBuildManager::setPrintOnly(bool value)
-{
-//    this->_printOnly = value;
-//    this->_link = false;
-//    this->_run = false;
-//    this->_singleFile = true;
-}
-
-void LILBuildManager::setSingleFile(bool value)
-{
-//    this->_singleFile = value;
-//    this->_link = false;
-//    this->_run = false;
-}
-
 void LILBuildManager::setWarningLevel(int value)
 {
     this->_warningLevel = value;

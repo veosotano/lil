@@ -38,8 +38,6 @@ namespace LIL {
         void setVerbose(bool value);
         void setNoConfigureDefaults(bool value);
         void setDebugConfigureDefaults(bool value);
-        void setPrintOnly(bool value);
-        void setSingleFile(bool value);
         void setWarningLevel(int value);
         void setArguments(std::vector<LILString> && args);
     private:
