@@ -60,6 +60,23 @@ const DEBUG: false;
             }
             return null;
         };
+		
+        #========== fn value ==============
+        #= Returns a the value at the given index
+		#= Warning! Might read out of bounds.
+        #===============================
+        #= var index: the offset into the array 
+        #-------------------------------
+        #= return: the value at given index
+        #-------------------------------
+        fn value(var.i64 index)=>@subtype {
+            if @self.buffer => sbuf {
+                return @self.buffer[index];
+            }
+            if @self.buffer => ptr(@subtype) {
+                return valueOf(@self.buffer + index);
+            }
+        };
 
         #=========== fn add ============
         #= Appends a value at the end of the array, resizing the array if necessary
