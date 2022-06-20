@@ -91,7 +91,7 @@ std::shared_ptr<LILNode> LILFlowControlCall::getArgument() const
 {
     auto childNodes = this->getChildNodes();
     if (childNodes.size() > 0) {
-        return childNodes.front();;
+        return childNodes.front();
     }
     return nullptr;
 }

@@ -45,8 +45,7 @@ void LILEnumLowerer::performVisit(std::shared_ptr<LILRootNode> rootNode)
     this->setRootNode(rootNode);
     
     std::vector<std::shared_ptr<LILNode>> nodes = rootNode->getNodes();
-    
-    std::vector<std::shared_ptr<LILNode>> resultNodes;
+
     for (auto node : nodes) {
         this->process(node.get());
     }
