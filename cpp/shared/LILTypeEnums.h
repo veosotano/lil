@@ -245,6 +245,7 @@ namespace LIL
         InstructionTypeArg,
         InstructionTypeExpand,
         InstructionTypeGPU,
+        InstructionTypeResource,
     };
 
     enum SelectorType

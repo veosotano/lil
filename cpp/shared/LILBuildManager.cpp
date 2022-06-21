@@ -592,6 +592,35 @@ void LILBuildManager::build()
                             return;
                         }
                     }
+                    if (this->_config->getConfigBool("copyResources")) {
+                        if (this->_verbose) {
+                            std::cerr << "\n============================" << "\n";
+                            std::cerr << "==== COPYING RESOURCES =====" << "\n";
+                            std::cerr << "============================" << "\n";
+                        }
+                        auto resourcesPath = this->_config->getConfigString("resourcesPath");
+
+                        for (auto resFile : mainCodeUnit->getResources()) {
+                            std::array<char, 128> copyResBuffer;
+                            std::string copyResResult;
+                            std::string copyResCommand = "cp '"+resFile.data()+"' '"+resourcesPath.data()+resFile.data()+"'";
+                            if (this->_verbose) {
+                                std::cerr << copyResCommand << "\n";
+                            }
+                            copyResCommand.append(" 2>&1");
+                            std::unique_ptr<FILE, decltype(&pclose)> copyResPipe(popen(copyResCommand.c_str(), "r"), pclose);
+                            if (!copyResPipe) {
+                                std::cerr << "ERROR: popen() failed while trying copy resource! \n";
+                                return;
+                            }
+                            while (fgets(copyResBuffer.data(), copyResBuffer.size(), copyResPipe.get()) != nullptr) {
+                                copyResResult += copyResBuffer.data();
+                            }
+                            if (copyResResult.length() > 0) {
+                                std::cerr << copyResResult;
+                            }
+                        }
+                    }
                 }
                 
                 if (this->_config->getConfigBool("run")) {

@@ -27,6 +27,7 @@ LILVarDecl::LILVarDecl()
 , _isConst(false)
 , _receivesReturnType(false)
 , _isExpanded(false)
+, _isResource(false)
 {
     
 }
@@ -41,6 +42,7 @@ LILVarDecl::LILVarDecl(const LILVarDecl & orig)
 , _isConst(orig._isConst)
 , _receivesReturnType(orig._receivesReturnType)
 , _isExpanded(orig._isExpanded)
+, _isResource(orig._isResource)
 {
 
 }
@@ -86,6 +88,7 @@ bool LILVarDecl::equalTo(std::shared_ptr<LILNode> otherNode)
     if ( this->_returnType && !castedNode->_returnType) return false;
     if ( this->_returnType && (!this->_returnType->equalTo(castedNode->_returnType))) return false;
     if ( this->_isExpanded != castedNode->_isExpanded) return false;
+    if ( this->_isResource != castedNode->_isResource) return false;
     return true;
 }
 
@@ -189,4 +192,14 @@ void LILVarDecl::setIsExpanded(bool value)
 bool LILVarDecl::getIsExpanded() const
 {
     return this->_isExpanded;
+}
+
+void LILVarDecl::setIsResource(bool value)
+{
+    this->_isResource = value;
+}
+
+bool LILVarDecl::getIsResource() const
+{
+    return this->_isResource;
 }

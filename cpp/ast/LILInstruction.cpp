@@ -63,6 +63,8 @@ LILString LILInstruction::instructionTypeToString(InstructionType instrType)
             return "arg";
         case InstructionTypeExpand:
             return "expand";
+        case InstructionTypeResource:
+            return "resource";
         default:
             return "ERROR: unknown instruction type";
     }

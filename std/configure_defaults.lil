@@ -7,6 +7,8 @@
     isMain: #arg { name: "isMain"; default: true };
     compile: #arg { name: "compile"; default: true };
     link: #arg { name: "link"; default: true };
+	copyResources: #arg { name: "copyResources"; default: true };
+	resourcesPath: #arg { name: "resourcesPath"; default: "" }; //if used, add trailing slash
     run: #arg { name: "run"; default: false };
     isApp: #arg { name: "isApp"; default: "auto" };
     autoMainFn: #arg { name: "autoMainFn"; default: true };
@@ -124,6 +126,8 @@
                 'cp "%buildPath/std/lil_shaders.metallib" "%name.app/Contents/Resources/lil_shaders.metallib"'
             ; //linkerFlagsApp
 
+			resourcesPath: "%name.app/Contents/Resources/";
+
             runCommand: '%buildPath/"%out"';
             runCommandApp: './"%name.app/Contents/MacOS/%name"'
         }
@@ -135,6 +139,7 @@
             vendor: #arg { name: "vendor"; default: "apple-ios%minOSVersion"};
             linkerFlags: "-r";
             linkerFlagsApp: "-r";
+			resourcesPath: "%name.app/Contents/Resources/";
         }
         iosSimulator {
             suffix: "OS_IOS";
@@ -144,6 +149,7 @@
             vendor: #arg { name: "vendor"; default: "apple-ios%minOSVersion-simulator"};
             linkerFlags: "-r";
             linkerFlagsApp: "-r";
+			resourcesPath: "%name.app/Contents/Resources/";
         }
         android {
             suffix: "OS_ANDROID";

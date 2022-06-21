@@ -226,7 +226,7 @@ fn LIL__setWindowBgColor(var.f32 red; var.f32 green; var.f32 blue; var.f32 alpha
         vvar.f32 z;
         vvar.@vel velocity;
         //fixme: should be =>cstr
-        vvar.ptr(@string)=>ptr(i8) src;
+        #resource vvar.ptr(@string)=>ptr(i8) src;
 
         fn getComponentId => i64 {
             return app.selectables[@self.id].componentId;

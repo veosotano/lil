@@ -459,12 +459,7 @@ std::shared_ptr<LILRootNode> LILVisitor::getRootNode() const
 
 std::shared_ptr<LILClassDecl> LILVisitor::findClassWithName(const LILString & name) const
 {
-    for (auto classVal : this->getRootNode()->getClasses()) {
-        if (classVal->getName() == name) {
-            return classVal;
-        }
-    }
-    return nullptr;
+    return this->getRootNode()->findClassWithName(name);
 }
 
 std::shared_ptr<LILClassDecl> LILVisitor::findAncestorClass(std::shared_ptr<LILNode> node) const

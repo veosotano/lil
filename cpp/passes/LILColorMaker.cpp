@@ -471,6 +471,7 @@ bool LILColorMaker::_processColorInstr(std::shared_ptr<LILInstruction> value)
             case InstructionTypeSnippet:
             case InstructionTypeExpand:
             case InstructionTypeGPU:
+            case InstructionTypeResource:
             {
                 //do nothing
                 break;

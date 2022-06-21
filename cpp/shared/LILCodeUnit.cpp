@@ -79,6 +79,7 @@ namespace LIL
         bool isMain;
         std::vector<LILString> arguments;
         std::vector<std::pair<LILString, bool>> neededFiles;
+        std::vector<LILString> resources;
         std::vector<LILString> constants;
         std::vector<LILString> imports;
 
@@ -550,6 +551,14 @@ void LILCodeUnit::runPasses()
     for (const auto & neededFile : neededFiles) {
         this->addNeededFileForBuild(neededFile.first, neededFile.second);
     }
+    const auto & importedResources = preprocessor->getResources();
+    for (const auto & resource : importedResources) {
+        this->addResource(resource);
+    }
+    const auto & localResources = d->astBuilder->getRootNode()->gatherResources();
+    for (const auto & resource : localResources) {
+        this->addResource(resource);
+    }
 
     if (d->pm->hasErrors()) {
         std::cerr << "Errors encountered. Exiting.\n\n";
@@ -703,6 +712,10 @@ void LILCodeUnit::runPassesForNeeds()
     for (const auto & neededFile : neededFiles) {
         this->addNeededFileForBuild(neededFile.first, neededFile.second);
     }
+    const auto & resources = preprocessor->getResources();
+    for (const auto & resource : resources) {
+        this->addResource(resource);
+    }
 
     if (d->pm->hasErrors()) {
         std::cerr << "Errors encountered. Exiting.\n\n";
@@ -774,6 +787,10 @@ void LILCodeUnit::runPassesForImport()
     const auto & neededFiles = preprocessor->getNeededFilesForBuild();
     for (const auto & neededFile : neededFiles) {
         this->addNeededFileForBuild(neededFile.first, neededFile.second);
+    }
+    const auto & resources = preprocessor->getResources();
+    for (const auto & resource : resources) {
+        this->addResource(resource);
     }
 
     if (d->pm->hasErrors()) {
@@ -866,4 +883,16 @@ void LILCodeUnit::addNeededFileForBuild(const LILString & path, bool verbose)
 const std::vector<std::pair<LILString, bool>> & LILCodeUnit::getNeededFilesForBuild() const
 {
     return d->neededFiles;
+}
+
+void LILCodeUnit::addResource(const LILString & path)
+{
+    if (std::find(d->resources.begin(), d->resources.end(), path) == d->resources.end()) {
+        d->resources.push_back( path );
+    }
+}
+
+const std::vector<LILString> & LILCodeUnit::getResources() const
+{
+    return d->resources;
 }

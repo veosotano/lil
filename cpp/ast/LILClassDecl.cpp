@@ -285,7 +285,11 @@ void LILClassDecl::add(std::shared_ptr<LILNode> node)
         }
         case NodeTypeInstruction:
         {
-            if (node->isA(InstructionTypeExpand)) {
+            auto instrType = node->getInstructionType();
+            if (
+                instrType == InstructionTypeExpand
+                || instrType == InstructionTypeResource
+            ) {
                 for (auto child : node->getChildNodes()) {
                     this->add(child);
                 }

@@ -22,12 +22,15 @@
 #include "LILFunctionDecl.h"
 #include "LILInstruction.h"
 #include "LILNodeToString.h"
+#include "LILPropertyName.h"
 #include "LILRule.h"
 #include "LILSelector.h"
 #include "LILSelectorChain.h"
 #include "LILSimpleSelector.h"
 #include "LILSnippetInstruction.h"
+#include "LILStringLiteral.h"
 #include "LILTypeDecl.h"
+#include "LILValuePath.h"
 #include "LILVarDecl.h"
 #include "LILVarName.h"
 
@@ -157,6 +160,7 @@ void LILRootNode::add(std::shared_ptr<LILNode> node, bool addToNodeTree)
                 case InstructionTypeBug:
                 case InstructionTypeArg:
                 case InstructionTypeExpand:
+                case InstructionTypeResource:
                     //do nothing
                     break;
 
@@ -456,4 +460,102 @@ void LILRootNode::addGPUNode(const std::shared_ptr<LILNode> & node)
 const std::vector<std::shared_ptr<LILNode>> & LILRootNode::getGPUNodes() const
 {
     return this->_gpuNodes;
+}
+
+const std::vector<LILString> LILRootNode::gatherResources() const
+{
+    std::vector<LILString> ret;
+    for (const auto & child : this->_childNodes) {
+        if (child->getNodeType() == NodeTypeRule) {
+            auto rule = std::static_pointer_cast<LILRule>(child);
+            auto ruleRet = this->_gatherResources(rule.get());
+            if (ruleRet.size() > 0) {
+                ret.insert(ret.end(), ruleRet.begin(), ruleRet.end());
+            }
+        }
+    }
+    return ret;
+}
+
+const std::vector<LILString> LILRootNode::_gatherResources(LILRule * rule) const
+{
+    std::vector<LILString> ret;
+    auto ty = rule->getType();
+    auto cdNode = this->findClassWithName(ty->getName());
+    if (cdNode && (cdNode->getNodeType() == NodeTypeClassDecl)) {
+        auto cd = this->findClassWithName(ty->getName());
+    
+        if (ty && (ty->getTypeType() == TypeTypeObject)) {
+            for (const auto & value : rule->getValues()) {
+                if (value->getNodeType() == NodeTypeAssignment) {
+                    auto as = std::static_pointer_cast<LILAssignment>(value);
+                    const auto & asVal = as->getValue();
+                    if (asVal && (asVal->getNodeType() == NodeTypeStringLiteral)) {
+                        auto strLit = std::static_pointer_cast<LILStringLiteral>(asVal);
+                        const auto & subj = as->getSubject();
+                        auto vd = this->_getFieldForSubject(cd.get(), subj.get());
+                        if (vd && vd->getIsResource()) {
+                            ret.push_back(strLit->getValue().stripQuotes());
+                        }
+                    }
+                }
+            }
+        }
+    }
+    for (const auto & childRule : rule->getChildRules()) {
+        std::vector<LILString> ruleRet = this->_gatherResources(childRule.get());
+        if (ruleRet.size() > 0) {
+            ret.insert(ret.end(), ruleRet.begin(), ruleRet.end());
+        }
+    }
+    return ret;
+}
+
+std::shared_ptr<LILVarDecl> LILRootNode::_getFieldForSubject(LILClassDecl * cd, LILNode * subj) const {
+    auto subjNodeTy = subj->getNodeType();
+    if (subjNodeTy == NodeTypePropertyName) {
+        auto pn = static_cast<LILPropertyName *>(subj);
+        auto field = cd->getFieldNamed(pn->getName());
+        if (field->getNodeType() == NodeTypeVarDecl) {
+            return std::static_pointer_cast<LILVarDecl>(field);
+        }
+    } else if (subjNodeTy == NodeTypeValuePath) {
+        auto vp = static_cast<LILValuePath *>(subj);
+        const auto & nodes = vp->getNodes();
+        bool isLast = false;
+        for (size_t i=0, j=nodes.size(); i<j; i+=1) {
+            isLast = i==j-1;
+            const auto & node = nodes.at(i);
+            if (node->getNodeType() == NodeTypePropertyName) {
+                auto pn = std::static_pointer_cast<LILPropertyName>(node);
+                auto field = cd->getFieldNamed(pn->getName());
+                if (field->getNodeType() == NodeTypeVarDecl) {
+                    auto vd = std::static_pointer_cast<LILVarDecl>(field);
+                    if (isLast) {
+                        return vd;
+                    }
+                    auto vdTy = vd->getType();
+                    if (vdTy->getTypeType() != TypeTypeObject) {
+                        std::cerr << "FIELD TYPE WAS NOT OBJECT FAIL !!!!!!!!!!!!!!! \n";
+                        return nullptr;
+                    }
+                    cd = this->findClassWithName(vdTy->getName()).get();
+                }
+            } else {
+                std::cerr << "UNIMPLEMENTED FAIL !!!!!!!!!!!!!!! \n";
+                return nullptr;
+            }
+        }
+    }
+    return nullptr;
+}
+
+std::shared_ptr<LILClassDecl> LILRootNode::findClassWithName(const LILString & name) const
+{
+    for (auto classVal : this->getClasses()) {
+        if (classVal->getName() == name) {
+            return classVal;
+        }
+    }
+    return nullptr;
 }

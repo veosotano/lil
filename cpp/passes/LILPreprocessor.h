@@ -79,6 +79,8 @@ namespace LIL
 
         void addNeededFileForBuild(const LILString & path, bool verbose);
         const std::vector<std::pair<LILString, bool>> & getNeededFilesForBuild() const;
+        void addResource(const LILString & path);
+        const std::vector<LILString> & getResources() const;
 
         void setConstants(std::vector<LILString> & values);
         const std::vector<LILString> & getConstants() const;
@@ -90,6 +92,7 @@ namespace LIL
         std::map<LILString, std::vector<std::shared_ptr<LILNode>>> _alreadyImportedFilesImport;
         std::vector<LILString> _constants;
         std::vector<std::pair<LILString, bool>> _buildFiles;
+        std::vector<LILString> _resources;
         std::vector<std::vector<std::shared_ptr<LILNode>>> _nodeBuffer;
         LILString _dir;
         LILString _suffix;

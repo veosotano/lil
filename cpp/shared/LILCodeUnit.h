@@ -80,6 +80,8 @@ namespace LIL
         bool isAlreadyImported(const LILString & path, bool isNeeds);
         void addNeededFileForBuild(const LILString & path, bool verbose);
         const std::vector<std::pair<LILString, bool>> & getNeededFilesForBuild() const;
+        void addResource(const LILString & path);
+        const std::vector<LILString> & getResources() const;
 
     private:
         LILCodeUnitPrivate * d;

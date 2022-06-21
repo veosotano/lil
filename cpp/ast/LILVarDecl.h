@@ -55,6 +55,8 @@ namespace LIL
         
         void setIsExpanded(bool value);
         bool getIsExpanded() const;
+        void setIsResource(bool value);
+        bool getIsResource() const;
 
     private:
         virtual std::shared_ptr<LILClonable> cloneImpl() const override;
@@ -66,6 +68,7 @@ namespace LIL
         bool _isConst;
         bool _receivesReturnType;
         bool _isExpanded;
+        bool _isResource;
     };
 }
 

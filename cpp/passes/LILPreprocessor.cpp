@@ -191,6 +191,9 @@ void LILPreprocessor::processImportingInstr(const std::shared_ptr<LILRootNode> &
                     for (const auto & path : codeUnit->getNeededFilesForBuild()) {
                         this->addNeededFileForBuild(path.first, path.second);
                     }
+                    for (const auto & resource : codeUnit->getResources()) {
+                        this->addResource(resource);
+                    }
                 }
                 if (this->getVerbose() && instr->getVerbose()) {
                     std::cerr << "\nEnd of file " << path.data() << "\n\n========================================\n\n";
@@ -914,6 +917,18 @@ const std::vector<std::pair<LILString, bool>> & LILPreprocessor::getNeededFilesF
     return this->_buildFiles;
 }
 
+void LILPreprocessor::addResource(const LILString & path)
+{
+    if (std::find(this->_resources.begin(), this->_resources.end(), path) == this->_resources.end()) {
+        this->_resources.push_back( path );
+    }
+}
+
+const std::vector<LILString> & LILPreprocessor::getResources() const
+{
+    return this->_resources;
+}
+
 bool LILPreprocessor::isAlreadyImported(const LILString & path, bool isNeeds)
 {
     if (isNeeds) {
@@ -1066,6 +1081,7 @@ void LILPreprocessor::_importNodeIfNeeded(std::vector<std::shared_ptr<LILNode>> 
                     newVd->setIsIVar(fldVd->getIsIVar());
                     newVd->setIsVVar(fldVd->getIsVVar());
                     newVd->setIsExpanded(fldVd->getIsExpanded());
+                    newVd->setIsResource(fldVd->getIsResource());
                     auto initVal = fldVd->getInitVal();
                     if (initVal) {
                         newVd->setInitVal(fldVd->getInitVal()->clone());

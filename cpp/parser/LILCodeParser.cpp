@@ -3658,11 +3658,15 @@ bool LILCodeParser::readInstruction()
         }
         else if (currentval == "expand")
         {
-            return this->readExpandInstr();
+            return this->readInstrSimple();
         }
         else if (currentval == "gpu")
         {
             return this->readGPUInstr();
+        }
+        else if (currentval == "resource")
+        {
+            return this->readInstrSimple();
         }
         else
         {
@@ -4171,7 +4175,7 @@ bool LILCodeParser::readArgInstr()
     LIL_END_NODE
 }
 
-bool LILCodeParser::readExpandInstr()
+bool LILCodeParser::readInstrSimple()
 {
     LIL_START_NODE(NodeTypeInstruction)
     

@@ -818,6 +818,15 @@ void LILASTBuilder::receiveNodeCommit()
                     instr->addNode(this->currentNode);
                     break;
                 }
+                case InstructionTypeResource:
+                {
+                    if (this->currentNode->isA(NodeTypeVarDecl)) {
+                        auto vd = std::static_pointer_cast<LILVarDecl>(this->currentNode);
+                        vd->setIsResource(true);
+                    }
+                    instr->addNode(this->currentNode);
+                    break;
+                }
                 default:
                     std::cerr << "UNIMPLEMENTED FAIL !!!! \n\n";
                     break;
@@ -1380,6 +1389,8 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
                         instr->setInstructionType(InstructionTypeExpand);
                     } else if (data == "gpu") {
                         instr->setInstructionType(InstructionTypeGPU);
+                    } else if (data == "resource") {
+                        instr->setInstructionType(InstructionTypeResource);
                     }
                     break;
                 }
