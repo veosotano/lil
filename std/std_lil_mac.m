@@ -739,6 +739,8 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
 - (void)setWindowBackgroundRed:(float)red green:(float)green blue:(float)blue alpha:(float)alpha;
 - (LILMainView *)getMainView;
 - (void)quit;
+- (void)showOpenPanelWithSuccessCallback:(void(*)(const char *))onSuccess cancelCallback:(void(*)())onCancel;
+- (void)showSavePanelWithSuccessCallback:(void(*)(const char *))onSuccess cancelCallback:(void(*)())onCancel;
 @end
 @implementation LILAppDelegate
 - (id)init {
@@ -895,6 +897,42 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
 - (void)quit
 {
     [[NSApplication  sharedApplication] terminate:self];
+}
+
+- (void)showOpenPanelWithSuccessCallback:(void(*)(const char *))onSuccess cancelCallback:(void(*)())onCancel
+{
+	NSOpenPanel* panel = [NSOpenPanel openPanel];
+
+	// This method displays the panel and returns immediately.
+	// The completion handler is called when the user selects an
+	// item or cancels the panel.
+	[panel beginWithCompletionHandler:^(NSInteger result){
+		if (result == NSModalResponseOK) {
+			NSURL*  theDoc = [[panel URLs] objectAtIndex:0];
+
+			onSuccess(theDoc.fileSystemRepresentation);
+		} else {
+			onCancel();
+		}
+	}];
+}
+
+- (void)showSavePanelWithSuccessCallback:(void(*)(const char *))onSuccess cancelCallback:(void(*)())onCancel
+{
+	NSSavePanel* panel = [NSSavePanel savePanel];
+
+	// This method displays the panel and returns immediately.
+	// The completion handler is called when the user selects an
+	// item or cancels the panel.
+	[panel beginWithCompletionHandler:^(NSInteger result){
+		if (result == NSModalResponseOK) {
+			NSURL*  theDoc = [panel URL];
+
+			onSuccess(theDoc.fileSystemRepresentation);
+		} else {
+			onCancel();
+		}
+	}];
 }
 
 @end
