@@ -73,8 +73,8 @@
         mac {
             suffix: #arg { name: "suffix"; default: "OS_MAC" };
             constants+: "OS_MAC";
-            minOSVersion: #arg { name: "minOSVersion"; default: "10.12" };
-            cpu: #arg { name: "cpu"; default: "x86_64" };
+            minOSVersion: #arg { name: "minOSVersion"; default: "11.0" };
+            cpu: #arg { name: "cpu"; default: "aarch64" };
             vendor: #arg { name: "vendor"; default: "apple-macos%minOSVersion"};
             buildResources: #arg { name: "buildResources"; default: true };
             resourceBuildSteps:
@@ -82,11 +82,15 @@
                 'xcrun -sdk macosx metal -c std/lil_shaders.metal -o "%buildPath/std/lil_shaders.air"',
                 'xcrun -sdk macosx metallib "%buildPath/std/lil_shaders.air" -o "%buildPath/std/lil_shaders.metallib"'
             ;
+			linkerFlags +: "-L/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/lib";
+			linkerFlags +: "-F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks";
             linkerFlags +: "-macosx_version_min %minOSVersion";
             linkerFlags +: "-framework Cocoa";
 
             linkerFlagsApp:
                 '"%buildPath/std/std_lil_mac.o"',
+				"-L/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/lib",
+				"-F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks",
                 "-lc",
                 "-framework Cocoa",
                 "-framework AudioToolbox",
@@ -97,6 +101,7 @@
                 "-framework MetalKit",
                 "-macosx_version_min %minOSVersion";
             appBuildSteps:
+				'rm -rf "%name.app"',
                 'mkdir -p "%name.app/Contents/MacOS"',
                 'mkdir -p "%name.app/Contents/Resources"',
                 'echo "APPL????" > "%name.app/Contents/PkgInfo"',
