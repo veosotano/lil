@@ -78,9 +78,9 @@
             vendor: #arg { name: "vendor"; default: "apple-macos%minOSVersion"};
             buildResources: #arg { name: "buildResources"; default: true };
             resourceBuildSteps:
-                'clang -c std/std_lil_mac.m -o "%buildPath/std/std_lil_mac.o"',
-                'xcrun -sdk macosx metal -c std/lil_shaders.metal -o "%buildPath/std/lil_shaders.air"',
-                'xcrun -sdk macosx metallib "%buildPath/std/lil_shaders.air" -o "%buildPath/std/lil_shaders.metallib"'
+                'clang -c %compilerDir/std/std_lil_mac.m -o "%buildPath/std_lil_mac.o" -mmacosx-version-min=%minOSVersion',
+                'xcrun -sdk macosx metal -c %compilerDir/std/lil_shaders.metal -o "%buildPath/lil_shaders.air"',
+                'xcrun -sdk macosx metallib "%buildPath/lil_shaders.air" -o "%buildPath/lil_shaders.metallib"'
             ;
 			linkerFlags +: "-L/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/lib";
 			linkerFlags +: "-F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks";
@@ -88,7 +88,7 @@
             linkerFlags +: "-framework Cocoa";
 
             linkerFlagsApp:
-                '"%buildPath/std/std_lil_mac.o"',
+                '"%buildPath/std_lil_mac.o"',
 				"-L/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/lib",
 				"-F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks",
                 "-lc",
@@ -128,7 +128,7 @@
 </dict>
 </plist>" > "%name.app/Contents/Info.plist"',
                 'cp "%buildPath/%out" "%name.app/Contents/MacOS/%name"',
-                'cp "%buildPath/std/lil_shaders.metallib" "%name.app/Contents/Resources/lil_shaders.metallib"'
+                'cp "%buildPath/lil_shaders.metallib" "%name.app/Contents/Resources/lil_shaders.metallib"'
             ; //linkerFlagsApp
 
 			resourcesPath: "%name.app/Contents/Resources/";
