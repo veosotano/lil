@@ -481,6 +481,9 @@ const std::vector<LILString> LILRootNode::_gatherResources(LILRule * rule) const
 {
     std::vector<LILString> ret;
     auto ty = rule->getType();
+    if (!ty) {
+        return ret;
+    }
     auto cdNode = this->findClassWithName(ty->getName());
     if (cdNode && (cdNode->getNodeType() == NodeTypeClassDecl)) {
         auto cd = this->findClassWithName(ty->getName());
