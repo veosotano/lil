@@ -1921,6 +1921,20 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(LILValuePath * vp)
                     //FIXME: implement this
                     break;
                 }
+                case SelectorTypeThisSelector:
+                {
+                    auto rule = this->findAncestorRule(currentNode);
+                    if (!rule) {
+                        std::cerr << "USING @this OUTSIDE OF A RULE FAIL !!!!\n";
+                        return nullptr;
+                    }
+                    auto ruleTy = rule->getType();
+                    if (!ruleTy) {
+                        std::cerr << "RULE HAD NO TYPE FAIL !!!!\n";
+                        return nullptr;
+                    }
+                    return ruleTy;
+                }
                 default:
                     std::cerr << "!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!\n";
                     break;
@@ -1972,6 +1986,20 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(LILValuePath * vp)
                 currentNode = classDecl;
                 currentTy = classDecl->getType();
             }
+            else if (currentNode->isA(SelectorTypeThisSelector)) {
+                auto rule = this->findAncestorRule(currentNode);
+                if (!rule) {
+                    std::cerr << "USING @this OUTSIDE OF A RULE FAIL !!!!\n";
+                    return nullptr;
+                }
+                auto ruleTy = rule->getType();
+                if (!ruleTy) {
+                    std::cerr << "RULE HAD NO TYPE FAIL !!!!\n";
+                    return nullptr;
+                }
+                currentTy = ruleTy;
+                currentNode = rule;
+            }
         }
 
         bool isLast = false;
@@ -1988,7 +2016,7 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(LILValuePath * vp)
                         currentTy = ptrTy->getArgument();
                     }
                     auto currentNodeTy = currentNode->getNodeType();
-                    if (currentNodeTy == NodeTypeClassDecl || currentNodeTy == NodeTypeVarDecl ) {
+                    if (currentNodeTy == NodeTypeClassDecl || currentNodeTy == NodeTypeVarDecl || currentNodeTy == NodeTypeRule ) {
                         if (currentTy->getTypeType() != TypeTypeObject) {
                             std::cerr << "CURRENT TY WAS NOT OBJECT TY FAIL!!!!\n";
                             return nullptr;
