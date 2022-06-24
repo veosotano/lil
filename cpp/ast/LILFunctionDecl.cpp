@@ -20,7 +20,6 @@ using namespace LIL;
 
 LILFunctionDecl::LILFunctionDecl()
 : LILVarNode(NodeTypeFunctionDecl)
-, _functionDeclType(FunctionDeclTypeFn)
 , _name("")
 , _hasReturn(false)
 , _isConstructor(false)
@@ -28,7 +27,6 @@ LILFunctionDecl::LILFunctionDecl()
 , _hasMultipleImpls(false)
 {
     this->_receivesFunctionBody = false;
-    this->_functionDeclType = FunctionDeclTypeNone;
 }
 
 LILFunctionDecl::LILFunctionDecl(const LILFunctionDecl &other)
@@ -39,7 +37,6 @@ LILFunctionDecl::LILFunctionDecl(const LILFunctionDecl &other)
 , _fnlly(other._fnlly)
 , _fnType(other._fnType)
 , _receivesFunctionBody(other._receivesFunctionBody)
-, _functionDeclType(other._functionDeclType)
 , _name(other._name)
 , _hasReturn(other._hasReturn)
 , _isConstructor(other._isConstructor)
@@ -119,18 +116,7 @@ LILFunctionDecl::~LILFunctionDecl()
 
 void LILFunctionDecl::receiveNodeData(const LILString &data)
 {
-    if (data == "override")
-    {
-        this->setFunctionDeclType(FunctionDeclTypeOverride);
-    }
-    else if (data == "insert")
-    {
-        this->setFunctionDeclType(FunctionDeclTypeInsert);
-    }
-    else if (data == "macro")
-    {
-        this->setFunctionDeclType(FunctionDeclTypeMacro);
-    }
+    //do nothing
 }
 
 void LILFunctionDecl::addEvaluable(std::shared_ptr<LILNode> evl)
@@ -203,16 +189,6 @@ bool LILFunctionDecl::getReceivesFunctionBody() const
 void LILFunctionDecl::setReceivesFunctionBody(bool newValue)
 {
     this->_receivesFunctionBody = newValue;
-}
-
-FunctionDeclType LILFunctionDecl::getFunctionDeclType() const
-{
-    return this->_functionDeclType;
-}
-
-void LILFunctionDecl::setFunctionDeclType(FunctionDeclType newType)
-{
-    this->_functionDeclType = newType;
 }
 
 std::shared_ptr<LILType> LILFunctionDecl::getReturnType() const

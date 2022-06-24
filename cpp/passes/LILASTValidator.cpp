@@ -801,38 +801,29 @@ void LILASTValidator::_validate(const std::shared_ptr<LILVarName> & value)
 
 void LILASTValidator::_validate(const std::shared_ptr<LILFunctionDecl> & value)
 {
-    switch (value->getFunctionDeclType()) {
-        case FunctionDeclTypeFn:
-        {
-            auto fnTyNode = value->getType();
-            if (fnTyNode->getTypeType() == TypeTypeFunction) {
-                auto fnTy = std::static_pointer_cast<LILFunctionType>(fnTyNode);
-                for (auto arg : fnTy->getArguments()) {
-                    if (arg->getNodeType() == NodeTypeVarDecl) {
-                        auto argVd = std::static_pointer_cast<LILVarDecl>(arg);
-                        if (!argVd->getType()) {
-                            LILErrorMessage ei;
-                            ei.message =  "Argument "+argVd->getName()+" must have a type (for example var.i64 or var.@string)";
-                            LILNode::SourceLocation sl = arg->getSourceLocation();
-                            ei.file = sl.file;
-                            ei.line = sl.line;
-                            ei.column = sl.column;
-                            this->errors.push_back(ei);
-                        }
-                    }
+    auto fnTyNode = value->getType();
+    if (fnTyNode->getTypeType() == TypeTypeFunction) {
+        auto fnTy = std::static_pointer_cast<LILFunctionType>(fnTyNode);
+        for (auto arg : fnTy->getArguments()) {
+            if (arg->getNodeType() == NodeTypeVarDecl) {
+                auto argVd = std::static_pointer_cast<LILVarDecl>(arg);
+                if (!argVd->getType()) {
+                    LILErrorMessage ei;
+                    ei.message =  "Argument "+argVd->getName()+" must have a type (for example var.i64 or var.@string)";
+                    LILNode::SourceLocation sl = arg->getSourceLocation();
+                    ei.file = sl.file;
+                    ei.line = sl.line;
+                    ei.column = sl.column;
+                    this->errors.push_back(ei);
                 }
             }
-
-            auto evals = value->getBody();
-            for (size_t i=0, j=evals.size(); i<j; ++i) {
-                const auto & eval = evals[i];
-                this->_validateFunctionDeclChild(value.get(), eval.get());
-            }
-            break;
         }
+    }
 
-        default:
-            break;
+    auto evals = value->getBody();
+    for (size_t i=0, j=evals.size(); i<j; ++i) {
+        const auto & eval = evals[i];
+        this->_validateFunctionDeclChild(value.get(), eval.get());
     }
 }
 
@@ -851,24 +842,6 @@ void LILASTValidator::_validateFunctionDeclChild(LILFunctionDecl * value, LILNod
         {
             break;
         }
-        case NodeTypeFunctionDecl:
-        {
-            auto fd = static_cast<LILFunctionDecl *>(node);
-            switch (fd->getFunctionDeclType()) {
-                case FunctionDeclTypeInsert:
-                case FunctionDeclTypeOverride:
-                {
-                    break;
-                }
-                    
-                default:
-                    this->illegalNodeType(node, value);
-                    break;
-            }
-            
-            break;
-        }
-            
         case NodeTypeInstruction:
         {
             auto instr = static_cast<LILInstruction *>(node);

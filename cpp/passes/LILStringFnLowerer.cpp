@@ -205,7 +205,6 @@ bool LILStringFnLowerer::processStringFn(std::shared_ptr<LILNode> node)
 bool LILStringFnLowerer::_processStringFn(std::shared_ptr<LILStringFunction> value)
 {
     auto fd = std::make_shared<LILFunctionDecl>();
-    fd->setFunctionDeclType(FunctionDeclTypeFn);
     fd->setSourceLocation(value->getSourceLocation());
     auto fnName = "lil_string_fn_"+LILString::number((LILUnitI64)this->_count);
     fd->setName(fnName);

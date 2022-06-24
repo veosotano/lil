@@ -1124,7 +1124,6 @@ llvm::Value * LILIREmitter::_emitConvDecl(LILConversionDecl * value)
     }
     
     auto fd = std::make_shared<LILFunctionDecl>();
-    fd->setFunctionDeclType(FunctionDeclTypeFn);
     auto fnTy = std::make_shared<LILFunctionType>();
     fnTy->setName("fn");
     fnTy->addArgument(vd);
@@ -2406,26 +2405,16 @@ llvm::Value * LILIREmitter::_emitVN(LILVarName * value)
 
 llvm::Function * LILIREmitter::_emitFnDecl(LILFunctionDecl * value)
 {
-    switch (value->getFunctionDeclType()) {
-        case FunctionDeclTypeFn:
-        {
-            if (value->getIsExtern()) {
-                return nullptr;
-            }
-            if (value->getHasMultipleImpls()) {
-                for (auto impl : value->getImpls()) {
-                    this->_emitFnDecl(impl.get());
-                }
-                return nullptr;
-            }
-            return this->_emitFn(value);
-        }
-
-        default:
-            std::cerr << "!!!!!!!!!!UNKNOWN FUNCTION DECL TYPE FAIL!!!!!!!!!!!!!!!!\n";
-            break;
+    if (value->getIsExtern()) {
+        return nullptr;
     }
-    return nullptr;
+    if (value->getHasMultipleImpls()) {
+        for (auto impl : value->getImpls()) {
+            this->_emitFnDecl(impl.get());
+        }
+        return nullptr;
+    }
+    return this->_emitFn(value);
 }
 
 llvm::Function * LILIREmitter::_emitFnSignature(std::string name, LILFunctionType * fnTy)

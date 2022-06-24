@@ -45,9 +45,6 @@ namespace LIL
         bool getReceivesFunctionBody() const;
         void setReceivesFunctionBody(bool newValue);
 
-        FunctionDeclType getFunctionDeclType() const;
-        void setFunctionDeclType(FunctionDeclType newType);
-
         std::shared_ptr<LILType> getReturnType() const;
         void setReturnType(std::shared_ptr<LILType> type);
 
@@ -85,7 +82,6 @@ namespace LIL
         std::shared_ptr<LILNode> _fnlly;
         std::shared_ptr<LILFunctionType> _fnType;
         bool _receivesFunctionBody;
-        FunctionDeclType _functionDeclType;
         LILString _name;
         bool _hasReturn;
         bool _isConstructor;

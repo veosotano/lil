@@ -187,15 +187,6 @@ namespace LIL
         FunctionCallTypeConversion,
     };
 
-    enum FunctionDeclType
-    {
-        FunctionDeclTypeNone = 0,
-        FunctionDeclTypeFn,
-        FunctionDeclTypeInsert,
-        FunctionDeclTypeOverride,
-        FunctionDeclTypeMacro,
-    };
-
     enum FlowControlType
     {
         FlowControlTypeNone = 0,

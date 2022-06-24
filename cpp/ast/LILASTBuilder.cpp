@@ -1221,7 +1221,7 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
         {
             std::shared_ptr<LILFunctionDecl> fd = std::static_pointer_cast<LILFunctionDecl>(this->currentContainer.back());
             if (eventType == ParserEventFunctionTypeFn) {
-                fd->setFunctionDeclType(FunctionDeclTypeFn);
+                //do nothing
             }
             else if (eventType == ParserEventFunctionName) {
                 fd->setName(data);

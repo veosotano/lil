@@ -1101,7 +1101,6 @@ void LILPreprocessor::_importNodeIfNeeded(std::vector<std::shared_ptr<LILNode>> 
                     }
                     auto fd = std::static_pointer_cast<LILFunctionDecl>(method);
                     auto newFd = std::make_shared<LILFunctionDecl>();
-                    newFd->setFunctionDeclType(FunctionDeclTypeFn);
                     newFd->setType(fd->getFnType()->clone());
                     newFd->setName(fd->getName());
                     newFd->setIsExtern(true);
@@ -1110,7 +1109,6 @@ void LILPreprocessor::_importNodeIfNeeded(std::vector<std::shared_ptr<LILNode>> 
                         newFd->setHasMultipleImpls(true);
                         for (auto impl : fd->getImpls()) {
                             auto newImpl = std::make_shared<LILFunctionDecl>();
-                            newImpl->setFunctionDeclType(FunctionDeclTypeFn);
                             newImpl->setName(impl->getName());
                             newImpl->setIsExtern(true);
                             newImpl->setType(impl->getType()->clone());
@@ -1138,7 +1136,6 @@ void LILPreprocessor::_importNodeIfNeeded(std::vector<std::shared_ptr<LILNode>> 
         {
             auto fd = std::static_pointer_cast<LILFunctionDecl>(node);
             auto newFd = std::make_shared<LILFunctionDecl>();
-            newFd->setFunctionDeclType(FunctionDeclTypeFn);
             newFd->setName(fd->getName());
             newFd->setIsExtern(true);
             newFd->setIsExported(isExported);
@@ -1148,7 +1145,6 @@ void LILPreprocessor::_importNodeIfNeeded(std::vector<std::shared_ptr<LILNode>> 
                 newFd->setHasMultipleImpls(true);
                 for (auto impl : fd->getImpls()) {
                     auto newImpl = std::make_shared<LILFunctionDecl>();
-                    newImpl->setFunctionDeclType(FunctionDeclTypeFn);
                     newImpl->setName(impl->getName());
                     newImpl->setIsExtern(true);
                     newImpl->setType(impl->getType()->clone());

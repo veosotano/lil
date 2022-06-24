@@ -544,18 +544,7 @@ LILString LILNodeToString::stringify(LILNode * node)
         case NodeTypeFunctionDecl:
         {
             auto value = static_cast<LILFunctionDecl *>(node);
-            switch (value->getFunctionDeclType())
-            {
-                case FunctionDeclTypeNone: return "";
-                case FunctionDeclTypeFn:
-                {
-                    return "fn " + value->getName();
-                }
-                case FunctionDeclTypeInsert: return "insert";
-                case FunctionDeclTypeOverride: return "override";
-                case FunctionDeclTypeMacro: return "macro";
-            }
-            break;
+            return "fn " + value->getName();
         }
         case NodeTypeFunctionCall:
         {

@@ -1319,21 +1319,12 @@ std::shared_ptr<LILType> LILTypeGuesser::getNodeType(LILNode * node) const
         case NodeTypeFunctionDecl:
         {
             auto fd = static_cast<LILFunctionDecl *>(node);
-            switch (fd->getFunctionDeclType()) {
-                case FunctionDeclTypeFn:
-                {
-                    auto ty = fd->getType();
-                    if (!ty) {
-                        ty = this->getFnType(fd);
-                        fd->setType(ty);
-                    }
-                    return ty;
-                }
-
-                default:
-                    break;
+            auto ty = fd->getType();
+            if (!ty) {
+                ty = this->getFnType(fd);
+                fd->setType(ty);
             }
-            break;
+            return ty;
         }
         case NodeTypeValuePath:
         {
