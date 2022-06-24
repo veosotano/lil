@@ -240,6 +240,7 @@ void LILRootNode::add(std::shared_ptr<LILNode> node, bool addToNodeTree)
                 this->addNode(enm);
             }
             this->setLocalVariable(enm->getName(), enm);
+            this->addEnum(enm);
             break;
         }
         default:
@@ -256,6 +257,7 @@ void LILRootNode::clearNodes()
     this->_docs.clear();
     this->_types.clear();
     this->_aliases.clear();
+    this->_enums.clear();
     this->_snippets.clear();
     this->_config.clear();
     this->_constants.clear();
@@ -303,6 +305,16 @@ void LILRootNode::addType(std::shared_ptr<LILTypeDecl> value)
 const std::vector<std::shared_ptr<LILTypeDecl>> & LILRootNode::getTypes() const
 {
     return this->_types;
+}
+
+void LILRootNode::addEnum(std::shared_ptr<LILEnum> value)
+{
+    this->_enums.push_back(value);
+}
+
+const std::vector<std::shared_ptr<LILEnum>> & LILRootNode::getEnums() const
+{
+    return this->_enums;
 }
 
 void LILRootNode::addConversion(std::shared_ptr<LILConversionDecl> value)
@@ -558,6 +570,16 @@ std::shared_ptr<LILClassDecl> LILRootNode::findClassWithName(const LILString & n
     for (auto classVal : this->getClasses()) {
         if (classVal->getName() == name) {
             return classVal;
+        }
+    }
+    return nullptr;
+}
+
+std::shared_ptr<LILEnum> LILRootNode::findEnumWithName(const LILString & name) const
+{
+    for (auto enumVal : this->getEnums()) {
+        if (enumVal->getName() == name) {
+            return enumVal;
         }
     }
     return nullptr;

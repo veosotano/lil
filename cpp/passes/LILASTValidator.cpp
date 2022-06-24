@@ -550,6 +550,12 @@ bool LILASTValidator::_isCustomType(const std::shared_ptr<LILType> & ty) const
             return true;
         }
     }
+    auto enums = rootNode->getEnums();
+    for (auto enm : enums) {
+        if (enm->getName() == ty->getName()) {
+            return true;
+        }
+    }
     return false;
 }
 

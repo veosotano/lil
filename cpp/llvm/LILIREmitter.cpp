@@ -4364,6 +4364,16 @@ llvm::Type * LILIREmitter::llvmTypeFromLILType(LILType * type)
     } else if (typestr == "null") {
         return llvm::Type::getVoidTy(d->llvmContext);
     }
+    
+    if (!ret) {
+        auto enumVal = this->findEnumWithName(typestr);
+        if (enumVal) {
+            auto enumTy = enumVal->getType();
+            if (enumTy) {
+                ret = this->llvmTypeFromLILType(enumTy.get());
+            }
+        }
+    }
 
     if (type->getIsNullable()) {
         std::vector<llvm::Type*> types;
