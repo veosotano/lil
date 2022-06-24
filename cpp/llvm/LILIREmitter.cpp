@@ -1984,7 +1984,7 @@ llvm::Value * LILIREmitter::_emitRuleInner(LILRule * value)
 {
     auto ty = value->getType();
     if (!ty) {
-        //std::cerr << "RULE HAD NO TYPE FAIL!!!!!!!\n\n";
+        std::cerr << "RULE HAD NO TYPE FAIL!!!!!!!\n\n";
         return nullptr;
     }
     const auto & tyName = ty->getName();
@@ -2009,60 +2009,7 @@ llvm::Value * LILIREmitter::_emitRuleInner(LILRule * value)
     thisArg->setName("@this");
 
     for (const auto & val : value->getValues()) {
-        switch (val->getNodeType()) {
-            case NodeTypeAssignment:
-            {
-                auto asgmt = std::static_pointer_cast<LILAssignment>(val);
-                const auto & subj = asgmt->getSubject();
-                switch (subj->getNodeType()) {
-                    case NodeTypePropertyName:
-                    {
-                        auto as = std::make_shared<LILAssignment>();
-                        auto vp = std::make_shared<LILValuePath>();
-                        auto thisSelector = std::make_shared<LILSelector>();
-                        thisSelector->setName("@this");
-                        thisSelector->setSelectorType(SelectorTypeThisSelector);
-                        vp->addChild(thisSelector);
-                        vp->addChild(subj->clone());
-                        as->setSubject(vp);
-                        as->setValue(asgmt->getValue()->clone());
-                        as->setParentNode(value->shared_from_this());
-                        this->_emitAsgmt(as.get());
-                        break;
-                    }
-                    case NodeTypeValuePath:
-                    {
-                        auto as = std::make_shared<LILAssignment>();
-                        auto vp = std::make_shared<LILValuePath>();
-                        auto thisSelector = std::make_shared<LILSelector>();
-                        thisSelector->setName("@this");
-                        thisSelector->setSelectorType(SelectorTypeThisSelector);
-                        vp->addChild(thisSelector);
-                        auto subjVp = std::static_pointer_cast<LILValuePath>(subj);
-                        for (const auto & node : subjVp->getNodes()) {
-                            vp->addChild(node->clone());
-                        }
-                        as->setSubject(vp);
-                        as->setValue(asgmt->getValue()->clone());
-                        as->setParentNode(value->shared_from_this());
-                        this->_emitAsgmt(as.get());
-                        break;
-                    }
-                        
-                    default:
-                        std::cerr << "!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!\n";
-                        return nullptr;
-                        break;
-                }
-                
-                
-                break;
-            }
-                
-            default:
-                std::cerr << "!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!\n";
-                return nullptr;
-        }
+        this->emit(val.get());
     }
 
     d->namedValues.erase("@this");
