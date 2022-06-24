@@ -2220,6 +2220,7 @@ bool LILCodeParser::readEnum()
             }
         } else {
             bool pNameValid = this->readPropertyName();
+            LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
             if (pNameValid) {
                 d->receiver->receiveNodeCommit();
             } else {
