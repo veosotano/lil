@@ -671,6 +671,8 @@ void LILASTBuilder::receiveNodeCommit()
                 }
                 case NodeTypeAssignment:
                 case NodeTypeUnaryExpression:
+                case NodeTypeValuePath:
+                case NodeTypeFunctionCall:
                 {
                     rule->addValue(this->currentNode);
                     break;
