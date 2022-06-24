@@ -684,7 +684,17 @@ LILToStrInfo LILToStringVisitor::_stringify(LILRule * value)
 {
     LILToStrInfo ret;
     ret.value = "Rule:";
-    this->stringifyChildren(value->getChildNodes(), ret);
+    auto instr = value->getInstruction();
+    if (instr) {
+        ret.children.push_back(this->stringify(instr.get()));
+    }
+    ret.children.push_back(this->stringify(value->getSelectorChain().get()));
+    for (const auto & val : value->getValues()) {
+        ret.children.push_back(this->stringify(val.get()));
+    }
+    for (const auto & childRule : value->getChildRules()) {
+        ret.children.push_back(this->stringify(childRule.get()));
+    }
     return ret;
 }
 

@@ -295,10 +295,6 @@ llvm::Value * LILIREmitter::emit(LILNode * node)
         {
             LILRule * value = static_cast<LILRule *>(node);
             this->_emitRule(value);
-            
-            for (auto child : value->getChildRules()) {
-                this->_emitRule(child.get());
-            }
             return nullptr;
         }
         case NodeTypeSimpleSelector:
@@ -1976,6 +1972,15 @@ llvm::Value * LILIREmitter::_emitPN(LILPropertyName * value)
 }
 
 llvm::Value * LILIREmitter::_emitRule(LILRule * value)
+{
+    auto ret = this->_emitRuleInner(value);
+    for (auto child : value->getChildRules()) {
+        this->_emitRule(child.get());
+    }
+    return ret;
+}
+
+llvm::Value * LILIREmitter::_emitRuleInner(LILRule * value)
 {
     auto ty = value->getType();
     if (!ty) {

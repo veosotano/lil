@@ -30,6 +30,7 @@
 #include "LILObjectType.h"
 #include "LILPropertyName.h"
 #include "LILRootNode.h"
+#include "LILRule.h";
 #include "LILStringLiteral.h"
 #include "LILUnaryExpression.h"
 #include "LILValueList.h"
@@ -176,6 +177,16 @@ bool LILColorMaker::processColorInstr(std::shared_ptr<LILNode> node)
             return this->_processColorInstr(value);
         }
         case NodeTypeRule:
+        {
+            auto rule = std::static_pointer_cast<LILRule>(node);
+            for (const auto & val : rule->getValues()) {
+                this->processColorInstr(val);
+            }
+            for (const auto & childRule : rule->getChildRules()) {
+                this->processColorInstr(childRule);
+            }
+            break;
+        }
         case NodeTypeClassDecl:
         case NodeTypeSelectorChain:
         case NodeTypeSimpleSelector:

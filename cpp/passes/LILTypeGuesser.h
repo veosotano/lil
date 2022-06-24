@@ -97,6 +97,7 @@ namespace LIL
         void _process(LILPropertyName * value);
         void _process(LILVarName * value);
         void _process(LILRule * value);
+        void _processRuleInner(LILRule * value);
         void _process(LILSimpleSelector * value);
         void _process(LILSelectorChain * value);
         void _process(LILSelector * value);

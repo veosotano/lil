@@ -39,7 +39,6 @@ std::shared_ptr<LILRule> LILRule::clone() const
 std::shared_ptr<LILClonable> LILRule::cloneImpl() const
 {
     std::shared_ptr<LILRule> clone(new LILRule(*this));
-    clone->clearChildNodes();
 
     if (this->_selectorChain) {
         clone->setSelectorChain(this->_selectorChain->clone());
@@ -74,14 +73,14 @@ const std::shared_ptr<LILNode> & LILRule::getSelectorChain() const
 
 void LILRule::setSelectorChain(std::shared_ptr<LILNode> value)
 {
-    this->addNode(value);
     this->_selectorChain = value;
+    value->setParentNode(this->shared_from_this());
 }
 
 void LILRule::addValue(std::shared_ptr<LILNode> newVal)
 {
-    this->addNode(newVal);
     this->_values.push_back(newVal);
+    newVal->setParentNode(this->shared_from_this());
 }
 
 const std::vector<std::shared_ptr<LILNode>> & LILRule::getValues() const
@@ -92,12 +91,15 @@ const std::vector<std::shared_ptr<LILNode>> & LILRule::getValues() const
 void LILRule::setValues(std::vector<std::shared_ptr<LILNode>> && nodes)
 {
     this->_values = std::move(nodes);
+    for (const auto & value : this->_values) {
+        value->setParentNode(this->shared_from_this());
+    }
 }
 
 void LILRule::addChildRule(std::shared_ptr<LILRule> rule)
 {
-    this->addNode(rule);
     this->_childRules.push_back(rule);
+    rule->setParentNode(this->shared_from_this());
 }
 const std::vector<std::shared_ptr<LILRule>> & LILRule::getChildRules() const
 {
@@ -107,11 +109,15 @@ const std::vector<std::shared_ptr<LILRule>> & LILRule::getChildRules() const
 void LILRule::setChildRules(std::vector<std::shared_ptr<LILRule>> && rules)
 {
     this->_childRules = std::move(rules);
+    for (const auto & child : this->_childRules) {
+        child->setParentNode(this->shared_from_this());
+    }
 }
 
 void LILRule::setInstruction(std::shared_ptr<LILNode> instruction)
 {
     this->_instruction = instruction;
+    this->_instruction->setParentNode(this->shared_from_this());
 }
 
 const std::shared_ptr<LILNode> LILRule::getInstruction() const

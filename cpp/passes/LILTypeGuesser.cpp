@@ -305,21 +305,7 @@ void LILTypeGuesser::processChildren(const std::vector<std::shared_ptr<LILNode> 
 
 void LILTypeGuesser::process(LILNode * node)
 {
-    if ((node->getNodeType() == NodeTypeRule) && !node->getType()) {
-        auto rule = static_cast<LILRule *>(node);
-        auto ruleTy = this->getNodeType(rule);
-        if (ruleTy) {
-            rule->setType(ruleTy);
-            
-            if (
-                ruleTy->getName() != "mainMenu"
-                && ruleTy->getName() != "menu"
-                && ruleTy->getName() != "menuItem"
-            ) {
-                this->processChildren(node->getChildNodes());
-            }
-        }
-    } else if (LILNode::isContainerNode(node->getNodeType())) {
+    if (LILNode::isContainerNode(node->getNodeType())) {
         //we don't need to process extern classes
         if (!node->isA(NodeTypeClassDecl) || !static_cast<LILClassDecl *>(node)->getIsExtern()) {
             this->processChildren(node->getChildNodes());
@@ -441,9 +427,6 @@ void LILTypeGuesser::process(LILNode * node)
         {
             LILRule * value = static_cast<LILRule *>(node);
             this->_process(value);
-            for (auto child : value->getChildRules()) {
-                this->process(child.get());
-            }
             break;
         }
         case NodeTypeSimpleSelector:
@@ -768,11 +751,22 @@ void LILTypeGuesser::_process(LILPropertyName * value)
 
 void LILTypeGuesser::_process(LILRule * value)
 {
+    this->_processRuleInner(value);
+    for (const auto & child: value->getChildRules()) {
+        this->_process(child.get());
+    }
+}
+
+void LILTypeGuesser::_processRuleInner(LILRule * value)
+{
     if (!value->getType()) {
         auto ty = this->getNodeType(value);
         if (ty) {
             value->setType(ty);
         }
+    }
+    for (const auto & val : value->getValues()) {
+        this->process(val.get());
     }
 }
 
