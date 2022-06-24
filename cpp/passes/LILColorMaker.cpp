@@ -558,6 +558,7 @@ bool LILColorMaker::_processColorInstr(std::shared_ptr<LILInstruction> value)
         auto red = std::make_shared<LILAssignment>();
         auto redPn = std::make_shared<LILPropertyName>();
         redPn->setName("red");
+        red->setType(numTy);
         red->setSubject(redPn);
         red->setValue(redNumLit);
         objDef->addChild(red);
@@ -568,6 +569,7 @@ bool LILColorMaker::_processColorInstr(std::shared_ptr<LILInstruction> value)
         auto green = std::make_shared<LILAssignment>();
         auto greenPn = std::make_shared<LILPropertyName>();
         greenPn->setName("green");
+        green->setType(numTy);
         green->setSubject(greenPn);
         green->setValue(greenNumLit);
         objDef->addNode(green);
@@ -578,6 +580,7 @@ bool LILColorMaker::_processColorInstr(std::shared_ptr<LILInstruction> value)
         auto blue = std::make_shared<LILAssignment>();
         auto bluePn = std::make_shared<LILPropertyName>();
         bluePn->setName("blue");
+        blue->setType(numTy);
         blue->setSubject(bluePn);
         blue->setValue(blueNumLit);
         objDef->addNode(blue);
@@ -588,6 +591,7 @@ bool LILColorMaker::_processColorInstr(std::shared_ptr<LILInstruction> value)
         auto alpha = std::make_shared<LILAssignment>();
         auto alphaPn = std::make_shared<LILPropertyName>();
         alphaPn->setName("alpha");
+        alpha->setType(numTy);
         alpha->setSubject(alphaPn);
         alpha->setValue(alphaNumLit);
         objDef->addNode(alpha);
