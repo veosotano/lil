@@ -1,7 +1,7 @@
 #export {
 	class @mouseEvent {
-		var.i64 clickCount;
-		var.f32 x;
-		var.f32 y;
+		var.i64 clickCount: 0;
+		var.f32 x: 0;
+		var.f32 y: 0;
 	}
 }
