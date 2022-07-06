@@ -438,7 +438,9 @@ fn LIL__loadTexture(var.cstr path) extern;
 			};
 			shape.items[size]: newItem;
 			shape.size +: 1;
-			printf(`created moveTo with x:%f and y:%f\n`, x, y);
+			#if DEBUG {
+				printf(`created moveTo with x:%f and y:%f\n`, x, y);
+			}
 		}
 		fn lineTo(var.f32 x; var.f32 y) {
 			var shape: pointerTo app.shapes[@self.componentId];
@@ -450,7 +452,9 @@ fn LIL__loadTexture(var.cstr path) extern;
 			};
 			shape.items[size]: newItem;
 			shape.size +: 1;
-			printf(`created lineTo with x:%f and y:%f\n`, x, y);
+			#if DEBUG {
+				printf(`created lineTo with x:%f and y:%f\n`, x, y);
+			}
 		}
 	}
 	
