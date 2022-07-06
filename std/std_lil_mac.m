@@ -511,15 +511,17 @@ typedef struct
     }
 	
     //shape
-	long int shapeOffset = (sizeof(LILVertex) * (self.boxVertexCount + (self.textureCount * 6)));
-    [renderEncoder setRenderPipelineState:shapePipeline];
-    [renderEncoder setVertexBuffer:vertexBuffer offset:shapeOffset atIndex:LILVertexInputIndexVertices ];
-    LILUniforms shapeUniforms;
-    shapeUniforms.scale = 1.0;
-    shapeUniforms.viewportSize = viewportSize;
-    [renderEncoder setVertexBytes:&shapeUniforms length:sizeof(shapeUniforms) atIndex:LILVertexInputIndexUniforms ];
-    [renderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:self.shapeIndexCount indexType:MTLIndexTypeUInt32 indexBuffer:indexBuffer indexBufferOffset:0];
-
+	if (self.shapeIndexCount > 0) {
+		long int shapeOffset = (sizeof(LILVertex) * (self.boxVertexCount + (self.textureCount * 6)));
+	    [renderEncoder setRenderPipelineState:shapePipeline];
+	    [renderEncoder setVertexBuffer:vertexBuffer offset:shapeOffset atIndex:LILVertexInputIndexVertices ];
+	    LILUniforms shapeUniforms;
+	    shapeUniforms.scale = 1.0;
+	    shapeUniforms.viewportSize = viewportSize;
+	    [renderEncoder setVertexBytes:&shapeUniforms length:sizeof(shapeUniforms) atIndex:LILVertexInputIndexUniforms ];
+	    [renderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:self.shapeIndexCount indexType:MTLIndexTypeUInt32 indexBuffer:indexBuffer indexBufferOffset:0];
+	}
+	
     [renderEncoder endEncoding];
     [commandBuffer presentDrawable:currentDrawable];
     [commandBuffer commit];
