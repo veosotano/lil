@@ -1,13 +1,17 @@
 const DEBUG: false;
+const DEBUG_SHAPE_VERTICES: false;
 
 #snippet entityTypesSize { 10 };
 #snippet namesSize { 32 };
 #snippet selectionSize { 32 };
 #snippet entitiesSize { 2048 };
 #snippet componentsSize { 32 };
+#snippet shapesSize { 32 };
 
 fn onUpdate(var.f64 deltaTime) extern;
 fn LIL__setWindowBgColor(var.f32 red; var.f32 green; var.f32 blue; var.f32 alpha) extern;
+
+#import "libtess2.lil";
 
 #export {
     #needs "cstd.lil";
@@ -19,7 +23,8 @@ fn LIL__setWindowBgColor(var.f32 red; var.f32 green; var.f32 blue; var.f32 alpha
     //0: @container
     //1: @image
     //2: @sprite
-    var.@app app: @app { selectables: []; entityCount: 0; typeCount: 3};
+	//3: @shape2d
+    var.@app app: @app { selectables: []; entityCount: 0; typeCount: 4 };
 
     class @size {
         var.f64 width;
@@ -86,6 +91,27 @@ fn LIL__setWindowBgColor(var.f32 red; var.f32 green; var.f32 blue; var.f32 alpha
         var.f32 y;
         var.f32 z;
     };
+	enum.i32 ShapeType {
+		moveTo,
+		lineTo
+	};
+	class @shapeItem {
+		var.ShapeType ty;
+		var.f32 x: 0;
+		var.f32 y: 0;
+		var.f32 x2: 0;
+		var.f32 y2: 0;
+	};
+	class @shapeData {
+        var.f32 width;
+        var.f32 height;
+        var.f32 x;
+        var.f32 y;
+        var.f32 z;
+		var.[#paste shapesSize x @shapeItem] items: [];
+		var.i64 size: 0;
+        var.@rgb bgColor;
+	};
     class @sel {
         var.[#paste selectionSize x i64] ids: [];
         var.i64 size: 0;
@@ -327,6 +353,99 @@ fn LIL__setWindowBgColor(var.f32 red; var.f32 green; var.f32 blue; var.f32 alpha
         };
     }
 	
+	class @shape2d {
+        //this class MUST only be an i64
+        //do not add any more vars
+        #expand var.@element super: @element { };
+		
+        //public interface
+        vvar.i64 componentId;
+        vvar.f32 width;
+        vvar.f32 height;
+        vvar.f32 x;
+        vvar.f32 y;
+        vvar.f32 z;
+        vvar.@rgb background;
+
+        fn getComponentId => i64 {
+            return app.selectables[@self.id].componentId;
+        }
+
+        fn initialize(var.cstr name; var.i64 parentId: 0) => i64 {
+			#if DEBUG {
+				puts `created shape!`;
+			}
+            var componentId: app.newShape();
+            @self.id: app.newElement(name, parentId, 3, componentId);
+            return @self.id;
+        }
+
+        fn setWidth(var.f32 value) {
+            app.shapes[@self.componentId].width: value;
+        };
+        fn getWidth {
+            return app.shapes[@self.componentId].width;
+        };
+        fn setHeight(var.f32 value) {
+            app.shapes[@self.componentId].height: value;
+        };
+        fn getHeight {
+            return app.shapes[@self.componentId].height;
+        };
+        fn setX(var.f32 value) {
+            app.shapes[@self.componentId].x: value;
+        }
+        fn getX() => f32 {
+            return app.shapes[@self.componentId].x;
+        };
+        fn setY(var.f32 value) {
+            app.shapes[@self.componentId].y: value;
+        };
+        fn getY() => f32 {
+            return app.shapes[@self.componentId].y;
+        };
+        fn setZ(var.f32 value) {
+            app.shapes[@self.componentId].z: value;
+        };
+        fn getZ() => f32 {
+            return app.shapes[@self.componentId].z;
+        };
+        fn setBackground(var.@rgb value) {
+            app.shapes[@self.componentId].bgColor: value;
+        };
+        fn getBackground {
+            return app.shapes[@self.componentId].bgColor;
+        };
+        fn getBackgroundPointer {
+            return pointerTo app.shapes[@self.componentId].bgColor;
+        };
+		
+		fn moveTo(var.f32 x; var.f32 y) {
+			var shape: pointerTo app.shapes[@self.componentId];
+			var size: shape.size;
+			var newItem: @shapeItem {
+				ty: ShapeType.moveTo;
+				x: x;
+				y: y;
+			};
+			shape.items[size]: newItem;
+			shape.size +: 1;
+			printf(`created moveTo with x:%f and y:%f\n`, x, y);
+		}
+		fn lineTo(var.f32 x; var.f32 y) {
+			var shape: pointerTo app.shapes[@self.componentId];
+			var size: shape.size;
+			var newItem: @shapeItem {
+				ty: ShapeType.lineTo;
+				x: x;
+				y: y;
+			};
+			shape.items[size]: newItem;
+			shape.size +: 1;
+			printf(`created lineTo with x:%f and y:%f\n`, x, y);
+		}
+	}
+	
 	fn LIL__mouseClickListener(var.ptr(any) data) {
 		var.ptr(@mouseEvent) event: data;
 		var mouseX: event.x => f32;
@@ -380,7 +499,10 @@ fn LIL__setWindowBgColor(var.f32 red; var.f32 green; var.f32 blue; var.f32 alpha
         var.[#paste entitiesSize x @pos2d] imgClips: [];
         var.[#paste entitiesSize x @img] imgs: [];
         var.i64 imgCount: 0;
-        //colliders
+		//shapes
+		var.[#paste entitiesSize x @shapeData] shapes: [];
+        var.i64 shapesCount: 0;
+		//colliders
         var.[#paste entitiesSize x i64] colliderIds: [];
         var.[#paste componentsSize x @collider] colliders: [];
         var.[#paste namesSize x cstr] names: [];
@@ -494,6 +616,11 @@ fn LIL__setWindowBgColor(var.f32 red; var.f32 green; var.f32 blue; var.f32 alpha
         fn newImg => i64 {
             var currentCount: @self.imgCount;
             @self.imgCount +: 1;
+            return currentCount;
+        };
+        fn newShape => i64 {
+            var currentCount: @self.shapesCount;
+            @self.shapesCount +: 1;
             return currentCount;
         };
         fn setCollider(var.i64 id; var.@collider value) {
@@ -733,4 +860,138 @@ fn LIL__setWindowBgColor(var.f32 red; var.f32 green; var.f32 blue; var.f32 alpha
         memcpy (vertexBuffer, pointerTo(vertices), bufferSize);
         vertexCount: app.imgCount * 6;
     }
+
+	fn LIL__makeShapeVertices(var.ptr(any) vertexBuffer; var.ptr(i64) vertexCount; var.ptr(any) indexBuffer; var.ptr(i64) indexCount) {
+		var.[1000 x @pos2d] subpaths: [];
+		var.[300 x i64] subpathIndices: [];
+		var.i64 pathElemsCount: 0;
+		var.i64 subpathCount: 0;
+
+		var.[1000 x @vertex] theVertices: [];
+		var.[1000 x i32] theIndices: [];
+
+		var.ptr(@TESStesselator) tess: tessNewTess(null);
+		
+		var.i64 vtxCount: 0;
+		var.i64 idxCount: 0;
+
+		for (var.i64 i:0; i<app.shapesCount; i+:1) {
+			#if DEBUG_SHAPE_VERTICES {
+				printf(`tessellating shape %li\n`, i);
+			}
+			pathElemsCount: 0;
+			subpathCount: 0;
+			
+			var shape: pointerTo app.shapes[i];
+			for (var.i64 j:0; j<shape.size; j+:1) {
+				var shapeItem: shape.items[j];
+				#if DEBUG_SHAPE_VERTICES {
+					printf(`shape item %li has type %i\n`, j, shapeItem.ty);
+				}
+				if shapeItem.ty = ShapeType.moveTo
+				{
+					subpathIndices[subpathCount]: pathElemsCount;
+					subpathCount +: 1;
+
+					subpaths[pathElemsCount]: @pos2d {
+						x: shapeItem.x;
+						y: shapeItem.y;
+					};
+					pathElemsCount +: 1;
+				}
+				else if shapeItem.ty = ShapeType.lineTo
+				{
+					subpaths[pathElemsCount]: @pos2d {
+						x: shapeItem.x;
+						y: shapeItem.y;
+					};
+					pathElemsCount +: 1;
+				}
+			}
+
+			for (var.i64 j:0; j<subpathCount; j+:1) {
+				var.i64 from: subpathIndices[j];
+				var.i64 to;
+				if j < (subpathCount - 1) {
+					to: subpathIndices[j+1];
+				} else {
+					to: pathElemsCount;
+				}
+				tessAddContour(
+					tess: tess;
+					size: 2;
+					vertices: (pointerTo(subpaths) => ptr(@pos2d)) + from;
+					stride: sizeOf(type @pos2d) => i32;
+					numVertices: (to - from) => i32
+				);
+			}
+		
+			var tessResult: tessTesselate(
+				tess: tess;
+				windingRule: TESSwindingRule.odd;
+				elementType: TESSelementType.polygons;
+				polySize: 3;
+				vertexSize: 2
+			);
+			#if DEBUG_SHAPE_VERTICES {
+				printf(`tessellation result is %i\n`, tessResult);
+			}
+		
+			var.i64 tessVertexCount: tessGetVertexCount(tess);
+			var.ptr(f32) tessVertices: tessGetVertices(tess);
+			var.i64 tessElemCount: tessGetElementCount(tess);
+			var.ptr(i32) tessIndices: tessGetElements(tess);
+
+			for (var.i64 k:0; k<tessVertexCount; k+:1) {
+				theVertices[vtxCount + k]: @vertex {
+					x: valueOf(tessVertices + (k*2)) + shape.x;
+					y: valueOf(tessVertices + ((k*2)+1)) + shape.y;
+	                color: shape.bgColor;
+	                textureX: 0;
+	                textureY: 0;
+				};
+			}
+			
+			var.i64 tessIndexCount: tessElemCount * 3;
+			#if DEBUG_SHAPE_VERTICES {
+				printf(`copying %li indices to %li\n`, tessIndexCount, idxCount);
+			}
+			for (var.i64 k:0; k<tessIndexCount; k+:1) {
+				theIndices[idxCount + k]: valueOf(tessIndices + k) + vtxCount;
+			}
+			vtxCount +: tessVertexCount;
+			idxCount +: tessIndexCount;
+		}
+
+		tessDeleteTess(tess);
+		
+		#if DEBUG_SHAPE_VERTICES {
+			puts `vertices:`;
+			for (var.i64 i:0; i<vtxCount; i+:1) {
+				var vtx: theVertices[i];
+				printf(`%f %f ,`, vtx.x, vtx.y);
+			}
+			printf(`\n`);
+
+			puts `indices:`;
+			for (var.i64 i:0; i<idxCount; i+:1) {
+				var idx: theIndices[i];
+				printf(`%li, `, idx);
+			}
+			printf(`\n`);
+		}
+
+		var.i64 bufferSize: (sizeOf(type @vertex) * vtxCount);
+		#if DEBUG_SHAPE_VERTICES {
+			printf(`copying %li vertices to buffer\n`, vtxCount);
+		}
+    	memcpy (vertexBuffer, pointerTo(theVertices), bufferSize);
+		vertexCount: vtxCount;
+		indexCount: idxCount;
+		memcpy (indexBuffer, pointerTo(theIndices), (sizeOf(type i32) * idxCount));
+		#if DEBUG_SHAPE_VERTICES {
+			printf(`copying %li indices to index buffer\n`, idxCount);
+			puts `=====`;
+		}
+	}
 }

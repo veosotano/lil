@@ -31,6 +31,7 @@ extern void LIL__addMenus();
 extern void LIL__nextFrame(double deltaTime);
 extern void LIL__makeBoxVertices(void * vertexBuffer, long int * vertexCount);
 extern void LIL__makeTextureVertices(void * vertexBuffer, long int * vertexCount);
+extern void LIL__makeShapeVertices(void * vertexBuffer, long int * vertexCount, void * indexBuffer, long int * indexCount);
 extern long int LIL__getResourceCount();
 extern LIL__resourceStruct * LIL__getResorceById(long int id);
 extern void LIL__setTextureSize(long int imgId, float width, float height);
@@ -268,11 +269,14 @@ typedef struct
 - (void)loadTextureForFile:(NSString *)filename;
 - (void)renderToMetalLayer:(nonnull CAMetalLayer*)metalLayer;
 - (void *)getVertexBufferPointer;
+- (void *)getIndexBufferPointer;
 
 @property(nonatomic, assign) MTLClearColor windowBgColor;
 @property(nonatomic, assign) long int boxVertexCount;
 @property(nonatomic, assign) long int textureVertexCount;
 @property(nonatomic, assign) long int textureCount;
+@property(nonatomic, assign) long int shapeVertexCount;
+@property(nonatomic, assign) long int shapeIndexCount;
 
 @end
 
@@ -282,9 +286,11 @@ typedef struct
     id <MTLCommandQueue> commandQueue;
     id <MTLRenderPipelineState> boxPipeline;
     id <MTLBuffer> vertexBuffer;
+	id <MTLBuffer> indexBuffer;
     id <MTLTexture> depthTarget;
     id <MTLTexture> textures[32];
     id <MTLRenderPipelineState> texturePipelines[32];
+	id <MTLRenderPipelineState> shapePipeline;
     id <MTLFunction> vertexShaderFn;
     id <MTLFunction> fragmentShaderFn;
     id <MTLFunction> textureShaderFn;
@@ -296,12 +302,16 @@ typedef struct
     long int boxVertexCount_;
     long int textureVertexCount_;
     long int textureCount;
+    long int shapeVertexCount_;
+	long int shapeIndexCount_;
 }
 
 @synthesize windowBgColor = windowBgColor_;
 @synthesize boxVertexCount = boxVertexCount_;
 @synthesize textureVertexCount = textureVertexCount_;
 @synthesize textureCount = textureCount_;
+@synthesize shapeVertexCount = shapeVertexCount_;
+@synthesize shapeIndexCount = shapeIndexCount_;
 
 - (nonnull id)initWithMetalDevice:(nonnull id<MTLDevice>)device_ drawablePixelFormat:(MTLPixelFormat)drawablePixelFormat
 {
@@ -313,6 +323,8 @@ typedef struct
         boxVertexCount_ = 0;
         textureVertexCount_ = 0;
         textureCount_ = 0;
+		shapeVertexCount_ = 0;
+		shapeIndexCount_ = 0;
         self.windowBgColor = MTLClearColorMake(0., 0., 0., 1.);
         drawablePixelFormat_ = drawablePixelFormat;
 
@@ -355,7 +367,10 @@ typedef struct
 
         //create a new empty vertex buffer
         vertexBuffer = [device newBufferWithLength:(sizeof(LILVertex)*1000) options:MTLResourceStorageModeShared];
-        vertexBuffer.label = @"BoxVertexBuffer";
+        vertexBuffer.label = @"vertexBuffer";
+        //create a new empty index buffer
+        indexBuffer = [device newBufferWithLength:(sizeof(UInt16)*1000) options:MTLResourceStorageModeShared];
+        indexBuffer.label = @"indexBuffer";
 
         NSError *error;
 
@@ -372,6 +387,21 @@ typedef struct
         if(!boxPipeline)
         {
             NSLog(@"ERROR: Failed aquiring box pipeline state: %@", error);
+            return nil;
+        }
+		
+        //shape
+        MTLRenderPipelineDescriptor *shapePipelineDescriptor = [[MTLRenderPipelineDescriptor alloc] init];
+        shapePipelineDescriptor.label                           = @"shapePipeline";
+        shapePipelineDescriptor.vertexFunction                  = vertexShaderFn;
+        shapePipelineDescriptor.fragmentFunction                = fragmentShaderFn;
+        shapePipelineDescriptor.colorAttachments[0].pixelFormat = drawablePixelFormat_;
+        shapePipelineDescriptor.depthAttachmentPixelFormat      = LILDepthPixelFormat;
+
+        shapePipeline = [device newRenderPipelineStateWithDescriptor:shapePipelineDescriptor error:&error];
+        if(!shapePipeline)
+        {
+            NSLog(@"ERROR: Failed aquiring shape pipeline state: %@", error);
             return nil;
         }
     }
@@ -470,6 +500,16 @@ typedef struct
         
         [renderEncoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:vtxStart vertexCount:6];
     }
+	
+    //shape
+	long int shapeOffset = (sizeof(LILVertex) * (self.boxVertexCount + (self.textureCount * 6)));
+    [renderEncoder setRenderPipelineState:shapePipeline];
+    [renderEncoder setVertexBuffer:vertexBuffer offset:shapeOffset atIndex:LILVertexInputIndexVertices ];
+    LILUniforms shapeUniforms;
+    shapeUniforms.scale = 1.0;
+    shapeUniforms.viewportSize = viewportSize;
+    [renderEncoder setVertexBytes:&shapeUniforms length:sizeof(shapeUniforms) atIndex:LILVertexInputIndexUniforms ];
+    [renderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:self.shapeIndexCount indexType:MTLIndexTypeUInt32 indexBuffer:indexBuffer indexBufferOffset:0];
 
     [renderEncoder endEncoding];
 
@@ -498,6 +538,11 @@ typedef struct
 - (void *)getVertexBufferPointer
 {
     return vertexBuffer.contents;
+}
+
+- (void *)getIndexBufferPointer
+{
+    return indexBuffer.contents;
 }
 
 @end
@@ -697,7 +742,7 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
     @autoreleasepool
     {
         LILMainView *theView = (__bridge LILMainView*)displayLinkContext;
-        long int boxVertexCount = 0;
+        long int vertexCount = 0;
         long int textureVertexCount = 0;
         LILMetalRenderer * renderer = theView.renderer;
         long int currentTime = LIL__ticksTonanoseconds(outputTime->hostTime);
@@ -711,10 +756,17 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
 
         LIL__nextFrame(deltaTime);
         char * vertexBufferPointer = [renderer getVertexBufferPointer];
-        LIL__makeBoxVertices((void *)vertexBufferPointer, &boxVertexCount);
-        renderer.boxVertexCount = boxVertexCount;
-        LIL__makeTextureVertices((void *)(vertexBufferPointer + (boxVertexCount * sizeof(LILVertex))), &textureVertexCount);
+        LIL__makeBoxVertices((void *)vertexBufferPointer, &vertexCount);
+        renderer.boxVertexCount = vertexCount;
+        LIL__makeTextureVertices((void *)(vertexBufferPointer + (vertexCount * sizeof(LILVertex))), &textureVertexCount);
+		vertexCount += textureVertexCount;
         renderer.textureVertexCount = textureVertexCount;
+		long int shapeVertexCount = 0;
+		long int shapeIndexCount = 0;
+		char * indexBufferPointer = [renderer getIndexBufferPointer];
+        LIL__makeShapeVertices((void *)(vertexBufferPointer + (vertexCount * sizeof(LILVertex))), &shapeVertexCount, (void *)indexBufferPointer, &shapeIndexCount);
+        renderer.shapeVertexCount = shapeVertexCount;
+		renderer.shapeIndexCount = shapeIndexCount;
         [theView render];
     }
     return kCVReturnSuccess;
