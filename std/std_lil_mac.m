@@ -410,7 +410,13 @@ typedef struct
 
 - (void)loadTextureForFile:(NSString *)filename
 {
-    NSURL * textureUrl = [[NSBundle mainBundle] URLForResource:filename withExtension:nil];
+    NSURL * textureUrl;
+	if ([filename isAbsolutePath]){
+		textureUrl = [NSURL fileURLWithPath:filename];
+	} else {
+		textureUrl = [[NSBundle mainBundle] URLForResource:filename withExtension:nil];
+	}
+	
     if (textureUrl != nil) {
         MTKTextureLoader * loader = [[MTKTextureLoader alloc] initWithDevice: device];
 
@@ -789,6 +795,7 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
 - (void)exitMenu;
 - (void)menuItemSelected:(NSMenuItem *) menuItem;
 - (void)setWindowBackgroundRed:(float)red green:(float)green blue:(float)blue alpha:(float)alpha;
+- (void)loadTextureForFile:(NSString *)path;
 - (LILMainView *)getMainView;
 - (void)quit;
 - (void)showOpenPanelWithSuccessCallback:(void(*)(const char *))onSuccess cancelCallback:(void(*)())onCancel;
@@ -843,14 +850,13 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
     [mainWindow setContentView:mainView];
     
     long int count = LIL__getResourceCount();
-    LILMetalRenderer * renderer = mainView.renderer;
-
     for(long int i = 0; i<count; i+=1) {
         LIL__resourceStruct * res = LIL__getResorceById(i);
         NSString * path = [[NSString alloc] initWithUTF8String: res->path];
-        [renderer loadTextureForFile:path];
+        [self loadTextureForFile: path];
     }
 }
+
 - (void)applicationDidFinishLaunching:(NSNotification *)notification {
     //setup main menu item
     [self populateMainMenu];
@@ -939,6 +945,12 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
 - (void)setWindowBackgroundRed:(float)red green:(float)green blue:(float)blue alpha:(float)alpha
 {
     mainView.renderer.windowBgColor = MTLClearColorMake(red, green, blue, alpha);
+}
+
+- (void)loadTextureForFile:(NSString *)path
+{
+	LILMetalRenderer * renderer = mainView.renderer;
+	[renderer loadTextureForFile:path];
 }
 
 - (LILMainView *)getMainView
