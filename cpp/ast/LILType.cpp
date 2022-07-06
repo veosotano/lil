@@ -254,6 +254,9 @@ bool LILType::typesCompatible(LILType * ty1, LILType * ty2)
         {
             auto ty1p = static_cast<LILPointerType *>(ty1);
             if (!ty2->isA(TypeTypePointer)) {
+                if (ty1p->getIsNullable() && ty2->getName() == "null") {
+                    return true;
+                }
                 return ty2->equalTo(ty1p->getArgument());
             }
             auto arg = ty1p->getArgument();
