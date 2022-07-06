@@ -772,13 +772,12 @@ fn LIL__setWindowBgColor(var.f32 red; var.f32 green; var.f32 blue; var.f32 alpha
     
     fn LIL__makeTextureVertices(var.ptr(any) vertexBuffer; var.ptr(i64) vertexCount) {
         var.[1000 x @vertex] vertices: [];
+		var color: #F00;
         for (var.i64 i:0; i<app.imgCount; i+:1) {
 
             var img: app.imgs[i];
             var pos: app.imgPositions[i];
             var clip: app.imgClips[i];
-            var color: #F00;
-
             var.i64 triIdx: i*6;
 			
 			var.f32 minX;
