@@ -1,0 +1,32 @@
+#export {
+	enum.i32 TESSoption {
+		delaunayTriangulation,
+		reverseContours
+	};
+	enum.i32 TESSelementType {
+		polygons,
+		connectedPolygons,
+		boundaryContours
+	}
+	enum.i32 TESSwindingRule {
+		odd,
+		nonzero,
+		positive,
+		negative,
+		absGeqTwo
+	};
+
+	class @TESSalloc { };
+	class @TESStesselator { };
+
+	fn tessNewTess(var.ptr(@TESSalloc)|null alloc: null) => ptr(@TESStesselator) extern;
+	fn tessDeleteTess(var.ptr(@TESStesselator) tess) extern;
+	fn tessAddContour(var.ptr(@TESStesselator) tess; var.i32 size; var.ptr(any) vertices; var.i32 stride; var.i32 numVertices) extern;
+	fn tessSetOption(var.ptr(@TESStesselator) tess; var.TESSoption option; var.i32 value) extern;
+	fn tessTesselate(var.ptr(@TESStesselator) tess; var.i32 windingRule; var.i32 elementType; var.i32 polySize; var.i32 vertexSize; var.ptr(f32)|null normal: null) => i32 extern;
+	fn tessGetVertexCount(var.ptr(@TESStesselator) tess) => i32 extern;
+	fn tessGetVertices(var.ptr(@TESStesselator) tess) => ptr(f32) extern;
+	fn tessGetVertexIndices(var.ptr(@TESStesselator) tess) => ptr(i32) extern;
+	fn tessGetElementCount(var.ptr(@TESStesselator) tess) => i32 extern;
+	fn tessGetElements(var.ptr(@TESStesselator) tess) => ptr(i32) extern;
+}
