@@ -289,6 +289,8 @@ typedef struct
 	id <MTLBuffer> indexBuffer;
     id <MTLTexture> depthTarget;
     id <MTLTexture> textures[32];
+    id <MTLTexture> msaaTexture_;
+	id <MTLTexture> msaaDepthTexture_;
     id <MTLRenderPipelineState> texturePipelines[32];
 	id <MTLRenderPipelineState> shapePipeline;
     id <MTLFunction> vertexShaderFn;
@@ -332,12 +334,10 @@ typedef struct
 
         drawableRenderDescriptor = [MTLRenderPassDescriptor new];
         drawableRenderDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
-        drawableRenderDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
-
+        drawableRenderDescriptor.colorAttachments[0].storeAction = MTLStoreActionMultisampleResolve;
         drawableRenderDescriptor.depthAttachment.loadAction = MTLLoadActionClear;
-        drawableRenderDescriptor.depthAttachment.storeAction = MTLStoreActionDontCare;
+        drawableRenderDescriptor.depthAttachment.storeAction = MTLStoreActionMultisampleResolve;
         drawableRenderDescriptor.depthAttachment.clearDepth = 1.0;
-
 
         NSError *libraryError = NULL;
         NSString *libraryFile = [[NSBundle mainBundle] pathForResource:@"lil_shaders" ofType:@"metallib"];
@@ -377,6 +377,7 @@ typedef struct
         //create pipeline state descriptors to create a compiled pipeline state object
         //box
         MTLRenderPipelineDescriptor *boxPipelineDescriptor = [[MTLRenderPipelineDescriptor alloc] init];
+		boxPipelineDescriptor.rasterSampleCount               = 4;
         boxPipelineDescriptor.label                           = @"boxPipeline";
         boxPipelineDescriptor.vertexFunction                  = vertexShaderFn;
         boxPipelineDescriptor.fragmentFunction                = fragmentShaderFn;
@@ -392,6 +393,7 @@ typedef struct
 		
         //shape
         MTLRenderPipelineDescriptor *shapePipelineDescriptor = [[MTLRenderPipelineDescriptor alloc] init];
+		shapePipelineDescriptor.rasterSampleCount				= 4;
         shapePipelineDescriptor.label                           = @"shapePipeline";
         shapePipelineDescriptor.vertexFunction                  = vertexShaderFn;
         shapePipelineDescriptor.fragmentFunction                = fragmentShaderFn;
@@ -438,7 +440,8 @@ typedef struct
         NSError *error;
         
         MTLRenderPipelineDescriptor *texturePipelineDescriptor = [[MTLRenderPipelineDescriptor alloc] init];
-        texturePipelineDescriptor.label                           = @"texturePipeline";
+        texturePipelineDescriptor.rasterSampleCount               = 4;
+		texturePipelineDescriptor.label                           = @"texturePipeline";
         texturePipelineDescriptor.vertexFunction                  = vertexShaderFn;
         texturePipelineDescriptor.fragmentFunction                = textureShaderFn;
         MTLRenderPipelineColorAttachmentDescriptor *attachment = texturePipelineDescriptor.colorAttachments[0];
@@ -479,7 +482,7 @@ typedef struct
     }
 
     drawableRenderDescriptor.colorAttachments[0].clearColor = self.windowBgColor;
-    drawableRenderDescriptor.colorAttachments[0].texture = currentDrawable.texture;
+    drawableRenderDescriptor.colorAttachments[0].resolveTexture = currentDrawable.texture;
     
     id <MTLRenderCommandEncoder> renderEncoder = [commandBuffer renderCommandEncoderWithDescriptor:drawableRenderDescriptor];
 
@@ -518,9 +521,7 @@ typedef struct
     [renderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:self.shapeIndexCount indexType:MTLIndexTypeUInt32 indexBuffer:indexBuffer indexBufferOffset:0];
 
     [renderEncoder endEncoding];
-
     [commandBuffer presentDrawable:currentDrawable];
-
     [commandBuffer commit];
 }
 
@@ -537,8 +538,31 @@ typedef struct
     depthTargetDescriptor.usage = MTLTextureUsageRenderTarget;
 
     depthTarget = [device newTextureWithDescriptor:depthTargetDescriptor];
+	drawableRenderDescriptor.depthAttachment.resolveTexture = depthTarget;
+	
+	MTLTextureDescriptor * msaaTextureDescriptor = [MTLTextureDescriptor new];
+	msaaTextureDescriptor.textureType = MTLTextureType2DMultisample;
+	msaaTextureDescriptor.sampleCount = 4;
+	msaaTextureDescriptor.pixelFormat = drawablePixelFormat_;
+	msaaTextureDescriptor.width = drawableSize.width;
+	msaaTextureDescriptor.height = drawableSize.height;
+	msaaTextureDescriptor.storageMode = MTLStorageModePrivate;
+	msaaTextureDescriptor.usage = MTLTextureUsageRenderTarget;
+	
+	msaaTexture_ = [device newTextureWithDescriptor:msaaTextureDescriptor];
+	drawableRenderDescriptor.colorAttachments[0].texture = msaaTexture_;
+	
+    MTLTextureDescriptor *msaaDepthTextureDescriptor = [MTLTextureDescriptor new];
+	msaaDepthTextureDescriptor.textureType = MTLTextureType2DMultisample;
+	msaaDepthTextureDescriptor.sampleCount = 4;
+    msaaDepthTextureDescriptor.width = drawableSize.width;
+    msaaDepthTextureDescriptor.height = drawableSize.height;
+    msaaDepthTextureDescriptor.pixelFormat = LILDepthPixelFormat;
+    msaaDepthTextureDescriptor.storageMode = MTLStorageModePrivate;
+    msaaDepthTextureDescriptor.usage = MTLTextureUsageRenderTarget;
 
-    drawableRenderDescriptor.depthAttachment.texture = depthTarget;
+    msaaDepthTexture_ = [device newTextureWithDescriptor:msaaDepthTextureDescriptor];
+	drawableRenderDescriptor.depthAttachment.texture = msaaDepthTexture_;
 }
 
 - (void *)getVertexBufferPointer
