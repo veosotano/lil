@@ -974,7 +974,7 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
 		if (result == NSModalResponseOK) {
 			NSURL*  theDoc = [[panel URLs] objectAtIndex:0];
 
-			onSuccess(theDoc.fileSystemRepresentation);
+			onSuccess([theDoc fileSystemRepresentation]);
 		} else {
 			onCancel();
 		}
@@ -992,7 +992,7 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
 		if (result == NSModalResponseOK) {
 			NSURL*  theDoc = [panel URL];
 
-			onSuccess(theDoc.fileSystemRepresentation);
+			onSuccess([theDoc fileSystemRepresentation]);
 		} else {
 			onCancel();
 		}
