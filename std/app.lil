@@ -180,7 +180,9 @@ fn LIL__setWindowBgColor(var.f32 red; var.f32 green; var.f32 blue; var.f32 alpha
         
         fn initialize(var.cstr name; var.i64 parentId: 0) => i64 {
             var componentId: app.newBox();
-            return app.newElement(name, parentId, 0, componentId);
+			var id: app.newElement(name, parentId, 0, componentId);
+			@self.id: id;
+            return id;
         }
 
         fn setWidth(var.f32 value) {
