@@ -120,9 +120,19 @@
 			y: y;
 			pressed: true;
 		};
+		var mouseEvent: @mouseEvent {
+			x: x => f32;
+			y: y => f32;
+		};
+		msgEmit(`onMouseDown`, pointerTo mouseEvent);
 	};
 	fn LIL__setMouseDragged(var.i64 buttonNumber; var.f64 x; var.f64 y) {
 		input.setMousePosition(buttonNumber, x, y);
+		var mouseEvent: @mouseEvent {
+			x: x => f32;
+			y: y => f32;
+		};
+		msgEmit(`onMouseDragged`, pointerTo mouseEvent);
 	};
 	fn LIL__setMouseUp(var.i64 buttonNumber; var.f64 x; var.f64 y; var.i64 clickCount) {
 		input.mouseStates[buttonNumber]: @mouseState {
@@ -130,14 +140,15 @@
 			y: y;
 			pressed: false;
 		};
+		var mouseEvent: @mouseEvent {
+			clickCount: clickCount;
+			x: x => f32;
+			y: y => f32;
+		};
 		if clickCount > 0 {
-			var event: @mouseEvent {
-				clickCount: clickCount;
-				x: x => f32;
-				y: y => f32;
-			}
-			msgEmit(`onClick`, pointerTo event);
+			msgEmit(`onClick`, pointerTo mouseEvent);
 		}
+		msgEmit(`onMouseUp`, pointerTo mouseEvent);
 	};
     fn LIL__setKeyDown(var.i16 keyCode) {
         input.setKeyDown(keyCode, true);
