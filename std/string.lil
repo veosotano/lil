@@ -131,6 +131,20 @@ const DEBUG: false;
                 @self.length: newLength;
             }
             currentLength: newLength;
-        }
+        };
+
+		fn initialize(var.cstr value; var.i64 length) {
+			#if DEBUG {
+				printf (`initialize with c string: %s and length: %li\n`, value, length);
+			}
+			@self.length: length;
+			if length < 56 {
+				memcpy(dst: pointerTo(@self.buffer); src: value; len: length+1);
+			} else {
+				var newBuffer: malloc length;
+				memcpy(dst: newBuffer; src: value; len: length+1);
+				set(pointerTo(@self.buffer) => ptr(cstr), newBuffer);
+			}
+		};
     };
 }
