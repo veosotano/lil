@@ -161,6 +161,16 @@ void LILPathExpander::_process(LILValuePath * vp)
             auto classDecl = this->findAncestorClass(firstNode);
             currentTy = classDecl->getType();
         }
+        else if (firstNode->isA(SelectorTypeThisSelector)) {
+            auto rule = this->findAncestorRule(firstNode);
+            if (rule) {
+                currentTy = rule->getType();
+            }
+            if (!currentTy) {
+                std::cerr << "RULE HAD NO TYPE FAIL!!!!\n";
+                return;
+            }
+        }
     }
     for (size_t i = 0; i<startIndex; ++i) {
         newNodes.push_back(nodes[i]->clone());
