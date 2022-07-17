@@ -524,7 +524,6 @@ fn LIL__loadTexture(var.cstr path) extern;
         var.[#paste entitiesSize x i64] resourceIds: [];
         var.[#paste entitiesSize x @resource] resources: [];
         var.i64 resourceCount: 0;
-        var.i64 lastFrameTime: 0;
 		//actions
 		var.[#paste entitiesSize x @action] actions: [];
 		var.i64 actionCount: 0;
