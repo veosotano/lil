@@ -236,33 +236,36 @@ LILString LILNodeToString::stringify(LILNode * node)
                     auto fnTy = static_cast<LILFunctionType *>(node);
                     LILString name = fnTy->getName();
                     
-                    name += "(";
                     auto args = fnTy->getArguments();
-                    for (size_t i=0, j=args.size(); i<j; ++i) {
-                        std::shared_ptr<LILNode> arg = args[i];
-                        if (arg) {
-                            std::shared_ptr<LILType> ty;
-                            if (arg->isA(NodeTypeType)) {
-                                ty = std::static_pointer_cast<LILType>(arg);
-                            } else if (arg->isA(NodeTypeVarDecl)){
-                                ty = std::static_pointer_cast<LILVarDecl>(arg)->getType();
-                            }
-                            if (ty) {
-                                name += LILNodeToString::stringify(ty.get());
+                    if (args.size() > 0) {
+                        name += "(";
+                        for (size_t i=0, j=args.size(); i<j; ++i) {
+                            std::shared_ptr<LILNode> arg = args[i];
+                            if (arg) {
+                                std::shared_ptr<LILType> ty;
+                                if (arg->isA(NodeTypeType)) {
+                                    ty = std::static_pointer_cast<LILType>(arg);
+                                } else if (arg->isA(NodeTypeVarDecl)){
+                                    ty = std::static_pointer_cast<LILVarDecl>(arg)->getType();
+                                }
+                                if (ty) {
+                                    name += LILNodeToString::stringify(ty.get());
 
-                                if ((i+1)<j) {
-                                    name += ",";
+                                    if ((i+1)<j) {
+                                        name += ",";
+                                    }
                                 }
                             }
                         }
+                        if (fnTy->getIsVariadic()) {
+                            name += "...";
+                        }
+                        name += ")";
                     }
-                    if (fnTy->getIsVariadic()) {
-                        name += "...";
-                    }
-                    name += ")";
+
                     std::shared_ptr<LILFunctionType> retTy = std::static_pointer_cast<LILFunctionType>(fnTy->getReturnType());
                     if (retTy) {
-                        name += "=>";
+                        name += " => ";
                         name += LILNodeToString::stringify(retTy.get());
                     }
                     
@@ -273,13 +276,14 @@ LILString LILNodeToString::stringify(LILNode * node)
                     auto sa = static_cast<LILStaticArrayType *>(node);
                     auto ty = sa->getType();
                     LILString name;
-                    if (ty) {
-                        name = LILNodeToString::stringify(ty.get());
-                    }
                     name += "[";
                     auto arg = sa->getArgument();
                     if (arg) {
                         name += LILNodeToString::stringify(arg.get());
+                    }
+                    name += " x ";
+                    if (ty) {
+                        name += LILNodeToString::stringify(ty.get());
                     }
                     name += "]";
                     if (sa->getIsNullable()) {

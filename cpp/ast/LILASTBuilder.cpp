@@ -879,6 +879,8 @@ void LILASTBuilder::receiveNodeCommit()
                 if (childDoc->getContent().length() > 0) {
                     doc->add(this->currentNode);
                 }
+            } else if (this->currentNode->isA(NodeTypeForeignLang)) {
+                doc->add(this->currentNode);
             }
             break;
         }
@@ -1227,6 +1229,7 @@ void LILASTBuilder::receiveNodeData(ParserEvent eventType, const LILString &data
             }
             else if (eventType == ParserEventFunctionName) {
                 fd->setName(data);
+                fd->setUnmangledName(data);
             }
             else if (eventType == ParserEventBody) {
                 fd->setReceivesFunctionBody(true);

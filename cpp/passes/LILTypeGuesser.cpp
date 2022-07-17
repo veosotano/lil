@@ -515,6 +515,7 @@ void LILTypeGuesser::process(LILNode * node)
         }
         case NodeTypeType:
         case NodeTypeSnippetInstruction:
+        case NodeTypeForeignLang:
         {
             //do nothing
             break;

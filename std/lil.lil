@@ -1,4 +1,7 @@
 #export {
+	#if #getConfig(documentation) {
+		#import "docs/*.doc.lil";
+	}
     #import "cstd.lil";
     #needs "array.lil";
     #needs "string.lil";

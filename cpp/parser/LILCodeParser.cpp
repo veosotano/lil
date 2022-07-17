@@ -1364,6 +1364,114 @@ bool LILCodeParser::isPunctuation(std::shared_ptr<LILToken> token) const
     return false;
 }
 
+bool LILCodeParser::isClassDocumentation() const
+{
+    auto theStr = d->currentToken->getString().data();
+    size_t i = 0;
+    for (i=2; i<theStr.length(); i+=1) {
+        const char & cc = theStr[i];
+        if (cc == '=') {
+            continue;
+        } else if (cc == ' ') {
+            continue;
+        } else {
+            break;
+        }
+    }
+    if (theStr.substr(i, 5) == "class" ) {
+        return true;
+    }
+    return false;
+}
+
+bool LILCodeParser::isFnDocumentation() const
+{
+    auto theStr = d->currentToken->getString().data();
+    size_t i = 0;
+    for (i=2; i<theStr.length(); i+=1) {
+        const char & cc = theStr[i];
+        if (cc == '=') {
+            continue;
+        } else if (cc == ' ') {
+            continue;
+        } else {
+            break;
+        }
+    }
+    if (theStr.substr(i, 2) == "fn" ) {
+        return true;
+    }
+    return false;
+}
+
+bool LILCodeParser::isVarDocumentation() const
+{
+    auto theStr = d->currentToken->getString().data();
+    size_t i = 0;
+    for (i=2; i<theStr.length(); i+=1) {
+        const char & cc = theStr[i];
+        if (cc == '=') {
+            continue;
+        } else if (cc == ' ') {
+            continue;
+        } else {
+            break;
+        }
+    }
+    if (
+        theStr.substr(i, 4) == "vvar"
+        || theStr.substr(i, 3) == "var"
+    ) {
+        return true;
+    }
+    return false;
+}
+
+bool LILCodeParser::isAliasDocumentation() const
+{
+    auto theStr = d->currentToken->getString().data();
+    size_t i = 0;
+    for (i=2; i<theStr.length(); i+=1) {
+        const char & cc = theStr[i];
+        if (cc == '=') {
+            continue;
+        } else if (cc == ' ') {
+            continue;
+        } else {
+            break;
+        }
+    }
+    if (theStr.substr(i, 5) == "alias" ) {
+        return true;
+    }
+    return false;
+}
+
+bool LILCodeParser::isDocContainerEnd() const
+{
+    auto theStr = d->currentToken->getString().data();
+    size_t i = 0;
+    for (i=2; i<theStr.length(); i+=1) {
+        const char & cc = theStr[i];
+        if (cc == '=') {
+            continue;
+        } else if (cc == ' ') {
+            continue;
+        } else {
+            break;
+        }
+    }
+    if (
+        theStr.substr(i, 4) == "/var"
+        || theStr.substr(i, 3) == "/fn"
+        || theStr.substr(i, 6) == "/class"
+        || theStr.substr(i, 6) == "/alias"
+    ) {
+        return true;
+    }
+    return false;
+}
+
 bool LILCodeParser::canHaveExpression(NodeType nodeType) const
 {
     switch (nodeType) {
@@ -6309,20 +6417,172 @@ bool LILCodeParser::readForeignLang()
 
 bool LILCodeParser::readDocumentation()
 {
+    if (this->isClassDocumentation()) {
+        return this->readClassDocumentation();
+    } else if (this->isFnDocumentation()) {
+        return this->readFnDocumentation();
+    } else if (this->isVarDocumentation()) {
+        return this->readVarDocumentation(false);
+    }
+    return false;
+}
+
+bool LILCodeParser::readClassDocumentation()
+{
     LIL_START_NODE(NodeTypeDocumentation)
 
     d->receiver->receiveNodeData(ParserEventDocumentation, d->currentToken->getString());
     this->readNextToken();
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
 
-    while (d->currentToken && d->currentToken->isA(TokenTypeDocumentation)) {
-        LIL_START_NODE(NodeTypeDocumentation)
-        //skip the instruction sign
-        d->receiver->receiveNodeData(ParserEventDocumentation, d->currentToken->getString());
-        this->readNextToken();
-        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
-        LIL_END_NODE_NO_RETURN
-        d->receiver->receiveNodeCommit();
+    while (
+           d->currentToken
+           && (d->currentToken->isA(TokenTypeDocumentation) || d->currentToken->isA(TokenTypeForeignLang))
+    ) {
+        if (d->currentToken->isA(TokenTypeDocumentation)) {
+            if (this->isFnDocumentation()) {
+                this->readFnDocumentation();
+                d->receiver->receiveNodeCommit();
+            } else if (this->isVarDocumentation()) {
+                this->readVarDocumentation(false);
+                d->receiver->receiveNodeCommit();
+            } else if (this->isAliasDocumentation()) {
+                this->readAliasDocumentation();
+                d->receiver->receiveNodeCommit();
+            } else {
+                LIL_START_NODE(NodeTypeDocumentation)
+                //skip the instruction sign
+                d->receiver->receiveNodeData(ParserEventDocumentation, d->currentToken->getString());
+                this->readNextToken();
+                LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+                LIL_END_NODE_NO_RETURN
+                d->receiver->receiveNodeCommit();
+            }
+        } else {
+            this->readForeignLang();
+            LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+            d->receiver->receiveNodeCommit();
+        }
+    }
+    LIL_END_NODE_SKIP(false)
+}
+
+bool LILCodeParser::readFnDocumentation()
+{
+    LIL_START_NODE(NodeTypeDocumentation)
+
+    d->receiver->receiveNodeData(ParserEventDocumentation, d->currentToken->getString());
+    this->readNextToken();
+    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+
+    while (
+           d->currentToken
+           && (d->currentToken->isA(TokenTypeDocumentation) || d->currentToken->isA(TokenTypeForeignLang))
+    ) {
+        if (d->currentToken->isA(TokenTypeDocumentation)) {
+            if (
+                this->isFnDocumentation()
+                || this->isDocContainerEnd()
+            ) {
+                break;
+            } else if (this->isVarDocumentation()) {
+                this->readVarDocumentation(true);
+                d->receiver->receiveNodeCommit();
+            } else {
+                LIL_START_NODE(NodeTypeDocumentation)
+                //skip the instruction sign
+                d->receiver->receiveNodeData(ParserEventDocumentation, d->currentToken->getString());
+                this->readNextToken();
+                LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+                LIL_END_NODE_NO_RETURN
+                d->receiver->receiveNodeCommit();
+            }
+        } else {
+            this->readForeignLang();
+            LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+            d->receiver->receiveNodeCommit();
+        }
+    }
+    LIL_END_NODE_SKIP(false)
+}
+
+
+bool LILCodeParser::readVarDocumentation(bool exitEarly)
+{
+    LIL_START_NODE(NodeTypeDocumentation)
+
+    d->receiver->receiveNodeData(ParserEventDocumentation, d->currentToken->getString());
+    this->readNextToken();
+    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+
+    while (
+           d->currentToken
+           && (d->currentToken->isA(TokenTypeDocumentation) || d->currentToken->isA(TokenTypeForeignLang))
+    ) {
+        if (d->currentToken->isA(TokenTypeDocumentation)) {
+            if (
+                this->isVarDocumentation()
+                || this->isFnDocumentation()
+                || this->isClassDocumentation()
+                || this->isAliasDocumentation()
+            ) {
+                break;
+            } else {
+                LIL_START_NODE(NodeTypeDocumentation)
+                //skip the instruction sign
+                d->receiver->receiveNodeData(ParserEventDocumentation, d->currentToken->getString());
+                this->readNextToken();
+                LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+                LIL_END_NODE_NO_RETURN
+                d->receiver->receiveNodeCommit();
+            }
+        } else {
+            if (exitEarly) {
+                break;
+            } else {
+                this->readForeignLang();
+                LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+                d->receiver->receiveNodeCommit();
+            }
+        }
+    }
+    LIL_END_NODE_SKIP(false)
+}
+
+bool LILCodeParser::readAliasDocumentation()
+{
+    LIL_START_NODE(NodeTypeDocumentation)
+
+    d->receiver->receiveNodeData(ParserEventDocumentation, d->currentToken->getString());
+    this->readNextToken();
+    LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+
+    while (
+           d->currentToken
+           && (d->currentToken->isA(TokenTypeDocumentation) || d->currentToken->isA(TokenTypeForeignLang))
+    ) {
+        if (d->currentToken->isA(TokenTypeDocumentation)) {
+            if (
+                this->isVarDocumentation()
+                || this->isFnDocumentation()
+                || this->isClassDocumentation()
+                || this->isAliasDocumentation()
+            ) {
+                break;
+            } else {
+                LIL_START_NODE(NodeTypeDocumentation)
+                //skip the instruction sign
+                d->receiver->receiveNodeData(ParserEventDocumentation, d->currentToken->getString());
+                this->readNextToken();
+                LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+                LIL_END_NODE_NO_RETURN
+                d->receiver->receiveNodeCommit();
+            }
+        } else {
+            this->readForeignLang();
+            LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+            d->receiver->receiveNodeCommit();
+        }
     }
     LIL_END_NODE_SKIP(false)
 }

@@ -21,6 +21,7 @@ using namespace LIL;
 LILFunctionDecl::LILFunctionDecl()
 : LILVarNode(NodeTypeFunctionDecl)
 , _name("")
+, _unmangledName("")
 , _hasReturn(false)
 , _isConstructor(false)
 , _isExtern(false)
@@ -38,6 +39,7 @@ LILFunctionDecl::LILFunctionDecl(const LILFunctionDecl &other)
 , _fnType(other._fnType)
 , _receivesFunctionBody(other._receivesFunctionBody)
 , _name(other._name)
+, _unmangledName(other._unmangledName)
 , _hasReturn(other._hasReturn)
 , _isConstructor(other._isConstructor)
 , _isExtern(other._isExtern)
@@ -220,6 +222,16 @@ LILString LILFunctionDecl::getName() const
 void LILFunctionDecl::setName(LILString value)
 {
     this->_name = value;
+}
+
+LILString LILFunctionDecl::getUnmangledName() const
+{
+    return this->_unmangledName;
+}
+
+void LILFunctionDecl::setUnmangledName(LILString value)
+{
+    this->_unmangledName = value;
 }
 
 bool LILFunctionDecl::hasReturn() const

@@ -50,6 +50,8 @@ namespace LIL
 
         LILString getName() const;
         void setName(LILString value);
+        LILString getUnmangledName() const;
+        void setUnmangledName(LILString value);
         
         bool hasReturn() const;
         bool getIsConstructor() const;
@@ -83,6 +85,7 @@ namespace LIL
         std::shared_ptr<LILFunctionType> _fnType;
         bool _receivesFunctionBody;
         LILString _name;
+        LILString _unmangledName;
         bool _hasReturn;
         bool _isConstructor;
         bool _isExtern;

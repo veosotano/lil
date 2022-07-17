@@ -68,6 +68,11 @@ namespace LIL
         bool isIfCast() const;
         bool isFlag() const;
         bool isPunctuation(std::shared_ptr<LILToken> token) const;
+        bool isClassDocumentation() const;
+        bool isFnDocumentation() const;
+        bool isVarDocumentation() const;
+        bool isAliasDocumentation() const;
+        bool isDocContainerEnd() const;
         bool canHaveExpression(NodeType nodeType) const;
 
         bool readClassDecl();
@@ -163,6 +168,10 @@ namespace LIL
 
         bool readForeignLang();
         bool readDocumentation();
+        bool readClassDocumentation();
+        bool readFnDocumentation();
+        bool readVarDocumentation(bool exitEarly);
+        bool readAliasDocumentation();
     private:
         LILCodeParserPrivate *const d;
     };

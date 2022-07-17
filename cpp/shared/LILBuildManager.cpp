@@ -17,6 +17,9 @@
 #include "LILBoolLiteral.h"
 #include "LILCodeUnit.h"
 #include "LILConfiguration.h"
+#include "LILDocumentation.h"
+#include "LILDocumentationWriter.h"
+#include "LILDocumentationTmplManager.h"
 #include "LILErrorMessage.h"
 #include "LILNumberLiteral.h"
 #include "LILOutputEmitter.h"
@@ -243,13 +246,23 @@ void LILBuildManager::build()
     }
 
     LIL_makeDir(buildPath);
-
-    if (this->_config->getConfigBool("documentation")) {
-        
+    
+    bool needsCompile = this->_config->getConfigBool("compile", true);
+    auto docConfigStr = this->_config->getConfigString("documentation");
+    bool needsDocs;
+    if (docConfigStr.length() > 0) {
+        needsDocs = true;
+    } else {
+        needsDocs = this->_config->getConfigBool("documentation");
     }
 
-    if (this->_config->getConfigBool("compile", true)) {
-        std::string filePath = this->_directory.data() + "/" + this->_file.data();
+    if (needsCompile || needsDocs) {
+        std::string filePath;
+        if (this->_file.data().substr(0, 1) == "/") {
+            filePath = this->_file.data();
+        } else {
+            filePath = this->_directory.data() + "/" + this->_file.data();
+        }
         std::ifstream file(filePath, std::ios::in);
         if (file.fail()) {
             LILErrorMessage ei;
@@ -313,26 +326,73 @@ void LILBuildManager::build()
             return;
         }
         
-        std::unique_ptr<LILOutputEmitter> outEmitter = std::make_unique<LILOutputEmitter>();
-        outEmitter->setVerbose(this->_verbose);
-        outEmitter->setDebugIREmitter(this->_debug);
-        LILString oFile = outName;
-        oFile += (this->_compileToS ? ".s" : this->_config->getConfigString("objExt") );
+        if (needsDocs)
+        {
+            std::string oDir = buildPath+"/docs";
+            LIL_makeDir(oDir);
+            
+            auto tmplManager = std::make_unique<LILDocumentationTmplManager>();
+            tmplManager->setTemplatePath(this->_config->getConfigString("docTemplatesPath"));
+            
+            std::unique_ptr<LILDocumentationWriter> docWriter = std::make_unique<LILDocumentationWriter>();
+            docWriter->setTemplateManager(tmplManager.get());
+            docWriter->initializeVisit();
 
-        outEmitter->setInFile(this->_file);
-        outEmitter->setOutFile(oFile);
-        outEmitter->setDir(buildPath);
-
-        outEmitter->setCPU(this->_config->getConfigString("cpu"));
-        outEmitter->setVendor(this->_config->getConfigString("vendor"));
-
-        if (this->_config->getConfigBool("printOnly")) {
-            outEmitter->printToOutput(mainCodeUnit->getRootNode());
-        } else {
-            if (this->_compileToS) {
-                outEmitter->compileToS(mainCodeUnit->getRootNode());
+            if (docConfigStr.length() == 0) {
+                for (const auto & doc : mainCodeUnit->getRootNode()->getDocs()) {
+                    auto str = doc->getContent().data();
+                    if (str.substr(0, 5) == "class") {
+                        docWriter->setValue(doc);
+                        docWriter->performVisit(mainCodeUnit->getRootNode());
+                        
+                        std::string outFilePath = oDir+"/class_"+str.substr(7, std::string::npos)+".html";
+                        std::ofstream outFile(outFilePath, std::ios::out);
+                        const std::string & result = docWriter->getResult();
+                        outFile << result;
+                        outFile.close();
+                    }
+                    
+                }
             } else {
-                outEmitter->compileToO(mainCodeUnit->getRootNode());
+                if (docConfigStr.substr(0, 5) == "class") {
+                    std::string className = docConfigStr.substr(7, std::string::npos);
+                    auto rootNode = mainCodeUnit->getRootNode();
+                    auto classDecl = rootNode->findClassWithName(className);
+                    if (!classDecl) {
+                        std::cout << "!! CLASS NOT FOUND FAIL !!!!!!\n";
+                        return;
+                    }
+                    std::string result = docWriter->createBoilerplate(classDecl.get(), rootNode.get());
+                    std::string outFilePath = oDir+"/"+docConfigStr.substr(7, std::string::npos)+".doc.lil";
+                    std::ofstream outFile(outFilePath, std::ios::out);
+                    outFile << result;
+                    outFile.close();
+                }
+            }
+        }
+        else
+        {
+            std::unique_ptr<LILOutputEmitter> outEmitter = std::make_unique<LILOutputEmitter>();
+            outEmitter->setVerbose(this->_verbose);
+            outEmitter->setDebugIREmitter(this->_debug);
+            LILString oFile = outName;
+            oFile += (this->_compileToS ? ".s" : this->_config->getConfigString("objExt") );
+
+            outEmitter->setInFile(this->_file);
+            outEmitter->setOutFile(oFile);
+            outEmitter->setDir(buildPath);
+
+            outEmitter->setCPU(this->_config->getConfigString("cpu"));
+            outEmitter->setVendor(this->_config->getConfigString("vendor"));
+
+            if (this->_config->getConfigBool("printOnly")) {
+                outEmitter->printToOutput(mainCodeUnit->getRootNode());
+            } else {
+                if (this->_compileToS) {
+                    outEmitter->compileToS(mainCodeUnit->getRootNode());
+                } else {
+                    outEmitter->compileToO(mainCodeUnit->getRootNode());
+                }
             }
         }
         
@@ -426,29 +486,35 @@ void LILBuildManager::build()
                 
                 codeUnit->run();
 
-                std::unique_ptr<LILOutputEmitter> outEmitter = std::make_unique<LILOutputEmitter>();
-                outEmitter->setVerbose(fileIsVerbose);
-                outEmitter->setDebugIREmitter(this->_debug);
-                std::string oFile = fileName+this->_config->getConfigString("objExt");
-                std::string oDir = buildPath+"/"+fileDir;
-                outEmitter->setInFile(fileNameExt);
-                outEmitter->setOutFile(oFile);
-                outEmitter->setDir(oDir);
-                outEmitter->setCPU(this->_config->getConfigString("cpu"));
-                outEmitter->setVendor(this->_config->getConfigString("vendor"));
-                
-                LIL_makeDir(oDir);
-                
-                if (this->_config->getConfigBool("printOnly")) {
-                    outEmitter->printToOutput(codeUnit->getRootNode());
-                } else {
-                    outEmitter->compileToO(codeUnit->getRootNode());
-                }
-                std::string linkFileStr = oDir + "/" + oFile;
-                if (std::find(linkFiles.begin(), linkFiles.end(), linkFileStr) == linkFiles.end()) {
-                    linkFiles.push_back(linkFileStr);
+                if (!needsDocs) {
+                    std::unique_ptr<LILOutputEmitter> outEmitter = std::make_unique<LILOutputEmitter>();
+                    outEmitter->setVerbose(fileIsVerbose);
+                    outEmitter->setDebugIREmitter(this->_debug);
+                    std::string oFile = fileName+this->_config->getConfigString("objExt");
+                    std::string oDir = buildPath+"/"+fileDir;
+                    outEmitter->setInFile(fileNameExt);
+                    outEmitter->setOutFile(oFile);
+                    outEmitter->setDir(oDir);
+                    outEmitter->setCPU(this->_config->getConfigString("cpu"));
+                    outEmitter->setVendor(this->_config->getConfigString("vendor"));
+                    
+                    LIL_makeDir(oDir);
+                    
+                    if (this->_config->getConfigBool("printOnly")) {
+                        outEmitter->printToOutput(codeUnit->getRootNode());
+                    } else {
+                        outEmitter->compileToO(codeUnit->getRootNode());
+                    }
+                    std::string linkFileStr = oDir + "/" + oFile;
+                    if (std::find(linkFiles.begin(), linkFiles.end(), linkFileStr) == linkFiles.end()) {
+                        linkFiles.push_back(linkFileStr);
+                    }
                 }
             } //for
+            
+            if (needsDocs) {
+                return;
+            }
             
             std::string outFileName = buildPath + "/" + out;
             

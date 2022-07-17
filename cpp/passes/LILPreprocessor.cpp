@@ -182,7 +182,7 @@ void LILPreprocessor::processImportingInstr(const std::shared_ptr<LILRootNode> &
                         }
                     } else {
                         for (const auto & node : newRoot->getChildNodes()) {
-                            if (node->getIsExported()) {
+                            if (node->getIsExported() || node->getNodeType() == NodeTypeDocumentation) {
                                 node->setIsExported(instrIsExported);
                                 newNodes.push_back(node);
                             }
@@ -1103,6 +1103,7 @@ void LILPreprocessor::_importNodeIfNeeded(std::vector<std::shared_ptr<LILNode>> 
                     auto newFd = std::make_shared<LILFunctionDecl>();
                     newFd->setType(fd->getFnType()->clone());
                     newFd->setName(fd->getName());
+                    newFd->setUnmangledName(fd->getUnmangledName());
                     newFd->setIsExtern(true);
 
                     if (fd->getHasMultipleImpls()) {
@@ -1110,6 +1111,7 @@ void LILPreprocessor::_importNodeIfNeeded(std::vector<std::shared_ptr<LILNode>> 
                         for (auto impl : fd->getImpls()) {
                             auto newImpl = std::make_shared<LILFunctionDecl>();
                             newImpl->setName(impl->getName());
+                            newImpl->setUnmangledName(impl->getUnmangledName());
                             newImpl->setIsExtern(true);
                             newImpl->setType(impl->getType()->clone());
                             newFd->addImpl(newImpl);
@@ -1788,6 +1790,36 @@ bool LILPreprocessor::_processIfInstrIfInstr(std::shared_ptr<LILIfInstruction> v
                 }
             }
         }
+        else if (remoteNode->isA(NodeTypeStringLiteral))
+        {
+            auto & nbb = this->_nodeBuffer.back();
+            if (this->_evaluate(remoteNode)) {
+                auto then = value->getThen();
+                if (then.size() > 0) {
+                    for (auto child : then) {
+                        if (isExported) {
+                            child->setIsExported(true);
+                        }
+                        nbb.push_back(child);
+                    }
+                } else {
+                    ret = true;
+                }
+                
+            } else {
+                auto els = value->getElse();
+                if (els.size() > 0) {
+                    for (auto child : value->getElse()) {
+                        if (isExported) {
+                            child->setIsExported(true);
+                        }
+                        nbb.push_back(child);
+                    }
+                } else {
+                    ret = true;
+                }
+            }
+        }
     }
     return ret;
 }
@@ -1963,7 +1995,11 @@ bool LILPreprocessor::_evaluate(std::shared_ptr<LILNode> node)
                     break;
             }
         }
-            
+        case NodeTypeStringLiteral:
+        {
+            auto strLit = std::static_pointer_cast<LILStringLiteral>(node);
+            return strLit->getValue().length() > 0;
+        }
         default:
             std::cerr << "UNKNOWN NODE TYPE TO EVALUATE FAIL!!!!!!!!\n\n";
             break;

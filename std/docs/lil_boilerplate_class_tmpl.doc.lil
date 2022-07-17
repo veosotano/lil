@@ -1,0 +1,7 @@
+#===== class {{LIL_DOC_CLASS_NAME}} =====
+#= 
+#= href 
+#---------------------------
+<lil></lil>
+
+{{LIL_DOC_ALIASES}}{{LIL_DOC_VVARS}}{{LIL_DOC_MEMBER_VARS}}{{LIL_DOC_MEMBER_FNS}}
