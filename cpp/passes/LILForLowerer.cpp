@@ -75,6 +75,7 @@ void LILForLowerer::processForBlocks(LILNode * node)
                     break;
                 }
                 case NodeTypeVarName:
+                case NodeTypeValuePath:
                 {
                     auto remoteNode = this->recursiveFindNode(arg);
                     if (!remoteNode) {

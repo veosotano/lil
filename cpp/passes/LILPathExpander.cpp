@@ -434,6 +434,9 @@ void LILPathExpander::_process(LILRule * rule)
                     as->setSubject(newVp);
                 }
             }
+        } else if (subjNode->getNodeType() == NodeTypeValuePath) {
+            auto vp = std::static_pointer_cast<LILValuePath>(subjNode);
+            this->_process(vp.get());
         }
     }
 }
