@@ -197,6 +197,20 @@ std::shared_ptr<LILNode> LILClassDecl::getMethodNamed(const LILString & name) co
     return nullptr;
 }
 
+std::shared_ptr<LILNode> LILClassDecl::getAliasNamed(const LILString & name) const
+{
+    for (auto alias : this->_aliases) {
+        if (!alias->isA(NodeTypeAliasDecl)) {
+            continue;
+        }
+        auto aliasDecl = std::static_pointer_cast<LILAliasDecl>(alias);
+        if (aliasDecl->getSrcType()->getName() == name) {
+            return aliasDecl;
+        }
+    }
+    return nullptr;
+}
+
 bool LILClassDecl::getIsExtern() const
 {
     return this->_isExtern;

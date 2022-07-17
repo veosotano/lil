@@ -49,6 +49,7 @@ namespace LIL
         
         std::shared_ptr<LILNode> getFieldNamed(const LILString & name) const;
         std::shared_ptr<LILNode> getMethodNamed(const LILString & name) const;
+        std::shared_ptr<LILNode> getAliasNamed(const LILString & name) const;
 
         bool getIsExtern() const;
         void setIsExtern(bool value);
