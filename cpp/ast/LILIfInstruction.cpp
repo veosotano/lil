@@ -40,7 +40,7 @@ std::shared_ptr<LILIfInstruction> LILIfInstruction::clone() const
 
 std::shared_ptr<LILClonable> LILIfInstruction::cloneImpl() const
 {
-    std::shared_ptr<LILIfInstruction> clone = std::static_pointer_cast<LILIfInstruction>(LILInstruction::cloneImpl());
+    std::shared_ptr<LILIfInstruction> clone(new LILIfInstruction(*this));
 
     clone->_then.clear();
     for (auto it = this->_then.begin(); it != this->_then.end(); ++it)
