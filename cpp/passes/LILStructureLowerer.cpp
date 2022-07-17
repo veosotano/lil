@@ -502,8 +502,29 @@ void LILStructureLowerer::_process(std::shared_ptr<LILFunctionDecl> value)
                 tyArg = arg->getType();
             }
 
+            bool doLowering = false;
             if ((tyArg->getTypeType() == TypeTypeMultiple) && !tyArg->getIsWeakType()) {
-                
+                const auto & mtTy = std::static_pointer_cast<LILMultipleType>(tyArg);
+                const auto & mtTys = mtTy->getTypes();
+                if (mtTys.size() > 2) {
+                    doLowering = true;
+                } else {
+                    const auto & firstTy = mtTys.at(0);
+                    const auto & secondTy = mtTys.at(1);
+                    if (
+                        !(
+                            firstTy->getTypeType() == TypeTypePointer
+                            && secondTy->getName() == "null"
+                        ) && !(
+                            secondTy->getTypeType() == TypeTypePointer
+                            && firstTy->getName() == "null"
+                        )
+                    ) {
+                        doLowering = true;
+                    }
+                }
+            }
+            if (doLowering) {
                 auto newFd = std::make_shared<LILFunctionDecl>();
                 newFd->setIsExtern(value->getIsExtern());
                 newFd->setIsExported(value->getIsExported());
