@@ -48,7 +48,7 @@ const DEBUG: false;
             }
         };
 
-        fn append(var.@string otherStr) {
+        fn append(var.ptr(@string) otherStr) {
             #if DEBUG {
                 puts `Appending to string`;
             }
