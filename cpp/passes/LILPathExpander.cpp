@@ -411,6 +411,14 @@ void LILPathExpander::_process(LILObjectDefinition * objdef)
 
 void LILPathExpander::_process(LILRule * rule)
 {
+    this->_processRuleInner(rule);
+    for (const auto & child : rule->getChildRules()) {
+        this->_process(child.get());
+    }
+}
+
+void LILPathExpander::_processRuleInner(LILRule * rule)
+{
     auto ty = rule->getType();
     if (!ty || (ty->getTypeType() != TypeTypeObject)) {
         return;

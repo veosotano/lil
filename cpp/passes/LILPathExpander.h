@@ -37,6 +37,7 @@ namespace LIL
         std::shared_ptr<LILNode> _addExpandedFields(std::deque<std::shared_ptr<LILNode>> &newNodes, std::shared_ptr<LILClassDecl> classDecl, const LILString & pnName, bool & hasChanges, bool isMethod = false);
         void _process(LILObjectDefinition * objdef);
         void _process(LILRule * rule);
+        void _processRuleInner(LILRule * rule);
     };
 }
 
