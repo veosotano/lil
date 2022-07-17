@@ -490,10 +490,6 @@ void LILStructureLowerer::_process(std::shared_ptr<LILVarName> value)
 
 void LILStructureLowerer::_process(std::shared_ptr<LILFunctionDecl> value)
 {
-    if (value->getIsExtern()) {
-        return;
-    }
-
     auto ty = value->getType();
 
     if (ty && ty->getTypeType() == TypeTypeFunction) {
