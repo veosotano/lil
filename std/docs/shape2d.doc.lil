@@ -1,0 +1,167 @@
+#===== class @shape2d ========
+#= A 2D shape is made up of a series of drawing commands, like lineTo and curveTo.
+#= Warning: Work in Progress! (only moveTo and lineTo have been implemented so far.)
+#= href https://github.com/veosotano/lil/blob/main/std/app.lil
+#---------------------------
+<lil>#new @shape2d myStar {
+	x: 200;
+	y: 100;
+	background: #FD00C8;
+
+	moveTo(170.555, 162.807);
+	lineTo(275.903, 162.807);
+	lineTo(190.674, 100.885);
+	lineTo(223.229, 0.692535);
+	lineTo(138.000, 62.6149);
+	lineTo(52.7711, 0.692535);
+	lineTo(85.3257, 100.885);
+	lineTo(0.0968018, 162.807);
+	lineTo(105.445, 162.807);
+	lineTo(138, 263);
+	lineTo(170.555, 162.807);
+};</lil>
+
+#===== vvar componentId ===========
+#= The identifier of the shape data.
+#---------------------------
+<lil>app.shapes[@self.componentId].width: value;</lil>
+
+#===== vvar width ===========
+#= How wide the shape is. Currently unused.
+
+#===== vvar height ===========
+#= How tall the shape is. Currently unused.
+
+#===== vvar x ===========
+#= The position along the horizontal axis.
+#---------------------------
+<lil>theShape.x: 300;</lil>
+
+#===== vvar y ===========
+#= The position along the vertical axis.
+#---------------------------
+<lil>theShape.y +: 100;</lil>
+
+#===== vvar z ===========
+#= The position along the direction of the depth.
+#---------------------------
+<lil>theShape.z: 0;</lil>
+
+#===== vvar background ===========
+#= A color object representing the background color of this shape.
+#---------------------------
+<lil>theShape.background: #F00;</lil>
+
+
+
+#===== fn getComponentId ===
+#= Accessor for the componentId vvar.
+#---------------------------
+<lil>var componentId: @self.getComponentId();</lil>
+
+#===== fn initialize =======
+#= This method installs a new 2D shape into the ECS.
+#===== var name ============
+#= The name of the new shape.
+#===== var parentId ========
+#= The id of the parent of the new shape. Defaults to 0, which is the id of the @root object.
+#---------------------------
+<lil>var theShape: @shape2d { };
+theShape.initialize(`myShape`, 0);</lil>
+
+#===== fn setWidth =====
+#= Setter for the width vvar. Currently unused.
+#===== var value ===========
+#=The number in pixels for the width.
+#---------------------------
+<lil>theShape.setWidth(100);</lil>
+
+#===== fn getWidth =====
+#= Getter for the width vvar.
+#---------------------------
+<lil>if theShape.getWidth() > 200 {
+	//etc
+}</lil>
+
+#===== fn setHeight =====
+#= Setter for the height vvar.
+#===== var value ===========
+#= The number in pixels for the height. Currently unused.
+#---------------------------
+<lil></lil>
+
+#===== fn getHeight =====
+#= Getter for the height vvar.
+#---------------------------
+<lil>print theShape.getHeight();</lil>
+
+#===== fn setX =============
+#= Setter for the x vvar.
+#===== var value ===========
+#= The number in pixels for the x coordinate.
+#---------------------------
+<lil>theShape.setX(200);</lil>
+
+#===== fn getX =============
+#= Getter for the x vvar.
+#---------------------------
+<lil>if theShape.getX() > 100 {
+	//etc
+}</lil>
+
+#===== fn setY =============
+#= Setter for the y vvar.
+#===== var value ===========
+#= The number in pixels for the y coordinate.
+#---------------------------
+<lil>theShape.setY(0);</lil>
+
+#===== fn getY =============
+#= Getter for the y vvar.
+#---------------------------
+<lil>var currentY: theShape.getY();</lil>
+
+#===== fn setZ =============
+#= Setter for the z vvar.
+#===== var value ===========
+#= The number in pixels for the z coordinate.
+#---------------------------
+<lil>theShape.setZ(0);</lil>
+
+#===== fn getZ =============
+#= Getter for the z vvar.
+#---------------------------
+<lil>if theShape.getZ() > 0 {
+	//etc
+}
+</lil>
+
+#===== fn getBackground ====
+#= Value accessor for the background vvar.
+#---------------------------
+<lil>var color: theShape.getBackground();</lil>
+
+#===== fn getBackgroundPointer =====
+#= Pointer accessor for the background vvar.
+#---------------------------
+<lil>var colorPtr: theShape.getBackgroundPointer();</lil>
+
+#===== fn moveTo =============
+#= Starts a new subpath at the specified location.
+#= Imagine the "virtual pen" gets lifted off the surface and placed somewhere else.
+#===== var x ===========
+#= The number in pixels for the x coordinate.
+#===== var y ===========
+#= The number in pixels for the y coordinate.
+#---------------------------
+<lil>theShape.moveTo(123, 250.7)</lil>
+
+#===== fn lineTo =============
+#= Draws a line from the previous point to the given one.
+#===== var x ===========
+#= The number in pixels for the x coordinate.
+#===== var y ===========
+#= The number in pixels for the y coordinate.
+#---------------------------
+<lil>theShape.lineTo(200, 250)</lil>
+

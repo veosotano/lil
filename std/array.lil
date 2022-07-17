@@ -6,30 +6,14 @@
 const DEBUG: false;
 
 #export {
-    #====== class @array ===========
-    #= A dynamic array which automatically grows or shrinks as needed
     class @array (type @subtype) {
         alias sbuf => [#paste SMALL_BUFFER_SIZE x @subtype];
-        
-        #======== var buffer ===========
-        #= The space for some values or a pointer to the first value
-        var.sbuf|ptr(@subtype) buffer;
 
-        #======== var size =============
-        #= How many values are currently in the array
+        var.sbuf|ptr(@subtype) buffer;
         var.i64 size: 0;
 
-        #======== var capacity =========
-        #= How much space is allocated for values
         var.i64 capacity: #paste SMALL_BUFFER_SIZE;
 
-        #========== fn at ==============
-        #= Returns a pointer to the value at the given index or null if not found
-        #===============================
-        #= var index: the offset into the array 
-        #-------------------------------
-        #= return: a pointer to the value at given index or null
-        #-------------------------------
         fn at(var.i64 index)=>ptr(@subtype)|null {
             #if DEBUG {
                 puts `start of at method`;
@@ -60,15 +44,7 @@ const DEBUG: false;
             }
             return null;
         };
-		
-        #========== fn value ==============
-        #= Returns a the value at the given index
-		#= Warning! Might read out of bounds.
-        #===============================
-        #= var index: the offset into the array 
-        #-------------------------------
-        #= return: the value at given index
-        #-------------------------------
+
         fn value(var.i64 index)=>@subtype {
             if @self.buffer => sbuf {
                 return @self.buffer[index];
@@ -78,11 +54,6 @@ const DEBUG: false;
             }
         };
 
-        #=========== fn add ============
-        #= Appends a value at the end of the array, resizing the array if necessary
-        #===============================
-        #= var value: the value to be inserted
-        #-------------------------------
         fn add(var.@subtype value){
             puts `start of method add`;
             if @self.capacity > @self.size {
@@ -124,11 +95,6 @@ const DEBUG: false;
             @self.size +: 1;
         };
 
-        #========= fn reserve ==========
-        #= Use this method when you want to increase capacity for more elements ahead of time
-        #===============================
-        #= var newCapacity: how many elements will fit
-        #-------------------------------
         fn reserve(var.i64 newCapacity) {
             printf(`Reserve called with %li\n`, newCapacity);
             if @self.capacity >= newCapacity {
@@ -148,11 +114,6 @@ const DEBUG: false;
             puts `finished reserving`;
         };
 
-        #======= fn initialize =========
-        #= The runtime calls this method to set up the array before copying elements into it
-        #===============================
-        #= var newCapacity: how many elements will fit
-        #-------------------------------
         fn initialize(var.i64 newCapacity)=>ptr(@subtype) {
             #if DEBUG {
                 printf(`initialize with %li\n`, newCapacity);

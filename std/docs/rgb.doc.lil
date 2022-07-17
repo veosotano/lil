@@ -1,0 +1,37 @@
+#===== class @rgb =========
+#= This class encapsulates color information. This is the class that is used to instantiate colors written using color instructions.
+#= href https://github.com/veosotano/lil/blob/main/std/app.lil
+#--------------------------
+<lil>//#0 is converted to:
+@rgb {
+	red: 0;
+	green: 0;
+	blue: 0;
+}
+
+//#FFF is converted to:
+@rgb {
+	red: 1.0;
+	green: 1.0;
+	blue: 1.0;
+}</lil>
+
+#===== var red ============
+#= The red component value of the color. Valid values are between 0.0 and 1.0.
+#--------------------------
+<lil>theColor.red: 0.5;</lil>
+
+#===== var green ============
+#= The green component value of the color. Valid values are between 0.0 and 1.0.
+#--------------------------
+<lil>theColor.green: 0.5;</lil>
+
+#===== var blue ============
+#= The blue component value of the color. Valid values are between 0.0 and 1.0.
+#--------------------------
+<lil>theColor.blue: 0.5;</lil>
+
+#===== var alpha ============
+#= The alpha component value of the color. Valid values are between 0.0 and 1.0.
+#--------------------------
+<lil>theColor.alpha: 1.0;</lil>

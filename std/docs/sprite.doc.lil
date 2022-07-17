@@ -1,0 +1,67 @@
+#===== class @sprite ========
+#= A sprite is an image which clips its content to a given box.
+#= This class extends the @image class with the clipping functionality
+#= href https://github.com/veosotano/lil/blob/main/std/app.lil
+#---------------------------
+<lil>#new @sprite character {
+	width: 64;
+	height: 64
+	src: "sprite.png";
+	x: 20;
+	y: 10;
+	clipX: 0;
+	clipY: 128;
+}</lil>
+
+
+#===== var super ===========
+#= The @image superclass. This field is expanded and gives this class its id field and the vvars interface from @image.
+#---------------------------
+<lil>var image: @self.super;</lil>
+
+#===== vvar clipX ===========
+#= The location on the horizontal axis of where to place the clipping window.
+#---------------------------
+<lil>mySprite.clipX: 0;</lil>
+
+#===== vvar clipY ===========
+#= #= The location on the vertical axis of where to place the clipping window.
+#---------------------------
+<lil><lil>mySprite.clipY +: 64;</lil></lil>
+
+
+#===== fn initialize =============
+#= This method installs a new sprite into the ECS.
+#===== var name ============
+#= The name of the new sprite.
+#===== var parentId ========
+#= The id of the parent of the new sprite. Defaults to 0, which is the id of the @root object.
+#---------------------------
+<lil>var mySprite: @sprite { };
+mySprite.initialize(`mySprite`, 0);</lil>
+
+#===== fn setClipX =========
+#= Setter for the clipX vvar.
+#===== var value ===========
+#= The number in pixels for the clipX coordinate.
+#---------------------------
+<lil>theImage.setClipX(128);</lil>
+
+#===== fn getClipX =============
+#= Getter for the clipX vvar.
+#---------------------------
+<lil>if mySprite.getClipX() > 200 {
+	//etc
+}</lil>
+
+#===== fn setClipY =============
+#= Setter for the clipY vvar.
+#===== var value ===========
+#= The number in pixels for the clipY coordinate.
+#---------------------------
+<lil>theImage.setClipY(0);</lil>
+
+#===== fn getClipY =============
+#= Getter for the clipY vvar.
+#---------------------------
+<lil>print mySprite.getClipY();</lil>

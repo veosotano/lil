@@ -1,0 +1,52 @@
+#===== class @element ======
+#= An element object is a handle to the primary data in the ECS system. It only contains the id of the entity as a field. The rest of the interface is defined trough vvars, which in turn access the storage on the app object.
+#= href https://github.com/veosotano/lil/blob/main/std/app.lil
+#---------------------------
+<lil>var myElem: @element { id: 0 };
+var sel: myElem.selectable;
+print sel.typeId;</lil>
+
+#===== var id ==============
+#= The unique identifier in the ECS system.
+#---------------------------
+<lil>return app.selectables[@self.id];</lil>
+
+#===== vvar selectable =====
+#= The @selectable data object this element points to.
+#---------------------------
+<lil>var sel: theElem.selectable;</lil>
+
+#===== vvar action =========
+#= Returns the associated action pointer if it has one. Otherwise returns null.
+#---------------------------
+<lil>if theElem.action => ptr(any) {
+	var callback: theElem.action => ptr(fn);
+	callback();
+}</lil>
+
+#===== fn getSelectable ====
+#= Value accessor for the selectable vvar.
+#---------------------------
+<lil>var.@selectable sel: theElem.getSelectable();</lil>
+
+#===== fn getSelectablePointer ====
+#= Pointer accessor for the selectable vvar.
+#---------------------------
+<lil>var.ptr(@selectable) sel: theElem.getSelectablePointer();</lil>
+
+#===== fn getName ==========
+#= Returns the name.
+#---------------------------
+<lil>var name: theElem.getName();</lil>
+
+#===== fn getAction ========
+#= Value accessor for the action vvar.
+#---------------------------
+<lil>var action: theElem.getAction();</lil>
+
+#===== fn setAction ========
+#= Setter for the action vvar.
+#===== var ptr =============
+#= The pointer to the function to be called.
+#---------------------------
+<lil>theElem.setAction(ptr: someFn);</lil>

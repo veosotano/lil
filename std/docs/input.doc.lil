@@ -1,0 +1,157 @@
+#===== class @input =======
+#= This class has storage for the states of the keys of the keyboard, the mouse and gamepads.
+#= href https://github.com/veosotano/lil/blob/main/std/input.lil
+#---------------------------
+<lil>var gamepad: input.getGamepad();
+
+if input.getMousePressed() {
+	someObj.setX(input.getMouseX());
+	someObj.setY(input.getMouseY());
+}
+</lil>
+
+#===== var keyStates =======
+#= Storage for the press status of each key on the keyboard.
+#---------------------------
+<lil>@self.keyStates[keyCode]: value;</lil>
+
+#===== var gamepads ===========
+#= Storage for the states of the gamepads.
+#---------------------------
+<lil>@self.gamepads[gamepadId].buttonStates[buttonId]: value;</lil>
+
+#===== var gamepadCount ===========
+#= The amount of gamepads that are currently in use.
+#---------------------------
+<lil>input.gamepadCount +: 1;</lil>
+
+#===== var mouseStates ===========
+#= Storage for the button states and location of the mouse.
+#---------------------------
+<lil>input.mouseStates[buttonNumber]: @mouseState {
+	x: x;
+	y: y;
+	pressed: true;
+};</lil>
+
+
+#===== fn isKeyDown ========
+#= Returns wether the key with the given code is pressed.
+#===== var keyCode =========
+#= The number identifying which key.
+#---------------------------
+<lil>if input.isKeyDown(KeyBoard.enter) {
+	print "key down";
+}</lil>
+
+#===== fn setKeyDown =======
+#= Sets the press status of the key on the keyboard with the given keyCode.
+#===== var keyCode =========
+#= The number identifying which key.
+#===== var value =========
+#= Wether it is pressed or not.
+#---------------------------
+<lil>inut.setKeyDown(keyCode, value);</lil>
+
+#===== fn getGamepad =======
+#= Returns the gamepad object for the given gamepadId.
+#===== var gamepadId =======
+#= The number identifying the gamepad. Defaults to 0.
+#---------------------------
+<lil>//get the first gamepad
+var gamepad: input.getGamepad();
+//get the second one
+var gamepad2: input.getGamepad(1);
+</lil>
+
+#===== fn isGamepadButtonDown =======
+#= Returns the gamepad object for the given gamepadId.
+#===== var gamepadId =======
+#= The number identifying the gamepad.
+#===== var buttonId =======
+#= The number identifying the button of the gamepad.
+#---------------------------
+<lil>if input.isGamepadButtonDown(0, 3) {
+	//etc
+}</lil>
+
+#===== fn setGamepadButtonDown =====
+#= Sets the press state of the button with given buttonId on the gamepad with given gamepadId.
+#===== var gamepadId =====
+#= The number identifying the gamepad.
+#===== var buttonId =====
+#= The number identifying the button of the gamepad.
+#===== var value =====
+#= Wether or not it is pressed.
+#-------------------------------
+<lil>input.setGamepadButtonDown(gamepadId: 0; buttonId: 1; value: true);</lil>
+
+#===== fn setGamepadX =====
+#= Sets the position of the thumbstick in the horizontal axis for the gamepad with given gamepadId.
+#===== var gamepadId =====
+#= The number identifying the gamepad.
+#===== var value =====
+#= The number representing the x amount. Valid values are between 0.0 and 1.0;
+#-------------------------------
+<lil>input.setGamepadX(0, 0.5);</lil>
+
+#===== fn setGamepadY =====
+#= Sets the position of the thumbstick in the vertical axis for the gamepad with given gamepadId.
+#===== var gamepadId =====
+#= The number identifying the gamepad.
+#===== var value =====
+#= The number representing the y amount. Valid values are between 0.0 and 1.0;
+#-------------------------------
+<lil>input.setGamepadY(0, 1.0);</lil>
+
+#===== fn setGamepadX2 =====
+#= Sets the position of the second thumbstick in the horizontal axis for the gamepad with given gamepadId.
+#===== var gamepadId =====
+#= The number identifying the gamepad.
+#===== var value =====
+#= The number representing the x amount. Valid values are between 0.0 and 1.0;
+#-------------------------------
+<lil>input.setGamepadX2(0, 0);</lil>
+
+#===== fn setGamepadY2 =====
+#= Sets the position of the second thumbstick in the vertical axis for the gamepad with given gamepadId.
+#===== var gamepadId =====
+#= The number identifying the gamepad.
+#===== var value =====
+#=  The number representing the y amount. Valid values are between 0.0 and 1.0;
+#-------------------------------
+<lil>input.setGamepadY2(0, 0);</lil>
+
+#===== fn getMouseX =====
+#= Returns the location on the horizontal axis of the mouse cursor, in window coordinates.
+#===== var num =====
+#= The button number. Defaults to 0. The x and y coordinates of the mouse cursor are stored at index 0.
+#-------------------------------
+<lil>print input.getMouseX();</lil>
+
+#===== fn getMouseY =====
+#= Returns the location on the vertical axis of the mouse cursor, in window coordinates.
+#===== var num =====
+#= The button number. Defaults to 0. The x and y coordinates of the mouse cursor are stored at index 0.
+#-------------------------------
+<lil>print input.getMouseY();</lil>
+
+#===== fn getMousePressed =====
+#= Returns the press state of the button with given numnber of the mouse.
+#===== var num =====
+#= The button number.
+#-------------------------------
+<lil>if getMousePressed(0) {
+	//etc
+}</lil>
+
+#===== fn setMousePosition =====
+#= Sets the x and y coordinates for the mouse. Use window coordinates.
+#===== var num =====
+#= The button number. Defaults to 0. The x and y coordinates of the mouse cursor are stored at index 0.
+#===== var x =====
+#= The number representing the x coordinate.
+#===== var y =====
+#= The number representing the y coordinate.
+#-------------------------------
+<lil>input.setMousePosition(0, mouseX, mouseY);</lil>

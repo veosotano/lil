@@ -1,0 +1,81 @@
+#====== class @array ===========
+#= A dynamic array which automatically grows or shrinks as needed
+#= href https://github.com/veosotano/lil/blob/main/std/array.lil
+#-------------------------------
+<lil>//use built in array syntax
+var myArr: "apples", "oranges", "pears";
+for myArr {
+	print @value;
+}
+
+//or do it manually
+var.@array(i64) otherArr: [1, 2, 3, 4];
+otherArr.add(5);</lil>
+
+	#======== alias sbuf ===========
+	#= The static buffer of values.
+	#-------------------------------
+	<lil>//this will be expanded
+var.sbuf foo: [];
+//into this
+var.[#paste SMALL_BUFFER_SIZE x @subtype] foo: [];</lil>
+
+    #======== var buffer ===========
+    #= The space for some values or a pointer to the first value
+	#-------------------------------
+	<lil>if @self.buffer => ptr(@subtype) {
+	return @self.buffer + index;
+}</lil>
+
+    #======== var size =============
+    #= How many values are currently in the array
+	#-------------------------------
+	<lil>if index < @self.size {
+	//etc
+}</lil>
+
+    #======== var capacity =========
+    #= How much space is allocated for values
+	#-------------------------------
+	<lil>if @self.capacity > @self.size {
+	//etc
+}</lil>
+
+    #========== fn at ==============
+    #= Returns a pointer to the value at the given index or null if not found
+    #===== var index ===============
+	#= The offset into the array.
+	#-------------------------------
+	<lil>print myArr.at(0);</lil>
+
+    #========== fn value ===========
+    #= Returns the value at the given index
+	#= Warning! Might read out of bounds.
+    #===== var index ===============
+	#= The offset into the array.
+	#-------------------------------
+	<lil>var lastValue: myArr.value(myArr.size - 1);</lil>
+
+    #=========== fn add ============
+    #= Appends a value at the end of the array, resizing the array if necessary
+    #===== var value ===============
+	#= The value to be inserted.
+	#-------------------------------
+	<lil>var.@array(i64) myArray: 1, 2, 3;
+myArray.add(123);
+myArray.add(888);</lil>
+
+    #========= fn reserve ==========
+    #= Use this method when you want to increase capacity for more elements ahead of time
+    #==== var newCapacity ==========
+	#= How many elements will fit.
+	#-------------------------------
+	<lil>myArr.reserve(1024);</lil>
+
+    #======= fn initialize =========
+    #= The runtime calls this method to set up the array before copying elements into it
+    #===== var newCapacity =========
+	#= how many elements will fit
+	#-------------------------------
+	<lil>var myArr: @array(i64) { };
+myArray.initialize(25);</lil>

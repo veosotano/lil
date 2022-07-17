@@ -1,0 +1,175 @@
+#===== class @image ========
+#= An image is a box with a texture.
+#= href https://github.com/veosotano/lil/blob/main/std/app.lil
+#---------------------------
+<lil>#new @image logo {
+	src: "logo.png";
+	x: 20;
+	y: 10;
+}</lil>
+
+
+#===== var super ===========
+#= The @element superclass. This field is expanded and gives this class its id field.
+#---------------------------
+<lil>var elem: @self.super;</lil>
+
+#===== vvar componentId ===========
+#= The identifier of the data for this image.
+#---------------------------
+<lil>app.imgs[@self.componentId].width: value;</lil>
+
+#===== vvar width ===========
+#= How wide the image is.
+#---------------------------
+<lil>theImage.width: 100;</lil>
+
+#===== vvar height ===========
+#= How tall the image is.
+#---------------------------
+<lil>var height: theImage.height;</lil>
+
+#===== vvar x ===========
+#= The position along the horizontal axis.
+#---------------------------
+<lil>theImage.x +: 100;</lil>
+
+#===== vvar y ===========
+#= The position along the vertical axis.
+#---------------------------
+<lil>theImage.y -: 20;</lil>
+
+#===== vvar z ===========
+#= The position along the direction of the depth.
+#---------------------------
+<lil>theImage.z: 0;</lil>
+
+#===== vvar velocity ===========
+#= The speed at which this image should move, in pixels per 60th of a second.
+#---------------------------
+<lil>theImage.velocity: @vel { x: 3; y: 5 };</lil>
+
+#===== vvar src ===========
+#= A string containing the file path for the resource. Returns the string as a cstr.
+#---------------------------
+<lil>theImage.src: "sprite.png";</lil>
+
+#===== fn getComponentId =============
+#= Accessor for the componentId vvar.
+#---------------------------
+<lil>var componentId: @self.getComponentId();</lil>
+
+#===== fn initialize =============
+#= This method installs a new image into the ECS.
+#===== var name ============
+#= The name of the new image.
+#===== var parentId ========
+#= The id of the parent of the new image. Defaults to 0, which is the id of the @root object.
+#---------------------------
+<lil>var theImage: @image { };
+theImage.initialize(`myImage`, 0);</lil>
+
+#===== fn setWidth =============
+#= Setter for the width vvar.
+#===== var value ===========
+#= The number in pixels for the width.
+#---------------------------
+<lil>theImage.setWidth(100);</lil>
+
+#===== fn getWidth =============
+#= Getter for the width vvar.
+#---------------------------
+<lil>if theImage.getWidth() > 200 {
+	//etc
+}</lil>
+
+#===== fn setHeight =============
+#= Setter for the height vvar.
+#===== var value ===========
+#= The number in pixels for the height.
+#---------------------------
+<lil>theImage.setHeight(200);</lil>
+
+#===== fn getHeight =============
+#= Getter for the height vvar.
+#---------------------------
+<lil>print theImage.getHeight();</lil>
+
+#===== fn setX =============
+#= Setter for the x vvar.
+#===== var value ===========
+#= The number in pixels for the x coordinate.
+#---------------------------
+<lil>theImage.setX(200);</lil>
+
+#===== fn getX =============
+#= Getter for the x vvar.
+#---------------------------
+<lil>if theImage.getX() > 100 {
+	//etc
+}</lil>
+
+#===== fn setY =============
+#= Setter for the y vvar.
+#===== var value ===========
+#= The number in pixels for the y coordinate.
+#---------------------------
+<lil>theImage.setY(0);</lil>
+
+#===== fn getY =============
+#= Getter for the y vvar.
+#---------------------------
+<lil>var currentY: theImage.getY();</lil>
+
+#===== fn setZ =============
+#= Setter for the z vvar.
+#===== var value ===========
+#= The number in pixels for the z coordinate.
+#---------------------------
+<lil>theImage.setZ(0);</lil>
+
+#===== fn getZ =============
+#= Getter for the z vvar.
+#---------------------------
+<lil>if theImage.getZ() > 0 {
+	//etc
+}</lil>
+
+#===== fn setVelocity =============
+#= Setter for the velocity vvar.
+#===== var value ===========
+#= A vector describing the velocitiy of the image.
+#---------------------------
+<lil>theImage.setVelocity(@vel {
+	x: 2;
+	y: 0;
+});</lil>
+
+#===== fn getVelocity =============
+#= Value accessor for the velocity vvar.
+#---------------------------
+<lil>var vel: theImage.getVelocity();</lil>
+
+#===== fn getVelocityPointer =============
+#= Pointer accessor for the volicity vvar.
+#---------------------------
+<lil>var ptrToVel: theImage.getVelocityPointer();</lil>
+
+#===== fn setSrc =============
+#= Setter for the src vvar.
+#===== var value ===========
+#= A string containing the path to the image inside the Resources folder.
+#---------------------------
+<lil>theImage.setSrc("newImage.png");</lil>
+
+#===== fn getSrc =============
+#= Getter for the src vvar.
+#---------------------------
+<lil>print theImage.getSrc();</lil>
+
+#===== fn load =============
+#= Loads a new image into the system, creating the new texture.
+#===== var value ===========
+#= A string containing the path to the image inside the Resources folder.
+#---------------------------
+<lil>myImage.load("someFile.png");</lil>

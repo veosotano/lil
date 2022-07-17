@@ -1,0 +1,55 @@
+#===== class @string  =======
+#= Strings are sequences of characters. They keep track of their length.
+#= href https://github.com/veosotano/lil/blob/main/std/string.lil
+#----------------------------
+<lil>//use built in LIL strings
+var myStr: "Hello world";
+myStr.append(", have a great day!");
+
+//or do it manually
+var otherStr: @string { };
+otherStr.initialize(`this is a c style string`, 24);</lil>
+
+#===== var length =======
+#= The amount of bytes that are used in the buffer for storing the string.
+#------------------------
+<lil>print myStr.length;</lil>
+
+#===== var buffer =======
+#= The internal storage space for characters, using the short string optimization. When the string is long, it contains a pointer to the buffer on the heap.
+#------------------------
+<lil>return pointerTo(@self.buffer) => cstr;</lil>
+
+#===== fn construct =====
+#= The constructor for this class. This method will be called automatically.
+
+#===== fn destruct ======
+#= The destructor for this class. This method will be called automatically.
+
+#===== fn cstr ==========
+#= Returns a pointer to the characters as a C string, aka ptr(i8).
+#------------------------
+<lil>var str: "This is a LIL string";
+doStuffWithCStr(str.cstr());</lil>
+
+#===== fn append =========
+#= Add the content of the given string to the end of this one.
+#===== var otherStr ======
+#= The other string, which will be added to this one.
+#-------------------------
+<lil>var str: "Hello there ";
+str.add("my friend");
+print str; //prints Hello there my friend to stdout</lil>
+
+#===== fn initialize =====
+#= Sets up the string and adds the given string as content. This method is the one that is called by the compiler when creating built-in strings.
+#===== var value =========
+#= A null terminated C-style string.
+#===== var length ========
+#= The amount of bytes that are needed to store the full sequence of characters, but WITHOUT the null terminator. The method automatically adds 1 to the length when necessary.
+#-------------------------
+<lil>//initialize will be implicitly called
+var myStr: "Hello there";
+//or you can do it yourself
+var otherStr: @string { };
+otherStr.initialize(someCStrFromSomewhere, strnlen(someCStrFromSomewhere, MAX_STR_LEN));</lil>

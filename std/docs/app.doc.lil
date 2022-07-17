@@ -1,0 +1,146 @@
+#===== class @app =====
+#= The app object is the heart of your application. It provides the storage for the ECS architecture and stuff like movement or the selection system.
+#= The file std/app.lil defines a global variable called app. You can call methods on it directly, but usually it is changed indirectly, through classes such as @container or @sprite.
+#= href https://github.com/veosotano/lil/blob/main/std/app.lil
+#----------------------
+<lil>//you wouldn't usually do this, it is just an example
+app.selectByName(
+	nameId: app.registerName(`mytestobj`);
+	parentId: 0
+);</lil>
+
+#===== var selectables ======
+#= Each item in the ECS corresponds to one selectable of this array.
+#----------------------------
+<lil>var sel: pointerTo app.selectables[entityId];</lil>
+
+#===== var boxPositions =====
+#= Position storage for boxes (containers).
+#----------------------------
+<lil>app.boxPositions[i].x +: ((app.boxVelocities[i].x => f64) * dt) => f32;</lil>
+
+#===== var boxVelocities ====
+#= Storage for the velocities of boxes.
+#----------------------------
+<lil>app.boxVelocities[@self.componentId]: value;</lil>
+
+#===== var box2ds ===========
+#= The data of the 2d boxes is stored in this static array.
+#----------------------------
+<lil>var bgColor: app.box2ds[0].bgColor;</lil>
+
+#===== var boxCount =========
+#= The amount of 2d boxes that are currently in use.
+#----------------------------
+<lil>vertexCount: app.boxCount * 6;</lil>
+
+#===== var imgPositions =====
+#= Position storage for images.
+#----------------------------
+<lil>app.imgPositions[@self.componentId].x: value;</lil>
+
+#===== var imgVelocities ====
+#= The velocities of the images are stored in this static array.
+<lil>app.imgPositions[i].x +: ((app.imgVelocities[i].x => f64) * dt) => f32;</lil>
+
+#===== var imgClips =========
+#= Storage for clipping data of @sprite objects.
+#-
+<lil>var clip: app.imgClips[i];</lil>
+
+#===== var imgs =============
+#= Image data such as width and height are stored in this static array.
+#----------------------------
+<lil>app.imgs[imgId].textureWidth: width;</lil>
+
+#===== var imgCount =========
+#= The amount of images that are currently in use.
+#----------------------------
+<lil>var.i64 bufferSize: (sizeOf(type @vertex) * 6 * app.imgCount);</lil>
+
+#===== var shapes ===========
+#= Storage for vector shape data.
+#----------------------------
+<lil>var shape: pointerTo app.shapes[i];</lil>
+
+#===== var shapesCount ======
+#= The amount of vector shapes that are currently in use.
+#----------------------------
+<lil>for (var.i64 i:0; i<app.shapesCount; i+:1) {
+//etc
+}</lil>
+
+#===== var colliderIds ======
+#= This is currently unused
+
+#===== var colliders ========
+#= This is currently unused
+
+#===== var names ============
+#= Storage for names that have been given a name id.
+#----------------------------
+<lil>@self.names[currentCount]: name;</lil>
+
+#===== var nameCount ========
+#= The amount of names that are currently in use.
+#----------------------------
+<lil>@self.nameCount +: 1;</lil>
+
+#===== var typeCount ========
+#= The amount of types of objects that are currently in use.
+#----------------------------
+<lil>var currentCount: @self.typeCount;</lil>
+
+#===== var resourceIds ======
+#= Storage for the ids of resources.
+#----------------------------
+<lil>var resId: app.resourceIds[id];</lil>
+
+#===== var resources ========
+#= Data of resources are stored in this static array.
+#----------------------------
+<lil>return pointerTo app.resources[resId];</lil>
+
+#===== var resourceCount ====
+#= The amount of resources that are currently in use.
+#----------------------------
+<lil>@self.resourceIds[@self.resourceCount]: id;</lil>
+
+#===== var actions ==========
+#= Action data is stored in this static array.
+#----------------------------
+<lil>var action: app.actions[i];</lil>
+
+#===== var actionCount ======
+#= The amount of actions that are currently in use.
+#----------------------------
+<lil>var currentCount: @self.actionCount;</lil>
+
+#===== fn initialize ========
+#= Sets up the background color and mouse listener
+#----------------------------
+<lil>app.initialize();</lil>
+
+#===== fn newEntity =========
+#= Bumps the current entity count by one and returns the new entity id
+#----------------------------
+<lil>var newId: app.newEntity();</lil>
+
+#===== fn newType ===========
+#= Bumps the current type count by one and returns the new type id
+#----------------------------
+<lil>var newTypeId: app.newType();</lil>
+
+#===== fn registerName ======
+#= For each unique string passed in to this function it returns a corresponding id.
+#===== var name =============
+#= The C string containing the name to be identified.</lil>
+#----------------------------
+<lil>var.i64 nameId: @self.registerName(name);</lil>
+
+#===== fn getName ===========
+#= Returns the name at given id.
+#===== var id ===============
+#= The number that was previously handed out by the registerName method.
+#----------------------------
+<lil>return app.getName(selectable.nameId);</lil>

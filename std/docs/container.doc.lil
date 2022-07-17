@@ -1,0 +1,173 @@
+#===== class @container ====
+#= A container is a basic box of content. It can contain other objects and draw a background.
+#= href https://github.com/veosotano/lil/blob/main/std/app.lil
+#---------------------------
+<lil>#new @container test {
+	width: 100;
+	height: 100;
+	backround: #0;
+}</lil>
+
+#===== var super ===========
+#= The @element superclass. This field is expanded and gives this class its id field.
+#---------------------------
+<lil>var elem: @self.super;</lil>
+
+#===== vvar componentId ====
+#= The identifier of the box for this container.
+#---------------------------
+<lil>app.box2ds[@self.componentId].width: value;</lil>
+
+#===== vvar width ==========
+#= How wide the container is.
+#---------------------------
+<lil>theContainer.width: 100;</lil>
+
+#===== vvar height =========
+#= How tall the container is.
+#---------------------------
+<lil>var height: theContainer.height;</lil>
+
+#===== vvar background ======
+#= A color object representing the background color of this container.
+#---------------------------
+<lil>theContainer.background: #F00;</lil>
+
+#===== vvar x ==============
+#= The position along the horizontal axis.
+#---------------------------
+<lil>theContainer.x +: 100;</lil>
+
+#===== vvar y ==============
+#= The position along the vertical axis.
+#---------------------------
+<lil>theContainer.y -: 20;</lil>
+
+#===== vvar z ==============
+#= The position along the direction of the depth.
+#---------------------------
+<lil>theContainer.z: 0;</lil>
+
+#===== vvar velocity =======
+#= The speed at which this container should move, in pixels per 60th of a second.
+#---------------------------
+<lil>theContainer.velocity: @vel { x: 3; y: 5 };</lil>
+
+#===== fn getComponentId ===
+#= Accessor for the componentId vvar.
+#---------------------------
+<lil>var componentId: @self.getComponentId();</lil>
+
+#===== fn initialize =======
+#= This method installs a new container into the ECS.
+#===== var name ============
+#= The name of the new container.
+#===== var parentId ========
+#= The id of the parent of the new container. Defaults to 0, which is the id of the @root object.
+#---------------------------
+<lil>var theContainer: @container { };
+theContainer.initialize(`myContainer`, 0);</lil>
+
+#===== fn setWidth =====
+#= Setter for the width vvar.
+#===== var value ===========
+#=The number in pixels for the width.
+#---------------------------
+<lil>theContainer.setWidth(100);</lil>
+
+#===== fn getWidth =====
+#= Getter for the width vvar.
+#---------------------------
+<lil>if theContainer.getWidth() > 200 {
+	//etc
+}</lil>
+
+#===== fn setHeight =====
+#= Setter for the height vvar.
+#===== var value ===========
+#= The number in pixels for the height.
+#---------------------------
+<lil></lil>
+
+#===== fn getHeight =====
+#= Getter for the height vvar.
+#---------------------------
+<lil>print theContainer.getHeight();</lil>
+
+#===== fn setBackground ====
+#= Setter for the background vvar.
+#===== var value ===========
+#= The color with which to draw the background.
+#---------------------------
+<lil>theContainer.setBackground(myBgColor);</lil>
+
+#===== fn getBackground ====
+#= Value accessor for the background vvar.
+#---------------------------
+<lil>var color: theContainer.getBackground();</lil>
+
+#===== fn getBackgroundPointer =====
+#= Pointer accessor for the background vvar.
+#---------------------------
+<lil>var colorPtr: theContainer.getBackgroundPointer();</lil>
+
+#===== fn setX =============
+#= Setter for the x vvar.
+#===== var value ===========
+#= The number in pixels for the x coordinate.
+#---------------------------
+<lil>theContainer.setX(200);</lil>
+
+#===== fn getX =============
+#= Getter for the x vvar.
+#---------------------------
+<lil>if theContainer.getX() > 100 {
+	//etc
+}</lil>
+
+#===== fn setY =============
+#= Setter for the y vvar.
+#===== var value ===========
+#= The number in pixels for the y coordinate.
+#---------------------------
+<lil>theContainer.setY(0);</lil>
+
+#===== fn getY =============
+#= Getter for the y vvar.
+#---------------------------
+<lil>var currentY: theContainer.getY();</lil>
+
+#===== fn setZ =============
+#= Setter for the z vvar.
+#===== var value ===========
+#= The number in pixels for the z coordinate.
+#---------------------------
+<lil>theContainer.setZ(0);</lil>
+
+#===== fn getZ =============
+#= Getter for the z vvar.
+#---------------------------
+<lil>if theContainer.getZ() > 0 {
+	//etc
+}
+</lil>
+
+#===== fn setVelocity =====
+#= Setter for the velocity vvar.
+#===== var value ===========
+#= A vector describing the velocitiy of the container.
+#---------------------------
+<lil>theContainer.setVelocity(@vel {
+	x: 2;
+	y: 0;
+});</lil>
+
+#===== fn getVelocity =====
+#= Value accessor for the velocity vvar.
+#---------------------------
+<lil>var vel: theContainer.getVelocity();</lil>
+
+#===== fn getVelocityPointer =====
+#= Pointer accessor for the volicity vvar.
+#---------------------------
+<lil>var ptrToVel: theContainer.getVelocityPointer();</lil>
