@@ -326,6 +326,8 @@ std::shared_ptr<LILToken> LILLexer::readNextToken()
             ret = std::shared_ptr<LILToken>(new LILToken(TokenTypePercentSign, cc, d->currentLine, d->currentColumn - 1, d->index));
             this->readNextChar();
             return ret;
+        case '$':
+            return this->readIdentifier();
 
         default:
             return this->readInvalidChar();
@@ -464,7 +466,7 @@ std::shared_ptr<LILToken> LILLexer::readIdentifier()
     const size_t column = d->currentColumn - 1;
     const size_t index = d->index;
 
-    while (isLatin1Letter(d->currentChar) || d->currentChar.isDigit() || d->currentChar == '_')
+    while (isLatin1Letter(d->currentChar) || d->currentChar.isDigit() || d->currentChar == '_' || d->currentChar == '$')
     {
         this->storeCurrentCharAndReadNext();
     }

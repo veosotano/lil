@@ -1132,7 +1132,7 @@ bool LILCodeParser::isBuiltinFunctionCall() const
     std::string value = d->currentToken->getString().data();
     if (
         value == "ref"
-        || value == "sel"
+        || value == "$"
         || value == "flag"
         || value == "unflag"
         || value == "addFlag"
@@ -5272,7 +5272,7 @@ bool LILCodeParser::readFunctionCall()
             return this->readNameAndSelectorFunctionCall();
         }
         // <fnName> (selector)
-        else if (name == "sel")
+        else if (name == "$")
         {
             return this->readSelFunction();
         }
@@ -5567,16 +5567,18 @@ bool LILCodeParser::readSelFunction()
 
     LIL_EXPECT(TokenTypeIdentifier, "identifier")
     d->receiver->receiveNodeData(ParserEventFunction, d->currentToken->getString());
-
+    this->readNextToken();
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
 
     LIL_EXPECT(TokenTypeParenthesisOpen, "open parenthesis")
     d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+    this->readNextToken();
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
 
+    //readSelectorChains() auto commits
     bool scValid = this->readSelectorChains(TokenTypeParenthesisClose);
-    if (scValid) {
-        d->receiver->receiveNodeCommit();
+    if (!scValid) {
+        LIL_CANCEL_NODE
     }
 
     LIL_EXPECT(TokenTypeParenthesisClose, "closing parenthesis")

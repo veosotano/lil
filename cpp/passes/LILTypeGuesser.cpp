@@ -22,6 +22,30 @@
 
 using namespace LIL;
 
+const std::shared_ptr<LILElement> & LILElement::add(LILString name, std::shared_ptr<LILType> ty)
+{
+    auto newItem = std::make_shared<LILElement>();
+    newItem->name = name;
+    newItem->ty = ty;
+    this->children.push_back(newItem);
+    return this->children.back();
+}
+
+void LILElement::remove(std::shared_ptr<LILElement> elem)
+{
+    this->children.erase(std::remove(this->children.begin(), this->children.end(), elem), this->children.end());
+}
+
+const std::shared_ptr<LILElement> & LILElement::at(size_t index) const
+{
+    return this->children.at(index);
+}
+
+const std::vector<std::shared_ptr<LILElement>> & LILElement::getChildren() const
+{
+    return this->children;
+}
+
 LILTypeGuesser::LILTypeGuesser()
 {
 }
@@ -48,6 +72,7 @@ void LILTypeGuesser::visit(LILNode *node)
 void LILTypeGuesser::performVisit(std::shared_ptr<LILRootNode> rootNode)
 {
     this->setRootNode(rootNode);
+    this->createDOM();
     auto nodes = rootNode->getNodes();
     for (const auto & node : nodes) {
         this->nullsToNullables(node);
@@ -70,6 +95,43 @@ void LILTypeGuesser::performVisit(std::shared_ptr<LILRootNode> rootNode)
     for (const auto & node : nodes) {
         this->process(node.get());
     }
+}
+
+void LILTypeGuesser::createDOM()
+{
+    auto root = std::make_shared<LILElement>();
+    root->name = "@root";
+    root->ty = LILObjectType::make("container");
+    this->dom = root;
+    this->insertionPoint = this->dom.get();
+    for (const auto & rule : this->getRootNode()->getRules()) {
+        for (const auto & innerRule : rule->getChildRules()) {
+            this->recursiveAddElement(innerRule.get());
+        }
+    }
+}
+
+void LILTypeGuesser::recursiveAddElement(LILRule * rule)
+{
+    auto insertionPointBackup = this->insertionPoint;
+    
+    const auto & instr = rule->getInstruction();
+    if (instr && instr->getInstructionType() == InstructionTypeNew) {
+        auto firstSel = rule->getFirstSelector();
+        auto nameSel = std::static_pointer_cast<LILSelector>(firstSel);
+        auto ruleTy = rule->getType();
+        if (!ruleTy) {
+            ruleTy = this->getNodeType(rule);
+            rule->setType(ruleTy);
+        }
+        auto newElem = this->insertionPoint->add(nameSel->getName(), ruleTy);
+        this->insertionPoint = newElem.get();
+    }
+
+    for (const auto & innerRule : rule->getChildRules()) {
+        this->recursiveAddElement(innerRule.get());
+    }
+    this->insertionPoint = insertionPointBackup;
 }
 
 void LILTypeGuesser::nullsToNullables(std::shared_ptr<LILNode> node)
@@ -1829,6 +1891,17 @@ std::shared_ptr<LILType> LILTypeGuesser::findReturnTypeForFunctionCall(LILFuncti
             newPtrTy->setArgument(firstArgType);
             return newPtrTy;
         }
+        case FunctionCallTypeSel:
+        {
+            const auto & args = fc->getArguments();
+            const auto & firstArg = args.front();
+            if (firstArg->getNodeType() != NodeTypeSelectorChain) {
+                std::cerr << "FIRST ARG OF SEL CALL IS NOT SELECTOR CHAIN FAIL!!!!!!!!!!!!!!!!\n";
+                return nullptr;
+            }
+            auto selCh = static_cast<LILSelectorChain *>(firstArg.get());
+            return this->findTypeForSelectorChain(selCh);
+        }
             
         default:
             break;
@@ -2192,6 +2265,30 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForSelectorChain(LILSelectorCha
             default:
                 //std::cerr << "UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n";
                 break;
+        }
+    } else {
+        bool isLast = false;
+        std::vector<std::shared_ptr<LILRule>> currentSelection;
+        
+        
+        for (size_t i=1, j=selNodes.size(); i<j; ++i) {
+            isLast = i==j-1;
+            auto selNode = selNodes.at(i);
+            switch (selNode->getSelectorType()) {
+                case SelectorTypeRootSelector:
+                {
+                    currentSelection = this->getRootNode()->getRules();
+                    break;
+                }
+                    
+                case SelectorTypeNameSelector:
+                {
+                    
+                    break;
+                }
+                default:
+                    break;
+            }
         }
     }
     return nullptr;

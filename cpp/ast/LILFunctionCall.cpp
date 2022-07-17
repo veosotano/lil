@@ -66,7 +66,7 @@ void LILFunctionCall::receiveNodeData(const LILString &data)
     {
         this->setFunctionCallType(FunctionCallTypeRef);
     }
-    else if (data == "sel")
+    else if (data == "$")
     {
         this->setFunctionCallType(FunctionCallTypeSel);
     }

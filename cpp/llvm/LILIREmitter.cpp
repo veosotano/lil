@@ -2108,11 +2108,12 @@ llvm::Value * LILIREmitter::_emitRuleInner(LILRule * value)
         idList.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
         idList.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
         idList.push_back(d->irBuilder.CreateLoad(i64Ty, counter));
+        idList.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(LIL_GEP_INDEX_SIZE, 0, false)));
         auto selClassTy = d->classTypes["sel"];
         auto selAlloca = d->irBuilder.CreateAlloca(selClassTy);
         d->irBuilder.CreateStore(selection, selAlloca);
-        auto idGep = llvm::GetElementPtrInst::Create(selClassTy, selAlloca, idList, "ids", d->irBuilder.GetInsertBlock());
-        auto currentId = d->irBuilder.CreateLoad(selClassTy, idGep);
+        auto currentIdGep = llvm::GetElementPtrInst::Create(selClassTy, selAlloca, idList, "currentId", d->irBuilder.GetInsertBlock());
+        auto currentId = d->irBuilder.CreateLoad(i64Ty, currentIdGep);
         
         bool needsCast = tyName != "container";
         llvm::Type * containerTy;
@@ -2194,7 +2195,9 @@ llvm::Value * LILIREmitter::_emitSelCh(LILSelectorChain * value, bool & outIsId)
                         case SelectorTypeRootSelector:
                         {
                             outIsId = true;
-                            return llvm::ConstantInt::get(d->llvmContext, llvm::APInt(64, 0, true));
+                            std::vector<llvm::Constant *> members;
+                            members.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(64, 0, true)));
+                            return llvm::ConstantStruct::get(d->classTypes["element"], members);
                         }
 
                         case SelectorTypeNameSelector:
@@ -2916,6 +2919,23 @@ llvm::Value * LILIREmitter::_emitFC(LILFunctionCall * value)
             }
             fnTy->setReturnType(conv->getType());
             return this->_emitFunctionCall(value, "_lil_conversion_"+name, fnTy.get(), nullptr);
+        }
+        case FunctionCallTypeSel:
+        {
+            bool outIsId = false;
+            const auto & args = value->getArguments();
+            const auto & selChNode = args.front();
+            if (selChNode->getNodeType() != NodeTypeSelectorChain) {
+                std::cerr << "SEL CALL ARG IS NOT SEL CHAIN FAIL!!!!\n";
+                return nullptr;
+            }
+            auto selCh = std::static_pointer_cast<LILSelectorChain>(selChNode);
+            auto llvmIr = this->_emitSelCh(selCh.get(), outIsId);
+            if (outIsId) {
+                return llvmIr;
+            } else {
+                
+            }
         }
         default:
         {

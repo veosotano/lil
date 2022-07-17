@@ -561,7 +561,7 @@ LILString LILNodeToString::stringify(LILNode * node)
                 }
                 case FunctionCallTypeSel:
                 {
-                    return "sel";
+                    return "$";
                 }
                 case FunctionCallTypeFlag:
                 {

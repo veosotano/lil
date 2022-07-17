@@ -113,10 +113,6 @@ fn LIL__loadTexture(var.cstr path) extern;
 		var.i64 size: 0;
         var.@rgb bgColor;
 	};
-    class @sel {
-        var.[#paste selectionSize x i64] ids: [];
-        var.i64 size: 0;
-    };
     class @element {
         var.i64 id: 0;
         
@@ -153,6 +149,10 @@ fn LIL__loadTexture(var.cstr path) extern;
 				};
 			}
 		}
+    };
+    class @sel {
+        var.[#paste selectionSize x @element] items: [];
+        var.i64 size: 0;
     };
 	class @action
 	{
@@ -591,7 +591,7 @@ fn LIL__loadTexture(var.cstr path) extern;
                 var item: pointerTo @self.selectables[i];
                 if item.parentId = parentId {
                     if item.nameId = nameId {
-                        ret.ids[ret.size]: i;
+                        ret.items[ret.size]: @element { id: i };
                         ret.size +: 1;
                     }
                 }
@@ -667,7 +667,7 @@ fn LIL__loadTexture(var.cstr path) extern;
             var selectable: app.selectables[i];
             if (selectable.parentId = parentId) {
                 if(selectable.nameId = nameId){
-                    ret.ids[ret.size]: i;
+                    ret.items[ret.size]: @element { id: i };
                     ret.size +: 1;
                 }
             }
