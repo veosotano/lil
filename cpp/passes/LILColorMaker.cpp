@@ -30,7 +30,7 @@
 #include "LILObjectType.h"
 #include "LILPropertyName.h"
 #include "LILRootNode.h"
-#include "LILRule.h";
+#include "LILRule.h"
 #include "LILStringLiteral.h"
 #include "LILUnaryExpression.h"
 #include "LILValueList.h"
