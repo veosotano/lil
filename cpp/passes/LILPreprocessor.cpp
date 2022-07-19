@@ -1139,6 +1139,7 @@ void LILPreprocessor::_importNodeIfNeeded(std::vector<std::shared_ptr<LILNode>> 
             auto fd = std::static_pointer_cast<LILFunctionDecl>(node);
             auto newFd = std::make_shared<LILFunctionDecl>();
             newFd->setName(fd->getName());
+            newFd->setUnmangledName(fd->getUnmangledName());
             newFd->setIsExtern(true);
             newFd->setIsExported(isExported);
             newFd->setType(fd->getType()->clone());
