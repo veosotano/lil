@@ -7,12 +7,14 @@ const DEBUG_SHAPE_VERTICES: false;
 #snippet entitiesSize { 2048 };
 #snippet componentsSize { 32 };
 #snippet shapesSize { 32 };
+#snippet maxPathSubdiv { 20 };
 
 fn onUpdate(var.f64 deltaTime) extern;
 fn LIL__setWindowBgColor(var.f32 red; var.f32 green; var.f32 blue; var.f32 alpha) extern;
 fn LIL__loadTexture(var.cstr path) extern;
 
 #import "libtess2.lil";
+fn powf(f32, f32) => f32 extern;
 
 #export {
     #needs "cstd.lil";
@@ -94,7 +96,9 @@ fn LIL__loadTexture(var.cstr path) extern;
     };
 	enum.i32 ShapeType {
 		moveTo,
-		lineTo
+		lineTo,
+		quadCurveTo,
+		curveTo
 	};
 	class @shapeItem {
 		var.ShapeType ty;
@@ -454,6 +458,22 @@ fn LIL__loadTexture(var.cstr path) extern;
 			shape.size +: 1;
 			#if DEBUG {
 				printf(`created lineTo with x:%f and y:%f\n`, x, y);
+			}
+		}
+		fn quadCurveTo(var.f32 ctlPtX; var.f32 ctlPtY; var.f32 toPtX; var.f32 toPtY) {
+			var shape: pointerTo app.shapes[@self.componentId];
+			var size: shape.size;
+			var newItem: @shapeItem {
+				ty: ShapeType.quadCurveTo;
+				x: ctlPtX;
+				y: ctlPtY;
+				x2: toPtX;
+				y2: toPtY;
+			};
+			shape.items[size]: newItem;
+			shape.size +: 1;
+			#if DEBUG {
+				printf(`created quadCurveTo with controlPointX: %f, controlPointY: %, toPointX:%f and toPointY:%f\n`, ctlPtX, ctlPtY, toPtX, toPtY);
 			}
 		}
 	}
@@ -917,6 +937,60 @@ fn LIL__loadTexture(var.cstr path) extern;
 					};
 					pathElemsCount +: 1;
 				}
+				else if shapeItem.ty = ShapeType.quadCurveTo
+				{
+					//convert to line segments using adaptive subdivision
+					var fromPoint: subpaths[pathElemsCount - 1];
+					var toPoint: @pos2d {
+						x: shapeItem.x2;
+						y: shapeItem.y2;
+					};
+					var controlPoint: @pos2d {
+						x: shapeItem.x;
+						y: shapeItem.y;
+					};
+					var.f32 maxTolerance: 0.2;
+					var.f32 t: 0;
+					var.f32 candidateT: 0.5;
+					var.@pos2d currentPoint: fromPoint;
+
+					loop {
+						var.i32 subdivs: 1;
+						var.f32  err: 999.0;
+						var.@pos2d candidatePoint: currentPoint;
+						if (t + 0.5) > 1.0 {
+							candidateT: 1.0;
+						} else {
+							candidateT: t + 0.5;
+						}
+						candidatePoint: LIL__evalQuadCurve(fromPoint, controlPoint, toPoint, candidateT);
+						loop {
+							candidatePoint: LIL__evalQuadCurve(fromPoint, controlPoint, toPoint, candidateT);
+							var.f32 midT: (t + candidateT) / 2;
+							var.@pos2d midCurve: LIL__evalQuadCurve(fromPoint, controlPoint, toPoint, midT);
+							var.@pos2d midSeg: LIL__lerpPoints(currentPoint, candidatePoint, 0.5);
+							err: powf(midSeg.x - midCurve.x, 2) + powf(midSeg.y - midCurve.y, 2);
+
+							if (err > maxTolerance) {
+								candidateT: t + (0.5 * (candidateT - t));
+								subdivs +: 1;
+								if (subdivs < #paste maxPathSubdiv) {
+									repeat;
+								}
+							}
+						}
+
+						t: candidateT;
+						currentPoint: candidatePoint;
+
+						subpaths[pathElemsCount]:currentPoint;
+						pathElemsCount +: 1;
+
+						if (t < 1.0) {
+							repeat;
+						}
+					}
+				}
 			}
 
 			for (var.i64 j:0; j<subpathCount; j+:1) {
@@ -1003,5 +1077,27 @@ fn LIL__loadTexture(var.cstr path) extern;
 			printf(`copying %li indices to index buffer\n`, idxCount);
 			puts `=====`;
 		}
+	}
+	
+	fn LIL__lerp(var.f32 a; var.f32 b; var.f32 t) => f32
+	{
+		return a + (t * (b - a));
+	}
+	
+	fn LIL__lerpPoints(var.@pos2d a; var.@pos2d b; var.f32 t) => @pos2d
+	{
+		var ret: @pos2d {
+			x: LIL__lerp(a.x, b.x, t);
+			y: LIL__lerp(a.y, b.y, t)
+		};
+		return ret;
+	}
+
+	fn LIL__evalQuadCurve(var.@pos2d fromPoint; var.@pos2d controlPoint; var.@pos2d toPoint; var.f32 t) => @pos2d
+	{
+		var.@pos2d q0: @pos2d { x: LIL__lerp(fromPoint.x, controlPoint.x, t); y: LIL__lerp(fromPoint.y, controlPoint.y, t) };
+		var.@pos2d q1: @pos2d { x: LIL__lerp(controlPoint.x, toPoint.x, t); y: LIL__lerp(controlPoint.y, toPoint.y, t) };
+		var.@pos2d r: @pos2d { x: LIL__lerp(q0.x, q1.x, t); y: LIL__lerp(q0.y, q1.y, t) };
+		return r;
 	}
 }
