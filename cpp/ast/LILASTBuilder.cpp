@@ -782,6 +782,7 @@ void LILASTBuilder::receiveNodeCommit()
                 case InstructionTypeImport:
                 case InstructionTypePaste:
                 case InstructionTypeBug:
+                case InstructionTypeGetConfig:
                     instr->setArgument(this->currentNode);
                     break;
 
@@ -791,32 +792,12 @@ void LILASTBuilder::receiveNodeCommit()
                     instr->addNode(this->currentNode);
                     break;
                 }
-                case InstructionTypeConfigure:
-                {
-                    instr->addNode(this->currentNode);
-                    break;
-                }
-                case InstructionTypeGetConfig:
-                {
-                    instr->setArgument(this->currentNode);
-                    break;
-                }
-                case InstructionTypeArg:
-                {
-                    instr->addNode(this->currentNode);
-                    break;
-                }
                 case InstructionTypeExpand:
                 {
                     if (this->currentNode->isA(NodeTypeVarDecl)) {
                         auto vd = std::static_pointer_cast<LILVarDecl>(this->currentNode);
                         vd->setIsExpanded(true);
                     }
-                    instr->addNode(this->currentNode);
-                    break;
-                }
-                case InstructionTypeGPU:
-                {
                     instr->addNode(this->currentNode);
                     break;
                 }
@@ -830,10 +811,11 @@ void LILASTBuilder::receiveNodeCommit()
                     break;
                 }
                 default:
-                    std::cerr << "UNIMPLEMENTED FAIL !!!! \n\n";
+                {
+                    instr->addNode(this->currentNode);
                     break;
+                }
             }
-            
             break;
         }
 
