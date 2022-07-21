@@ -106,6 +106,8 @@ fn powf(f32, f32) => f32 extern;
 		var.f32 y: 0;
 		var.f32 x2: 0;
 		var.f32 y2: 0;
+		var.f32 x3: 0;
+		var.f32 y3: 0;
 	};
 	class @shapeData {
         var.f32 width;
@@ -474,6 +476,24 @@ fn powf(f32, f32) => f32 extern;
 			shape.size +: 1;
 			#if DEBUG {
 				printf(`created quadCurveTo with controlPointX: %f, controlPointY: %, toPointX:%f and toPointY:%f\n`, ctlPtX, ctlPtY, toPtX, toPtY);
+			}
+		}
+		fn curveTo(var.f32 ctlPt1X; var.f32 ctlPt1Y; var.f32 ctlPt2X; var.f32 ctlPt2Y; var.f32 toPtX; var.f32 toPtY) {
+			var shape: pointerTo app.shapes[@self.componentId];
+			var size: shape.size;
+			var newItem: @shapeItem {
+				ty: ShapeType.curveTo;
+				x: ctlPt1X;
+				y: ctlPt1Y;
+				x2: ctlPt2X;
+				y2: ctlPt2Y;
+				x3: toPtX;
+				y3: toPtY;
+			};
+			shape.items[size]: newItem;
+			shape.size +: 1;
+			#if DEBUG {
+				printf(`created curveTo with controlPoint1X: %f, controlPoint1Y: %, controlPoint2X: %f, controlPoint2Y: %, toPointX:%f and toPointY:%f\n`, ctlPt1X, ctlPt1Y, ctlPt2X, ctlPt2Y, toPtX, toPtY);
 			}
 		}
 	}
@@ -990,6 +1010,63 @@ fn powf(f32, f32) => f32 extern;
 							repeat;
 						}
 					}
+				} else if shapeItem.ty = ShapeType.curveTo
+				{
+					//convert to line segments using adaptive subdivision
+					var fromPoint: subpaths[pathElemsCount - 1];
+					var toPoint: @pos2d {
+						x: shapeItem.x3;
+						y: shapeItem.y3;
+					};
+					var controlPoint1: @pos2d {
+						x: shapeItem.x;
+						y: shapeItem.y;
+					};
+					var controlPoint2: @pos2d {
+						x: shapeItem.x2;
+						y: shapeItem.y2;
+					};
+					var.f32 maxTolerance: 0.2;
+					var.f32 t: 0;
+					var.f32 candidateT: 0.5;
+					var.@pos2d currentPoint: fromPoint;
+
+					loop {
+						var.i32 subdivs: 1;
+						var.f32  err: 999.0;
+						var.@pos2d candidatePoint: currentPoint;
+						if (t + 0.5) > 1.0 {
+							candidateT: 1.0;
+						} else {
+							candidateT: t + 0.5;
+						}
+
+						loop {
+							candidatePoint: LIL__evalCubicCurve(fromPoint, controlPoint1, controlPoint2, toPoint, candidateT);
+							var.f32 midT: (t + candidateT) / 2;
+							var.@pos2d midCurve: LIL__evalCubicCurve(fromPoint, controlPoint1, controlPoint2, toPoint, midT);
+							var.@pos2d midSeg: LIL__lerpPoints(currentPoint, candidatePoint, 0.5);
+							err: powf(midSeg.x - midCurve.x, 2) + powf(midSeg.y - midCurve.y, 2);
+
+							if (err > maxTolerance) {
+								candidateT: t + (0.5 * (candidateT - t));
+								subdivs +: 1;
+								if (subdivs < #paste maxPathSubdiv) {
+									repeat;
+								}
+							}
+						}
+
+						t: candidateT;
+						currentPoint: candidatePoint;
+
+						subpaths[pathElemsCount]:currentPoint;
+						pathElemsCount +: 1;
+
+						if (t < 1.0) {
+							repeat;
+						}
+					}
 				}
 			}
 
@@ -1098,6 +1175,17 @@ fn powf(f32, f32) => f32 extern;
 		var.@pos2d q0: @pos2d { x: LIL__lerp(fromPoint.x, controlPoint.x, t); y: LIL__lerp(fromPoint.y, controlPoint.y, t) };
 		var.@pos2d q1: @pos2d { x: LIL__lerp(controlPoint.x, toPoint.x, t); y: LIL__lerp(controlPoint.y, toPoint.y, t) };
 		var.@pos2d r: @pos2d { x: LIL__lerp(q0.x, q1.x, t); y: LIL__lerp(q0.y, q1.y, t) };
+		return r;
+	}
+
+	fn LIL__evalCubicCurve(var.@pos2d fromPoint; var.@pos2d controlPoint1; var.@pos2d controlPoint2; var.@pos2d toPoint; var.f32 t) => @pos2d
+	{
+		var a: @pos2d { x: LIL__lerp(fromPoint.x, controlPoint1.x, t); y: LIL__lerp(fromPoint.y, controlPoint1.y, t) };
+		var b: @pos2d { x: LIL__lerp(controlPoint1.x, controlPoint2.x, t); y: LIL__lerp(controlPoint1.y, controlPoint2.y, t) };
+		var c: @pos2d { x: LIL__lerp(controlPoint2.x, toPoint.x, t); y: LIL__lerp(controlPoint2.y, toPoint.y, t) };
+		var d: @pos2d { x: LIL__lerp(a.x, b.x, t); y: LIL__lerp(a.y, b.y, t) };
+		var e: @pos2d { x: LIL__lerp(b.x, c.x, t); y: LIL__lerp(b.y, c.y, t) };
+		var r: @pos2d { x: LIL__lerp(d.x, e.x, t); y: LIL__lerp(d.y, e.y, t) };
 		return r;
 	}
 }
