@@ -3887,6 +3887,7 @@ bool LILCodeParser::readExportInstr()
         while (!this->atEndOfSource() && !d->currentToken->isA(TokenTypeBlockClose)) {
             this->parseNext();
         }
+        LIL_CHECK_FOR_END
         LIL_EXPECT(TokenTypeBlockClose, "block close")
         d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
         this->readNextToken();
