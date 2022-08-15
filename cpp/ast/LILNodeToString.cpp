@@ -287,7 +287,7 @@ LILString LILNodeToString::stringify(LILNode * node)
                     }
                     name += "]";
                     if (sa->getIsNullable()) {
-                        name += "|null";
+                        name += "?";
                     }
                     return name;
                 }
@@ -301,7 +301,7 @@ LILString LILNodeToString::stringify(LILNode * node)
                         name += "(" + LILNodeToString::stringify(arg.get()) + ")";
                     }
                     if (value->getIsNullable()) {
-                        name += "|null";
+                        name += "?";
                     }
                     return name;
                 }
@@ -328,7 +328,7 @@ LILString LILNodeToString::stringify(LILNode * node)
                         ret += ")";
                     }
                     if (value->getIsNullable()) {
-                        ret += "|null";
+                        ret += "?";
                     }
                     return ret;
                 }
@@ -336,7 +336,7 @@ LILString LILNodeToString::stringify(LILNode * node)
                 {
                     LILString ret = value->getName();
                     if (value->getIsNullable()) {
-                        ret += "|null";
+                        ret += "?";
                     }
                     return ret;
                 }
@@ -356,7 +356,7 @@ LILString LILNodeToString::stringify(LILNode * node)
                     }
                     
                     if (mt->getIsNullable()) {
-                        return tempstr + "|null";
+                        return tempstr + "?";
                     } else {
                         return tempstr;
                     }
@@ -368,7 +368,7 @@ LILString LILNodeToString::stringify(LILNode * node)
                     ret += "x";
                     ret += LILString::number((LILUnitI32)simdTy->getWidth());
                     if (value->getIsNullable()) {
-                        ret += "|null";
+                        ret += "?";
                     }
                     return ret;
                 }
