@@ -26,6 +26,8 @@ LILEnum::LILEnum()
 
 LILEnum::LILEnum(const LILEnum &other)
 : LILTypedNode(other)
+, _name(other._name)
+, _preventEmitCallToIVar(other._preventEmitCallToIVar)
 {
     
 }
