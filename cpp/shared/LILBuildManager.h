@@ -35,6 +35,7 @@ namespace LIL {
         void setDirectory(LILString value);
         void setFile(LILString value);
         void setCompilerDir(LILString value);
+        void setCurrentWorkingDir(LILString value);
         void setVerbose(bool value);
         void setNoConfigureDefaults(bool value);
         void setDebugConfigureDefaults(bool value);
@@ -48,6 +49,7 @@ namespace LIL {
         LILString _directory;
         LILString _file;
         LILString _compilerDir;
+        LILString _currentWorkingDir;
         LILString _minOSVersion;
         bool _hasErrors;
         bool _debug;

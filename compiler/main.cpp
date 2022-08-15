@@ -79,8 +79,7 @@ int main(int argc, const char * argv[]) {
     
     if (verbose) {
         std::cerr << "Initializing...\n\n";
-        std::cerr << "Input file was: \n";
-        std::cerr << inName << "\n\n";
+        std::cerr << "Input file is: \n";
     }
     
     size_t slashIndex = inName.find_last_of("/");
@@ -90,6 +89,19 @@ int main(int argc, const char * argv[]) {
     } else {
         localDir = "";
     }
+    
+    std::string directory;
+    std::string cwd = LIL_getCurrentDir();
+    if (localDir.size() > 0) {
+        directory = localDir;
+    } else {
+        directory = cwd;
+    }
+    
+    if (verbose) {
+        std::cerr << inName << "\n\n";
+        std::cerr << "Local directory is:\n"  << directory << " \n\n";
+    }
 
     if (verbose) {
         std::cerr << "Arguments:\n";
@@ -98,20 +110,15 @@ int main(int argc, const char * argv[]) {
         }
         std::cerr << "\n\n";
     }
-    
-    std::string directory = LIL_getCurrentDir();
 
     std::unique_ptr<LILBuildManager> buildMgr = std::make_unique<LILBuildManager>();
 
     buildMgr->setArguments(std::move(arguments));
 
-    if (localDir == "") {
-        buildMgr->setDirectory(directory);
-    } else {
-        buildMgr->setDirectory(directory+"/"+localDir);
-    }
+    buildMgr->setDirectory(directory);
     buildMgr->setFile(inName);
     buildMgr->setCompilerDir(compilerDir);
+    buildMgr->setCurrentWorkingDir(cwd);
 
     buildMgr->setNoConfigureDefaults(noConfigureDefaults);
     buildMgr->setDebugConfigureDefaults(debugConfigureDefaults);

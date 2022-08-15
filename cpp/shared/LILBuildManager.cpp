@@ -65,7 +65,10 @@ LILBuildManager::~LILBuildManager()
 
 void LILBuildManager::read()
 {
-    std::string filePath = this->_directory.data() + "/" + this->_file.data();
+    std::string filePath = this->_file.data();
+    if (filePath.substr(0, 1) != "/") {
+        filePath = this->_directory.data() + "/" + filePath;
+    }
     std::ifstream file(filePath, std::ios::in);
     if (file.fail()) {
         LILErrorMessage ei;
@@ -95,9 +98,8 @@ void LILBuildManager::read()
 
     this->_codeUnit->setFile(this->_file);
     std::vector<std::shared_ptr<LILNode>> emptyVect;
-    auto fullPath = this->_directory+"/"+this->_file;
-    this->_codeUnit->addAlreadyImportedFile(fullPath, emptyVect, true);
-    this->_codeUnit->addAlreadyImportedFile(fullPath, emptyVect, false);
+    this->_codeUnit->addAlreadyImportedFile(filePath, emptyVect, true);
+    this->_codeUnit->addAlreadyImportedFile(filePath, emptyVect, false);
     this->_codeUnit->setDir(this->_directory);
     this->_codeUnit->setCompilerDir(this->_compilerDir);
 
@@ -222,6 +224,10 @@ void LILBuildManager::configure()
         this->_config->setConfig("out", strLit);
     }
 
+    std::shared_ptr<LILStringLiteral> dirStrLit = std::make_shared<LILStringLiteral>();
+    dirStrLit->setValue(this->_directory);
+    this->_config->setConfig("directory", dirStrLit);
+
     if (this->_verbose) {
         std::cerr << "============================\n";
         std::cerr << "==== USED CONFIGURATION ====\n";
@@ -242,7 +248,7 @@ void LILBuildManager::build()
     std::string objExt = this->_config->getConfigString("objExt");
     std::string buildPath = this->_config->getConfigString("buildPath");
     if (buildPath.substr(0, 1) != "/") {
-        buildPath = this->_directory.data() + "/" + buildPath;
+        buildPath = this->_currentWorkingDir.data() + "/" + buildPath;
     }
 
     LIL_makeDir(buildPath);
@@ -669,7 +675,13 @@ void LILBuildManager::build()
                         for (auto resFile : mainCodeUnit->getResources()) {
                             std::array<char, 128> copyResBuffer;
                             std::string copyResResult;
-                            std::string copyResCommand = "cp '"+resFile.data()+"' '"+resourcesPath.data()+resFile.data()+"'";
+                            std::string sourcePath;
+                            if (resFile.substr(0, 1) == "/") {
+                                sourcePath = resFile.data();
+                            } else {
+                                sourcePath = this->_directory.data() + "/" + resFile.data();
+                            }
+                            std::string copyResCommand = "cp '"+sourcePath+"' '"+resourcesPath.data()+resFile.data()+"'";
                             if (this->_verbose) {
                                 std::cerr << copyResCommand << "\n";
                             }
@@ -742,6 +754,14 @@ void LILBuildManager::setCompilerDir(LILString value)
     auto strLit = std::make_shared<LILStringLiteral>();
     strLit->setValue(value);
     this->_config->setConfig("compilerDir", strLit);
+}
+
+void LILBuildManager::setCurrentWorkingDir(LILString value)
+{
+    this->_currentWorkingDir = value;
+    auto strLit = std::make_shared<LILStringLiteral>();
+    strLit->setValue(value);
+    this->_config->setConfig("currentWorkingDir", strLit);
 }
 
 void LILBuildManager::setVerbose(bool value)
