@@ -72,7 +72,7 @@ const DEBUG: false;
                     puts `Long version`;
                     printf(`Needs %li characters now\n`, newLength);
                 }
-                var newBuffer: malloc newLength;
+                var newBuffer: malloc (newLength+1);
                 #if DEBUG {
                     printf(`New buffer points to %li\n`, newBuffer => i64);
                 }
@@ -142,7 +142,7 @@ const DEBUG: false;
 			if length < 56 {
 				memcpy(dst: pointerTo(@self.buffer); src: value; len: length+1);
 			} else {
-				var newBuffer: malloc length;
+				var newBuffer: malloc (length+1);
 				memcpy(dst: newBuffer; src: value; len: length+1);
 				set(pointerTo(@self.buffer) => ptr(cstr), newBuffer);
 			}
