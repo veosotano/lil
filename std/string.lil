@@ -133,6 +133,98 @@ const DEBUG: false;
             }
         };
 
+        fn add(var.i32|i64|f32|f64 value) {
+            #if DEBUG {
+                puts `Adding i32 to string`;
+            }
+            var.cstr format;
+            if value => i32 {
+                format: `%d`;
+            } else if value => i64 {
+                format: `%li`;
+            } else if value => f32 {
+                format: `%f`;
+            } else if value => f64 {
+                format: `%lf`;
+            }
+            
+            var nullptr: 0;
+            var otherLength: (snprintf(nullptr => ptr(i8), 0, format, value) => i64);
+            var currentLength: @self.length;
+            var newLength: currentLength + otherLength;
+            
+            if (newLength < 56) {
+                #if DEBUG {
+                    puts `Short version`;
+                }
+                var loc: ((pointerTo(@self.buffer) => i64) + currentLength) => cstr;
+                #if DEBUG {
+                    printf(`Inserting at: index %li -> %li\n`, currentLength, loc=>i64);
+                }
+                
+                snprintf(loc, otherLength + 1, format, value);
+                var zeroLoc: ((loc => i64) + otherLength) => cstr;
+                #if DEBUG {
+                    printf(`Setting zero at: %li -> %li\n`, currentLength + otherLength, zeroLoc=>i64);
+                }
+                set(zeroLoc, 0i8);
+                @self.length: newLength;
+            } else {
+                #if DEBUG {
+                    puts `Long version`;
+                    printf(`Needs %li characters now\n`, newLength);
+                }
+                var newBuffer: malloc (newLength+1);
+                #if DEBUG {
+                    printf(`New buffer points to %li\n`, newBuffer => i64);
+                }
+
+                //copy the existing portion of the string into the new buffer
+                if (currentLength > 55){
+                    #if DEBUG {
+                        puts `Copying existing portion of string, long version`;
+                    }
+                    memcpy(newBuffer, valueOf(pointerTo(@self.buffer) => ptr(cstr)), currentLength);
+                } else {
+                    #if DEBUG {
+                        puts `Copying existing portion of string, short version`;
+                    }
+                    memcpy(newBuffer, (pointerTo(@self.buffer) => cstr), currentLength);
+                }
+
+                //copy otherString into the new buffer
+                var loc: ((newBuffer => i64) + currentLength) => cstr;
+                snprintf(loc, otherLength+1, format, value);
+
+                //add \0 for c string
+                var zeroLoc: ((newBuffer => i64) + newLength) => cstr;
+                #if DEBUG {
+                    printf(`Setting zero at: %li -> %li\n`, newLength, zeroLoc=>i64);
+                }
+                set(zeroLoc, 0i8);
+                
+                #if DEBUG {
+                    puts newBuffer;
+                }
+
+                if (currentLength > 55) {
+                    #if DEBUG {
+                        printf(`Freeing string at %li\n`, valueOf(pointerTo(@self.buffer) => ptr(i64)));
+                    }
+                    free valueOf(pointerTo(@self.buffer) => ptr(cstr));
+                }
+                
+                //store pointer to the heap data into the buffer of the string object
+                set(pointerTo(@self.buffer) => ptr(cstr), newBuffer);
+                #if DEBUG {
+                    printf(`Buffer now contains: %li\n`, valueOf(pointerTo(@self.buffer) => ptr(cstr)) => i64);
+                }
+
+                //update the length on the string object
+                @self.length: newLength;
+            }
+        }
+
 		fn initialize(var.cstr value; var.i64 length) {
 			#if DEBUG {
 				printf (`initialize with c string: %s and length: %li\n`, value, length);
