@@ -147,5 +147,22 @@ const DEBUG: false;
 				set(pointerTo(@self.buffer) => ptr(cstr), newBuffer);
 			}
 		};
+        
+        fn reserve(var.i64 length) {
+            if length < 56
+            {
+                //short string, no need to do anything
+                return;
+            }
+            else
+            {
+                //+1 because of zero terminator of c string \0
+                var newBuffer: malloc (length+1);
+                set(pointerTo(@self.buffer) => ptr(cstr), newBuffer);
+                var zeroLoc: newBuffer + length;
+                set(zeroLoc, 0i8);
+            }
+            @self.length: length;
+        }
     };
 }
