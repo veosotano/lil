@@ -247,7 +247,13 @@ bool LILStringFnLowerer::_processStringFn(std::shared_ptr<LILStringFunction> val
     retVd->setType(strTy);
     auto strLit = std::make_shared<LILStringLiteral>();
     strLit->setSourceLocation(value->getSourceLocation());
-    strLit->setValue(value->getStartChunk());
+    auto startStr = value->getStartChunk();
+    //remove beginning quotes
+    if (startStr.substr(0, 1) == "\"" || startStr.substr(0, 1) == "'") {
+        strLit->setValue(startStr.substr(1, startStr.length() - 1));
+    } else {
+        strLit->setValue(startStr);
+    }
     retVd->setInitVal(strLit);
 
     fd->addEvaluable(retVd);
@@ -294,7 +300,14 @@ bool LILStringFnLowerer::_processStringFn(std::shared_ptr<LILStringFunction> val
 
     auto endChunkLit = std::make_shared<LILStringLiteral>();
     endChunkLit->setSourceLocation(value->getSourceLocation());
-    endChunkLit->setValue(value->getEndChunk());
+    auto endStr = value->getEndChunk();
+    //remove end quotes
+    auto endStrLen = endStr.length();
+    if (endStr.substr(endStrLen - 1, 1) == "\"" || endStr.substr(endStrLen - 1, 1) == "'") {
+        endChunkLit->setValue(endStr.substr(0, endStrLen - 1));
+    } else {
+        endChunkLit->setValue(endStr);
+    }
     auto vp3 = std::make_shared<LILValuePath>();
     vp3->setSourceLocation(value->getSourceLocation());
     auto retVn3 = std::make_shared<LILVarName>();
