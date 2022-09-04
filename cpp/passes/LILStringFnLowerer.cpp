@@ -264,7 +264,7 @@ bool LILStringFnLowerer::_processStringFn(std::shared_ptr<LILStringFunction> val
         vp->addChild(retVn);
         auto fc = std::make_shared<LILFunctionCall>();
         fc->setFunctionCallType(FunctionCallTypeValuePath);
-        fc->setName("append");
+        fc->setName("add");
         vp->addChild(fc);
         auto argVn = std::make_shared<LILVarName>();
         argVn->setType(args.at(i)->getType()->clone());
@@ -284,7 +284,7 @@ bool LILStringFnLowerer::_processStringFn(std::shared_ptr<LILStringFunction> val
             auto fc2 = std::make_shared<LILFunctionCall>();
             fc2->setFunctionCallType(FunctionCallTypeValuePath);
             fc2->setSourceLocation(value->getSourceLocation());
-            fc2->setName("append");
+            fc2->setName("add");
             vp2->addChild(fc2);
             fc2->addArgument(chunkLit);
             fd->addEvaluable(vp2);
@@ -304,7 +304,7 @@ bool LILStringFnLowerer::_processStringFn(std::shared_ptr<LILStringFunction> val
     auto fc3 = std::make_shared<LILFunctionCall>();
     fc3->setFunctionCallType(FunctionCallTypeValuePath);
     fc3->setSourceLocation(value->getSourceLocation());
-    fc3->setName("append");
+    fc3->setName("add");
     vp3->addChild(fc3);
     fc3->addArgument(endChunkLit);
     fd->addEvaluable(vp3);
