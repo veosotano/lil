@@ -454,7 +454,12 @@ bool LILStringFnLowerer::_processStringFn(std::shared_ptr<LILAssignment> value)
 {
     auto val = value->getValue();
     if (val) {
+        this->_nodeBuffer.emplace_back();
         this->processStringFn(val);
+        if (this->_nodeBuffer.back().size() != 0) {
+            value->setValue(this->_nodeBuffer.back().back());
+        }
+        this->_nodeBuffer.pop_back();
     }
     return false;
 }
