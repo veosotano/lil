@@ -1,6 +1,5 @@
 #===== class @shape2d ========
 #= A 2D shape is made up of a series of drawing commands, like lineTo and curveTo.
-#= Warning: Work in Progress! (only moveTo and lineTo have been implemented so far.)
 #= href https://github.com/veosotano/lil/blob/main/std/app.lil
 #---------------------------
 <lil>#new @shape2d myStar {
