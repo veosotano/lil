@@ -66,6 +66,7 @@ const DEBUG: false;
                 var zeroLoc: ((loc => i64) + otherLength) => cstr;
                 //printf(`Setting zero at: %li -> %li\n`, currentLength + otherLength, zeroLoc=>i64);
                 set(zeroLoc, 0i8);
+                @self.length: newLength;
             } else {
                 #if DEBUG {
                     puts `Long version`;
