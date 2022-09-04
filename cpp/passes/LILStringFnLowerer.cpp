@@ -329,6 +329,7 @@ bool LILStringFnLowerer::_processStringFn(std::shared_ptr<LILStringFunction> val
     auto retVn = std::make_shared<LILVarName>();
     retVn->setSourceLocation(value->getSourceLocation());
     retVn->setName("ret");
+    retVn->setType(strTy);
     returnCall->setArgument(retVn);
 
     auto strFnCall = std::make_shared<LILFunctionCall>();
