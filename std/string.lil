@@ -131,7 +131,6 @@ const DEBUG: false;
                 //update the length on the string object
                 @self.length: newLength;
             }
-            currentLength: newLength;
         };
 
 		fn initialize(var.cstr value; var.i64 length) {
