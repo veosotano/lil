@@ -2113,7 +2113,7 @@ void LILIREmitter::_connectRule(LILRule * value, llvm::Value * parentId, llvm::V
     const auto & selChNode = value->getSelectorChain();
     if (!selChNode || selChNode->getNodeType() != NodeTypeSelectorChain) {
         std::cerr << "NODE WAS NOT SELECTOR CHAIN FAIL!!!!!!!\n\n";
-        return nullptr;
+        return;
     }
     auto selCh = std::static_pointer_cast<LILSelectorChain>(selChNode);
 
@@ -2207,11 +2207,22 @@ void LILIREmitter::_connectRule(LILRule * value, llvm::Value * parentId, llvm::V
             d->currentAlloca = d->irBuilder.CreatePointerCast(d->currentAlloca, llvmTy->getPointerTo());
         }
         argsvect.push_back(d->currentAlloca);
-        d->irBuilder.CreateCall(fun, argsvect);
-        
+
+        auto counterVal = d->irBuilder.CreateLoad(i64Ty, counter);
+        argsvect.push_back(counterVal);
+
+        d->irBuilder.CreateCall(ruleFn, argsvect);
+
+        const auto & childRules = value->getChildRules();
+        if (childRules.size() > 0) {
+            auto i64Ty = llvm::Type::getInt64Ty(d->llvmContext);
+            auto idValue = d->irBuilder.CreateLoad(i64Ty, gep);
+            for (auto child : childRules) {
+                this->_connectRule(child.get(), idValue, parentIndex, d->currentAlloca);
+            }
+        }
 
         //counter +: 1
-        auto counterVal = d->irBuilder.CreateLoad(i64Ty, counter);
         auto oneVal = llvm::ConstantInt::get(d->llvmContext, llvm::APInt(64, 1, true));
         auto increased = d->irBuilder.CreateAdd(counterVal, oneVal);
         d->irBuilder.CreateStore(increased, counter);
@@ -2221,7 +2232,6 @@ void LILIREmitter::_connectRule(LILRule * value, llvm::Value * parentId, llvm::V
         d->irBuilder.CreateCondBr(condition2, loopBB, afterBB);
         d->irBuilder.SetInsertPoint(afterBB);
     }
-    return fun;
 }
 
 llvm::Value* LILIREmitter::_getContainerNameFromSelectorChain(std::shared_ptr<LILSelectorChain> selCh)
