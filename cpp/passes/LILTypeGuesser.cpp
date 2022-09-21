@@ -19,34 +19,12 @@
 #include "LILStaticArrayType.h"
 #include "LILTypeDecl.h"
 #include "LILVarNode.h"
+#include "../shared/LILDOMBuilder.h"
 
 using namespace LIL;
 
-const std::shared_ptr<LILElement> & LILElement::add(LILString name, std::shared_ptr<LILType> ty)
-{
-    auto newItem = std::make_shared<LILElement>();
-    newItem->name = name;
-    newItem->ty = ty;
-    this->children.push_back(newItem);
-    return this->children.back();
-}
-
-void LILElement::remove(std::shared_ptr<LILElement> elem)
-{
-    this->children.erase(std::remove(this->children.begin(), this->children.end(), elem), this->children.end());
-}
-
-const std::shared_ptr<LILElement> & LILElement::at(size_t index) const
-{
-    return this->children.at(index);
-}
-
-const std::vector<std::shared_ptr<LILElement>> & LILElement::getChildren() const
-{
-    return this->children;
-}
-
-LILTypeGuesser::LILTypeGuesser()
+LILTypeGuesser::LILTypeGuesser(LILDOMBuilder * domBuilder)
+: _domBuilder(domBuilder)
 {
 }
 
@@ -72,7 +50,7 @@ void LILTypeGuesser::visit(LILNode *node)
 void LILTypeGuesser::performVisit(std::shared_ptr<LILRootNode> rootNode)
 {
     this->setRootNode(rootNode);
-    this->createDOM();
+    this->_domBuilder->createDOM();
     auto nodes = rootNode->getNodes();
     for (const auto & node : nodes) {
         this->nullsToNullables(node);
@@ -95,43 +73,6 @@ void LILTypeGuesser::performVisit(std::shared_ptr<LILRootNode> rootNode)
     for (const auto & node : nodes) {
         this->process(node.get());
     }
-}
-
-void LILTypeGuesser::createDOM()
-{
-    auto root = std::make_shared<LILElement>();
-    root->name = "@root";
-    root->ty = LILObjectType::make("container");
-    this->dom = root;
-    this->insertionPoint = this->dom.get();
-    for (const auto & rule : this->getRootNode()->getRules()) {
-        for (const auto & innerRule : rule->getChildRules()) {
-            this->recursiveAddElement(innerRule.get());
-        }
-    }
-}
-
-void LILTypeGuesser::recursiveAddElement(LILRule * rule)
-{
-    auto insertionPointBackup = this->insertionPoint;
-    
-    const auto & instr = rule->getInstruction();
-    if (instr && instr->getInstructionType() == InstructionTypeNew) {
-        auto firstSel = rule->getFirstSelector();
-        auto nameSel = std::static_pointer_cast<LILSelector>(firstSel);
-        auto ruleTy = rule->getType();
-        if (!ruleTy) {
-            ruleTy = this->getNodeType(rule);
-            rule->setType(ruleTy);
-        }
-        auto newElem = this->insertionPoint->add(nameSel->getName(), ruleTy);
-        this->insertionPoint = newElem.get();
-    }
-
-    for (const auto & innerRule : rule->getChildRules()) {
-        this->recursiveAddElement(innerRule.get());
-    }
-    this->insertionPoint = insertionPointBackup;
 }
 
 void LILTypeGuesser::nullsToNullables(std::shared_ptr<LILNode> node)

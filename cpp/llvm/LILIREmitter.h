@@ -69,6 +69,7 @@ namespace llvm {
 namespace LIL
 {
     class LILClassDecl;
+    class LILElement;
     class LILFunctionType;
     class LILMultipleType;
     class LILIREmitterPrivate;
@@ -163,6 +164,8 @@ namespace LIL
         
         std::shared_ptr<LILType> getMostAlignedType(const std::vector<std::shared_ptr<LILType>> & types) const;
         size_t getSizeOfType(std::shared_ptr<LILType> ty) const;
+        const std::shared_ptr<LILElement> & getDOM() const;
+        void setDOM(const std::shared_ptr<LILElement> & dom);
 
     private:
         LILIREmitterPrivate *const d;

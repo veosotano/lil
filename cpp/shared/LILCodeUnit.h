@@ -26,6 +26,7 @@ namespace LIL
 {
     class LILCodeUnitPrivate;
     class LILConfiguration;
+    class LILElement;
     class LILNode;
     class LILRootNode;
     class LILCodeUnit
@@ -82,6 +83,8 @@ namespace LIL
         const std::vector<std::pair<LILString, bool>> & getNeededFilesForBuild() const;
         void addResource(const LILString & path);
         const std::vector<LILString> & getResources() const;
+        const std::shared_ptr<LILElement> & getDOM() const;
+        void setDOM(const std::shared_ptr<LILElement> & dom);
 
     private:
         LILCodeUnitPrivate * d;

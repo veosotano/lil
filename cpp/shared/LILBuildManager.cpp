@@ -391,6 +391,10 @@ void LILBuildManager::build()
             outEmitter->setCPU(this->_config->getConfigString("cpu"));
             outEmitter->setVendor(this->_config->getConfigString("vendor"));
 
+            //instantiate the IREmitter
+            outEmitter->prepare();
+            outEmitter->setDOM(mainCodeUnit->getDOM());
+
             if (this->_config->getConfigBool("printOnly")) {
                 outEmitter->printToOutput(mainCodeUnit->getRootNode());
             } else {
@@ -503,7 +507,11 @@ void LILBuildManager::build()
                     outEmitter->setDir(oDir);
                     outEmitter->setCPU(this->_config->getConfigString("cpu"));
                     outEmitter->setVendor(this->_config->getConfigString("vendor"));
-                    
+
+                    //instantiate the IREmitter
+                    outEmitter->prepare();
+                    outEmitter->setDOM(codeUnit->getDOM());
+
                     LIL_makeDir(oDir);
                     
                     if (this->_config->getConfigBool("printOnly")) {

@@ -40,6 +40,7 @@
 #include "LILToStringVisitor.h"
 #include "LILTypeGuesser.h"
 #include "LILTypeResolver.h"
+#include "LILDOMBuilder.h"
 
 using namespace LIL;
 
@@ -83,6 +84,7 @@ namespace LIL
         std::vector<LILString> resources;
         std::vector<LILString> constants;
         std::vector<LILString> imports;
+        std::shared_ptr<LILElement> dom;
 
         LILConfiguration * config;
         bool verbose;
@@ -437,8 +439,12 @@ void LILCodeUnit::runPasses()
         passes.push_back(stringVisitor);
     }
 
+    //build the DOM of static elements
+    auto domBuilder = new LILDOMBuilder();
+    passes.push_back(domBuilder);
+
     //type guessing
-    auto typeGuesser = new LILTypeGuesser();
+    auto typeGuesser = new LILTypeGuesser(domBuilder);
     passes.push_back(typeGuesser);
     if (verbose) {
         auto stringVisitor = new LILToStringVisitor();
@@ -567,6 +573,7 @@ void LILCodeUnit::runPasses()
         for (const auto & resource : localResources) {
             this->addResource(resource);
         }
+        this->setDOM(domBuilder->getDOM());
     }
     for (auto pass : passes) {
         delete pass;
@@ -665,8 +672,12 @@ void LILCodeUnit::runPassesForNeeds()
         passes.push_back(stringVisitor);
     }
 
+    //build the DOM of static elements
+    auto domBuilder = new LILDOMBuilder();
+    passes.push_back(domBuilder);
+
     //type guessing
-    auto typeGuesser = new LILTypeGuesser();
+    auto typeGuesser = new LILTypeGuesser(domBuilder);
     passes.push_back(typeGuesser);
     if (verbose) {
         auto stringVisitor = new LILToStringVisitor();
@@ -724,6 +735,7 @@ void LILCodeUnit::runPassesForNeeds()
             for (const auto & resource : resources) {
                 this->addResource(resource);
             }
+            this->setDOM(domBuilder->getDOM());
     }
     for (auto pass : passes) {
         delete pass;
@@ -900,4 +912,14 @@ void LILCodeUnit::addResource(const LILString & path)
 const std::vector<LILString> & LILCodeUnit::getResources() const
 {
     return d->resources;
+}
+
+const std::shared_ptr<LILElement> & LILCodeUnit::getDOM() const
+{
+    return d->dom;
+}
+
+void LILCodeUnit::setDOM(const std::shared_ptr<LILElement> & dom)
+{
+    d->dom = dom;
 }

@@ -52,6 +52,7 @@
 #include "llvm/AsmParser/Parser.h"
 #include "llvm/AsmParser/LLParser.h"
 
+#include "../shared/LILDOMBuilder.h"
 
 
 #define LILIREMITTEROPTIMIZE
@@ -90,6 +91,7 @@ namespace LIL
         llvm::Value * returnAlloca;
         llvm::BasicBlock * finallyBB;
         int ruleCount;
+        std::shared_ptr<LILElement> dom;
     };
 }
 
@@ -4877,6 +4879,16 @@ size_t LILIREmitter::getSizeOfType(std::shared_ptr<LILType> ty) const
     }
     
     return ret;
+}
+
+const std::shared_ptr<LILElement> & LILIREmitter::getDOM() const
+{
+    return d->dom;
+}
+
+void LILIREmitter::setDOM(const std::shared_ptr<LILElement> & dom)
+{
+    d->dom = dom;
 }
 
 bool LILIREmitter::_needsTemporaryVariable(LILNode * node)

@@ -58,29 +58,18 @@
 
 namespace LIL
 {
-    class LILElement {
-    public:
-        std::shared_ptr<LILType> ty;
-        LILString name;
-        std::vector<std::shared_ptr<LILElement>> children;
-        
-        const std::shared_ptr<LILElement> & add(LILString name, std::shared_ptr<LILType> ty);
-        void remove(std::shared_ptr<LILElement> elem);
-        const std::shared_ptr<LILElement> & at(size_t index) const;
-        const std::vector<std::shared_ptr<LILElement>> & getChildren() const;
-    };
+    class LILDOMBuilder;
 
     class LILTypeGuesser : public LILVisitor
     {
     public:
         
-        LILTypeGuesser();
+        LILTypeGuesser(LILDOMBuilder * domBuilder);
         virtual ~LILTypeGuesser();
 
         void initializeVisit() override;
         void visit(LILNode * node) override;
         void performVisit(std::shared_ptr<LILRootNode> rootNode) override;
-        void createDOM();
         void recursiveAddElement(LILRule * rule);
         void nullsToNullables(std::shared_ptr<LILNode> node);
         void connectCallsWithDecls(std::shared_ptr<LILNode> node);
@@ -151,8 +140,7 @@ namespace LIL
         std::shared_ptr<LILType> nullsToNullableTypes(std::shared_ptr<LILType> ty) const;
         std::shared_ptr<LILType> findTypeForEnum(LILEnum * value) const;
     private:
-        std::shared_ptr<LILElement> dom;
-        LILElement * insertionPoint;
+        LILDOMBuilder * _domBuilder;
     };
 }
 
