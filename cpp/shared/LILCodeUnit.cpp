@@ -34,6 +34,7 @@
 #include "LILParameterSorter.h"
 #include "LILPassManager.h"
 #include "LILPathExpander.h"
+#include "LILResourceGatherer.h"
 #include "LILStringFnLowerer.h"
 #include "LILStructureLowerer.h"
 #include "LILToStringVisitor.h"
@@ -543,6 +544,10 @@ void LILCodeUnit::runPasses()
         stringVisitor->setPrintHeadline(false);
         passes.push_back(stringVisitor);
     }
+    
+    //resource gathering
+    auto resourceGatherer = new LILResourceGatherer();
+    passes.push_back(resourceGatherer);
 
     //execute the passes
     d->pm->execute(passes, d->astBuilder->getRootNode(), d->source);
