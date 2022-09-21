@@ -99,7 +99,7 @@ void LILForLowerer::processForBlocks(LILNode * node)
                 }
                     
                 default:
-                    std::cerr << "UNEXPECTED NOTE TYPE FAIL !!!!!!!!\n";
+                    std::cerr << "UNEXPECTED NODE TYPE FAIL !!!!!!!!\n";
                     return;
             }
         }
