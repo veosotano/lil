@@ -89,7 +89,6 @@ namespace LIL {
         void addGPUNode(const std::shared_ptr<LILNode> & node);
         const std::vector<std::shared_ptr<LILNode>> & getGPUNodes() const;
 
-        const std::vector<LILString> gatherResources() const;
         std::shared_ptr<LILClassDecl> findClassWithName(const LILString & name) const;
         std::shared_ptr<LILEnum> findEnumWithName(const LILString & name) const;
 
@@ -108,9 +107,6 @@ namespace LIL {
         std::vector<std::shared_ptr<LILNode>> _mainMenu;
         std::vector<std::shared_ptr<LILNode>> _config;
         std::vector<std::shared_ptr<LILNode>> _gpuNodes;
-
-        const std::vector<LILString> _gatherResources(LILRule * rule) const;
-        std::shared_ptr<LILVarDecl> _getFieldForSubject(LILClassDecl * cd, LILNode * subj) const;
     };
 }
 
