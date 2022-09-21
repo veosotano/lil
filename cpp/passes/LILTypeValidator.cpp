@@ -61,6 +61,12 @@ void LILTypeValidator::performVisit(std::shared_ptr<LILRootNode> rootNode)
             && (node->getNodeType() != NodeTypeSnippetInstruction)
         ) {
             this->validate(node);
+            if (node->isTypedNode()) {
+                auto ty = node->getType();
+                if (ty) {
+                    this->validateType(ty);
+                }
+            }
         }
     }
     if (this->getVerbose() && !this->hasErrors()) {
@@ -68,11 +74,77 @@ void LILTypeValidator::performVisit(std::shared_ptr<LILRootNode> rootNode)
     }
 }
 
+void LILTypeValidator::validateType(const std::shared_ptr<LILType> & value)
+{
+    switch (value->getTypeType()) {
+        case TypeTypeSingle:
+        {
+            auto name = value->getName();
+            if (!LILType::isBuiltInType(value.get()) && !this->_isCustomType(value)) {
+                LILErrorMessage ei;
+                ei.message =  "Invalid type name "+value->getName();
+                LILNode::SourceLocation sl = value->getSourceLocation();
+                ei.file = sl.file;
+                ei.line = sl.line;
+                ei.column = sl.column;
+                this->errors.push_back(ei);
+            }
+            break;
+        }
+        case TypeTypeObject:
+        {
+            //FIXME: search for the class to see if it is valid
+            break;
+        }
+            
+        case TypeTypePointer:
+        {
+            auto ptrTy = static_cast<LILPointerType *>(value.get());
+            auto arg = ptrTy->getArgument();
+            if (arg && arg->LILNode::isA(NodeTypeType)) {
+                this->validateType(std::static_pointer_cast<LILType>(arg));
+            }
+            if (this->getDebug() && !this->hasErrors()) {
+                std::cerr << "The subtype in the type is a type. OK\n";
+            }
+            break;
+        }
+        case TypeTypeSIMD:
+        {
+            auto elementTy = value->getType();
+            if (!elementTy) {
+                LILErrorMessage ei;
+                ei.message =  "SIMD type had no element type";
+                LILNode::SourceLocation sl = value->getSourceLocation();
+                ei.file = sl.file;
+                ei.line = sl.line;
+                ei.column = sl.column;
+                this->errors.push_back(ei);
+                break;
+            }
+            auto name = elementTy->getName();
+            if (!LILType::isBuiltInType(elementTy.get())) {
+                LILErrorMessage ei;
+                ei.message =  "Invalid type name "+name;
+                LILNode::SourceLocation sl = value->getSourceLocation();
+                ei.file = sl.file;
+                ei.line = sl.line;
+                ei.column = sl.column;
+                this->errors.push_back(ei);
+            }
+            break;
+        }
+            
+        default:
+            if (this->getDebug() && !this->hasErrors()) {
+                std::cerr << "Nothing to do. OK\n";
+            }
+            break;
+    }
+}
+
 void LILTypeValidator::validate(std::shared_ptr<LILNode> node)
 {
-    if (LILNode::isContainerNode(node->getNodeType())) {
-        this->validateChildren(node->getChildNodes());
-    }
     if (this->getDebug()) {
         std::cerr << "## validating " + LILNode::nodeTypeToString(node->getNodeType()).data() + " " + LILNodeToString::stringify(node.get()).data() + " ##\n";
     }
@@ -104,9 +176,21 @@ void LILTypeValidator::validate(std::shared_ptr<LILNode> node)
             this->_validate(vn);
             break;
         }
+        case NodeTypeClassDecl:
+        {
+            auto cd = std::static_pointer_cast<LILClassDecl>(node);
+            this->enterClassContext(cd);
+            break;
+        }
             
         default:
             break;
+    }
+    if (LILNode::isContainerNode(node->getNodeType())) {
+        this->validateChildren(node->getChildNodes());
+    }
+    if (node->getNodeType() == NodeTypeClassDecl) {
+        this->exitClassContext();
     }
 }
 
@@ -867,6 +951,8 @@ void LILTypeValidator::_validate(std::shared_ptr<LILVarDecl> vd)
                     }
                 }
             }
+        } else if (ty->getIsNullable() && ivTy->getName() == "null") {
+            found = true;
         } else if (ty->getIsNullable() && !ivTy->getIsNullable()) {
             ty->setIsNullable(false);
             found = ty->equalTo(ivTy);
@@ -919,4 +1005,57 @@ void LILTypeValidator::validateChildren(const std::vector<std::shared_ptr<LILNod
     {
         this->validate((*it));
     };
+}
+
+bool LILTypeValidator::_isCustomType(const std::shared_ptr<LILType> & ty) const
+{
+    auto cd = this->getClassContext();
+    if (cd) {
+        for (auto alias : cd->getAliases()) {
+            auto aTy = alias->getSrcType();
+            if (aTy && aTy->equalTo(ty)) {
+                return true;
+            }
+        }
+    }
+    auto rootNode = this->getRootNode();
+    auto aliases = rootNode->getAliases();
+    for (auto alias : aliases) {
+        auto aTy = alias->getSrcType();
+        if (aTy && aTy->equalTo(ty)) {
+            return true;
+        }
+    }
+    auto typeDecls = rootNode->getTypes();
+    for (auto typeDecl : typeDecls) {
+        auto tTy = typeDecl->getSrcType();
+        if (tTy && tTy->equalTo(ty)) {
+            return true;
+        }
+    }
+    auto enums = rootNode->getEnums();
+    for (auto enm : enums) {
+        if (enm->getName() == ty->getName()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+std::shared_ptr<LILClassDecl> LILTypeValidator::getClassContext() const
+{
+    if (this->_classContext.size() > 0) {
+        return this->_classContext.back();
+    }
+    return nullptr;
+}
+
+void LILTypeValidator::enterClassContext(std::shared_ptr<LILClassDecl> value)
+{
+    this->_classContext.push_back(value);
+}
+
+void LILTypeValidator::exitClassContext()
+{
+    this->_classContext.pop_back();
 }

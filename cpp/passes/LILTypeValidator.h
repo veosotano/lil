@@ -17,7 +17,9 @@
 
 
 #include "LILVisitor.h"
+#include "LILAliasDecl.h"
 #include "LILNode.h"
+#include "LILEnum.h"
 #include "LILFunctionCall.h"
 #include "LILFunctionType.h"
 #include "LILObjectDefinition.h"
@@ -36,7 +38,7 @@ namespace LIL
         void initializeVisit() override;
         void visit(LILNode * node) override { };
         void performVisit(std::shared_ptr<LILRootNode> rootNode) override;
-        
+        void validateType(const std::shared_ptr<LILType> & value);
         void validate(std::shared_ptr<LILNode> node);
         void _validate(std::shared_ptr<LILFunctionCall> fc);
         void _validateFCArguments(std::shared_ptr<LILFunctionType> fnTy, std::shared_ptr<LILFunctionCall> fc, bool isMethod, std::shared_ptr<LILValuePath> vp);
@@ -46,6 +48,15 @@ namespace LIL
         void _validate(std::shared_ptr<LILVarDecl> vd);
         void _validate(std::shared_ptr<LILVarName> vn);
         inline void validateChildren(const std::vector<std::shared_ptr<LILNode>> & children);
+
+        std::shared_ptr<LILClassDecl> getClassContext() const;
+        void enterClassContext(std::shared_ptr<LILClassDecl> value);
+        void exitClassContext();
+
+    private:
+        std::vector<std::shared_ptr<LILClassDecl>> _classContext;
+
+        bool _isCustomType(const std::shared_ptr<LILType> & ty) const;
     };
 }
 
