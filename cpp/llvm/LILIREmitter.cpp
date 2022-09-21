@@ -2064,6 +2064,10 @@ llvm::Value * LILIREmitter::_emitRuleInner(LILRule * value)
     auto thisArg = ruleFn->args().begin();
     d->namedValues["@this"] = thisArg;
     thisArg->setName("@this");
+    
+    auto indexArg = ruleFn->args().begin() + 1;
+    d->namedValues["@index"] = indexArg;
+    indexArg->setName("@index");
 
     for (const auto & val : value->getValues()) {
         this->emit(val.get());
@@ -2118,51 +2122,119 @@ void LILIREmitter::_connectRule(LILRule * value, llvm::Value * parentId, llvm::V
     auto selCh = std::static_pointer_cast<LILSelectorChain>(selChNode);
 
     //create element if needed
-    const auto & instr = value->getInstruction();
-    if (instr && instr->getInstructionType() == InstructionTypeNew) {
-        d->currentAlloca = d->irBuilder.CreateAlloca(this->llvmTypeFromLILType(ty.get()));
-        auto cd = this->findClassWithName(ty->getName());
-        
-        auto initializeMethod = cd->getMethodNamed("initialize");
-        if (initializeMethod) {
-            if (!initializeMethod->isA(NodeTypeFunctionDecl)) {
-                std::cerr << "NODE WAS NOT FUNCTION DECL FAIL!!!!!!!!!!!!!!!!\n\n";
-                return nullptr;
-            }
-            auto fd = std::static_pointer_cast<LILFunctionDecl>(initializeMethod);
-            llvm::Function* fun = d->llvmModule.getFunction(fd->getName().data());
-            if (fun) {
-                std::vector<llvm::Value *> argsvect;
-                //@self
-                argsvect.push_back(d->currentAlloca);
-                //name
-                argsvect.push_back(this->_getContainerNameFromSelectorChain(selCh));
-                //parentId
-                //fixme: get id of parent
-                auto zeroVal = llvm::ConstantInt::get(d->llvmContext, llvm::APInt(64, 0, true));
-                argsvect.push_back(zeroVal);
-                d->irBuilder.CreateCall(fun, argsvect);
-            } else {
-                std::cerr << "COULD NOT CALL INITIALIZE FUNCTION FAIL!!!!!!!!!!!!!!!!\n\n";
-                return nullptr;
-            }
-        } else {
-            std::cerr << "INITIALIZE METHOD NOT FOUND FAIL!!!!!!!!!!!!!!!!\n\n";
-            return nullptr;
+    const auto & instrNode = value->getInstruction();
+    if (instrNode && instrNode->getInstructionType() == InstructionTypeNew) {
+        long int iterations = 1;
+        auto instr = std::static_pointer_cast<LILInstruction>(instrNode);
+        const auto & arg = instr->getArgument();
+        if (arg && arg->getNodeType() == NodeTypeNumberLiteral) {
+            auto numLit = std::static_pointer_cast<LILNumberLiteral>(arg);
+            iterations = stol(numLit->getValue().data());
         }
+        for (long int index = 0; index < iterations; index += 1) {
+            d->currentAlloca = d->irBuilder.CreateAlloca(this->llvmTypeFromLILType(ty.get()));
+            auto cd = this->findClassWithName(ty->getName());
+            
+            auto initializeMethod = cd->getMethodNamed("initialize");
+            if (initializeMethod) {
+                if (!initializeMethod->isA(NodeTypeFunctionDecl)) {
+                    std::cerr << "NODE WAS NOT FUNCTION DECL FAIL!!!!!!!!!!!!!!!!\n\n";
+                    return;
+                }
+                auto fd = std::static_pointer_cast<LILFunctionDecl>(initializeMethod);
+                llvm::Function* initializeFn = d->llvmModule.getFunction(fd->getName().data());
+                if (initializeFn) {
+                    std::vector<llvm::Value *> argsvect;
+                    //@self
+                    argsvect.push_back(d->currentAlloca);
+                    //name
+                    argsvect.push_back(this->_getContainerNameFromSelectorChain(selCh));
+                    //parentId
+                    argsvect.push_back(parentId);
+                    auto initializeReturn = d->irBuilder.CreateCall(initializeFn, argsvect);
+                    
+                    auto llvmTy = this->llvmTypeFromLILType(ty.get());
+                    d->currentAlloca = d->irBuilder.CreateAlloca(llvmTy, 0, "");
+                    //hack: using the array index to get to the id field of super
+                    auto gep = this->_emitGEP(d->currentAlloca, llvmTy, true, 0, "id", true, true, 0);
+                    d->irBuilder.CreateStore(initializeReturn, gep);
+                    std::vector<llvm::Value *> ruleFnArgs;
+                    ruleFnArgs.push_back(d->currentAlloca);
+                    llvm::Value * indexLlvmVal;
+                    if (iterations > 1) {
+                        indexLlvmVal = llvm::ConstantInt::get(d->llvmContext, llvm::APInt(64, index, true));
+                    } else {
+                        indexLlvmVal = parentIndex;
+                    }
+                    ruleFnArgs.push_back(indexLlvmVal);
+                    d->irBuilder.CreateCall(ruleFn, ruleFnArgs);
+
+                    const auto & childRules = value->getChildRules();
+                    if (childRules.size() > 0) {
+                        for (auto child : childRules) {
+                            this->_connectRule(child.get(), initializeReturn, indexLlvmVal, d->currentAlloca);
+                        }
+                    }
+                } else {
+                    std::cerr << "COULD NOT CALL INITIALIZE FUNCTION FAIL!!!!!!!!!!!!!!!!\n\n";
+                    return;
+                }
+            } else {
+                std::cerr << "INITIALIZE METHOD NOT FOUND FAIL!!!!!!!!!!!!!!!!\n\n";
+                return;
+            }
+        }
+        return;
     }
 
     bool outIsId = false;
-    auto selection = this->_emitSelCh(selCh.get(), outIsId);
+    bool outNeedsAlloca = false;
+    auto selection = this->_emitSelCh(selCh.get(), outIsId, outNeedsAlloca, parentIndex, thisObj);
     auto llvmTy = this->llvmTypeFromLILType(ty.get());
+    if (!selection) {
+        const auto & childRules = value->getChildRules();
+        if (childRules.size() > 0) {
+            for (auto child : childRules) {
+                this->_connectRule(child.get(), parentId, parentIndex, thisObj);
+            }
+        }
+        return;
+    }
     if (outIsId) {
-        d->currentAlloca = d->irBuilder.CreateAlloca(llvmTy, 0, "");
-        //hack: using the array index to get to the id field of super
-        auto gep = this->_emitGEP(d->currentAlloca, llvmTy, true, 0, "id", true, true, 0);
-        d->irBuilder.CreateStore(selection, gep);
-        std::vector<llvm::Value *> argsvect;
-        argsvect.push_back(d->currentAlloca);
-        d->irBuilder.CreateCall(fun, argsvect);
+        if (outNeedsAlloca) {
+            d->currentAlloca = d->irBuilder.CreateAlloca(llvmTy, 0, "");
+            //hack: using the array index to get to the id field of super
+            auto gep = this->_emitGEP(d->currentAlloca, llvmTy, true, 0, "id", true, true, 0);
+            d->irBuilder.CreateStore(selection, gep);
+            std::vector<llvm::Value *> argsvect;
+            argsvect.push_back(d->currentAlloca);
+            argsvect.push_back(parentIndex);
+            d->irBuilder.CreateCall(ruleFn, argsvect);
+            
+            const auto & childRules = value->getChildRules();
+            if (childRules.size() > 0) {
+                auto i64Ty = llvm::Type::getInt64Ty(d->llvmContext);
+                auto idValue = d->irBuilder.CreateLoad(i64Ty, gep);
+                for (auto child : childRules) {
+                    this->_connectRule(child.get(), idValue, parentIndex, d->currentAlloca);
+                }
+            }
+        } else {
+            std::vector<llvm::Value *> argsvect;
+            argsvect.push_back(selection);
+            argsvect.push_back(parentIndex);
+            d->irBuilder.CreateCall(ruleFn, argsvect);
+            
+            const auto & childRules = value->getChildRules();
+            if (childRules.size() > 0) {
+                auto i64Ty = llvm::Type::getInt64Ty(d->llvmContext);
+                auto gep = this->_emitGEP(selection, llvmTy, true, 0, "id", true, true, 0);
+                auto idValue = d->irBuilder.CreateLoad(i64Ty, gep);
+                for (auto child : childRules) {
+                    this->_connectRule(child.get(), idValue, parentIndex, selection);
+                }
+            }
+        }
     } else {
         auto loopBB = llvm::BasicBlock::Create(d->llvmContext, "sel_loop", applyFn);
         auto afterBB = llvm::BasicBlock::Create(d->llvmContext, "sel_loop.after");
@@ -2267,7 +2339,7 @@ llvm::Value * LILIREmitter::_emitSSel(LILSimpleSelector * value)
 
 }
 
-llvm::Value * LILIREmitter::_emitSelCh(LILSelectorChain * value, bool & outIsId)
+llvm::Value * LILIREmitter::_emitSelCh(LILSelectorChain * value, bool & outIsId, bool & outNeedsAlloca, llvm::Value* parentIndex, llvm::Value * thisObj)
 {
     if (value->getNodes().size() == 1) {
         auto sChNode = value->getNodes().front();
@@ -2275,65 +2347,122 @@ llvm::Value * LILIREmitter::_emitSelCh(LILSelectorChain * value, bool & outIsId)
             auto ss = std::static_pointer_cast<LILSimpleSelector>(sChNode);
             if (ss->getNodes().size() == 1) {
                 auto firstSelNode = ss->getNodes().front();
-                if (firstSelNode->getNodeType() == NodeTypeSelector) {
+                auto selNodeTy = firstSelNode->getNodeType();
+                if (selNodeTy == NodeTypeSelector) {
                     auto sel = std::static_pointer_cast<LILSelector>(firstSelNode);
                     switch (sel->getSelectorType()) {
                         case SelectorTypeRootSelector:
                         {
                             outIsId = true;
-                            std::vector<llvm::Constant *> members;
-                            members.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(64, 0, true)));
-                            return llvm::ConstantStruct::get(d->classTypes["element"], members);
+                            outNeedsAlloca = true;
+                            std::vector<llvm::Constant *> elemMembers;
+                            elemMembers.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(64, 0, true)));
+                            auto elemStruct = llvm::ConstantStruct::get(d->classTypes["element"], elemMembers);
+                            std::vector<llvm::Constant *> containerMembers;
+                            containerMembers.push_back(elemStruct);
+                            return llvm::ConstantStruct::get(d->classTypes["container"], containerMembers);
                         }
 
                         case SelectorTypeNameSelector:
                         {
-                            outIsId = false;
-                            const auto & name = sel->getName();
-                            auto nameToIdFc = std::make_shared<LILFunctionCall>();
-                            LILString nameToIdFnName = "LIL__nameToNameId";
-                            nameToIdFc->setName(nameToIdFnName);
-                            auto strLit = std::make_shared<LILStringLiteral>();
-                            strLit->setIsCString(true);
-                            strLit->setValue(name);
-                            nameToIdFc->addArgument(strLit);
-                            
-                            
-                            auto nameToIdFnNode = this->findNodeForName(nameToIdFnName, value->getParentNode().get());
-                            if (!nameToIdFnNode || !nameToIdFnNode->isA(NodeTypeFunctionDecl)){
-                                std::cerr << "NAME TO ID FUNCTION NOT FOUND FAIL\n\n";
-                                break;
+                            for (const auto & elem : this->getDOM()->children) {
+                                if (elem->name == sel->getName()) {
+                                    outIsId = true;
+                                    outNeedsAlloca = true;
+                                    std::vector<llvm::Constant *> elemMembers;
+                                    elemMembers.push_back(llvm::ConstantInt::get(d->llvmContext, llvm::APInt(64, elem->id, true)));
+                                    auto elemStruct = llvm::ConstantStruct::get(d->classTypes["element"], elemMembers);
+                                    std::vector<llvm::Constant *> containerMembers;
+                                    containerMembers.push_back(elemStruct);
+                                    return llvm::ConstantStruct::get(d->classTypes["container"], containerMembers);
+                                }
                             }
-                            auto nameToIdFn = std::static_pointer_cast<LILFunctionDecl>(nameToIdFnNode);
-                            std::shared_ptr<LILFunctionType> fnTy = nameToIdFn->getFnType();
-                            auto nameId = this->_emitFunctionCall(nameToIdFc.get(), nameToIdFn->getName(), fnTy.get(), nullptr);
-
-                            LILString selectFnName = "LIL__selectByName";
-                            auto selectFnNode = this->findNodeForName(selectFnName, value->getParentNode().get());
-                            if (!selectFnNode || !selectFnNode->isA(NodeTypeFunctionDecl)){
-                                std::cerr << "SELECT BY NAME FUNCTION NOT FOUND FAIL\n\n";
-                                break;
-                            }
-                            auto selectFn = std::static_pointer_cast<LILFunctionDecl>(selectFnNode);
-                            auto selectFnTy = selectFn->getFnType();
-                            llvm::Function* selectFun = d->llvmModule.getFunction(selectFn->getName().data());
-                            std::vector<llvm::Value *> selectArgs;
-                            selectArgs.push_back(nameId);
-                            auto zeroLit = std::make_shared<LILNumberLiteral>();
-                            zeroLit->setValue("0");
-                            auto zeroTy = LILType::make("i64");
-                            zeroLit->setType(zeroTy);
-                            selectArgs.push_back(this->_emitNum(zeroLit.get()));
-                            return d->irBuilder.CreateCall(selectFun, selectArgs, "selection");
+                            std::cerr << "!!!!COULD NOT FIND ELEMENT FAIL!!!!!!!!!!\n";
+                            return nullptr;
+                        }
+                        case SelectorTypeThisSelector:
+                        {
+                            outIsId = true;
+                            outNeedsAlloca = false;
+                            return thisObj;
                         }
                         default:
                             std::cerr << "!!!!UNIMPLEMENTED FAIL!!!!!!!!!!\n";
                             return nullptr;
                             break;
                     }
+                } else if (selNodeTy == NodeTypeFlag) {
+                    auto flag = std::static_pointer_cast<LILFlag>(firstSelNode);
+                    if (flag->getIsOnByDefault()) {
+                        outIsId = true;
+                        outNeedsAlloca = false;
+                        return thisObj;
+                    }
+                    return nullptr;
                 }
-                
             }
+        }
+    } else {
+
+        for (const auto & schNode : value->getNodes()) {
+            if (schNode->getNodeType() != NodeTypeSimpleSelector) {
+                std::cerr << "UNKNOWN SELECTOR TYPE FAIL!!!!!!!!!!!!!!!!!\n";
+                return nullptr;
+            }
+            auto ss = std::static_pointer_cast<LILSimpleSelector>(schNode);
+            for (const auto & ssNode : ss->getNodes()) {
+                if (ssNode->getNodeType() != NodeTypeSelector) {
+                    std::cerr << "UNKNOWN SELECTOR TYPE FAIL!!!!!!!!!!!!!!!!!\n";
+                    return nullptr;
+                }
+                auto sel = std::static_pointer_cast<LILSelector>(ssNode);
+                switch (ssNode->getSelectorType()) {
+                    case SelectorTypeRootSelector:
+                    {
+                        break;
+                    }
+                        
+                    case SelectorTypeNameSelector:
+                    {
+                        const auto & name = sel->getName();
+                        auto nameToIdFc = std::make_shared<LILFunctionCall>();
+                        LILString nameToIdFnName = "LIL__nameToNameId";
+                        nameToIdFc->setName(nameToIdFnName);
+                        auto strLit = std::make_shared<LILStringLiteral>();
+                        strLit->setIsCString(true);
+                        strLit->setValue(name);
+                        nameToIdFc->addArgument(strLit);
+                        
+                        
+                        auto nameToIdFnNode = this->findNodeForName(nameToIdFnName, value->getParentNode().get());
+                        if (!nameToIdFnNode || !nameToIdFnNode->isA(NodeTypeFunctionDecl)){
+                            std::cerr << "NAME TO ID FUNCTION NOT FOUND FAIL\n\n";
+                            break;
+                        }
+                        auto nameToIdFn = std::static_pointer_cast<LILFunctionDecl>(nameToIdFnNode);
+                        std::shared_ptr<LILFunctionType> fnTy = nameToIdFn->getFnType();
+                        auto nameId = this->_emitFunctionCall(nameToIdFc.get(), nameToIdFn->getName(), fnTy.get(), nullptr);
+
+                        LILString selectFnName = "LIL__selectByName";
+                        auto selectFnNode = this->findNodeForName(selectFnName, value->getParentNode().get());
+                        if (!selectFnNode || !selectFnNode->isA(NodeTypeFunctionDecl)){
+                            std::cerr << "SELECT BY NAME FUNCTION NOT FOUND FAIL\n\n";
+                            break;
+                        }
+                        auto selectFn = std::static_pointer_cast<LILFunctionDecl>(selectFnNode);
+                        auto selectFnTy = selectFn->getFnType();
+                        llvm::Function* selectFun = d->llvmModule.getFunction(selectFn->getName().data());
+                        std::vector<llvm::Value *> selectArgs;
+                        selectArgs.push_back(nameId);
+                        selectArgs.push_back(parentIndex);
+                        return d->irBuilder.CreateCall(selectFun, selectArgs, "selection");
+                    }
+                        
+                    default:
+                        break;
+                }
+            }
+            
         }
     }
     return nullptr;
@@ -2341,65 +2470,97 @@ llvm::Value * LILIREmitter::_emitSelCh(LILSelectorChain * value, bool & outIsId)
 
 llvm::Value * LILIREmitter::_emitSel(LILSelector * value)
 {
-    LILString name = value->getName();
-    auto namestr = name.data();
-    
-    if (namestr == "@key")
-    {
-        auto vn = std::make_shared<LILVarName>();
-        vn->setName(namestr);
-        vn->setParentNode(value->getParentNode());
-        return this->_emitVN(vn.get());
-    }
-    else if (namestr == "@value")
-    {
-        auto forBlock = this->findAncestorFor(value->shared_from_this());
-        auto subjectNode = forBlock->getSubject();
-        auto subjTy = subjectNode->getType();
-        if (!subjTy) {
-            std::cerr << "SUBJECT HAD NO TYPE FAIL!!!!!!!!!!!!!!\n";
-            return nullptr;
-        }
-        if (subjTy->getTypeType() == TypeTypeObject) {
-            auto cd = this->findClassWithName(subjTy->getName());
-            if (!cd) {
-                std::cerr << "CLASS " + subjTy->getName().data() +  " NOT FOUND FAIL!!!!!!!!!!!!!!\n";
-                return nullptr;
-            }
-            auto meth = cd->getMethodNamed("value");
-            if (meth) {
-                if (!meth->isA(NodeTypeFunctionDecl)) {
-                    std::cerr << "VALUE METHOD NODE WAS NOT FUNCTION DECL FAIL!!!\n\n";
-                    return nullptr;
-                }
-                auto fd = std::static_pointer_cast<LILFunctionDecl>(meth);
-                llvm::Function* fun = d->llvmModule.getFunction(fd->getName().data());
-                if (fun) {
-                    auto vn = std::make_shared<LILVarName>();
-                    vn->setName("@key");
-                    vn->setParentNode(value->getParentNode());
-                    auto keyVal = this->_emitVN(vn.get());
-                    
-                    std::vector<llvm::Value *> argsvect;
-                    argsvect.push_back(this->emitPointer(subjectNode.get()));
-                    argsvect.push_back(keyVal);
-                    return d->irBuilder.CreateCall(fun, argsvect);
-                } else {
-                    std::cerr << "COULD NOT CALL VALUE METHOD FAIL!!!!\n\n";
-                    return nullptr;
-                }
-            }
-            
-            
-        } else {
+    switch (value->getSelectorType()) {
+        case SelectorTypeKey:
+        {
+            LILString name = value->getName();
+            auto namestr = name.data();
             auto vn = std::make_shared<LILVarName>();
             vn->setName(namestr);
             vn->setParentNode(value->getParentNode());
             return this->_emitVN(vn.get());
         }
-    }
+            
+        case SelectorTypeValue:
+        {
+            LILString name = value->getName();
+            auto namestr = name.data();
+            auto forBlock = this->findAncestorFor(value->shared_from_this());
+            auto subjectNode = forBlock->getSubject();
+            auto subjTy = subjectNode->getType();
+            if (!subjTy) {
+                std::cerr << "SUBJECT HAD NO TYPE FAIL!!!!!!!!!!!!!!\n";
+                return nullptr;
+            }
+            if (subjTy->getTypeType() == TypeTypeObject) {
+                auto cd = this->findClassWithName(subjTy->getName());
+                if (!cd) {
+                    std::cerr << "CLASS " + subjTy->getName().data() +  " NOT FOUND FAIL!!!!!!!!!!!!!!\n";
+                    return nullptr;
+                }
+                auto meth = cd->getMethodNamed("value");
+                if (meth) {
+                    if (!meth->isA(NodeTypeFunctionDecl)) {
+                        std::cerr << "VALUE METHOD NODE WAS NOT FUNCTION DECL FAIL!!!\n\n";
+                        return nullptr;
+                    }
+                    auto fd = std::static_pointer_cast<LILFunctionDecl>(meth);
+                    llvm::Function* fun = d->llvmModule.getFunction(fd->getName().data());
+                    if (fun) {
+                        auto vn = std::make_shared<LILVarName>();
+                        vn->setName("@key");
+                        vn->setParentNode(value->getParentNode());
+                        auto keyVal = this->_emitVN(vn.get());
+                        
+                        std::vector<llvm::Value *> argsvect;
+                        argsvect.push_back(this->emitPointer(subjectNode.get()));
+                        argsvect.push_back(keyVal);
+                        return d->irBuilder.CreateCall(fun, argsvect);
+                    } else {
+                        std::cerr << "COULD NOT CALL VALUE METHOD FAIL!!!!\n\n";
+                        return nullptr;
+                    }
+                }
+                
+                
+            } else {
+                auto vn = std::make_shared<LILVarName>();
+                vn->setName(namestr);
+                vn->setParentNode(value->getParentNode());
+                return this->_emitVN(vn.get());
+            }
+            break;
+        }
+            
+        case SelectorTypeSelfSelector:
+        {
+            return d->namedValues["@self"];
+        }
 
-    std::cerr << "!!!!!!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!\n";
+        case SelectorTypeIndex:
+        {
+            const auto indexStr = "@index";
+            if (d->namedValues.count(indexStr)) {
+                LILString name = value->getName();
+                auto vn = std::make_shared<LILVarName>();
+                vn->setName(indexStr);
+                vn->setParentNode(value->getParentNode());
+                return this->_emitVN(vn.get());
+            }
+            const auto valueStr = "@value";
+            if (d->namedValues.count(valueStr)) {
+                auto ptr = d->namedValues[valueStr];
+                return d->irBuilder.CreateLoad(this->llvmTypeFromLILType(value->getType().get()), ptr, valueStr);
+            }
+            std::cerr << "COULD NOT EMIT @index SELECTOR FAIL!!!!!!!!!!!!!!\n";
+            return nullptr;
+            
+        }
+
+        default:
+            std::cerr << "!!!!!!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!!!!\n";
+            break;
+    }
     return nullptr;
 }
 
@@ -3009,6 +3170,7 @@ llvm::Value * LILIREmitter::_emitFC(LILFunctionCall * value)
         case FunctionCallTypeSel:
         {
             bool outIsId = false;
+            bool outNeedsAlloca = false;
             const auto & args = value->getArguments();
             const auto & selChNode = args.front();
             if (selChNode->getNodeType() != NodeTypeSelectorChain) {
@@ -3016,11 +3178,45 @@ llvm::Value * LILIREmitter::_emitFC(LILFunctionCall * value)
                 return nullptr;
             }
             auto selCh = std::static_pointer_cast<LILSelectorChain>(selChNode);
-            auto llvmIr = this->_emitSelCh(selCh.get(), outIsId);
-            if (outIsId) {
-                return llvmIr;
+            auto zeroLit = std::make_shared<LILNumberLiteral>();
+            zeroLit->setValue("0");
+            auto zeroTy = LILType::make("i64");
+            zeroLit->setType(zeroTy);
+            auto zeroLitVal = this->_emitNum(zeroLit.get());
+            auto llvmIr = this->_emitSelCh(selCh.get(), outIsId, outNeedsAlloca, zeroLitVal, nullptr);
+            if (args.size() > 1) {
+                const auto & flagNode = args.back();
+                if (flagNode->getNodeType() == NodeTypeFlag) {
+                    auto rule = this->findRuleForSelChAndFlag(selCh.get(), static_cast<LILFlag *>(flagNode.get()));
+                    if (!rule) {
+                        std::cerr << "RULE NOT FOUND FAIL!!!!!!!!!\n";
+                        return nullptr;
+                    }
+                    if (outIsId) {
+                        auto ruleFn = d->llvmModule.getFunction(rule->getFnName().data());
+                        assert(ruleFn && "Rule function not found.");
+                        auto llvmTy = this->llvmTypeFromLILType(rule->getType().get());
+                        d->currentAlloca = d->irBuilder.CreateAlloca(llvmTy, 0, "");
+                        //hack: using the array index to get to the id field of super
+                        auto gep = this->_emitGEP(d->currentAlloca, llvmTy, true, 0, "id", true, true, 0);
+                        d->irBuilder.CreateStore(llvmIr, gep);
+                        std::vector<llvm::Value *> argsvect;
+                        argsvect.push_back(d->currentAlloca);
+                        argsvect.push_back(zeroLitVal);
+                        return d->irBuilder.CreateCall(ruleFn, argsvect);
+                        
+                    } else {
+                        std::cerr << "UNIMPLEMENTED FAIL!!!!\n";
+                        return nullptr;
+                    }
+                }
             } else {
-                
+                if (outIsId) {
+                    return llvmIr;
+                } else {
+                    std::cerr << "UNIMPLEMENTED FAIL!!!!\n";
+                    return nullptr;
+                }
             }
         }
         default:
@@ -3032,6 +3228,145 @@ llvm::Value * LILIREmitter::_emitFC(LILFunctionCall * value)
 
     return nullptr;
 
+}
+
+std::shared_ptr<LILRule> LILIREmitter::findRuleForSelChAndFlag(LILSelectorChain * selCh, LILFlag * flag) const
+{
+    const auto & rootNode = this->getRootNode();
+    const auto & firstSimpleSel = selCh->getNodes().front();
+    assert((firstSimpleSel->getNodeType() == NodeTypeSimpleSelector) && "Node was not simple selector");
+    
+    std::vector<std::shared_ptr<LILRule>> currentRules;
+    const auto & firstSimpleSelNode = firstSimpleSel->getChildNodes().front();
+    switch (firstSimpleSelNode->getSelectorType()) {
+        case SelectorTypeRootSelector:
+        {
+            for (const auto & rule : rootNode->getRules()) {
+                auto firstSel = rule->getFirstSelector();
+                if (firstSel->getSelectorType() == SelectorTypeRootSelector) {
+                    for (const auto & childRule : rule->getChildRules()) {
+                        currentRules.push_back(childRule);
+                    }
+                }
+            }
+            break;
+        }
+        case SelectorTypeNameSelector:
+        {
+            auto selector = std::static_pointer_cast<LILSelector>(firstSimpleSelNode);
+            for (const auto & rule : rootNode->getRules()) {
+                auto firstSel = rule->getFirstSelector();
+                if (firstSel->getSelectorType() == SelectorTypeRootSelector) {
+                    for (const auto & childRule : rule->getChildRules()) {
+                        const auto & childFirstSel = childRule->getFirstSelector();
+                        if (childFirstSel && childFirstSel->getSelectorType() == SelectorTypeNameSelector) {
+                            auto childSelector = std::static_pointer_cast<LILSelector>(childFirstSel);
+                            if (childSelector->getName() == selector->getName()) {
+                                if (selCh->getNodes().size() == 1) {
+                                    for (const auto & selChildRule : childRule->getChildRules()) {
+                                        const auto & selectorChain = selChildRule->getSelectorChain();
+                                        const auto & firstSimpleSelNode = selectorChain->getChildNodes().front();
+                                        assert((firstSimpleSelNode->getNodeType() == NodeTypeSimpleSelector) && "Node was not simple selector");
+                                        const auto & simpleSelNodes = firstSimpleSelNode->getChildNodes();
+                                        const auto & firstSelNode = firstSimpleSelNode->getChildNodes().front();
+                                        
+                                        if (firstSelNode->getSelectorType() == SelectorTypeThisSelector) {
+                                            if (simpleSelNodes.size() > 1) {
+                                                const auto & secondSelNode = simpleSelNodes.at(1);
+                                                if (secondSelNode->getNodeType() == NodeTypeFlag) {
+                                                    auto ruleFlag = std::static_pointer_cast<LILFlag>(secondSelNode);
+                                                    if (ruleFlag->getName() == flag->getName()) {
+                                                        return selChildRule;
+                                                    }
+                                                }
+                                            } else {
+                                                continue;
+                                            }
+                                        } else if (firstSelNode->getNodeType() == NodeTypeFlag) {
+                                            auto ruleFlag = std::static_pointer_cast<LILFlag>(firstSelNode);
+                                            if (ruleFlag->getName() == flag->getName()) {
+                                                return selChildRule;
+                                            }
+                                        }
+                                    }
+                                }
+                                currentRules.push_back(childRule);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        default:
+            std::cerr << "UNKNOWN SELECTOR TYPE TYPE FAIL\n";
+            break;
+    }
+    
+    for (long int i = 1, j = selCh->getNodes().size(); i<j; i += 1) {
+        std::vector<std::shared_ptr<LILRule>> tmpRules;
+        const auto & selNode = selCh->getNodes().at(i);
+        assert((selNode->getNodeType() == NodeTypeSimpleSelector) && "Node was not simple selector");
+        
+        const auto & simpleSelNode = selNode->getChildNodes().front();
+        switch (simpleSelNode->getSelectorType()) {
+            case SelectorTypeNameSelector:
+            {
+                auto selector = std::static_pointer_cast<LILSelector>(simpleSelNode);
+                for (const auto & rule : currentRules) {
+                    auto firstSel = rule->getFirstSelector();
+                    if (firstSel->getSelectorType() == SelectorTypeRootSelector) {
+                        for (const auto & childRule : rule->getChildRules()) {
+                            const auto & instr = childRule->getInstruction();
+                            if (instr && instr->getInstructionType() == InstructionTypeNew) {
+                                const auto & childFirstSel = childRule->getFirstSelector();
+                                if (childFirstSel && childFirstSel->getSelectorType() == SelectorTypeNameSelector) {
+                                    auto childSelector = std::static_pointer_cast<LILSelector>(childFirstSel);
+                                    if (childSelector->getName() == selector->getName()) {
+                                        tmpRules.push_back(childRule);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                currentRules = tmpRules;
+                break;
+            }
+            default:
+                std::cerr << "UNKNOWN SELECTOR TYPE TYPE FAIL\n";
+                break;
+        }
+    }
+    for (const auto & selectedRule : currentRules) {
+        for (const auto & selChildRule : selectedRule->getChildRules()) {
+            const auto & selectorChain = selChildRule->getSelectorChain();
+            const auto & firstSimpleSelNode = selectorChain->getChildNodes().front();
+            assert((firstSimpleSelNode->getNodeType() == NodeTypeSimpleSelector) && "Node was not simple selector");
+            const auto & simpleSelNodes = firstSimpleSelNode->getChildNodes();
+            const auto & firstSelNode = firstSimpleSelNode->getChildNodes().front();
+            
+            if (firstSelNode->getSelectorType() == SelectorTypeThisSelector) {
+                if (simpleSelNodes.size() > 1) {
+                    const auto & secondSelNode = simpleSelNodes.at(1);
+                    if (secondSelNode->getNodeType() == NodeTypeFlag) {
+                        auto ruleFlag = std::static_pointer_cast<LILFlag>(secondSelNode);
+                        if (ruleFlag->getName() == flag->getName()) {
+                            return selChildRule;
+                        }
+                    }
+                } else {
+                    continue;
+                }
+            } else if (firstSelNode->getNodeType() == NodeTypeFlag) {
+                auto ruleFlag = std::static_pointer_cast<LILFlag>(firstSelNode);
+                if (ruleFlag->getName() == flag->getName()) {
+                    return selChildRule;
+                }
+            }
+        }
+    }
+    
+    return nullptr;
 }
 
 llvm::Value * LILIREmitter::_emitFunctionCall(LILFunctionCall * value, LILString name, LILFunctionType * fnTy, llvm::Value * instance, bool skipArgument, size_t skipArgIndex)

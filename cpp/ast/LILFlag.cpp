@@ -18,12 +18,14 @@ using namespace LIL;
 
 LILFlag::LILFlag()
 : LIL::LILNode(NodeTypeFlag)
+, _isOnByDefault(false)
 {
     
 }
 
 LILFlag::LILFlag(const LILFlag &other)
 : LILNode(other)
+, _isOnByDefault(other._isOnByDefault)
 {
     this->_name = other._name;
 }
@@ -57,4 +59,14 @@ void LILFlag::setName(LILString newName)
 const LILString LILFlag::getName() const
 {
     return this->_name;
+}
+
+void LILFlag::setIsOnByDefault(bool value)
+{
+    this->_isOnByDefault = value;
+}
+
+bool LILFlag::getIsOnByDefault() const
+{
+    return this->_isOnByDefault;
 }

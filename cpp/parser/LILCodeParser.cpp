@@ -587,6 +587,7 @@ bool LILCodeParser::isObjectSelector() const
                 || objtype == "event"
                 || objtype == "key"
                 || objtype == "value"
+                || objtype == "index"
                 || objtype == "mainMenu"
                 )
             {
@@ -3456,6 +3457,14 @@ bool LILCodeParser::readSimpleSelector()
                 d->receiver->receiveNodeCommit();
             break;
         }
+            
+        case TokenTypeColon:
+        {
+            isValid = this->readFilterOrFlag();
+            if (isValid)
+                d->receiver->receiveNodeCommit();
+            break;
+        }
 
         default:
         {
@@ -3521,6 +3530,7 @@ bool LILCodeParser::readObjectSelector()
                     || objtype == "event"
                     || objtype == "key"
                     || objtype == "value"
+                    || objtype == "index"
                     || objtype == "mainMenu"
                     || objtype == "menu"
                     || objtype == "menuItem"
@@ -4100,6 +4110,25 @@ bool LILCodeParser::readNewInstr()
     d->receiver->receiveNodeData(ParserEventInstruction, d->currentToken->getString());
 
     this->readNextToken();
+    LIL_CHECK_FOR_END
+
+    if (d->currentToken->isA(TokenTypeParenthesisOpen)) {
+        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+        this->readNextToken();
+        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+        bool outIsSingleValue = true;
+        NodeType outType = NodeTypeInvalid;
+        bool valid = this->readExpression(outIsSingleValue, outType);
+        if (!valid) {
+            this->skipUntilEndOfExpression();
+            LIL_CANCEL_NODE
+        }
+        d->receiver->receiveNodeCommit();
+        LIL_EXPECT(TokenTypeParenthesisClose, "parenthesis close")
+        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+        this->readNextToken();
+        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
+    }
     LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
 
     if (d->currentToken->isA(TokenTypeObjectSign))
@@ -5542,6 +5571,24 @@ bool LILCodeParser::readSelFunction()
     LIL_EXPECT(TokenTypeParenthesisClose, "closing parenthesis")
     d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
     this->readNextToken();
+    
+    LIL_CHECK_FOR_END
+    if (d->currentToken->isA(TokenTypeColon)) {
+        bool ffValid = this->readFilterOrFlag();
+        if (ffValid) {
+            d->receiver->receiveNodeCommit();
+        } else {
+            LIL_CANCEL_NODE
+        }
+        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE;
+        LIL_EXPECT(TokenTypeParenthesisOpen, "open parenthesis")
+        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+        this->readNextToken();
+        LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE;
+        LIL_EXPECT(TokenTypeParenthesisClose, "closing parenthesis")
+        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
+        this->readNextToken();
+    }
     LIL_END_NODE
 }
 

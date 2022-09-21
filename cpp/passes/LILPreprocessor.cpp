@@ -26,6 +26,7 @@
 #include "LILFunctionDecl.h"
 #include "LILInstruction.h"
 #include "LILNodeToString.h"
+#include "LILNumberLiteral.h"
 #include "LILObjectType.h"
 #include "LILRootNode.h"
 #include "LILSelector.h"
@@ -85,6 +86,7 @@ void LILPreprocessor::performVisit(std::shared_ptr<LILRootNode> rootNode)
         if (this->hasErrors()) {
             return;
         }
+        this->processNewInstr(rootNode);
     }
 }
 
@@ -2830,4 +2832,114 @@ bool LILPreprocessor::_processPasteInstr(std::shared_ptr<LILEnum> value)
         value->setValues(resultNodes);
     }
     return false;
+}
+
+void LILPreprocessor::processNewInstr(const std::shared_ptr<LILRootNode> & rootNode)
+{
+    std::vector<std::shared_ptr<LILNode>> nodes = rootNode->getNodes();
+    for (const auto & node : nodes) {
+        this->_processNewInstr(node.get());
+    }
+}
+
+void LILPreprocessor::_processNewInstr(LILNode * node)
+{
+    if (node->getInstructionType() == InstructionTypeNew) {
+        auto instr = static_cast<LILInstruction *>(node);
+        auto arg = instr->getArgument();
+        if (arg && arg->getNodeType() != NodeTypeNumberLiteral) {
+            auto newNum = this->_evaluateToNum(arg.get());
+            instr->setArgument(newNum);
+        }
+    }
+    if (node->getNodeType() == NodeTypeRule) {
+        auto rule = static_cast<LILRule *>(node);
+        auto instr = rule->getInstruction();
+        if (instr) {
+            this->_processNewInstr(instr.get());
+        }
+        for (const auto & childRule : rule->getChildRules()) {
+            this->_processNewInstr(childRule.get());
+        }
+    }
+}
+
+std::shared_ptr<LILNode> LILPreprocessor::_evaluateToNum(LILNode * node)
+{
+    auto numLit = std::make_shared<LILNumberLiteral>();
+    std::string strVal = std::to_string(this->_evaluateToLongInt(node));
+    numLit->setValue(strVal);
+    return numLit;
+}
+
+long int LILPreprocessor::_evaluateToLongInt(LILNode * node)
+{
+    switch (node->getNodeType()) {
+        case NodeTypeNumberLiteral:
+        {
+            auto numLit = static_cast<LILNumberLiteral *>(node);
+            return stol(numLit->getValue().data());
+        }
+        case NodeTypeExpression:
+        {
+            auto exp = static_cast<LILExpression *>(node);
+            auto leftVal = this->_evaluateToLongInt(exp->getLeft().get());
+            auto rightVal = this->_evaluateToLongInt(exp->getRight().get());
+            switch (exp->getExpressionType()) {
+                case ExpressionTypeSum:
+                {
+                    return leftVal + rightVal;
+                    break;
+                }
+                case ExpressionTypeSubtraction:
+                {
+                    return leftVal - rightVal;
+                    break;
+                }
+                case ExpressionTypeMultiplication:
+                {
+                    return leftVal * rightVal;
+                    break;
+                }
+                case ExpressionTypeDivision:
+                {
+                    return leftVal / rightVal;
+                    break;
+                }
+                case ExpressionTypeMod:
+                {
+                    return leftVal % rightVal;
+                    break;
+                }
+                case ExpressionTypeShiftLeft:
+                {
+                    return leftVal << rightVal;
+                    break;
+                }
+                case ExpressionTypeShiftRight:
+                {
+                    return leftVal >> rightVal;
+                    break;
+                }
+                case ExpressionTypeBitwiseOr:
+                {
+                    return leftVal | rightVal;
+                    break;
+                }
+                case ExpressionTypeBitwiseAnd:
+                {
+                    return leftVal & rightVal;
+                    break;
+                }
+                default:
+                    std::cerr << "UNEXPECTED EXPRESSION TYPE FAIL !!!\n\n";
+                    break;
+            }
+        }
+            
+        default:
+            std::cerr << "UNEXPECTED NODE TYPE FAIL !!!\n\n";
+            break;
+    }
+    return 0;
 }

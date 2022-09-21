@@ -1950,6 +1950,10 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(LILValuePath * vp)
                     }
                     return ruleTy;
                 }
+                case SelectorTypeIndex:
+                {
+                    return LILType::make("i64");
+                }
                 default:
                     std::cerr << "!!!!!!UNIMPLEMENTED FAIL!!!!!!!!!!!\n";
                     break;
@@ -2195,23 +2199,66 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForSelectorChain(LILSelectorCha
         
         auto simpleSel = std::static_pointer_cast<LILSimpleSelector>(sSelNode);
         const auto & firstSimpleSel = simpleSel->getNodes().front();
-        switch (firstSimpleSel->getSelectorType()) {
-            case SelectorTypeRootSelector:
-            {
-                auto objTy = std::make_shared<LILObjectType>();
-                objTy->setName("container");
-                return objTy;
+        auto nodeTy = firstSimpleSel->getNodeType();
+        if (nodeTy == NodeTypeSelector) {
+            switch (firstSimpleSel->getSelectorType()) {
+                case SelectorTypeRootSelector:
+                {
+                    auto objTy = std::make_shared<LILObjectType>();
+                    objTy->setName("container");
+                    return objTy;
+                }
+                case SelectorTypeNameSelector:
+                {
+                    auto nameSel = std::static_pointer_cast<LILSelector>(firstSimpleSel);
+                    for (const auto & element : this->_domBuilder->getDOM()->children) {
+                        if (element->name == nameSel->getName()) {
+                            return element->ty;
+                        }
+                    }
+                    break;
+                }
+                case SelectorTypeThisSelector:
+                {
+                    auto ancestorRule = this->findAncestorRule(selCh->getParentNode());
+                    if (!ancestorRule) {
+                        std::cerr << "ANCESTOR RULE NOT FOUND FAIL!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n";
+                        return nullptr;
+                    }
+                    auto ancestorTy = ancestorRule->getType();
+                    if (!ancestorTy) {
+                        ancestorTy = this->getNodeType(ancestorRule.get());
+                    }
+                    return ancestorTy;
+                }
+                case SelectorTypeMainMenu:
+                {
+                    auto objTy = std::make_shared<LILObjectType>();
+                    objTy->setName("mainMenu");
+                    return objTy;
+                }
+                default:
+                    std::cerr << "UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n";
+                    break;
             }
-                
-            default:
-                //std::cerr << "UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n";
-                break;
+        } else if (nodeTy == NodeTypeFlag) {
+            //this is a shortcut for @this::flagname
+            auto ancestorRule = this->findAncestorRule(selCh->getParentNode());
+            if (!ancestorRule) {
+                std::cerr << "ANCESTOR RULE NOT FOUND FAIL!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n";
+                return nullptr;
+            }
+            auto ancestorTy = ancestorRule->getType();
+            if (!ancestorTy) {
+                ancestorTy = this->getNodeType(ancestorRule.get());
+            }
+            return ancestorTy;
         }
+        
     } else {
         bool isLast = false;
         std::vector<std::shared_ptr<LILRule>> currentSelection;
-        
-        
+
         for (size_t i=1, j=selNodes.size(); i<j; ++i) {
             isLast = i==j-1;
             auto selNode = selNodes.at(i);

@@ -31,12 +31,15 @@ namespace LIL
 
         void setName(LILString newName);
         const LILString getName() const;
+        void setIsOnByDefault(bool value);
+        bool getIsOnByDefault() const;
 
     protected:
         virtual std::shared_ptr<LILClonable> cloneImpl() const;
 
     private:
         LILString _name;
+        bool _isOnByDefault;
     };
 }
 

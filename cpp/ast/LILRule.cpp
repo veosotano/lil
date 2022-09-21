@@ -13,17 +13,21 @@
  ********************************************************************/
 
 #include "LILRule.h"
+#include "LILFlag.h"
+#include "LILSelectorChain.h"
 
 using namespace LIL;
 
 LILRule::LILRule()
 : LILTypedNode(NodeTypeRule)
+, _hasDefaultFlag(false)
 {
     
 }
 
 LILRule::LILRule(const LILRule &other)
 : LILTypedNode(other)
+, _hasDefaultFlag(other._hasDefaultFlag)
 , _fnName(other._fnName)
 {
     this->_selectorChain = other._selectorChain;
@@ -140,6 +144,16 @@ std::shared_ptr<LILNode> LILRule::getFirstSelector() const
         }
     }
     return nullptr;
+}
+
+void LILRule::setHasDefaultFlag(bool value)
+{
+    this->_hasDefaultFlag = value;
+}
+
+bool LILRule::getHasDefaultFlag() const
+{
+    return this->_hasDefaultFlag;
 }
 
 void LILRule::setFnName(LILString value)

@@ -680,7 +680,35 @@ void LILASTBuilder::receiveNodeCommit()
                 }
                 case NodeTypeRule:
                 {
-                    rule->addChildRule(std::static_pointer_cast<LILRule>(this->currentNode));
+                    auto childRule = std::static_pointer_cast<LILRule>(this->currentNode);
+                    rule->addChildRule(childRule);
+
+                    if (!rule->getHasDefaultFlag()) {
+                        const auto & sch = childRule->getSelectorChain();
+                        if (sch && sch->getNodeType() == NodeTypeSelectorChain) {
+                            const auto & schNodes = sch->getChildNodes();
+                            if (schNodes.size() == 1) {
+                                const auto & firstSimpleSel = schNodes.front();
+                                const auto & simpleSelNodes = firstSimpleSel->getChildNodes();
+                                if (simpleSelNodes.size() == 1) {
+                                    const auto & firstSel = simpleSelNodes.front();
+                                    if (firstSel->getNodeType() == NodeTypeFlag) {
+                                        auto flag = std::static_pointer_cast<LILFlag>(firstSel);
+                                        flag->setIsOnByDefault(true);
+                                        rule->setHasDefaultFlag(true);
+                                    }
+                                } else if (simpleSelNodes.size() == 2) {
+                                    const auto & firstSel = simpleSelNodes.front();
+                                    const auto & secondSel = simpleSelNodes.back();
+                                    if (firstSel->getSelectorType() == SelectorTypeThisSelector && secondSel->getNodeType() == NodeTypeFlag) {
+                                        auto flag = std::static_pointer_cast<LILFlag>(secondSel);
+                                        flag->setIsOnByDefault(true);
+                                        rule->setHasDefaultFlag(true);
+                                    }
+                                }
+                            }
+                        }
+                    }
                     break;
                 }
                 case NodeTypeInstruction:

@@ -116,7 +116,8 @@ namespace LIL
         llvm::Value* _getContainerNameFromSelectorChain(std::shared_ptr<LILSelectorChain> selCh);
         LILString _newRuleFnName();
         llvm::Value * _emitSSel(LILSimpleSelector * value);
-        llvm::Value * _emitSelCh(LILSelectorChain * value, bool & outIsId);
+        llvm::Value * _emitSelCh(LILSelectorChain * value, bool & outIsId, bool & outNeedsAlloca, llvm::Value* parentIndex, llvm::Value * thisObj);
+        std::shared_ptr<LILRule> findRuleForSelChAndFlag(LILSelectorChain * selCh, LILFlag * flag) const;
         llvm::Value * _emitSel(LILSelector * value);
         llvm::Value * _emitComb(LILCombinator * value);
         llvm::Value * _emitFlt(LILFilter * value);

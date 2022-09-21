@@ -38,6 +38,8 @@ namespace LIL
         void setInstruction(std::shared_ptr<LILNode> instruction);
         const std::shared_ptr<LILNode> getInstruction() const;
         std::shared_ptr<LILNode> getFirstSelector() const;
+        void setHasDefaultFlag(bool value);
+        bool getHasDefaultFlag() const;
         void setFnName(LILString value);
         const LILString & getFnName() const;
 
@@ -48,6 +50,7 @@ namespace LIL
         std::vector<std::shared_ptr<LILRule>> _childRules;
         std::shared_ptr<LILNode> _instruction;
         LILString _fnName;
+        bool _hasDefaultFlag;
     };
 }
 

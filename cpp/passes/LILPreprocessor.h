@@ -67,6 +67,7 @@ namespace LIL
         void processSnippets(const std::shared_ptr<LILRootNode> & rootNode);
         void processPasteInstr(const std::shared_ptr<LILRootNode> & rootNode);
         bool processPasteInstr(std::shared_ptr<LILNode> node);
+        void processNewInstr(const std::shared_ptr<LILRootNode> & rootNode);
         void setDir(LILString dir);
         LILString getDir() const;
         void setSuffix(const LILString & value);
@@ -165,6 +166,10 @@ namespace LIL
 
         void _processMainMenuRule(std::shared_ptr<LILSnippetInstruction> snippet, std::shared_ptr<LILRule> rule);
         void _processAppMenuRule(std::shared_ptr<LILSnippetInstruction> snippet, std::shared_ptr<LILRule> rule);
+
+        void _processNewInstr(LILNode * node);
+        std::shared_ptr<LILNode> _evaluateToNum(LILNode * node);
+        long int _evaluateToLongInt(LILNode * node);
     };
 }
 
