@@ -4357,49 +4357,6 @@ bool LILCodeParser::readGPUInstr()
     LIL_END_NODE
 }
 
-bool LILCodeParser::readInstructionRule()
-{
-    d->lexer->setHexPreferred(true);
-
-    d->receiver->receiveNodeData(ParserEventInstruction, d->currentToken->getString());
-    this->readNextToken();
-    if (this->atEndOfSource())
-        return false;
-
-    d->lexer->setHexPreferred(false);
-
-    if (this->isColorInstruction())
-    {
-        return false;
-    }
-
-    LILString instructionName = d->currentToken->getString();
-    if (instructionName == "new" || instructionName == "move")
-    {
-        this->readInstruction();
-        this->readRule();
-    }
-    else if (instructionName == "delete")
-    {
-        this->readSelectorChains(TokenTypeSemicolon);
-        if (atEndOfSource())
-            return false;
-
-        //we expect the end of the statement here
-        d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
-        this->readNextToken();
-        if (atEndOfSource())
-            return false;
-
-        //skip any whitespace
-        this->skip(TokenTypeWhitespace);
-        if (atEndOfSource())
-            return false;
-    }
-
-    return true;
-}
-
 bool LILCodeParser::readValuePath(bool allowFunctionCall)
 {
     bool done = false;
