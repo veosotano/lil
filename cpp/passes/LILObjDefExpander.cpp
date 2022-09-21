@@ -134,7 +134,7 @@ void LILObjDefExpander::process(LILNode * node) {
                     if (modifiers.size() > 0 && !initializer) {
                         auto defaultValue = vd->getInitVal();
                         if (defaultValue) {
-                            initializer = defaultValue;
+                            initializer = defaultValue->clone();
                         } else {
                             auto newObjDef = std::make_shared<LILObjectDefinition>();
                             newObjDef->setType(vdTy->clone());
