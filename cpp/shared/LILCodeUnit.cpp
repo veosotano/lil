@@ -547,21 +547,21 @@ void LILCodeUnit::runPasses()
     //execute the passes
     d->pm->execute(passes, d->astBuilder->getRootNode(), d->source);
 
-    const auto & neededFiles = preprocessor->getNeededFilesForBuild();
-    for (const auto & neededFile : neededFiles) {
-        this->addNeededFileForBuild(neededFile.first, neededFile.second);
-    }
-    const auto & importedResources = preprocessor->getResources();
-    for (const auto & resource : importedResources) {
-        this->addResource(resource);
-    }
-    const auto & localResources = d->astBuilder->getRootNode()->gatherResources();
-    for (const auto & resource : localResources) {
-        this->addResource(resource);
-    }
-
     if (d->pm->hasErrors()) {
         std::cerr << "Errors encountered. Exiting.\n\n";
+    } else {
+        const auto & neededFiles = preprocessor->getNeededFilesForBuild();
+        for (const auto & neededFile : neededFiles) {
+            this->addNeededFileForBuild(neededFile.first, neededFile.second);
+        }
+        const auto & importedResources = preprocessor->getResources();
+        for (const auto & resource : importedResources) {
+            this->addResource(resource);
+        }
+        const auto & localResources = resourceGatherer->gatherResources();
+        for (const auto & resource : localResources) {
+            this->addResource(resource);
+        }
     }
     for (auto pass : passes) {
         delete pass;
@@ -708,17 +708,17 @@ void LILCodeUnit::runPassesForNeeds()
     //execute the passes
     d->pm->execute(passes, d->astBuilder->getRootNode(), d->source);
 
-    const auto & neededFiles = preprocessor->getNeededFilesForBuild();
-    for (const auto & neededFile : neededFiles) {
-        this->addNeededFileForBuild(neededFile.first, neededFile.second);
-    }
-    const auto & resources = preprocessor->getResources();
-    for (const auto & resource : resources) {
-        this->addResource(resource);
-    }
-
     if (d->pm->hasErrors()) {
         std::cerr << "Errors encountered. Exiting.\n\n";
+    } else {
+        const auto & neededFiles = preprocessor->getNeededFilesForBuild();
+            for (const auto & neededFile : neededFiles) {
+                this->addNeededFileForBuild(neededFile.first, neededFile.second);
+            }
+            const auto & resources = preprocessor->getResources();
+            for (const auto & resource : resources) {
+                this->addResource(resource);
+            }
     }
     for (auto pass : passes) {
         delete pass;
