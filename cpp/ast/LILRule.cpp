@@ -24,6 +24,7 @@ LILRule::LILRule()
 
 LILRule::LILRule(const LILRule &other)
 : LILTypedNode(other)
+, _fnName(other._fnName)
 {
     this->_selectorChain = other._selectorChain;
     this->_values = other._values;
@@ -139,4 +140,14 @@ std::shared_ptr<LILNode> LILRule::getFirstSelector() const
         }
     }
     return nullptr;
+}
+
+void LILRule::setFnName(LILString value)
+{
+    this->_fnName = value;
+}
+
+const LILString & LILRule::getFnName() const
+{
+    return this->_fnName;
 }

@@ -83,7 +83,10 @@ namespace LIL
         llvm::Module * getLLVMModule() const;
         void initializeVisit() override;
         void performVisit(std::shared_ptr<LILRootNode> rootNode) override;
+        void emitRuleNames(LILRootNode * rootNode);
+        void emitRuleName(LILRule * rule);
         void hoistDeclarations(std::shared_ptr<LILRootNode> rootNode);
+        void emitRuleFnSignature(LILRule * rule);
 
         llvm::Value * emit(LILNode * node);
         llvm::Value * _emitBool(LILBoolLiteral * value);
@@ -109,6 +112,7 @@ namespace LIL
         llvm::Value * _emitVN(LILVarName * value);
         llvm::Value * _emitRule(LILRule * value);
         llvm::Value * _emitRuleInner(LILRule * value);
+        void _connectRule(LILRule * value, llvm::Value * parentId, llvm::Value * parentIndex, llvm::Value * thisObj);
         llvm::Value* _getContainerNameFromSelectorChain(std::shared_ptr<LILSelectorChain> selCh);
         LILString _newRuleFnName();
         llvm::Value * _emitSSel(LILSimpleSelector * value);

@@ -138,6 +138,7 @@ void LILIREmitter::initializeVisit()
 void LILIREmitter::performVisit(std::shared_ptr<LILRootNode> rootNode)
 {
     this->setRootNode(rootNode);
+    this->emitRuleNames(rootNode.get());
     this->hoistDeclarations(rootNode);
     
     std::vector<std::shared_ptr<LILNode>> nodes = rootNode->getNodes();
@@ -157,6 +158,23 @@ void LILIREmitter::performVisit(std::shared_ptr<LILRootNode> rootNode)
             d->irBuilder.SetInsertPoint(&applyFn->getBasicBlockList().back());
             d->irBuilder.CreateRetVoid();
         }
+    }
+}
+
+void LILIREmitter::emitRuleNames(LILRootNode * rootNode)
+{
+    for (const auto & rule : rootNode->getRules()) {
+        this->emitRuleName(rule.get());
+    }
+}
+
+void LILIREmitter::emitRuleName(LILRule * rule)
+{
+    auto newName = this->_newRuleFnName();
+    rule->setFnName(newName);
+    
+    for (const auto & childRule : rule->getChildRules()) {
+        this->emitRuleName(childRule.get());
     }
 }
 
@@ -188,11 +206,47 @@ void LILIREmitter::hoistDeclarations(std::shared_ptr<LILRootNode> rootNode)
                 this->emit(node.get());
                 break;
             }
+            case NodeTypeRule:
+            {
+                auto rule = std::static_pointer_cast<LILRule>(node);
+                this->emitRuleFnSignature(rule.get());
+                break;
+            }
             default:
             {
                 break;
             }
         }
+    }
+}
+
+void LILIREmitter::emitRuleFnSignature(LILRule * rule)
+{
+    auto ty = rule->getType();
+    assert(ty && "Rule had no type");
+    const auto & tyName = ty->getName();
+    if (tyName == "mainMenu" || tyName == "menuItem" || tyName == "menu") {
+        return;
+    }
+    auto fnTy = std::make_shared<LILFunctionType>();
+    auto fnName = rule->getFnName();
+    auto ptrTy = std::make_shared<LILPointerType>();
+    ptrTy->setArgument(ty->clone());
+    auto thisVd = std::make_shared<LILVarDecl>();
+    thisVd->setName("@this");
+    thisVd->setType(ptrTy);
+    fnTy->addArgument(thisVd);
+    auto indexVd = std::make_shared<LILVarDecl>();
+    indexVd->setName("@index");
+    auto numTy = LILType::make("i64");
+    indexVd->setType(numTy);
+    fnTy->addArgument(indexVd);
+    auto ruleFn = this->_emitFnSignature(fnName.data(), fnTy.get());
+    d->namedValues[fnName.data()] = ruleFn;
+    llvm::BasicBlock::Create(d->llvmContext, "entry", ruleFn);
+    
+    for (const auto & childRule : rule->getChildRules()) {
+        this->emitRuleFnSignature(childRule.get());
     }
 }
 
@@ -1975,38 +2029,26 @@ llvm::Value * LILIREmitter::_emitPN(LILPropertyName * value)
 
 llvm::Value * LILIREmitter::_emitRule(LILRule * value)
 {
+    auto parentId = llvm::ConstantInt::get(d->llvmContext, llvm::APInt(64, -1, true));
+    auto parentIndex = llvm::ConstantInt::get(d->llvmContext, llvm::APInt(64, 0, true));
     auto ret = this->_emitRuleInner(value);
-    for (auto child : value->getChildRules()) {
-        this->_emitRule(child.get());
-    }
+    this->_connectRule(value, parentId, parentIndex, nullptr);
     return ret;
 }
 
 llvm::Value * LILIREmitter::_emitRuleInner(LILRule * value)
 {
     auto ty = value->getType();
-    if (!ty) {
-        std::cerr << "RULE HAD NO TYPE FAIL!!!!!!!\n\n";
-        return nullptr;
-    }
+    assert(ty && "Rule must have a type");
     const auto & tyName = ty->getName();
     if (tyName == "mainMenu" || tyName == "menuItem" || tyName == "menu") {
         return nullptr;
     }
-    auto fnTy = std::make_shared<LILFunctionType>();
-    auto fnName = this->_newRuleFnName();
-    auto ptrTy = std::make_shared<LILPointerType>();
-    ptrTy->setArgument(ty->clone());
-    auto thisVd = std::make_shared<LILVarDecl>();
-    thisVd->setName("@this");
-    thisVd->setType(ptrTy);
-    fnTy->addArgument(thisVd);
-    auto fun = this->_emitFnSignature(fnName.data(), fnTy.get());
-    d->namedValues[fnName.data()] = fun;
-    llvm::BasicBlock * bb = llvm::BasicBlock::Create(d->llvmContext, "entry", fun);
-    d->irBuilder.SetInsertPoint(bb);
+    const auto & fnName = value->getFnName();
+    auto ruleFn = llvm::cast<llvm::Function>(d->namedValues[fnName.data()]);
+    d->irBuilder.SetInsertPoint(&ruleFn->getBasicBlockList().back());
 
-    auto thisArg = fun->args().begin();
+    auto thisArg = ruleFn->args().begin();
     d->namedValues["@this"] = thisArg;
     thisArg->setName("@this");
 
@@ -2014,10 +2056,29 @@ llvm::Value * LILIREmitter::_emitRuleInner(LILRule * value)
         this->emit(val.get());
     }
 
-    d->namedValues.erase("@this");
-
     d->irBuilder.CreateRetVoid();
     
+    const auto & childRules = value->getChildRules();
+    if (childRules.size() > 0) {
+        for (auto child : childRules) {
+            this->_emitRuleInner(child.get());
+        }
+    }
+    
+    return ruleFn;
+}
+
+void LILIREmitter::_connectRule(LILRule * value, llvm::Value * parentId, llvm::Value * parentIndex, llvm::Value * thisObj)
+{
+    auto ty = value->getType();
+    assert(ty && "Rule must have a type");
+    const auto & tyName = ty->getName();
+    if (tyName == "mainMenu" || tyName == "menuItem" || tyName == "menu") {
+        return;
+    }
+    const auto & fnName = value->getFnName();
+    auto ruleFn = llvm::cast<llvm::Function>(d->namedValues[fnName.data()]);
+
     //insert call into apply rules function
     std::string applyFnName = "LIL__applyRules";
     llvm::Function * applyFn;

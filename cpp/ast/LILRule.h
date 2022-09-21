@@ -38,6 +38,8 @@ namespace LIL
         void setInstruction(std::shared_ptr<LILNode> instruction);
         const std::shared_ptr<LILNode> getInstruction() const;
         std::shared_ptr<LILNode> getFirstSelector() const;
+        void setFnName(LILString value);
+        const LILString & getFnName() const;
 
     protected:
         virtual std::shared_ptr<LILClonable> cloneImpl() const;
@@ -45,6 +47,7 @@ namespace LIL
         std::vector<std::shared_ptr<LILNode>> _values;
         std::vector<std::shared_ptr<LILRule>> _childRules;
         std::shared_ptr<LILNode> _instruction;
+        LILString _fnName;
     };
 }
 
