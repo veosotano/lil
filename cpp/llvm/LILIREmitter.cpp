@@ -90,6 +90,7 @@ namespace LIL
         llvm::Value * currentAlloca;
         llvm::Value * returnAlloca;
         llvm::BasicBlock * finallyBB;
+        llvm::BasicBlock * afterLoopBB;
         int ruleCount;
         std::shared_ptr<LILElement> dom;
     };
@@ -3419,18 +3420,22 @@ llvm::Value * LILIREmitter::_emitIf(LILFlowControl * value)
     d->irBuilder.SetInsertPoint(bodyBB);
 
     bool hasReturn = false;
+    bool hasBreak = false;
     for (auto & node : value->getThen()) {
         if (node->isA(FlowControlCallTypeReturn)) {
             hasReturn = true;
         }
+        if (node->isA(FlowControlCallTypeBreak)) {
+            hasBreak = true;
+        }
         this->emit(node.get());
-        if (hasReturn) {
+        if (hasReturn || hasBreak) {
             break;
         }
     }
     if (hasReturn) {
         d->irBuilder.CreateBr(d->finallyBB);
-    } else {
+    } else if (!hasBreak) {
         d->irBuilder.CreateBr(mergeBB);
     }
 
@@ -3438,18 +3443,22 @@ llvm::Value * LILIREmitter::_emitIf(LILFlowControl * value)
     d->irBuilder.SetInsertPoint(elseBB);
 
     hasReturn = false;
+    hasBreak = false;
     for (auto & node : value->getElse()) {
         if (node->isA(FlowControlCallTypeReturn)) {
             hasReturn = true;
         }
+        if (node->isA(FlowControlCallTypeBreak)) {
+            hasBreak = true;
+        }
         this->emit(node.get());
-        if (hasReturn) {
+        if (hasReturn || hasBreak) {
             break;
         }
     }
     if (hasReturn) {
         d->irBuilder.CreateBr(d->finallyBB);
-    } else {
+    } else if (!hasBreak) {
         d->irBuilder.CreateBr(mergeBB);
     }
 
@@ -3676,10 +3685,11 @@ llvm::Value * LILIREmitter::_emitFor(LILFlowControl * value)
         auto currentBB = d->irBuilder.GetInsertBlock();
         auto fun = currentBB->getParent();
         auto loopBB = llvm::BasicBlock::Create(d->llvmContext, "loop", fun);
-        auto afterBB = llvm::BasicBlock::Create(d->llvmContext, "for.after");
+        auto afterLoopBBBackup = d->afterLoopBB;
+        d->afterLoopBB = llvm::BasicBlock::Create(d->llvmContext, "for.after", fun);
         
         auto condition = this->emit(condNode.get());
-        d->irBuilder.CreateCondBr(condition, loopBB, afterBB);
+        d->irBuilder.CreateCondBr(condition, loopBB, d->afterLoopBB);
         
         d->irBuilder.SetInsertPoint(loopBB);
         this->_emitEvaluables(value->getThen());
@@ -3711,10 +3721,11 @@ llvm::Value * LILIREmitter::_emitFor(LILFlowControl * value)
             }
         }
 
-        fun->getBasicBlockList().push_back(afterBB);
-        d->irBuilder.CreateCondBr(condition2, loopBB, afterBB);
+        d->irBuilder.CreateCondBr(condition2, loopBB, d->afterLoopBB);
         
-        d->irBuilder.SetInsertPoint(afterBB);
+        d->irBuilder.SetInsertPoint(d->afterLoopBB);
+
+        d->afterLoopBB = afterLoopBBBackup;
         
     } else {
         std::cerr << "UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!\n\n";
@@ -3729,6 +3740,9 @@ llvm::Value * LILIREmitter::_emitLoop(LILFlowControl * value)
     auto currentBB = d->irBuilder.GetInsertBlock();
     auto fun = currentBB->getParent();
     auto loopBB = llvm::BasicBlock::Create(d->llvmContext, "loop", fun);
+    auto afterLoopBBBackup = d->afterLoopBB;
+    d->afterLoopBB = llvm::BasicBlock::Create(d->llvmContext, "for.after", fun);
+
     d->irBuilder.CreateBr(loopBB);
     d->irBuilder.SetInsertPoint(loopBB);
     
@@ -3760,11 +3774,11 @@ llvm::Value * LILIREmitter::_emitLoop(LILFlowControl * value)
     rightVal->setValue(true);
     exp->setRight(rightVal);
     auto condition = this->emit(exp.get());
-    
-    auto afterBB = llvm::BasicBlock::Create(d->llvmContext, "for.after", fun);
-    d->irBuilder.CreateCondBr(condition, loopBB, afterBB);
-    d->irBuilder.SetInsertPoint(afterBB);
-    
+
+    d->irBuilder.CreateCondBr(condition, loopBB, d->afterLoopBB);
+    d->irBuilder.SetInsertPoint(d->afterLoopBB);
+
+    d->afterLoopBB = afterLoopBBBackup;
     return nullptr;
 }
 
@@ -3778,6 +3792,10 @@ llvm::Value * LILIREmitter::_emitFlowCCall(LILFlowControlCall * value)
         case FlowControlCallTypeRepeat:
         {
             return this->_emitRepeat(value);
+        }
+        case FlowControlCallTypeBreak:
+        {
+            return this->_emitBreak(value);
         }
         default:
         {
@@ -3831,6 +3849,11 @@ llvm::Value * LILIREmitter::_emitRepeat(LILFlowControlCall * value)
     ty->setName("bool");
     asgmt->setType(ty);
     return this->emit(asgmt.get());
+}
+
+llvm::Value * LILIREmitter::_emitBreak(LILFlowControlCall * value)
+{
+    return d->irBuilder.CreateBr(d->afterLoopBB);
 }
 
 llvm::Value * LILIREmitter::_emitInstr(LILInstruction * value)

@@ -144,6 +144,7 @@ namespace LIL
         llvm::Value * _emitFlowCCall(LILFlowControlCall * value);
         llvm::Value * _emitReturn(LILFlowControlCall * value);
         llvm::Value * _emitRepeat(LILFlowControlCall * value);
+        llvm::Value * _emitBreak(LILFlowControlCall * value);
         llvm::Value * _emitInstr(LILInstruction * value);
         llvm::Value * _emitForeignLang(LILForeignLang * value);
         llvm::Value * _emitValList(LILValueList * value);
