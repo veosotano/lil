@@ -944,11 +944,23 @@ llvm::Value * LILIREmitter::_emitStr(LILStringLiteral * value)
         //store the length
         auto lengthGep = this->_emitGEP(d->currentAlloca, stringTy, true, 0, "length", true, false, 0);
         d->irBuilder.CreateStore(llvm::ConstantInt::get(llvm::IntegerType::getInt64Ty(d->llvmContext), strLength), lengthGep);
-        //store the chars
-        auto bufferGep = this->_emitGEP(d->currentAlloca, stringTy, true, 1, "buffer", true, false, 0);
-        auto castedBuffer = d->irBuilder.CreatePointerCast(bufferGep, i8PtrTy);
-        //length is +1 because we want the \0 too
-        d->irBuilder.CreateMemCpy(castedBuffer, llvm::MaybeAlign(), castedGlobal, llvm::MaybeAlign(), strLength+1);
+        if (str.size() > 55) {
+            std::vector<llvm::Value *> mallocArgs;
+            auto intTy = llvm::IntegerType::get(d->llvmContext, 64);
+            mallocArgs.push_back(llvm::ConstantInt::get(intTy, llvm::APInt(64, strLength, false)));
+            auto mallocResult = d->irBuilder.CreateCall(d->llvmModule.getFunction("malloc"), mallocArgs);
+            d->irBuilder.CreateMemCpy(mallocResult, llvm::MaybeAlign(), castedGlobal, llvm::MaybeAlign(), strLength+1);
+            auto bufferGep = this->_emitGEP(d->currentAlloca, stringTy, true, 1, "buffer", true, false, 0);
+            auto castedBuffer = d->irBuilder.CreatePointerCast(bufferGep, i8PtrTy->getPointerTo());
+            d->irBuilder.CreateStore(mallocResult, castedBuffer);
+
+        } else {
+            //store the chars
+            auto bufferGep = this->_emitGEP(d->currentAlloca, stringTy, true, 1, "buffer", true, false, 0);
+            auto castedBuffer = d->irBuilder.CreatePointerCast(bufferGep, i8PtrTy);
+            //length is +1 because we want the \0 too
+            d->irBuilder.CreateMemCpy(castedBuffer, llvm::MaybeAlign(), castedGlobal, llvm::MaybeAlign(), strLength+1);
+        }
 
         auto cd = this->findClassWithName("string");
         if (!cd) {
