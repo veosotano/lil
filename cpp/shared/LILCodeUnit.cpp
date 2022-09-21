@@ -711,15 +711,6 @@ void LILCodeUnit::runPassesForNeeds()
         stringVisitor->setPrintHeadline(false);
         passes.push_back(stringVisitor);
     }
-    
-    //type validation
-    auto tyValidator = new LILTypeValidator();
-    passes.push_back(tyValidator);
-    if (verbose) {
-        auto stringVisitor = new LILToStringVisitor();
-        stringVisitor->setPrintHeadline(false);
-        passes.push_back(stringVisitor);
-    }
 
     //execute the passes
     d->pm->execute(passes, d->astBuilder->getRootNode(), d->source);
