@@ -220,7 +220,8 @@ void LILPathExpander::_process(LILValuePath * vp)
                         auto retTy = vd->getReturnType();
                         if (retTy) {
                             currentTy = retTy;
-                            break;
+                            newNodes.push_back(node->clone());
+                            continue;
                         }
                     }
                 }
