@@ -396,8 +396,34 @@ std::shared_ptr<LILType> LILClassTemplateLowerer::replaceType(std::shared_ptr<LI
         case TypeTypeSingle:
         case TypeTypeObject:
         {
-            if (sourceTy && sourceTy->equalTo(templateTy)) {
+            if (!sourceTy) {
+                break;
+            }
+            if (sourceTy->equalTo(templateTy)) {
                 ret = specializedTy->clone();
+            } else {
+                const auto & tmplParams = sourceTy->getTmplParams();
+                if (tmplParams.size() > 0) {
+                    std::vector<std::shared_ptr<LILNode>> newTmplParams;
+                    bool hasTmplParamChanges = false;
+                    for (const auto & tmplParam : tmplParams) {
+                        if (tmplParam->getNodeType() == NodeTypeType) {
+                            auto replacementTy = this->replaceType(std::static_pointer_cast<LILType>(tmplParam), templateTy, specializedTy);
+                            if (replacementTy) {
+                                newTmplParams.push_back(replacementTy);
+                                hasTmplParamChanges = true;
+                            } else {
+                                newTmplParams.push_back(tmplParam);
+                            }
+                        } else {
+                            newTmplParams.push_back(tmplParam);
+                        }
+                    }
+                    if (hasTmplParamChanges) {
+                        ret = sourceTy->clone();
+                        ret->setTmplParams(std::move(newTmplParams));
+                    }
+                }
             }
             break;
         }
