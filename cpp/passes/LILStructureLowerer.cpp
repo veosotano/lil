@@ -376,88 +376,129 @@ void LILStructureLowerer::_processRuleInner(std::shared_ptr<LILRule> value)
 {
     std::vector<std::shared_ptr<LILNode>> newValues;
     for (const auto & val : value->getValues()) {
-        switch (val->getNodeType()) {
-            case NodeTypeAssignment:
-            {
-                auto asgmt = std::static_pointer_cast<LILAssignment>(val);
-                const auto & subj = asgmt->getSubject();
-                switch (subj->getNodeType()) {
-                    case NodeTypePropertyName:
-                    {
-                        auto as = std::make_shared<LILAssignment>();
-                        auto vp = std::make_shared<LILValuePath>();
-                        auto thisSelector = std::make_shared<LILSelector>();
-                        thisSelector->setName("@this");
-                        thisSelector->setSelectorType(SelectorTypeThisSelector);
-                        vp->addChild(thisSelector);
-                        vp->addChild(subj->clone());
-                        as->setSubject(vp);
-                        as->setValue(asgmt->getValue()->clone());
-                        as->setParentNode(value);
-                        newValues.push_back(as);
-                        break;
-                    }
-                    case NodeTypeValuePath:
-                    {
-                        auto as = std::make_shared<LILAssignment>();
-                        auto vp = std::make_shared<LILValuePath>();
-                        auto thisSelector = std::make_shared<LILSelector>();
-                        thisSelector->setName("@this");
-                        thisSelector->setSelectorType(SelectorTypeThisSelector);
-                        vp->addChild(thisSelector);
-                        auto subjVp = std::static_pointer_cast<LILValuePath>(subj);
-                        for (const auto & node : subjVp->getNodes()) {
-                            vp->addChild(node->clone());
-                        }
-                        as->setSubject(vp);
-                        as->setValue(asgmt->getValue()->clone());
-                        as->setParentNode(value);
-                        newValues.push_back(as);
-                        break;
-                    }
-                        
-                    default:
-                        newValues.push_back(val);
-                        break;
-                }
-                break;
-            }
-            case NodeTypeFunctionCall:
-            {
-                auto fc = std::static_pointer_cast<LILFunctionCall>(val);
-                fc->setFunctionCallType(FunctionCallTypeValuePath);
-                auto vp = std::make_shared<LILValuePath>();
-                auto thisSelector = std::make_shared<LILSelector>();
-                thisSelector->setName("@this");
-                thisSelector->setSelectorType(SelectorTypeThisSelector);
-                vp->addChild(thisSelector);
-                vp->addChild(fc);
-                vp->setParentNode(value);
-                newValues.push_back(vp);
-                break;
-            }
-            case NodeTypeValuePath:
-            {
-                auto oldVp = std::static_pointer_cast<LILValuePath>(val);
-                auto vp = std::make_shared<LILValuePath>();
-                auto thisSelector = std::make_shared<LILSelector>();
-                thisSelector->setName("@this");
-                thisSelector->setSelectorType(SelectorTypeThisSelector);
-                vp->addChild(thisSelector);
-                for (const auto & node : oldVp->getNodes()) {
-                    vp->addChild(node->clone());
-                }
-                vp->setParentNode(value);
-                newValues.push_back(vp);
-                break;
-            }
-                
-            default:
-                std::cerr << "UNKNOWN NODE TYPE FAIL !!!!!!!! \n";
-                break;
+        auto newNode = this->_expandPaths(val);
+        if (newNode) {
+            newNode->setParentNode(value);
+            newValues.push_back(newNode);
         }
     }
     value->setValues(std::move(newValues));
+}
+
+std::shared_ptr<LILNode> LILStructureLowerer::_expandPaths(const std::shared_ptr<LILNode> & val)
+{
+    switch (val->getNodeType()) {
+        case NodeTypeAssignment:
+        {
+            auto asgmt = std::static_pointer_cast<LILAssignment>(val);
+            const auto & subj = asgmt->getSubject();
+            switch (subj->getNodeType()) {
+                case NodeTypePropertyName:
+                {
+                    auto as = std::make_shared<LILAssignment>();
+                    auto vp = std::make_shared<LILValuePath>();
+                    auto thisSelector = std::make_shared<LILSelector>();
+                    thisSelector->setName("@this");
+                    thisSelector->setSelectorType(SelectorTypeThisSelector);
+                    vp->addChild(thisSelector);
+                    vp->addChild(subj->clone());
+                    as->setSubject(vp);
+                    as->setValue(asgmt->getValue()->clone());
+                    return as;
+                }
+                case NodeTypeVarName:
+                {
+                    auto as = std::make_shared<LILAssignment>();
+                    auto vp = std::make_shared<LILValuePath>();
+                    auto thisSelector = std::make_shared<LILSelector>();
+                    thisSelector->setName("@this");
+                    thisSelector->setSelectorType(SelectorTypeThisSelector);
+                    vp->addChild(thisSelector);
+                    auto vn = std::static_pointer_cast<LILVarName>(subj);
+                    auto pn = std::make_shared<LILPropertyName>();
+                    pn->setName(vn->getName());
+                    vp->addChild(pn);
+                    as->setSubject(vp);
+                    as->setValue(asgmt->getValue()->clone());
+                    return as;
+                }
+                case NodeTypeValuePath:
+                {
+                    auto as = std::make_shared<LILAssignment>();
+                    auto vp = std::make_shared<LILValuePath>();
+                    auto thisSelector = std::make_shared<LILSelector>();
+                    thisSelector->setName("@this");
+                    thisSelector->setSelectorType(SelectorTypeThisSelector);
+                    vp->addChild(thisSelector);
+                    auto subjVp = std::static_pointer_cast<LILValuePath>(subj);
+                    for (const auto & node : subjVp->getNodes()) {
+                        vp->addChild(node->clone());
+                    }
+                    as->setSubject(vp);
+                    as->setValue(asgmt->getValue()->clone());
+                    return as;
+                }
+                    
+                default:
+                    return val;
+            }
+            break;
+        }
+        case NodeTypeFunctionCall:
+        {
+            auto fc = std::static_pointer_cast<LILFunctionCall>(val);
+            fc->setFunctionCallType(FunctionCallTypeValuePath);
+            auto vp = std::make_shared<LILValuePath>();
+            auto thisSelector = std::make_shared<LILSelector>();
+            thisSelector->setName("@this");
+            thisSelector->setSelectorType(SelectorTypeThisSelector);
+            vp->addChild(thisSelector);
+            vp->addChild(fc);
+            return vp;
+        }
+        case NodeTypeValuePath:
+        {
+            auto oldVp = std::static_pointer_cast<LILValuePath>(val);
+            auto vp = std::make_shared<LILValuePath>();
+            auto thisSelector = std::make_shared<LILSelector>();
+            thisSelector->setName("@this");
+            thisSelector->setSelectorType(SelectorTypeThisSelector);
+            vp->addChild(thisSelector);
+            for (const auto & node : oldVp->getNodes()) {
+                vp->addChild(node->clone());
+            }
+            return vp;
+        }
+            
+        case NodeTypeFlowControl:
+        {
+            auto fc = std::static_pointer_cast<LILFlowControl>(val);
+            std::vector<std::shared_ptr<LILNode>> newThenNodes;
+            for (const auto & thenNode : fc->getThen()) {
+                auto newNode = this->_expandPaths(thenNode);
+                if (newNode) {
+                    newNode->setParentNode(fc);
+                    newThenNodes.push_back(newNode);
+                }
+            }
+            fc->setThen(std::move(newThenNodes));
+            std::vector<std::shared_ptr<LILNode>> newElseNodes;
+            for (const auto & elseNode : fc->getElse()) {
+                auto newNode = this->_expandPaths(elseNode);
+                if (newNode) {
+                    newNode->setParentNode(fc);
+                    newElseNodes.push_back(newNode);
+                }
+            }
+            fc->setElse(std::move(newElseNodes));
+            return fc;
+        }
+            
+        default:
+            std::cerr << "UNKNOWN NODE TYPE FAIL !!!!!!!! \n";
+            break;
+    }
+    return nullptr;
 }
 
 void LILStructureLowerer::_process(std::shared_ptr<LILSimpleSelector> value)
