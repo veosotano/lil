@@ -816,6 +816,7 @@ void LILASTBuilder::receiveNodeCommit()
                 case InstructionTypePaste:
                 case InstructionTypeBug:
                 case InstructionTypeGetConfig:
+                case InstructionTypeNew:
                     instr->setArgument(this->currentNode);
                     break;
 
