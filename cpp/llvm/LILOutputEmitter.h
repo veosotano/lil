@@ -32,7 +32,9 @@ namespace LIL
     public:
         LILOutputEmitter();
         virtual ~LILOutputEmitter();
-        
+
+        void prepare();
+
         llvm::Module * getLLVMModule() const;
         
         void setInFile(const LILString & file);

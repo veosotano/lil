@@ -78,6 +78,11 @@ LILOutputEmitter::~LILOutputEmitter()
     delete d;
 }
 
+void LILOutputEmitter::prepare()
+{
+    d->irEmitter = new LILIREmitter(this->getInFile());
+}
+
 llvm::Module * LILOutputEmitter::getLLVMModule() const
 {
     return d->irEmitter->getLLVMModule();
@@ -85,8 +90,6 @@ llvm::Module * LILOutputEmitter::getLLVMModule() const
 
 void LILOutputEmitter::run(std::shared_ptr<LILRootNode> rootNode)
 {
-    d->irEmitter = new LILIREmitter(this->getInFile());
-    
     std::error_code error_code;
     
     std::string targetTriple;
