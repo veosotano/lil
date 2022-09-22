@@ -55,6 +55,9 @@ void LILConversionInserter::performVisit(std::shared_ptr<LILRootNode> rootNode)
     this->setRootNode(rootNode);
     auto nodes = rootNode->getNodes();
     for (const auto & node : nodes) {
+        if (node->getNodeType() == NodeTypeSnippetInstruction) {
+            continue;
+        }
         this->process(node);
     }
 }
