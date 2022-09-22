@@ -171,6 +171,8 @@ namespace LIL
         bool readFnDocumentation();
         bool readVarDocumentation(bool exitEarly);
         bool readAliasDocumentation();
+
+        std::shared_ptr<LILToken> peekUntilEndOfInstruction();
     private:
         LILCodeParserPrivate *const d;
     };

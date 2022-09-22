@@ -1241,6 +1241,7 @@ bool LILCodeParser::isIfCast() const
         }
     }
     bool done = false;
+    unsigned int parenthesesToMatch = 0;
     while (peekToken && !done) {
         done = true;
         
@@ -1253,8 +1254,17 @@ bool LILCodeParser::isIfCast() const
                 break;
             case TokenTypeParenthesisOpen:
             {
-                while (peekToken && !peekToken->isA(TokenTypeParenthesisClose)) {
+                while (peekToken) {
+                    if (peekToken->getType() == TokenTypeParenthesisOpen) {
+                        parenthesesToMatch += 1;
+                    }
+                    if (peekToken->getType() == TokenTypeParenthesisClose) {
+                        parenthesesToMatch -= 1;
+                    }
                     peekToken = d->lexer->peekNextToken();
+                    if (parenthesesToMatch <= 0) {
+                        break;
+                    }
                 }
                 peekToken = d->lexer->peekNextToken();
                 done = false;
@@ -1635,47 +1645,88 @@ bool LILCodeParser::readClassDecl()
 bool LILCodeParser::readType()
 {
     bool isMultiple = false;
-    auto peekToken = d->lexer->peekNextToken();
+    auto peekToken = d->currentToken;
     if (peekToken) {
-        bool expectParenthesisClose = false;
-        bool expectSquareBracketClose = false;
-        if (peekToken->isA(TokenTypeParenthesisOpen)) {
-            peekToken = d->lexer->peekNextToken();
-            expectParenthesisClose = true;
-        }
-        if (peekToken->isA(TokenTypeSquareBracketOpen)) {
-            peekToken = d->lexer->peekNextToken();
-            expectSquareBracketClose = true;
-        }
-        if (
-            peekToken
-            && (
-                peekToken->isA(TokenTypeIdentifier)
-                || peekToken->isA(TokenTypeNumberInt)
-                || peekToken->isA(TokenTypeObjectSign)
-            )
-        ) {
-            peekToken = d->lexer->peekNextToken();
-        }
-        if (expectSquareBracketClose) {
-            while (peekToken && !peekToken->isA(TokenTypeSquareBracketClose)) {
-                peekToken = d->lexer->peekNextToken();
-            }
-            if (peekToken && peekToken->isA(TokenTypeSquareBracketClose)) {
-                peekToken = d->lexer->peekNextToken();
-            }
-        }
-        if (expectParenthesisClose) {
-            while (peekToken && !peekToken->isA(TokenTypeParenthesisClose)) {
-                peekToken = d->lexer->peekNextToken();
-            }
-            if (peekToken && peekToken->isA(TokenTypeParenthesisClose)) {
-                peekToken = d->lexer->peekNextToken();
-            }
-        }
+        int parentheses = 0;
+        int squareBrackets = 0;
+        bool done = false;
+        while (peekToken && !done) {
+            switch (peekToken->getType()) {
+                case TokenTypeIdentifier:
+                case TokenTypeNumberInt:
+                case TokenTypeWhitespace:
+                case TokenTypeLineComment:
+                case TokenTypeBlockComment:
+                case TokenTypeVerticalBar:
+                {
+                    peekToken = d->lexer->peekNextToken();
+                    break;
+                }
+                case TokenTypeObjectSign:
+                {
+                    peekToken = d->lexer->peekNextToken();
+                    if (peekToken && peekToken->isA(TokenTypeIdentifier)) {
+                        peekToken = d->lexer->peekNextToken();
+                    }
+                    break;
+                }
+                case TokenTypeInstructionSign:
+                {
+                    peekToken = this->peekUntilEndOfInstruction();
+                    break;
+                }
 
-        if (peekToken && peekToken->isA(TokenTypeVerticalBar)) {
-            isMultiple = true;
+                case TokenTypeParenthesisOpen:
+                case TokenTypeParenthesisClose:
+                case TokenTypeSquareBracketOpen:
+                case TokenTypeSquareBracketClose:
+                {
+                    break;
+                }
+
+                default:
+                    done = true;
+                    break;
+            }
+            
+            if (peekToken) {
+                switch (peekToken->getType()) {
+                    case TokenTypeParenthesisOpen:
+                    {
+                        parentheses += 1;
+                        peekToken = d->lexer->peekNextToken();
+                        break;
+                    }
+                    case TokenTypeParenthesisClose:
+                    {
+                        parentheses -= 1;
+                        peekToken = d->lexer->peekNextToken();
+                        break;
+                    }
+                    case TokenTypeSquareBracketOpen:
+                    {
+                        squareBrackets += 1;
+                        peekToken = d->lexer->peekNextToken();
+                        break;
+                    }
+                    case TokenTypeSquareBracketClose:
+                    {
+                        squareBrackets -= 1;
+                        peekToken = d->lexer->peekNextToken();
+                        break;
+                    }
+                    default:
+                        break;
+                }
+            }
+            if (parentheses <= 0 && squareBrackets <= 0) {
+                done = true;
+            }
+        }
+        if (parentheses == 0 && squareBrackets == 0) {
+            if (peekToken && peekToken->isA(TokenTypeVerticalBar)) {
+                isMultiple = true;
+            }
         }
     }
     d->lexer->resetPeek();
@@ -6591,4 +6642,32 @@ bool LILCodeParser::readAliasDocumentation()
         }
     }
     LIL_END_NODE_SKIP(false)
+}
+
+std::shared_ptr<LILToken> LILCodeParser::peekUntilEndOfInstruction()
+{
+    std::shared_ptr<LILToken> peekToken = d->lexer->peekNextToken();
+    if (peekToken->getType() != TokenTypeIdentifier) {
+        d->receiver->receiveError("Unexpected token while peeking until end of instruction", d->file, d->line, d->column);
+        return nullptr;
+    }
+
+    LILString instrName = peekToken->getString();
+
+    //skip the identifier
+    peekToken = d->lexer->peekNextToken();
+    //skip all whitespace and comments
+    while (peekToken && (peekToken->isA(TokenTypeWhitespace) || peekToken->isA(TokenTypeBlockComment) || peekToken->isA(TokenTypeLineComment)))
+    {
+        peekToken = d->lexer->peekNextToken();
+    }
+    if (instrName == "paste") {
+        //skip the name of the snippet
+        peekToken = d->lexer->peekNextToken();
+    } else if (instrName == "if") {
+        d->receiver->receiveError("If instructions inside types are not supported yet", d->file, d->line, d->column);
+        return nullptr;
+    }
+
+    return peekToken;
 }
