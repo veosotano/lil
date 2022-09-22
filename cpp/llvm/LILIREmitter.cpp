@@ -1445,12 +1445,27 @@ llvm::Value * LILIREmitter::_emitAsgmt(LILAssignment * asgmt)
                 }
                 d->currentAlloca = d->namedValues[instanceName];
                 stringRep = vn->getName();
+                
+                size_t startIndex = 1;
+                std::shared_ptr<LILType> ifCastType;
+                if (!this->inhibitSearchingForIfCastType) {
+                    ifCastType = this->findIfCastType(vp.get(), startIndex);
+                }
+                
                 auto vdTy = vd->getType();
                 if (!vdTy) {
                     std::cerr << "TYPE OF VAR DECL WAS NULL FAIL !!!!!!!!!!!!!!!!\n";
                     return nullptr;
                 }
-                currentTy = vdTy;
+                
+                if (ifCastType) {
+                    if (vdTy->getTypeType() == TypeTypeMultiple) {
+                        d->currentAlloca = this->emitUnwrappedPointerFromMT(d->currentAlloca, ifCastType.get(), static_cast<LILMultipleType *>(vdTy.get()));
+                    }
+                    currentTy = ifCastType;
+                } else {
+                    currentTy = vdTy;
+                }
             }
         } else {
             //selector
@@ -1742,12 +1757,26 @@ llvm::Value * LILIREmitter::_emitVP(LILValuePath * value)
                     instanceName = vd->getName();
                     llvmSubject = d->namedValues[instanceName.data()];
                     stringRep = vn->getName();
+
+                    size_t startIndex = 1;
+                    std::shared_ptr<LILType> ifCastType;
+                    if (!this->inhibitSearchingForIfCastType) {
+                        ifCastType = this->findIfCastType(value, startIndex);
+                    }
                     auto vdTy = vd->getType();
                     if (!vdTy) {
                         std::cerr << "TYPE OF VAR DECL WAS NULL FAIL !!!!!!!!!!!!!!!!\n";
                         return nullptr;
                     }
-                    currentTy = vdTy;
+                    if (ifCastType) {
+                        if (vdTy->getTypeType() == TypeTypeMultiple) {
+                            llvmSubject = this->emitUnwrappedPointerFromMT(llvmSubject, ifCastType.get(), static_cast<LILMultipleType *>(vdTy.get()));
+                        }
+                        currentTy = ifCastType;
+                    } else {
+                        currentTy = vdTy;
+                    }
+                    
                 } else if (subjectNode->isA(NodeTypeEnum)) {
                     auto enm = std::static_pointer_cast<LILEnum>(subjectNode);
                     auto pnNode = childNodes.at(1);
@@ -2613,7 +2642,14 @@ llvm::Value * LILIREmitter::_emitVN(LILVarName * value)
         std::cerr << "!!!!!!!!!!UNKNOWN VARIABLE " + namestr + " OMG ALKJDLFJA FAIL FAIL FAIL!!!!!!!!!!!!!!!!\n";
         return nullptr;
     }
-    return d->irBuilder.CreateLoad(this->llvmTypeFromLILType(remoteNode->getType().get()), val, namestr);
+    auto ty = remoteNode->getType();
+    if (!this->inhibitSearchingForIfCastType && ty->isA(TypeTypeMultiple)) {
+        auto ifCastTy = this->findIfCastTypeVN(value);
+        if (ifCastTy) {
+            return d->irBuilder.CreateLoad(this->llvmTypeFromLILType(ifCastTy.get()), val, namestr);
+        }
+    }
+    return d->irBuilder.CreateLoad(this->llvmTypeFromLILType(ty.get()), val, namestr);
 }
 
 llvm::Function * LILIREmitter::_emitFnDecl(LILFunctionDecl * value)
