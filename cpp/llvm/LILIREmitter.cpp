@@ -1040,6 +1040,15 @@ llvm::Value * LILIREmitter::_emitVarDecl(LILVarDecl * value)
                 auto initVal = value->getInitVal();
                 if (initVal) {
                     switch (initVal->getNodeType()) {
+                        case NodeTypeBoolLiteral:
+                        {
+                            auto bl = this->emit(initVal.get());
+                            if (llvm::isa<llvm::Constant>(bl)) {
+                                globalVar->setInitializer(llvm::cast<llvm::Constant>(bl));
+                            } else {
+                                globalVar->setInitializer(llvm::Constant::getNullValue(this->llvmTypeFromLILType(ty.get())));
+                            }
+                        }
                         case NodeTypeNumberLiteral:
                         {
                             auto iv = this->emit(initVal.get());
