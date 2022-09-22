@@ -429,33 +429,49 @@ void LILPathExpander::_processRuleInner(LILRule * rule)
         return;
     }
     for (auto node : rule->getValues()) {
-        if (node->getNodeType() != NodeTypeAssignment) {
-            continue;
-        }
-        auto as = std::static_pointer_cast<LILAssignment>(node);
-        auto subjNode = as->getSubject();
-        auto valueNode = as->getValue();
-        if (subjNode->getNodeType() == NodeTypePropertyName) {
-            auto pn = std::static_pointer_cast<LILPropertyName>(subjNode);
-            auto pnName = pn->getName();
-            auto field = classDecl->getFieldNamed(pnName);
-            if (!field) {
-                auto newVp = std::make_shared<LILValuePath>();
-                std::deque<std::shared_ptr<LILNode>> tempNodes;
-                bool hasChanges = false;
-                
-                field = this->_addExpandedFields(tempNodes, classDecl, pnName, hasChanges);
-                if (field) {
-                    for (auto tempNode : tempNodes) {
-                        newVp->addChild(tempNode->clone());
+        switch (node->getNodeType()) {
+            case NodeTypeAssignment:
+            {
+                auto as = std::static_pointer_cast<LILAssignment>(node);
+                auto subjNode = as->getSubject();
+                auto valueNode = as->getValue();
+                if (subjNode->getNodeType() == NodeTypePropertyName) {
+                    auto pn = std::static_pointer_cast<LILPropertyName>(subjNode);
+                    auto pnName = pn->getName();
+                    auto field = classDecl->getFieldNamed(pnName);
+                    if (!field) {
+                        auto newVp = std::make_shared<LILValuePath>();
+                        std::deque<std::shared_ptr<LILNode>> tempNodes;
+                        bool hasChanges = false;
+                        
+                        field = this->_addExpandedFields(tempNodes, classDecl, pnName, hasChanges);
+                        if (field) {
+                            for (auto tempNode : tempNodes) {
+                                newVp->addChild(tempNode->clone());
+                            }
+                            newVp->addChild(subjNode->clone());
+                            as->setSubject(newVp);
+                        }
                     }
-                    newVp->addChild(subjNode->clone());
-                    as->setSubject(newVp);
+                } else if (subjNode->getNodeType() == NodeTypeValuePath) {
+                    auto vp = std::static_pointer_cast<LILValuePath>(subjNode);
+                    this->_process(vp.get());
                 }
+                break;
             }
-        } else if (subjNode->getNodeType() == NodeTypeValuePath) {
-            auto vp = std::static_pointer_cast<LILValuePath>(subjNode);
-            this->_process(vp.get());
+            case NodeTypeFlowControl:
+            {
+                auto fc = std::static_pointer_cast<LILFlowControl>(node);
+                for (const auto & thenNode : fc->getThen()) {
+                    this->process(thenNode.get());
+                }
+                for (const auto & elseNode : fc->getElse()) {
+                    this->process(elseNode.get());
+                }
+                break;
+            }
+            default:
+                break;
         }
     }
 }
