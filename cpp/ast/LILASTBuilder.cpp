@@ -713,7 +713,11 @@ void LILASTBuilder::receiveNodeCommit()
                 }
                 case NodeTypeInstruction:
                 {
-                    rule->setInstruction(this->currentNode);
+                    if (this->currentNode->getInstructionType() == InstructionTypeNew) {
+                        rule->setInstruction(this->currentNode);
+                    } else {
+                        rule->addValue(this->currentNode);
+                    }
                     break;
                 }
                 default:
