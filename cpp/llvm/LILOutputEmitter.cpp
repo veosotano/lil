@@ -18,6 +18,8 @@
 #include "LILRootNode.h"
 #include "LILIREmitter.h"
 
+#include "../shared/LILDOMBuilder.h"
+
 #include "llvm/IR/LegacyPassManager.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Type.h"
@@ -283,4 +285,9 @@ void LILOutputEmitter::setVendor(const LILString & value)
 const LILString & LILOutputEmitter::getVendor() const
 {
     return d->vendor;
+}
+
+void LILOutputEmitter::setDOM(const std::shared_ptr<LILElement> & dom) const
+{
+    d->irEmitter->setDOM(dom);
 }

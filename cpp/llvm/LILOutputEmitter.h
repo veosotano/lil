@@ -24,6 +24,7 @@ namespace llvm
 
 namespace LIL
 {
+    class LILElement;
     class LILRootNode;
     class LILOutputEmitterPrivate;
     class LILOutputEmitter
@@ -46,6 +47,7 @@ namespace LIL
         const LILString & getCPU() const;
         void setVendor(const LILString & value);
         const LILString & getVendor() const;
+        void setDOM(const std::shared_ptr<LILElement> & dom) const;
         
         void run(std::shared_ptr<LILRootNode> rootNode);
         void compileToO(std::shared_ptr<LILRootNode> rootNode);
