@@ -602,20 +602,22 @@ void LILStructureLowerer::_process(std::shared_ptr<LILFunctionDecl> value)
                         //disambiguate argument types
                         auto argClone = std::static_pointer_cast<LILVarDecl>(funArg)->clone();
                         auto funArgTy = funArg->getType();
-                        if(funArgTy && funArgTy->getTypeType() == TypeTypeMultiple){
+                        if(funArg == arg){
                             argClone->setType(argChild);
                             newArgs.push_back(argClone);
-                        }
-                        
-                        //resolve "if cast" blocks
-                        std::vector<std::shared_ptr<LILNode>> newBody;
-                        for (auto node : value->getBody()) {
-                            auto newChildNodes = this->reduceIfCastBlocks(node, argClone->getName(), argChild);
-                            for (auto child : newChildNodes) {
-                                newBody.push_back(child);
+                            
+                            //resolve "if cast" blocks
+                            std::vector<std::shared_ptr<LILNode>> newBody;
+                            for (auto node : value->getBody()) {
+                                auto newChildNodes = this->reduceIfCastBlocks(node, argClone->getName(), argChild);
+                                for (auto child : newChildNodes) {
+                                    newBody.push_back(child);
+                                }
                             }
+                            newChildFd->setBody(newBody);
+                        } else {
+                            newArgs.push_back(argClone);
                         }
-                        newChildFd->setBody(newBody);
                     }
                     
                     for (auto newArg : newArgs) {
