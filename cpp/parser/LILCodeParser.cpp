@@ -584,7 +584,6 @@ bool LILCodeParser::isObjectSelector() const
                 || objtype == "self"
                 || objtype == "parent"
                 || objtype == "root"
-                || objtype == "event"
                 || objtype == "key"
                 || objtype == "value"
                 || objtype == "index"
