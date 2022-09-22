@@ -3090,7 +3090,7 @@ llvm::Value * LILIREmitter::_emitFC(LILFunctionCall * value)
                     std::cerr << "TYPE IS NOT FUNCTION TYPE FAIL !!!!!!!!!!!!!!!!\n\n";
                     return nullptr;
                 }
-                auto initVal = this->recursiveFindNode(vd->getInitVal());
+                auto initVal = vd->getInitVal();
                 if (!initVal) {
                     auto namestr = name.data();
                     if (d->namedValues.count(namestr)) {
