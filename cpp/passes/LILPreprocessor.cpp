@@ -1177,8 +1177,9 @@ void LILPreprocessor::_importNodeIfNeeded(std::vector<std::shared_ptr<LILNode>> 
             
         case NodeTypeEnum:
         {
-            node->setIsExported(isExported);
-            newNodes->push_back(node);
+            auto clone = node->clone();
+            clone->setIsExported(isExported);
+            newNodes->push_back(clone);
             break;
         }
 
