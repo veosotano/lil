@@ -110,7 +110,7 @@ void LILForLowerer::_createForArgsNumber(LILFlowControl * fc, LILNode * arg) con
 {
     std::vector<std::shared_ptr<LILNode>> newArgs;
     auto vd = std::make_shared<LILVarDecl>();
-    auto numTy = LILType::make("i64");
+    auto numTy = arg->getType();
     vd->setName("@value");
     vd->setType(numTy);
     auto vdInitVal = std::make_shared<LILNumberLiteral>();
