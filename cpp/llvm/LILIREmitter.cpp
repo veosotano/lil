@@ -4078,6 +4078,9 @@ llvm::Value * LILIREmitter::_emitFor(LILFlowControl * value)
 {
     auto arguments = value->getArguments();
     if (arguments.size() > 1) {
+        std::map<std::string, llvm::Value *> scope;
+        d->hiddenLocals.push_back(scope);
+        
         auto initial = arguments.front();
         this->emit(initial.get());
         
@@ -4127,6 +4130,13 @@ llvm::Value * LILIREmitter::_emitFor(LILFlowControl * value)
 
         d->irBuilder.CreateCondBr(condition2, loopBB, d->afterLoopBB);
         
+        //restore hidden locals
+        const std::map<std::string, llvm::Value *> & hiddenLocals = d->hiddenLocals.back();
+        for (auto it = hiddenLocals.begin(); it != hiddenLocals.end(); ++it) {
+            d->namedValues[it->first] = it->second;
+        }
+        d->hiddenLocals.pop_back();
+
         d->irBuilder.SetInsertPoint(d->afterLoopBB);
 
         d->afterLoopBB = afterLoopBBBackup;
