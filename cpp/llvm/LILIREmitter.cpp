@@ -1054,6 +1054,8 @@ llvm::Value * LILIREmitter::_emitVarDecl(LILVarDecl * value)
                             auto iv = this->emit(initVal.get());
                             if (llvm::isa<llvm::Constant>(iv)) {
                                 globalVar->setInitializer(llvm::cast<llvm::Constant>(iv));
+                            } else {
+                                globalVar->setInitializer(llvm::Constant::getNullValue(this->llvmTypeFromLILType(ty.get())));
                             }
                             break;
                         }
