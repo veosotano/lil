@@ -79,7 +79,6 @@ namespace LIL
         void _validate(const std::shared_ptr<LILStringFunction> & value);
         void _validate(const std::shared_ptr<LILNullLiteral> & value);
         void _validate(const std::shared_ptr<LILType> & value);
-        bool _isCustomType(const std::shared_ptr<LILType> & ty) const;
         bool _isBuiltInType(const std::shared_ptr<LILType> & ty) const;
         void _validate(const std::shared_ptr<LILVarDecl> & value);
         void _validate(const std::shared_ptr<LILAliasDecl> & value);
@@ -111,13 +110,6 @@ namespace LIL
         void _validate(const std::shared_ptr<LILValueList> & value);
         void _validate(const std::shared_ptr<LILIndexAccessor> & value);
         inline void validateChildren(const std::vector<std::shared_ptr<LILNode>> & children);
-        
-        std::shared_ptr<LILClassDecl> getClassContext() const;
-        void enterClassContext(std::shared_ptr<LILClassDecl> value);
-        void exitClassContext();
-
-    private:
-        std::vector<std::shared_ptr<LILClassDecl>> _classContext;
     };
 }
 

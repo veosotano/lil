@@ -155,7 +155,6 @@ void LILASTValidator::validate(const std::shared_ptr<LILNode> & node)
         {
             std::shared_ptr<LILClassDecl> value = std::static_pointer_cast<LILClassDecl>(node);
             this->_validate(value);
-            this->enterClassContext(value);
             break;
         }
         case NodeTypeObjectDefinition:
@@ -302,9 +301,6 @@ void LILASTValidator::validate(const std::shared_ptr<LILNode> & node)
     }
     if (LILNode::isContainerNode(node->getNodeType())) {
         this->validateChildren(node->getChildNodes());
-    }
-    if (node->isA(NodeTypeClassDecl)) {
-        this->exitClassContext();
     }
 }
 
@@ -461,16 +457,6 @@ void LILASTValidator::_validate(const std::shared_ptr<LILType> & value)
     switch (value->getTypeType()) {
         case TypeTypeSingle:
         {
-            auto name = value->getName();
-            if (!LILType::isBuiltInType(value.get()) && !this->_isCustomType(value)) {
-                LILErrorMessage ei;
-                ei.message =  "Invalid type name "+value->getName();
-                LILNode::SourceLocation sl = value->getSourceLocation();
-                ei.file = sl.file;
-                ei.line = sl.line;
-                ei.column = sl.column;
-                this->errors.push_back(ei);
-            }
             break;
         }
         case TypeTypeObject:
@@ -522,41 +508,6 @@ void LILASTValidator::_validate(const std::shared_ptr<LILType> & value)
             }
             break;
     }
-}
-
-bool LILASTValidator::_isCustomType(const std::shared_ptr<LILType> & ty) const
-{
-    auto cd = this->getClassContext();
-    if (cd) {
-        for (auto alias : cd->getAliases()) {
-            auto aTy = alias->getSrcType();
-            if (aTy && aTy->equalTo(ty)) {
-                return true;
-            }
-        }
-    }
-    auto rootNode = this->getRootNode();
-    auto aliases = rootNode->getAliases();
-    for (auto alias : aliases) {
-        auto aTy = alias->getSrcType();
-        if (aTy && aTy->equalTo(ty)) {
-            return true;
-        }
-    }
-    auto typeDecls = rootNode->getTypes();
-    for (auto typeDecl : typeDecls) {
-        auto tTy = typeDecl->getSrcType();
-        if (tTy && tTy->equalTo(ty)) {
-            return true;
-        }
-    }
-    auto enums = rootNode->getEnums();
-    for (auto enm : enums) {
-        if (enm->getName() == ty->getName()) {
-            return true;
-        }
-    }
-    return false;
 }
 
 void LILASTValidator::_validate(const std::shared_ptr<LILVarDecl> & value)
@@ -1039,20 +990,3 @@ void LILASTValidator::validateChildren(const std::vector<std::shared_ptr<LILNode
     };
 }
 
-std::shared_ptr<LILClassDecl> LILASTValidator::getClassContext() const
-{
-    if (this->_classContext.size() > 0) {
-        return this->_classContext.back();
-    }
-    return nullptr;
-}
-
-void LILASTValidator::enterClassContext(std::shared_ptr<LILClassDecl> value)
-{
-    this->_classContext.push_back(value);
-}
-
-void LILASTValidator::exitClassContext()
-{
-    this->_classContext.pop_back();
-}
