@@ -203,6 +203,10 @@ std::shared_ptr<LILNode> LILVisitor::findNodeForValuePath(LILValuePath * vp) con
             auto classDecl = this->findAncestorClass(currentNode);
             currentTy = classDecl->getType();
         }
+        else if (currentNode->isA(SelectorTypeThisSelector)) {
+            auto rule = this->findAncestorRule(currentNode);
+            currentTy = rule->getType();
+        }
         for (size_t i=1, j=nodes.size(); i<j; ++i) {
             bool isLast = i==j-1;
             auto node = nodes[i];
