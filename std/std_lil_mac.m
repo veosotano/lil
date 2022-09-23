@@ -787,6 +787,8 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
         }
         LIL__lastFrameTime = currentTime;
 
+    @synchronized(renderer)
+    {
         LIL__nextFrame(deltaTime);
         char * vertexBufferPointer = [renderer getVertexBufferPointer];
         LIL__makeBoxVertices((void *)vertexBufferPointer, &vertexCount);
@@ -801,6 +803,7 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
         renderer.shapeVertexCount = shapeVertexCount;
 		renderer.shapeIndexCount = shapeIndexCount;
         [theView render];
+    }
     }
     return kCVReturnSuccess;
 }
