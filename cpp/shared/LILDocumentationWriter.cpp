@@ -114,6 +114,15 @@ void LILDocumentationWriter::performVisit(std::shared_ptr<LILRootNode> rootNode)
         this->_tmplManager->loadTemplate("lil_doc_class_tmpl.html");
         this->_result = this->_tmplManager->renderTemplate("lil_doc_class_tmpl.html", tmplData);
     }
+    else if (str.substr(0, 2) == "fn")
+    {
+        std::unordered_map<std::string, std::string> tmplData;
+        std::string fnName = str.substr(3, std::string::npos);
+
+        tmplData["LIL_DOC_FN_NAME"] = fnName;
+        this->_tmplManager->loadTemplate("lil_doc_function_tmpl.html");
+        this->_result = this->_tmplManager->renderTemplate("lil_doc_function_tmpl.html", tmplData);
+    }
 }
 
 std::string LILDocumentationWriter::writeAliasesTemplate(std::vector<std::shared_ptr<LILDocumentation>> docs, LILClassDecl * classDecl)
@@ -404,7 +413,7 @@ void LILDocumentationWriter::setTemplateManager(LILDocumentationTmplManager *mgr
     this->_tmplManager = mgr;
 }
 
-std::string LILDocumentationWriter::createBoilerplate(LILClassDecl * classDecl, LILRootNode * rootNode)
+std::string LILDocumentationWriter::createBoilerplateClass(LILClassDecl * classDecl, LILRootNode * rootNode)
 {
     this->_tmplManager->loadTemplate("lil_boilerplate_class_tmpl.doc.lil");
     std::unordered_map<std::string, std::string> tmplData;
@@ -453,6 +462,27 @@ std::string LILDocumentationWriter::createBoilerplate(LILClassDecl * classDecl, 
     tmplData["LIL_DOC_MEMBER_FNS"] = methodsStr;
 
     return this->_tmplManager->renderTemplate("lil_boilerplate_class_tmpl.doc.lil", tmplData);
+}
+
+std::string LILDocumentationWriter::createBoilerplateFn(LILFunctionDecl * fd, LILRootNode * rootNode)
+{
+    this->_tmplManager->loadTemplate("lil_boilerplate_function_tmpl.doc.lil");
+    std::unordered_map<std::string, std::string> tmplData;
+    
+    tmplData["LIL_DOC_FN_NAME"] = fd->getUnmangledName().data();
+    
+    std::string argsStr = "";
+    std::vector<std::shared_ptr<LILVarDecl>> args;
+    for (const auto & arg : fd->getFnType()->getArguments()) {
+        if (arg->getNodeType() != NodeTypeVarDecl) {
+            continue;
+        }
+        auto vd = std::static_pointer_cast<LILVarDecl>(arg);
+        argsStr += this->writeFnArgBoilerplate(vd.get());
+    }
+    tmplData["LIL_DOC_ARGS"] = argsStr;
+
+    return this->_tmplManager->renderTemplate("lil_boilerplate_function_tmpl.doc.lil", tmplData);
 }
 
 std::string LILDocumentationWriter::writeAliasBoilerplate(LILAliasDecl * alias) const

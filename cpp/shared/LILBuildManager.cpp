@@ -347,33 +347,48 @@ void LILBuildManager::build()
             if (docConfigStr.length() == 0) {
                 for (const auto & doc : mainCodeUnit->getRootNode()->getDocs()) {
                     auto str = doc->getContent().data();
+                    docWriter->setValue(doc);
+                    docWriter->performVisit(mainCodeUnit->getRootNode());
+                    std::string outFilePath;
                     if (str.substr(0, 5) == "class") {
-                        docWriter->setValue(doc);
-                        docWriter->performVisit(mainCodeUnit->getRootNode());
-                        
-                        std::string outFilePath = oDir+"/class_"+str.substr(7, std::string::npos)+".html";
-                        std::ofstream outFile(outFilePath, std::ios::out);
-                        const std::string & result = docWriter->getResult();
-                        outFile << result;
-                        outFile.close();
+                        outFilePath = oDir+"/class_"+str.substr(7, std::string::npos)+".html";
+                    } else if (str.substr(0, 2) == "fn") {
+                        outFilePath = oDir+"/fn_"+str.substr(3, std::string::npos)+".html";
+                    } else {
+                        std::cout << "!! UNKNOWN DOC TYPE FAIL !!!!!!\n";
+                        return;
                     }
-                    
+                    std::ofstream outFile(outFilePath, std::ios::out);
+                    const std::string & result = docWriter->getResult();
+                    outFile << result;
+                    outFile.close();
                 }
             } else {
+                auto rootNode = mainCodeUnit->getRootNode();
+                std::string outFilePath;
+                std::string result;
                 if (docConfigStr.substr(0, 5) == "class") {
                     std::string className = docConfigStr.substr(7, std::string::npos);
-                    auto rootNode = mainCodeUnit->getRootNode();
                     auto classDecl = rootNode->findClassWithName(className);
                     if (!classDecl) {
                         std::cout << "!! CLASS NOT FOUND FAIL !!!!!!\n";
                         return;
                     }
-                    std::string result = docWriter->createBoilerplate(classDecl.get(), rootNode.get());
-                    std::string outFilePath = oDir+"/"+docConfigStr.substr(7, std::string::npos)+".doc.lil";
-                    std::ofstream outFile(outFilePath, std::ios::out);
-                    outFile << result;
-                    outFile.close();
+                    result = docWriter->createBoilerplateClass(classDecl.get(), rootNode.get());
+                    outFilePath = oDir+"/"+docConfigStr.substr(7, std::string::npos)+".doc.lil";
+                } else if (docConfigStr.substr(0, 2) == "fn") {
+                    std::string fnName = docConfigStr.substr(3, std::string::npos);
+                    auto functionDeclNode = rootNode->getLocalVariable(fnName);
+                    if (functionDeclNode->getNodeType() == NodeTypeFunctionDecl) {
+                        auto fd = std::static_pointer_cast<LILFunctionDecl>(functionDeclNode);
+                        result = docWriter->createBoilerplateFn(fd.get(), rootNode.get());
+                        outFilePath = oDir+"/"+fnName+".doc.lil";
+                    }
                 }
+
+                std::ofstream outFile(outFilePath, std::ios::out);
+                outFile << result;
+                outFile.close();
             }
         }
         else

@@ -75,7 +75,8 @@ namespace LIL
         std::string writeVvarsTemplate(std::vector<std::shared_ptr<LILDocumentation>> docs, LILClassDecl * classDecl);
         std::string writeMemberFnsTemplate(std::vector<std::shared_ptr<LILDocumentation>> docs, LILClassDecl * classDecl);
         std::string writeFnArgsTemplate(std::vector<std::shared_ptr<LILDocumentation>> docs, LILFunctionDecl * fnDecl);
-        std::string createBoilerplate(LILClassDecl * classDecl, LILRootNode * rootNode);
+        std::string createBoilerplateClass(LILClassDecl * classDecl, LILRootNode * rootNode);
+        std::string createBoilerplateFn(LILFunctionDecl * classDecl, LILRootNode * rootNode);
         std::string writeAliasBoilerplate(LILAliasDecl * alias) const;
         std::string writeVvarBoilerplate(LILVarDecl * vd) const;
         std::string writeMemberVarBoilerplate(LILVarDecl * vd) const;
