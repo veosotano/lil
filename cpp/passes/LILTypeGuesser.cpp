@@ -308,6 +308,9 @@ void LILTypeGuesser::processChildren(const std::vector<std::shared_ptr<LILNode> 
 
 void LILTypeGuesser::process(LILNode * node)
 {
+    if (node->getNodeType() == NodeTypeSnippetInstruction) {
+        return;
+    }
     if (LILNode::isContainerNode(node->getNodeType())) {
         //we don't need to process extern classes
         if (!node->isA(NodeTypeClassDecl) || !static_cast<LILClassDecl *>(node)->getIsExtern()) {
@@ -517,7 +520,6 @@ void LILTypeGuesser::process(LILNode * node)
             break;
         }
         case NodeTypeType:
-        case NodeTypeSnippetInstruction:
         case NodeTypeForeignLang:
         {
             //do nothing
