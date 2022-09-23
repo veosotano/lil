@@ -12,6 +12,7 @@ const DEBUG_SHAPE_VERTICES: false;
 fn onUpdate(var.f64 deltaTime) extern;
 fn LIL__setWindowBgColor(var.f32 red; var.f32 green; var.f32 blue; var.f32 alpha) extern;
 fn LIL__loadTexture(var.cstr path; var.i64 idx) extern;
+fn LIL__unloadTexture(var.i64 idx) extern;
 
 #import "libtess2.lil";
 fn powf(f32, f32) => f32 extern;
