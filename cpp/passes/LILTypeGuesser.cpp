@@ -2067,7 +2067,19 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(LILValuePath * vp)
             if (startIndex == nodes.size()) {
                 return currentTy;
             }
-
+            if (currentTy->getTypeType() == TypeTypePointer) {
+                auto ptrTy = std::static_pointer_cast<LILPointerType>(currentTy);
+                auto ptrArg = ptrTy->getArgument();
+                if (ptrArg) {
+                    currentTy = ptrArg;
+                }
+            }
+            if (currentTy->getTypeType() == TypeTypeObject) {
+                auto classDecl = this->findClassWithName(currentTy->getName());
+                if (classDecl) {
+                    currentNode = classDecl;
+                }
+            }
         } else {
             currentNode = nodes.front();
             if (currentNode->isA(NodeTypeVarName)) {
