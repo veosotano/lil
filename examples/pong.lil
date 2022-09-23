@@ -38,14 +38,6 @@ fn onUpdate(var.f64 deltaTime) {
     if goal {
         goalCounterTick();
     }
-    if doesBeep {
-        var.bool needsFadeOut: beepCounter = beepCounterMax;
-        //printf(`%i `, beepCounter);
-        beepCounterTick();
-        LIL__generateSineTone(needsFadeOut);
-    } else {
-        LIL__generateSilence();
-    }
 };
 
 fn playBeep(var.i64 howManyFrames; var.i32 freq) {
@@ -135,7 +127,7 @@ fn bounceOnEdges (var.@container ball) {
         var.f32 yVel: vel.y;
         if (yVel < 0f32) {
             vel.y: (yVel * (-1f32)) + 1f32;
-            playBeep(4, wallSoundFreq);
+            LIL__beep();
         }
         if vel.x < 0f32 {
             vel.x -: 1f32;
@@ -155,7 +147,7 @@ fn bounceOnEdges (var.@container ball) {
         var.f32 yVel: vel.y;
         if yVel > 0f32 {
             vel.y: (yVel * (-1f32)) - 1f32;
-            playBeep(4, wallSoundFreq);
+            LIL__beep();
         }
         if vel.x < 0f32 {
             vel.x -: 1f32;
@@ -196,7 +188,7 @@ fn player1Goal {
     if player1Score >= 6 {
         playerWin();
     } else {
-        playBeep(30, goalSoundFreq);
+        LIL__beep();
         goalCounterMax: 50;
     }
     var player1ScoreBar: @container { id: 2 };
@@ -213,7 +205,7 @@ fn player2Goal {
     if player2Score >= 6 {
         playerWin();
     } else {
-        playBeep(30, goalSoundFreq);
+        LIL__beep();
         goalCounterMax: 50;
     }
     var player2ScoreBar: @container { id: 4 };
@@ -231,7 +223,7 @@ fn newGame {
 }
 
 fn playerWin {
-    playBeep(150, winSoundFreq);
+    LIL__beep();
     newGame();
 }
 
@@ -277,7 +269,7 @@ fn bounceOnPaddles (var.@container player1; var.@container player2; var.@contain
         if xVel < 0f32 {
             vel.x: (xVel * (-1f32)) + 1f32;
             ball.velocity: vel;
-            playBeep(4, player1SoundFreq);
+            LIL__beep();
         }
     }
     
@@ -286,7 +278,7 @@ fn bounceOnPaddles (var.@container player1; var.@container player2; var.@contain
         if xVel > 0f32 {
             vel.x: (xVel * (-1f32)) - 1f32;
             ball.velocity: vel;
-            playBeep(4, player2SoundFreq);
+            LIL__beep();
         }
     }
 };
