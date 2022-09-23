@@ -1,5 +1,5 @@
 #export {
-    enum.i16 KeyBoard {
+    enum.i16 Keyboard {
         a: 0;
         s: 1;
         d: 2;

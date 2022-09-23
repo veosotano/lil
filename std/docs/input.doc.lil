@@ -40,7 +40,7 @@ if input.getMousePressed() {
 #===== var keyCode =========
 #= The number identifying which key.
 #---------------------------
-<lil>if input.isKeyDown(KeyBoard.enter) {
+<lil>if input.isKeyDown(Keyboard.enter) {
 	print "key down";
 }</lil>
 

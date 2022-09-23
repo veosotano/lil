@@ -52,7 +52,7 @@ fn applyUserInput () {
     var gamepad: input.getGamepad(player1Gamepad);
     //W -- up
     // fixme: I'd like this to be:
-    // if input.isKeyDown(KeyBoard.w) OR input.isKeyDown(KeyBoard.upArrow) OR input.isKeyDown(GamePad.up) { }
+    // if input.isKeyDown(Keyboard.w) OR input.isKeyDown(Keyboard.upArrow) OR input.isKeyDown(GamePad.up) { }
     // until then, we are using the platform-specific codes for now
     var.bool upIsPressed: false;
     if input.isKeyDown(126i16) { upIsPressed: true }
