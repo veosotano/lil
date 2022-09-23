@@ -807,14 +807,14 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
         LIL__makeBoxVertices((void *)vertexBufferPointer, &vertexCount);
         renderer.boxVertexCount = vertexCount;
         LIL__makeTextureVertices((void *)(vertexBufferPointer + (vertexCount * sizeof(LILVertex))), &textureVertexCount);
-		vertexCount += textureVertexCount;
+    	vertexCount += textureVertexCount;
         renderer.textureVertexCount = textureVertexCount;
-		long int shapeVertexCount = 0;
-		long int shapeIndexCount = 0;
-		char * indexBufferPointer = [renderer getIndexBufferPointer];
+    	long int shapeVertexCount = 0;
+    	long int shapeIndexCount = 0;
+    	char * indexBufferPointer = [renderer getIndexBufferPointer];
         LIL__makeShapeVertices((void *)(vertexBufferPointer + (vertexCount * sizeof(LILVertex))), &shapeVertexCount, (void *)indexBufferPointer, &shapeIndexCount);
         renderer.shapeVertexCount = shapeVertexCount;
-		renderer.shapeIndexCount = shapeIndexCount;
+    	renderer.shapeIndexCount = shapeIndexCount;
         [theView render];
     }
     return kCVReturnSuccess;

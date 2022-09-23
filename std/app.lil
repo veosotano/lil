@@ -123,8 +123,7 @@ fn powf(f32, f32) => f32 extern;
         var.i64 id: 0;
         
         vvar.@selectable selectable;
-		vvar.ptr(any)|null action;
-        
+        vvar.ptr(any)|null action;
         fn getSelectable => @selectable {
             return app.selectables[@self.id];
         }
@@ -1106,9 +1105,9 @@ fn powf(f32, f32) => f32 extern;
 				theVertices[vtxCount + k]: @vertex {
 					x: valueOf(tessVertices + (k*2)) + shape.x;
 					y: valueOf(tessVertices + ((k*2)+1)) + shape.y;
-	                color: shape.bgColor;
-	                textureX: 0;
-	                textureY: 0;
+					color: shape.bgColor;
+					textureX: 0;
+					textureY: 0;
 				};
 			}
 			
