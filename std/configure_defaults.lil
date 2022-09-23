@@ -15,7 +15,7 @@
     onUpdateFn: #arg { name: "onUpdateFn"; default: false };
     automaticFullScreen: #arg { name: "automaticFullScreen"; default: false };
     documentation: #arg { name: "documentation"; default: false };
-	docTemplatesPath: #arg { name: "docTemplatesPath"; default: "%compilerDir/std/doc_templates/" };
+	docTemplatesPath: #arg { name: "docTemplatesPath"; default: "%compilerDir/std/docs/" };
     optimize: #arg { name: "optimize"; default: 1 };
     importStdLil: #arg { name: "importStdLil"; default: true };
     debugStdLil: #arg { name: "debugStdLil"; default: false };
