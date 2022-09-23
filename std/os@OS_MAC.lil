@@ -34,17 +34,16 @@ var.id LIL__applicationDelegate extern;
         castedPtr(LIL__applicationDelegate, selector, red, green, blue, alpha);
     }
 	
-	fn LIL__loadTexture(var.cstr path) {
+    fn LIL__loadTexture(var.cstr path; var.i64 idx) {
         var.Class stringClass: objc_lookUpClass(`NSString`);
         var.SEL strCreateSel: sel_registerName(`stringWithUTF8String:`);
-		var.ptr(fn(id,SEL,cstr)=>id) strCreateMethod: (pointerTo(objc_msgSend) => ptr(fn(id,SEL,cstr)=>id));
-		var.id nsStrInstance: strCreateMethod(stringClass=>id, strCreateSel, path);
+        var strCreateMethod: pointerTo(objc_msgSend) => ptr(fn(id,SEL,cstr)=>id);
+        var.id nsStrInstance: strCreateMethod(stringClass=>id, strCreateSel, path);
         
-        var.SEL loadTextureSel: sel_registerName(`loadTextureForFile:`);
-		var.ptr(fn(id,SEL,id)=>id) loadtextureMethod: (pointerTo(objc_msgSend) => ptr(fn(id,SEL,id)=>id));
-		loadtextureMethod(LIL__applicationDelegate, loadTextureSel, nsStrInstance);
-	}
-    
+        var.SEL loadTextureSel: sel_registerName(`loadTextureForFile:index:`);
+        var loadtextureMethod: pointerTo(objc_msgSend) => ptr(fn(id,SEL,id,i64));
+        loadtextureMethod(LIL__applicationDelegate, loadTextureSel, nsStrInstance, idx);
+    }
     fn LIL__automaticFullScreen {
         //fixme the separate var decl should not be needed
         var.bool value: #getConfig(automaticFullScreen);

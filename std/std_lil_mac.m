@@ -266,7 +266,7 @@ typedef struct
 @interface LILMetalRenderer : NSObject
 
 - (nonnull id)initWithMetalDevice:(nonnull id<MTLDevice>)device_ drawablePixelFormat:(MTLPixelFormat)drawablePixelFormat;
-- (void)loadTextureForFile:(NSString *)filename;
+- (void)loadTextureForFile:(NSString *)filename index:(unsigned int)idx;
 - (void)renderToMetalLayer:(nonnull CAMetalLayer*)metalLayer;
 - (void *)getVertexBufferPointer;
 - (void *)getIndexBufferPointer;
@@ -303,7 +303,7 @@ typedef struct
     MTLClearColor windowBgColor_;
     long int boxVertexCount_;
     long int textureVertexCount_;
-    long int textureCount;
+    long int textureCount_;
     long int shapeVertexCount_;
 	long int shapeIndexCount_;
 }
@@ -410,7 +410,7 @@ typedef struct
     return self;
 }
 
-- (void)loadTextureForFile:(NSString *)filename
+- (void)loadTextureForFile:(NSString *)filename index:(unsigned int)idx
 {
     NSURL * textureUrl;
 	if ([filename isAbsolutePath]){
@@ -425,11 +425,11 @@ typedef struct
         NSDictionary * textureOptions = @{
             MTKTextureLoaderOptionSRGB : @NO
         };
-        textures[textureCount] = [loader newTextureWithContentsOfURL: textureUrl options: textureOptions error: nil ];
-        if(textures[textureCount])
+        textures[idx] = [loader newTextureWithContentsOfURL: textureUrl options: textureOptions error: nil ];
+        if(textures[idx])
         {
-			id<MTLTexture> theTexture = textures[textureCount];
-			LIL__setTextureSize(textureCount, theTexture.width, theTexture.height);
+			id<MTLTexture> theTexture = textures[idx];
+			LIL__setTextureSize(idx, theTexture.width, theTexture.height);
         }
         else
         {
@@ -455,14 +455,15 @@ typedef struct
         attachment.destinationAlphaBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
         texturePipelineDescriptor.depthAttachmentPixelFormat      = LILDepthPixelFormat;
 
-        texturePipelines[textureCount] = [device newRenderPipelineStateWithDescriptor:texturePipelineDescriptor error:&error];
-        if(!texturePipelines[textureCount])
+        texturePipelines[idx] = [device newRenderPipelineStateWithDescriptor:texturePipelineDescriptor error:&error];
+        if(!texturePipelines[idx])
         {
             NSLog(@"ERROR: Failed aquiring texture pipeline state: %@", error);
             return;
         }
-        
-        textureCount += 1;
+        if (self.textureCount <= idx) {
+            self.textureCount = idx + 1;
+        }
     }
 }
 
@@ -498,7 +499,7 @@ typedef struct
 
     [renderEncoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:self.boxVertexCount];
     
-    for (long int i = 0; i < textureCount; i+=1) {
+    for (long int i = 0; i < self.textureCount; i+=1) {
         //texture
         [renderEncoder setRenderPipelineState:texturePipelines[i]];
         [renderEncoder setVertexBuffer:vertexBuffer offset:(sizeof(LILVertex) * self.boxVertexCount) atIndex:LILVertexInputIndexVertices ];
@@ -821,7 +822,7 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
 - (void)exitMenu;
 - (void)menuItemSelected:(NSMenuItem *) menuItem;
 - (void)setWindowBackgroundRed:(float)red green:(float)green blue:(float)blue alpha:(float)alpha;
-- (void)loadTextureForFile:(NSString *)path;
+- (void)loadTextureForFile:(NSString *)path index:(unsigned int)idx;
 - (LILMainView *)getMainView;
 - (void)quit;
 - (void)showOpenPanelWithSuccessCallback:(void(*)(const char *))onSuccess cancelCallback:(void(*)())onCancel;
@@ -879,7 +880,7 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
     for(long int i = 0; i<count; i+=1) {
         LIL__resourceStruct * res = LIL__getResorceById(i);
         NSString * path = [[NSString alloc] initWithUTF8String: res->path];
-        [self loadTextureForFile: path];
+        [self loadTextureForFile: path index:i];
     }
 }
 
@@ -973,7 +974,14 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
     mainView.renderer.windowBgColor = MTLClearColorMake(red, green, blue, alpha);
 }
 
-- (void)loadTextureForFile:(NSString *)path
+- (void)loadTextureForFile:(NSString *)path index:(unsigned int)idx
+{
+	LILMetalRenderer * renderer = mainView.renderer;
+    //avoid race conditions with anyone touching the renderer
+    @synchronized(renderer)
+    {
+        [renderer loadTextureForFile:path index:idx];
+    }
 {
 	LILMetalRenderer * renderer = mainView.renderer;
 	[renderer loadTextureForFile:path];
