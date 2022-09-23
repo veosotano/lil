@@ -401,11 +401,15 @@ fn powf(f32, f32) => f32 extern;
         }
 
         fn getSrc() => cstr {
-            return pointerTo(app.resources[@self.id].path) => ptr(i8);
+            var resourceId: app.selectables[@self.id].resourceId;
+            return pointerTo(app.resources[resourceId].path) => ptr(i8);
         }
         fn setSrc(var.ptr(@string) value) {
+            var resourceId: app.selectables[@self.id].resourceId;
+            if resourceId < 0 {
+                app.selectables[@self.id].resourceId: app.newResource();
+            }
             memcpy(@self.src, value.cstr(), value.length);
-            app.newResource(@self.id);
         }
 
 		fn load(var.ptr(@string) value) {
@@ -730,7 +734,6 @@ fn powf(f32, f32) => f32 extern;
         var.i64 nameCount: 0;
         var.i64 typeCount: 0;
 		//resources
-        var.[#paste entitiesSize x i64] resourceIds: [];
         var.[#paste entitiesSize x @resource] resources: [];
         var.i64 resourceCount: 0;
 		//actions
@@ -873,9 +876,10 @@ fn powf(f32, f32) => f32 extern;
             @self.shapesCount +: 1;
             return currentCount;
         };
-        fn newResource(var.i64 id) {
-            @self.resourceIds[@self.resourceCount]: id;
+        fn newResource => i64 {
+            var currentCount: @self.resourceCount;
             @self.resourceCount +: 1;
+            return currentCount;
         }
 		fn newActionId => i64 {
             #if DEBUG {
@@ -935,8 +939,7 @@ fn powf(f32, f32) => f32 extern;
     }
     
     fn LIL__getResorceById(var.i64 id) => ptr(@resource) {
-        var resId: app.resourceIds[id];
-        return pointerTo app.resources[resId];
+        return pointerTo app.resources[id];
     }
     
     fn LIL__movementSystem(var.f64 deltaTime) {
