@@ -281,6 +281,12 @@ fn powf(f32, f32) => f32 extern;
             return id;
         }
 
+        //WARNING: only call this when it is the last entity
+        fn deinit {
+            app.removeLastBox();
+            app.removeLastEntity();
+        }
+
         fn setWidth(var.f32 value) {
             app.box2ds[@self.componentId].width: value;
         };
@@ -360,6 +366,17 @@ fn powf(f32, f32) => f32 extern;
             return @self.id;
         }
 
+        //WARNING: only call this when it is the last entity
+        fn deinit {
+            app.removeLastImg();
+            app.removeLastEntity();
+            var resourceId: app.selectables[@self.id].resourceId;
+            if resourceId >= 0 {
+                LIL__unloadTexture(resourceId);
+                app.removeLastResource();
+            }
+        }
+
         fn setWidth(var.f32 value) {
             app.imgs[@self.componentId].width: value;
         };
@@ -435,6 +452,12 @@ fn powf(f32, f32) => f32 extern;
 			app.imgs[componentId].useClip: true;
             return @self.id;
         }
+
+        //FIXME: this should not be needed. It means that somewhere
+        //the path expander is not working
+        fn deinit {
+            @self.super.deinit();
+        }
         
         fn setClipX(var.f32 value) {
             app.imgClips[@self.componentId].x: value;
@@ -475,6 +498,12 @@ fn powf(f32, f32) => f32 extern;
             var componentId: app.newShape();
             @self.id: app.newElement(name, parentId, 3, componentId);
             return @self.id;
+        }
+
+        //WARNING: only call this when it is the last entity
+        fn deinit {
+            app.removeLastShape();
+            app.removeLastEntity();
         }
 
         fn setWidth(var.f32 value) {
@@ -775,6 +804,9 @@ fn powf(f32, f32) => f32 extern;
             @self.entityCount +: 1;
             return currentCount;
         };
+        fn removeLastEntity {
+            @self.entityCount -: 1;
+        }
         fn newType => i64 {
             #if DEBUG {
                 puts `Creating new type`;
@@ -783,6 +815,9 @@ fn powf(f32, f32) => f32 extern;
             @self.typeCount +: 1;
             return currentCount;
         };
+        fn removeLastType {
+            @self.typeCount -: 1;
+        }
         fn registerName(var.cstr name){
             #if DEBUG {
                 printf(`Register name %s\n`, name);
@@ -822,6 +857,9 @@ fn powf(f32, f32) => f32 extern;
         fn getName(var.i64 id) => cstr {
             return pointerTo(@self.names[id]) => cstr;
         };
+        fn removeLastName {
+            @self.nameCount -: 1;
+        }
         fn selectByName(var.i64 parentId; var.i64 nameId)=>@sel {
             var ret: @sel { };
             for(var.i64 i: 0; i<@self.entityCount; i+:1) {
@@ -866,20 +904,32 @@ fn powf(f32, f32) => f32 extern;
             @self.boxCount +: 1;
             return currentCount;
         };
+        fn removeLastBox {
+            @self.boxCount -: 1;
+        }
         fn newImg => i64 {
             var currentCount: @self.imgCount;
             @self.imgCount +: 1;
             return currentCount;
         };
+        fn removeLastImg {
+            @self.imgCount -: 1;
+        }
         fn newShape => i64 {
             var currentCount: @self.shapesCount;
             @self.shapesCount +: 1;
             return currentCount;
         };
+        fn removeLastShape {
+            @self.shapesCount -: 1;
+        }
         fn newResource => i64 {
             var currentCount: @self.resourceCount;
             @self.resourceCount +: 1;
             return currentCount;
+        }
+        fn removeLastResource {
+            @self.resourceCount -: 1;
         }
 		fn newActionId => i64 {
             #if DEBUG {
@@ -889,30 +939,48 @@ fn powf(f32, f32) => f32 extern;
             @self.actionCount +: 1;
             return currentCount;
 		}
+        fn removeLastActionId {
+            @self.actionCount -: 1;
+        }
         fn newTextfield => i64 {
             var currentCount: @self.textfieldCount;
             @self.textfieldCount +: 1;
             return currentCount;
         };
+        fn removeLastTextfield {
+            @self.textfieldCount -: 1;
+        }
         fn newMouseDownActionId => i64 {
             var currentCount: @self.mouseDownActionCount;
             @self.mouseDownActionCount +: 1;
             return currentCount;
+        }
+        fn removeLastMouseDownActionId {
+            @self.mouseDownActionCount -: 1;
         }
         fn newMouseUpActionId => i64 {
             var currentCount: @self.mouseUpActionCount;
             @self.mouseUpActionCount +: 1;
             return currentCount;
         }
+        fn removeLastMouseUpActionId {
+            @self.mouseUpActionCount -: 1;
+        }
         fn newMouseDraggedActionId => i64 {
             var currentCount: @self.mouseDraggedActionCount;
             @self.mouseDraggedActionCount +: 1;
             return currentCount;
         }
+        fn removeLastMouseDraggedActionId {
+            @self.mouseDraggedActionCount -: 1;
+        }
         fn newDragEndActionId => i64 {
             var currentCount: @self.dragEndActionCount;
             @self.dragEndActionCount +: 1;
             return currentCount;
+        }
+        fn removeLastDragEndActionId {
+            @self.dragEndActionCount -: 1;
         }
     };
 
