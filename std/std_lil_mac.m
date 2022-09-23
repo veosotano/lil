@@ -267,6 +267,7 @@ typedef struct
 
 - (nonnull id)initWithMetalDevice:(nonnull id<MTLDevice>)device_ drawablePixelFormat:(MTLPixelFormat)drawablePixelFormat;
 - (void)loadTextureForFile:(NSString *)filename index:(unsigned int)idx;
+- (void)unloadTextureForIndex:(unsigned int)idx;
 - (void)renderToMetalLayer:(nonnull CAMetalLayer*)metalLayer;
 - (void *)getVertexBufferPointer;
 - (void *)getIndexBufferPointer;
@@ -464,6 +465,15 @@ typedef struct
         if (self.textureCount <= idx) {
             self.textureCount = idx + 1;
         }
+    }
+}
+
+- (void)unloadTextureForIndex:(unsigned int)idx
+{
+    if (self.textureCount == idx + 1) {
+        self.textureCount = idx;
+    } else {
+        NSLog(@"ERROR: Can't unload texture index %i because it was not at the end.", idx);
     }
 }
 
@@ -828,6 +838,7 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
 - (void)menuItemSelected:(NSMenuItem *) menuItem;
 - (void)setWindowBackgroundRed:(float)red green:(float)green blue:(float)blue alpha:(float)alpha;
 - (void)loadTextureForFile:(NSString *)path index:(unsigned int)idx;
+- (void)unloadTextureForIndex:(unsigned int)idx;
 - (LILMainView *)getMainView;
 - (void)quit;
 - (void)showOpenPanelWithSuccessCallback:(void(*)(const char *))onSuccess cancelCallback:(void(*)())onCancel;
@@ -987,9 +998,15 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
     {
         [renderer loadTextureForFile:path index:idx];
     }
+}
+- (void)unloadTextureForIndex:(unsigned int)idx
 {
 	LILMetalRenderer * renderer = mainView.renderer;
-	[renderer loadTextureForFile:path];
+    //avoid race conditions with anyone touching the renderer
+    @synchronized(renderer)
+    {
+        [renderer unloadTextureForIndex:idx];
+    }
 }
 
 - (LILMainView *)getMainView

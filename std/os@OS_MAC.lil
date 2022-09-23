@@ -44,6 +44,13 @@ var.id LIL__applicationDelegate extern;
         var loadtextureMethod: pointerTo(objc_msgSend) => ptr(fn(id,SEL,id,i64));
         loadtextureMethod(LIL__applicationDelegate, loadTextureSel, nsStrInstance, idx);
     }
+
+    fn LIL__unloadTexture(var.i64 idx) {
+        var.SEL unloadTextureSel: sel_registerName(`unloadTextureForIndex:`);
+        var unloadtextureMethod: pointerTo(objc_msgSend) => ptr(fn(id,SEL,i64));
+        unloadtextureMethod(LIL__applicationDelegate, unloadTextureSel, idx);
+    }
+
     fn LIL__automaticFullScreen {
         //fixme the separate var decl should not be needed
         var.bool value: #getConfig(automaticFullScreen);
