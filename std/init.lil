@@ -20,6 +20,7 @@
             app.initialize();
 
             #paste LIL_INITIALIZERS;
+            msgEmit(`onInitialize`, pointerTo(app));
         }
         
         fn LIL__addAppMenu {
