@@ -289,10 +289,10 @@ typedef struct
     id <MTLBuffer> vertexBuffer;
 	id <MTLBuffer> indexBuffer;
     id <MTLTexture> depthTarget;
-    id <MTLTexture> textures[32];
+    id <MTLTexture> textures[256];
     id <MTLTexture> msaaTexture_;
 	id <MTLTexture> msaaDepthTexture_;
-    id <MTLRenderPipelineState> texturePipelines[32];
+    id <MTLRenderPipelineState> texturePipelines[256];
 	id <MTLRenderPipelineState> shapePipeline;
     id <MTLFunction> vertexShaderFn;
     id <MTLFunction> fragmentShaderFn;
@@ -370,7 +370,7 @@ typedef struct
         vertexBuffer = [device newBufferWithLength:(sizeof(LILVertex)*1000) options:MTLResourceStorageModeShared];
         vertexBuffer.label = @"vertexBuffer";
         //create a new empty index buffer
-        indexBuffer = [device newBufferWithLength:(sizeof(UInt16)*1000) options:MTLResourceStorageModeShared];
+        indexBuffer = [device newBufferWithLength:(sizeof(UInt16)*8000) options:MTLResourceStorageModeShared];
         indexBuffer.label = @"indexBuffer";
 
         NSError *error;

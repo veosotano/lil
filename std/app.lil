@@ -2,11 +2,11 @@ const DEBUG: false;
 const DEBUG_SHAPE_VERTICES: false;
 
 #snippet entityTypesSize { 10 };
-#snippet namesSize { 32 };
-#snippet selectionSize { 32 };
+#snippet namesSize { 256 };
+#snippet selectionSize { 256 };
 #snippet entitiesSize { 2048 };
 #snippet componentsSize { 32 };
-#snippet shapesSize { 32 };
+#snippet shapesSize { 128 };
 #snippet maxPathSubdiv { 20 };
 
 fn onUpdate(var.f64 deltaTime) extern;
