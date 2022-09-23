@@ -6,6 +6,7 @@ const DEBUG_SHAPE_VERTICES: false;
 #snippet selectionSize { 256 };
 #snippet entitiesSize { 2048 };
 #snippet componentsSize { 32 };
+#snippet actionsSize { 128 };
 #snippet shapesSize { 128 };
 #snippet maxPathSubdiv { 20 };
 
@@ -54,6 +55,10 @@ fn powf(f32, f32) => f32 extern;
         var.i64 componentId;
         var.i64 resourceId;
 		var.i64 actionId;
+		var.i64 mouseDownActionId;
+		var.i64 mouseUpActionId;
+		var.i64 mouseDraggedActionId;
+		var.i64 dragEndActionId;
     };
     class @pos2d {
         var.f32 x;
@@ -116,6 +121,11 @@ fn powf(f32, f32) => f32 extern;
         
         vvar.@selectable selectable;
         vvar.ptr(any)|null action;
+        vvar.ptr(any)|null onMouseDown;
+        vvar.ptr(any)|null onMouseUp;
+        vvar.ptr(any)|null onMouseDragged;
+        vvar.ptr(any)|null onDragEnd;
+
         fn getSelectable => @selectable {
             return app.selectables[@self.id];
         }
@@ -146,6 +156,82 @@ fn powf(f32, f32) => f32 extern;
 				};
 			}
 		}
+        fn getOnMouseDown => ptr(any)|null {
+            var actionId: app.selectables[@self.id].mouseDownActionId;
+            if actionId >= 0 {
+                return app.mouseDownActions[actionId].ptr;
+            } else {
+                return null;
+            }
+        }
+        fn setOnMouseDown(var.ptr(any) ptr) {
+            var existingAction: @self.getOnMouseDown();
+            if existingAction => null {
+                var actionId: app.newMouseDownActionId();
+                app.selectables[@self.id].mouseDownActionId: actionId;
+                app.mouseDownActions[actionId]: @action {
+                    elementId: @self.id;
+                    ptr: ptr;
+                };
+            }
+        }
+        fn getOnMouseUp => ptr(any)|null {
+            var actionId: app.selectables[@self.id].mouseUpActionId;
+            if actionId >= 0 {
+                return app.mouseUpActions[actionId].ptr;
+            } else {
+                return null;
+            }
+        }
+        fn setOnMouseUp(var.ptr(any) ptr) {
+            var existingAction: @self.getOnMouseUp();
+            if existingAction => null {
+                var actionId: app.newMouseUpActionId();
+                app.selectables[@self.id].mouseUpActionId: actionId;
+                app.mouseUpActions[actionId]: @action {
+                    elementId: @self.id;
+                    ptr: ptr;
+                };
+            }
+        }
+        fn getOnMouseDragged => ptr(any)|null {
+            var actionId: app.selectables[@self.id].mouseDraggedActionId;
+            if actionId >= 0 {
+                return app.mouseDraggedActions[actionId].ptr;
+            } else {
+                return null;
+            }
+        }
+        fn setOnMouseDragged(var.ptr(any) ptr) {
+            var existingAction: @self.getOnMouseDragged();
+            if existingAction => null {
+                var actionId: app.newMouseDraggedActionId();
+                app.selectables[@self.id].mouseDraggedActionId: actionId;
+                app.mouseDraggedActions[actionId]: @action {
+                    elementId: @self.id;
+                    ptr: ptr;
+                };
+            }
+        }
+        fn getOnDragEnd => ptr(any)|null {
+            var actionId: app.selectables[@self.id].dragEndActionId;
+            if actionId >= 0 {
+                return app.dragEndActions[actionId].ptr;
+            } else {
+                return null;
+            }
+        }
+        fn setOnDragEnd(var.ptr(any) ptr) {
+            var existingAction: @self.getOnDragEnd();
+            if existingAction => null {
+                var actionId: app.newDragEndActionId();
+                app.selectables[@self.id].dragEndActionId: actionId;
+                app.dragEndActions[actionId]: @action {
+                    elementId: @self.id;
+                    ptr: ptr;
+                };
+            }
+        }
     };
     class @sel {
         var.[#paste selectionSize x @element] items: [];
@@ -489,34 +575,126 @@ fn powf(f32, f32) => f32 extern;
 		for (var.i64 i: 0; i<app.actionCount; i +: 1) {
 			var action: app.actions[i];
 			var elem: app.selectables[action.elementId];
-			var componentId: elem.componentId;
-			var.bool result: false;
-			if elem.typeId = 0 {
-				var pos: app.boxPositions[componentId];
-				var box: app.box2ds[componentId];
-				result:
-					(mouseX >= pos.x) AND (mouseX < (pos.x + box.width))
-					AND (mouseY >= pos.y) AND (mouseY < (pos.y + box.height))
-				;
-			} else if ((elem.typeId = 1) OR (elem.typeId = 2)) {
-				var pos: app.imgPositions[componentId];
-				var img: app.imgs[componentId];
-				var width: img.width;
-				var height: img.height;
-				if width = 0 { width: img.textureWidth }
-				if height = 0 { height: img.textureHeight }
-				result:
-					(mouseX >= pos.x) AND (mouseX < (pos.x + width))
-					AND (mouseY >= pos.y) AND (mouseY < (pos.y + height))
-				;
-			}
-			if result {
-				//FIXME: conversion from any ptr to fn pointer should be implicit
-				var.ptr(fn(ptr(any))) callback: action.ptr => ptr(fn(ptr(any)));
+			if LIL__mouseIntersectionTest(elem.typeId, elem.componentId, mouseX, mouseY) {
+				var callback: action.ptr => ptr(fn(ptr(any)));
 				callback(data);
 			}
 		}
 	}
+    
+    fn LIL__mouseDownListener(var.ptr(any) data) {
+        var.ptr(@mouseEvent) event: data;
+        var mouseX: event.x => f32;
+        var mouseY: event.y => f32;
+        for (var.i64 i: 0; i<app.mouseDownActionCount; i +: 1) {
+            var action: app.mouseDownActions[i];
+            var id: action.elementId;
+            var elem: app.selectables[id];
+            if LIL__mouseIntersectionTest(elem.typeId, elem.componentId, mouseX, mouseY) {
+                app.dragTargetId: id;
+                app.dragOrigin: @pos2d { x: mouseX; y: mouseY };
+                var callback: action.ptr => ptr(fn(ptr(any)));
+                callback(data);
+            }
+        }
+    }
+    
+    fn LIL__mouseDraggedListener(var.ptr(any) data) {
+        var.ptr(@mouseEvent) event: data;
+        if !app.dragHasSession {
+            if (
+                (fabsf(event.x - app.dragOrigin.x) >= app.dragMinDistance)
+                OR (fabsf(event.y - app.dragOrigin.y) >= app.dragMinDistance)
+            ) {
+                app.dragHasSession: true;
+            } else {
+                app.dragHasSession: false;
+            }
+        }
+        
+        if app.dragHasSession {
+            for (var.i64 i: 0; i<app.mouseDraggedActionCount; i +: 1) {
+                var action: app.mouseDraggedActions[i];
+                var id: action.elementId;
+                if id = app.dragTargetId {
+                    var callback: action.ptr => ptr(fn(ptr(any)));
+                    callback(data);
+                }
+            }
+        }
+    }
+    
+    fn LIL__mouseUpListener(var.ptr(any) data) {
+        //send the mouse up events
+        var.ptr(@mouseEvent) event: data;
+        var mouseX: event.x => f32;
+        var mouseY: event.y => f32;
+        for (var.i64 i: 0; i<app.mouseUpActionCount; i +: 1) {
+            var action: app.mouseUpActions[i];
+            var id: action.elementId;
+            var elem: app.selectables[id];
+            if LIL__mouseIntersectionTest(elem.typeId, elem.componentId, mouseX, mouseY) {
+                var callback: action.ptr => ptr(fn(ptr(any)));
+                callback(data);
+            }
+        }
+
+        if app.dragHasSession {
+            //send the drag end event
+            for (var.i64 i: 0; i<app.dragEndActionCount; i +: 1) {
+                var action: app.dragEndActions[i];
+                var id: action.elementId;
+                if id = app.dragTargetId {
+                    var callback: action.ptr => ptr(fn(ptr(any)));
+                    callback(data);
+                }
+            }
+            app.dragHasSession: false;
+        }
+        app.dragTargetId: 0;
+    }
+    
+    fn LIL__mouseIntersectionTest(var.i64 typeId; var.i64 componentId; var.f32 mouseX; var.f32 mouseY) => bool {
+        if typeId = 0 {
+            var pos: app.boxPositions[componentId];
+            var box: app.box2ds[componentId];
+            return  (mouseX >= pos.x) AND (mouseX < (pos.x + box.width)) AND (mouseY >= pos.y) AND (mouseY < (pos.y + box.height));
+        } else if ((typeId = 1) OR (typeId = 2)) {
+            var pos: app.imgPositions[componentId];
+            var img: app.imgs[componentId];
+            var width: img.width;
+            var height: img.height;
+            if width = 0 { width: img.textureWidth }
+            if height = 0 { height: img.textureHeight }
+            return (mouseX >= pos.x) AND (mouseX < (pos.x + width)) AND (mouseY >= pos.y) AND (mouseY < (pos.y + height));
+        } else if typeId = 3 {
+            var shape: app.shapes[componentId];
+            var x: shape.x;
+            var y: shape.y;
+            var width: shape.width;
+            var height: shape.height;
+            return  (mouseX >= x) AND (mouseX < (x + width)) AND (mouseY >= y) AND (mouseY < (y + height));
+        }
+        return false;
+    }
+    
+    fn LIL__intersectionTest(var.@container|@image item; var.f32 testX; var.f32 testY) => bool {
+        if item => @container {
+            var componentId: item.componentId;
+            var pos: app.boxPositions[componentId];
+            var box: app.box2ds[componentId];
+            return  (testX >= pos.x) AND (testX < (pos.x + box.width)) AND (testY >= pos.y) AND (testY < (pos.y + box.height));
+        } else if item => @image {
+            var componentId: item.componentId;
+            var pos: app.imgPositions[componentId];
+            var img: app.imgs[componentId];
+            var width: img.width;
+            var height: img.height;
+            if width = 0 { width: img.textureWidth }
+            if height = 0 { height: img.textureHeight }
+            return (testX >= pos.x) AND (testX < (pos.x + width)) AND (testY >= pos.y) AND (testY < (pos.y + height));
+        }
+    }
 
     class @app {
         var.[#paste entitiesSize x @selectable] selectables: [];
@@ -544,16 +722,31 @@ fn powf(f32, f32) => f32 extern;
         var.[#paste entitiesSize x @resource] resources: [];
         var.i64 resourceCount: 0;
 		//actions
-		var.[#paste entitiesSize x @action] actions: [];
+		var.[#paste actionsSize x @action] actions: [];
 		var.i64 actionCount: 0;
+		var.[#paste actionsSize x @action] mouseDownActions: [];
+		var.i64 mouseDownActionCount: 0;
+        var.[#paste actionsSize x @action] mouseUpActions: [];
+        var.i64 mouseUpActionCount: 0;
+		var.[#paste actionsSize x @action] mouseDraggedActions: [];
+		var.i64 mouseDraggedActionCount: 0;
+        var.[#paste actionsSize x @action] dragEndActions: [];
+        var.i64 dragEndActionCount: 0;
+        var.i64 dragTargetId: 0;
+        var.@pos2d dragOrigin: @pos2d { x: 0; y: 0 };
+        var.f32 dragMinDistance: 3.0;
+        var.bool dragHasSession: false;
 		
 		fn initialize {
             //get root's background color
 			//fixme: use selection system instead of hardcoded to 0
             var bgColor: app.box2ds[0].bgColor;
             LIL__setWindowBgColor(bgColor.red, bgColor.green, bgColor.blue, bgColor.alpha);
-			//install the mouse listener
+			//install the mouse listeners
 			msgSub(`onClick`, LIL__mouseClickListener);
+            msgSub(`onMouseDown`, LIL__mouseDownListener);
+            msgSub(`onMouseDragged`, LIL__mouseDraggedListener);
+            msgSub(`onMouseUp`, LIL__mouseUpListener);
 		};
 
         fn newEntity => i64 {
@@ -643,6 +836,10 @@ fn powf(f32, f32) => f32 extern;
                 componentId: componentId;
 				resourceId: (0-1);
 				actionId: (0-1);
+                mouseDownActionId: (0-1);
+                mouseDraggedActionId: (0-1);
+                mouseUpActionId: (0-1);
+                dragEndActionId: (0-1);
             });
             return id;
         };
@@ -673,6 +870,26 @@ fn powf(f32, f32) => f32 extern;
             @self.actionCount +: 1;
             return currentCount;
 		}
+        fn newMouseDownActionId => i64 {
+            var currentCount: @self.mouseDownActionCount;
+            @self.mouseDownActionCount +: 1;
+            return currentCount;
+        }
+        fn newMouseUpActionId => i64 {
+            var currentCount: @self.mouseUpActionCount;
+            @self.mouseUpActionCount +: 1;
+            return currentCount;
+        }
+        fn newMouseDraggedActionId => i64 {
+            var currentCount: @self.mouseDraggedActionCount;
+            @self.mouseDraggedActionCount +: 1;
+            return currentCount;
+        }
+        fn newDragEndActionId => i64 {
+            var currentCount: @self.dragEndActionCount;
+            @self.dragEndActionCount +: 1;
+            return currentCount;
+        }
     };
 
     fn LIL__nameToNameId(var.cstr name) => i64 {
