@@ -84,6 +84,7 @@ namespace LIL
         void _process(std::shared_ptr<LILVarName> value);
         void _process(std::shared_ptr<LILRule> value);
         void _processRuleInner(std::shared_ptr<LILRule> value);
+        std::shared_ptr<LILNode> _expandPaths(const std::shared_ptr<LILNode> & val);
         void _process(std::shared_ptr<LILSimpleSelector> value);
         void _process(std::shared_ptr<LILSelectorChain> value);
         void _process(std::shared_ptr<LILSelector> value);
