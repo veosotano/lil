@@ -469,63 +469,68 @@ typedef struct
 
 - (void)renderToMetalLayer:(nonnull CAMetalLayer*)metalLayer
 {
-    frameNum++;
+    @autoreleasepool {
+        frameNum++;
 
-    // Create a new command buffer for each render pass to the current drawable.
-    id <MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer];
+        // Create a new command buffer for each render pass to the current drawable.
+        id <MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer];
 
-    id<CAMetalDrawable> currentDrawable = [metalLayer nextDrawable];
+        id<CAMetalDrawable> currentDrawable = [metalLayer nextDrawable];
 
-    // If the current drawable is nil, skip rendering this frame
-    if(!currentDrawable)
-    {
-        return;
-    }
+        // If the current drawable is nil, skip rendering this frame
+        if(!currentDrawable)
+        {
+            return;
+        }
 
-    drawableRenderDescriptor.colorAttachments[0].clearColor = self.windowBgColor;
-    drawableRenderDescriptor.colorAttachments[0].resolveTexture = currentDrawable.texture;
+        drawableRenderDescriptor.colorAttachments[0].clearColor = self.windowBgColor;
+        drawableRenderDescriptor.colorAttachments[0].resolveTexture = currentDrawable.texture;
     
-    id <MTLRenderCommandEncoder> renderEncoder = [commandBuffer renderCommandEncoderWithDescriptor:drawableRenderDescriptor];
+        id <MTLRenderCommandEncoder> renderEncoder = [commandBuffer renderCommandEncoderWithDescriptor:drawableRenderDescriptor];
 
-    //box
-    [renderEncoder setRenderPipelineState:boxPipeline];
+        //box
+        [renderEncoder setRenderPipelineState:boxPipeline];
 
-    [renderEncoder setVertexBuffer:vertexBuffer offset:0 atIndex:LILVertexInputIndexVertices ];
+        [renderEncoder setVertexBuffer:vertexBuffer offset:0 atIndex:LILVertexInputIndexVertices ];
 
-    LILUniforms uniforms;
-    uniforms.scale = 1.0;
-    uniforms.viewportSize = viewportSize;
-    [renderEncoder setVertexBytes:&uniforms length:sizeof(uniforms) atIndex:LILVertexInputIndexUniforms ];
-
-    [renderEncoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:self.boxVertexCount];
-    
-    for (long int i = 0; i < self.textureCount; i+=1) {
-        //texture
-        [renderEncoder setRenderPipelineState:texturePipelines[i]];
-        [renderEncoder setVertexBuffer:vertexBuffer offset:(sizeof(LILVertex) * self.boxVertexCount) atIndex:LILVertexInputIndexVertices ];
+        LILUniforms uniforms;
+        uniforms.scale = 1.0;
+        uniforms.viewportSize = viewportSize;
         [renderEncoder setVertexBytes:&uniforms length:sizeof(uniforms) atIndex:LILVertexInputIndexUniforms ];
-        [renderEncoder setFragmentTexture:textures[i] atIndex:0];
 
-        long int vtxStart = i * 6;
-        
-        [renderEncoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:vtxStart vertexCount:6];
+        [renderEncoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:self.boxVertexCount];
+
+        for (long int i = 0; i < self.textureCount; i+=1) {
+            //texture
+            if(texturePipelines[i] == nil) {
+                NSLog(@"Error loading pipeline state nr %li\n", i);
+            }
+            [renderEncoder setRenderPipelineState:texturePipelines[i]];
+            [renderEncoder setVertexBuffer:vertexBuffer offset:(sizeof(LILVertex) * self.boxVertexCount) atIndex:LILVertexInputIndexVertices ];
+            [renderEncoder setVertexBytes:&uniforms length:sizeof(uniforms) atIndex:LILVertexInputIndexUniforms ];
+            [renderEncoder setFragmentTexture:textures[i] atIndex:0];
+
+            long int vtxStart = i * 6;
+
+            [renderEncoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:vtxStart vertexCount:6];
+        }
+
+        //shape
+        if (self.shapeIndexCount > 0) {
+            long int shapeOffset = (sizeof(LILVertex) * (self.boxVertexCount + self.textureVertexCount));
+            [renderEncoder setRenderPipelineState:shapePipeline];
+            [renderEncoder setVertexBuffer:vertexBuffer offset:shapeOffset atIndex:LILVertexInputIndexVertices ];
+            LILUniforms shapeUniforms;
+            shapeUniforms.scale = 1.0;
+            shapeUniforms.viewportSize = viewportSize;
+            [renderEncoder setVertexBytes:&shapeUniforms length:sizeof(shapeUniforms) atIndex:LILVertexInputIndexUniforms ];
+            [renderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:self.shapeIndexCount indexType:MTLIndexTypeUInt32 indexBuffer:indexBuffer indexBufferOffset:0];
+        }
+	
+        [renderEncoder endEncoding];
+        [commandBuffer presentDrawable:currentDrawable];
+        [commandBuffer commit];
     }
-	
-    //shape
-	if (self.shapeIndexCount > 0) {
-		long int shapeOffset = (sizeof(LILVertex) * (self.boxVertexCount + (self.textureCount * 6)));
-	    [renderEncoder setRenderPipelineState:shapePipeline];
-	    [renderEncoder setVertexBuffer:vertexBuffer offset:shapeOffset atIndex:LILVertexInputIndexVertices ];
-	    LILUniforms shapeUniforms;
-	    shapeUniforms.scale = 1.0;
-	    shapeUniforms.viewportSize = viewportSize;
-	    [renderEncoder setVertexBytes:&shapeUniforms length:sizeof(shapeUniforms) atIndex:LILVertexInputIndexUniforms ];
-	    [renderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:self.shapeIndexCount indexType:MTLIndexTypeUInt32 indexBuffer:indexBuffer indexBufferOffset:0];
-	}
-	
-    [renderEncoder endEncoding];
-    [commandBuffer presentDrawable:currentDrawable];
-    [commandBuffer commit];
 }
 
 - (void)drawableResize:(CGSize)drawableSize
@@ -772,20 +777,18 @@ long int LIL__ticksTonanoseconds(long int ticks) {
 
 static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTimeStamp* now, const CVTimeStamp* outputTime, CVOptionFlags flagsIn, CVOptionFlags* flagsOut, void* displayLinkContext)
 {
-    @autoreleasepool
-    {
-        LILMainView *theView = (__bridge LILMainView*)displayLinkContext;
-        long int vertexCount = 0;
-        long int textureVertexCount = 0;
-        LILMetalRenderer * renderer = theView.renderer;
-        long int currentTime = LIL__ticksTonanoseconds(outputTime->hostTime);
-        double deltaTime;
-        if (LIL__lastFrameTime == 0) {
-            deltaTime = 0.0166666666666666666666666;
-        } else {
-            deltaTime = ((double)(currentTime - LIL__lastFrameTime) * 0.000000001);
-        }
-        LIL__lastFrameTime = currentTime;
+    LILMainView *theView = (__bridge LILMainView*)displayLinkContext;
+    long int vertexCount = 0;
+    long int textureVertexCount = 0;
+    LILMetalRenderer * renderer = theView.renderer;
+    long int currentTime = LIL__ticksTonanoseconds(outputTime->hostTime);
+    double deltaTime;
+    if (LIL__lastFrameTime == 0) {
+        deltaTime = 0.0166666666666666666666666;
+    } else {
+        deltaTime = ((double)(currentTime - LIL__lastFrameTime) * 0.000000001);
+    }
+    LIL__lastFrameTime = currentTime;
 
     @synchronized(renderer)
     {
@@ -803,7 +806,6 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
         renderer.shapeVertexCount = shapeVertexCount;
 		renderer.shapeIndexCount = shapeIndexCount;
         [theView render];
-    }
     }
     return kCVReturnSuccess;
 }
