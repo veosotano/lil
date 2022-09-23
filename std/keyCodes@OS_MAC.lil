@@ -51,6 +51,7 @@
         space: 49;
         backTick: 50;
         delete: 51;
+        esc: 53;
         command: 55;
         shift: 56;
         capsLock: 57;
