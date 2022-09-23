@@ -21,9 +21,9 @@
     fn rewind ( var.ptr(@FILE) stream ) extern;
 
     //memory
-    fn malloc (i64)=>cstr extern;
-    fn realloc (cstr,i64)=>cstr extern;
-    fn free (cstr) extern;
+    fn malloc (i64)=>ptr(any) extern;
+    fn realloc (ptr(any),i64)=>ptr(any) extern;
+    fn free (ptr(any)) extern;
     fn memcpy (var.ptr(any) dst; var.ptr(any) src; var.i64 len) extern;
 
     //c strings
