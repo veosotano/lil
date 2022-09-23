@@ -623,20 +623,6 @@ long int LIL__ticksTonanoseconds(long int ticks) {
     return self;
 }
 
-- (void)dealloc
-{
-    if(displayLink)
-    {
-        // Stop the display link BEFORE releasing anything in the view otherwise the display link
-        // thread may call into the view and crash when it encounters something that no longer
-        // exists
-        CVDisplayLinkStop(displayLink);
-        CVDisplayLinkRelease(displayLink);
-    }
-    
-    [super dealloc];
-}
-
 - (void)initialize
 {
     self.wantsLayer = YES;
@@ -770,12 +756,11 @@ long int LIL__ticksTonanoseconds(long int ticks) {
 
 - (void)windowWillClose:(NSNotification*)notification
 {
-    // Stop the display link when the window is closing since there
-    // is no point in drawing something that can't be seen
-    if(notification.object == self.window)
-    {
-        CVDisplayLinkStop(displayLink);
-    }
+    // Stop the display link BEFORE releasing anything in the view otherwise the display link
+    // thread may call into the view and crash when it encounters something that no longer
+    // exists
+    CVDisplayLinkStop(displayLink);
+    //CVDisplayLinkRelease(displayLink);
 }
 
 - (NSSize)windowWillResize:(NSWindow *)sender 
@@ -922,14 +907,7 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
         [mainWindow toggleFullScreen:self];
     }
 }
-- (void)dealloc {
-    // don’t forget to release allocated objects!
-    [menuStack release];
-    [mainMenu release];
-    [mainView release];
-    [mainWindow release];
-    [super dealloc];
-}
+
 - (void)populateMainMenu {
     mainMenu = [[NSMenu alloc] initWithTitle:@"MainMenu"];
     NSMenuItem *menuItem;
@@ -1057,18 +1035,15 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
 
 @end
 
-NSAutoreleasePool * LIL__autoreleasepool;
 LILAppDelegate * LIL__applicationDelegate;
 
 void LIL__run()
 {
-    LIL__autoreleasepool = [[NSAutoreleasePool alloc] init];
-
     // make sure the application singleton has been instantiated
     NSApplication * application = [NSApplication sharedApplication];
 
     // instantiate our application delegate
-    LIL__applicationDelegate = [[[LILAppDelegate alloc] init] autorelease];
+    LIL__applicationDelegate = [[LILAppDelegate alloc] init];
     
     [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
     [NSApp activateIgnoringOtherApps:YES];
@@ -1088,7 +1063,4 @@ void LIL__run()
     [application run];
 
     LIL__audioFree();
-
-    // drain the autorelease pool
-    [LIL__autoreleasepool drain];
 }

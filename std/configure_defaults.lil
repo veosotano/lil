@@ -79,7 +79,7 @@
             vendor: #arg { name: "vendor"; default: "apple-macos%minOSVersion"};
             buildResources: #arg { name: "buildResources"; default: true };
             resourceBuildSteps:
-                'clang -c %compilerDir/std/std_lil_mac.m -o "%buildPath/std_lil_mac.o" -mmacosx-version-min=%minOSVersion',
+                'clang -c %compilerDir/std/std_lil_mac.m -o "%buildPath/std_lil_mac.o" -mmacosx-version-min=%minOSVersion -fobjc-arc',
 				'(cd %compilerDir/std/libtess2 && make) && rm -rf %buildPath/libtess2 && mv -f %compilerDir/std/libtess2/Build %buildPath/libtess2', //parentheses are to not change cwd
                 'xcrun -sdk macosx metal -c %compilerDir/std/lil_shaders.metal -o "%buildPath/lil_shaders.air"',
                 'xcrun -sdk macosx metallib "%buildPath/lil_shaders.air" -o "%buildPath/lil_shaders.metallib"'
