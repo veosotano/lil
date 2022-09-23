@@ -1540,6 +1540,10 @@ std::shared_ptr<LILType> LILTypeGuesser::getNodeType(LILNode * node) const
                 }
             }
         }
+        case NodeTypeNull:
+        {
+            
+        }
         default:
             return nullptr;
     }
