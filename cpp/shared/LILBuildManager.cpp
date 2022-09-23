@@ -439,6 +439,10 @@ void LILBuildManager::build()
                 } else {
                     fileDirAndName = fileStr;
                 }
+                
+                if (this->_verbose) {
+                    std::cerr << "Compiling " << fileDirAndName << "\n";
+                }
 
                 size_t slashIndex = fileDirAndName.find_last_of("/");
                 if (slashIndex != std::string::npos) {
