@@ -7,12 +7,13 @@
 #import "cstd.lil";
 
 #snippet M_PI { 3.14159265358979323846264338327950288f32 };
+fn NSBeep extern;
 
 #export {
     fn sinf(var.f32 value) => f32 extern;
     
     fn LIL__beep {
-        
+        NSBeep();
     };
     
     class @AudioComponentInstance { };
