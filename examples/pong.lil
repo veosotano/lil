@@ -1,6 +1,6 @@
 #configure {
     name: "Pong";
-    automaticFullScreen: true;
+    //automaticFullScreen: true; //FIXME: enable this when scaling works
     onUpdateFn: true;
 }
 
