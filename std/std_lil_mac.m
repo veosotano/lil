@@ -54,6 +54,7 @@ extern void LIL__setGamepadY2(long int gamepadId, double value);
 
 extern bool LIL__automaticFullScreen();
 
+extern void msgEmit(char * name, void * data);
 OSStatus LIL__renderAudio(void * inData, AudioUnitRenderActionFlags * flags, const AudioTimeStamp * timestamp, UInt32 busNumber, UInt32 frames, AudioBufferList *ioData)
 {
     LIL__audioDescriptorStruct * audioDescriptor = (LIL__audioDescriptorStruct *)inData;
@@ -906,6 +907,12 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
     if (LIL__automaticFullScreen()) {
         [mainWindow toggleFullScreen:self];
     }
+    msgEmit("onFinishLaunching", NULL);
+}
+
+- (void)applicationWillTerminate:(NSNotification *)notification
+{
+    msgEmit("onTerminate", NULL);
 }
 
 - (void)populateMainMenu {
