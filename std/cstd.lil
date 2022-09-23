@@ -16,6 +16,9 @@
     fn fwrite (var.ptr(any) data; var.i64 elementSize; var.i64 numElements; var.ptr(@FILE) stream) => i64 extern;
     fn printf (cstr...)=>i32 extern;
     fn puts (cstr)=>i32 extern;
+    fn fseek (var.ptr(@FILE) stream; var.i64 offset; var.i32 origin) => i32 extern;
+    fn ftell (var.ptr(@FILE) stream) => i64 extern;
+    fn rewind ( var.ptr(@FILE) stream ) extern;
 
     //memory
     fn malloc (i64)=>cstr extern;
