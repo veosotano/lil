@@ -85,7 +85,7 @@ void LILTypeGuesser::nullsToNullables(std::shared_ptr<LILNode> node)
         auto ty = tyNode->getType();
         if (ty) {
             auto newTy = this->nullsToNullableTypes(ty);
-            if (newTy.get() != ty.get()) {
+            if (newTy) {
                 tyNode->setType(newTy);
             }
         }
@@ -95,7 +95,7 @@ void LILTypeGuesser::nullsToNullables(std::shared_ptr<LILNode> node)
         auto returnTy = fnDecl->getReturnType();
         if (returnTy) {
             auto newRetTy = this->nullsToNullableTypes(returnTy);
-            if (newRetTy.get() != returnTy.get()) {
+            if (newRetTy) {
                 fnDecl->setReturnType(newRetTy);
             }
         }
@@ -859,7 +859,7 @@ void LILTypeGuesser::_process(LILFunctionDecl * value)
             }
         } else {
             auto newReturnTy = this->nullsToNullableTypes(returnTy);
-            if (newReturnTy.get() != returnTy.get()) {
+            if (newReturnTy) {
                 fnTy->setReturnType(newReturnTy);
             }
         }
@@ -1590,7 +1590,10 @@ std::shared_ptr<LILType> LILTypeGuesser::getFnType(LILFunctionDecl * fd) const
         std::shared_ptr<LILVarDecl> vd = std::static_pointer_cast<LILVarDecl>(arg);
         auto argType = this->findTypeForArg(vd.get(), fd, argCount);
         if (argType) {
-            argType = this->nullsToNullableTypes(argType);
+            auto newArgType = this->nullsToNullableTypes(argType);
+            if (newArgType) {
+                argType = newArgType;
+            }
             ret->addArgument(argType);
             vd->setType(argType);
         }
@@ -1600,8 +1603,10 @@ std::shared_ptr<LILType> LILTypeGuesser::getFnType(LILFunctionDecl * fd) const
     auto evals = fd->getBody();
     auto existingReturnType = fd->getReturnType();
     if (existingReturnType) {
-        existingReturnType = this->nullsToNullableTypes(existingReturnType);
-        ret->setReturnType(existingReturnType);
+        auto newReturnType = this->nullsToNullableTypes(existingReturnType);
+        if (newReturnType) {
+            ret->setReturnType(newReturnType);
+        }
     } else {
         auto returnType = this->getFnReturnType(evals);
         ret->setReturnType(returnType);
@@ -1631,7 +1636,10 @@ std::shared_ptr<LILType> LILTypeGuesser::getFnReturnType(const std::vector<std::
             returnType = intType;
         }
         
-        returnType = this->nullsToNullableTypes(returnType);
+        auto newReturnType = this->nullsToNullableTypes(returnType);
+        if (newReturnType) {
+            returnType = newReturnType;
+        }
     }
     return returnType;
 }
@@ -2419,35 +2427,144 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeFromCallers(const std::vector<s
 
 std::shared_ptr<LILType> LILTypeGuesser::nullsToNullableTypes(std::shared_ptr<LILType> ty) const
 {
-    if (ty->isA(TypeTypeMultiple)) {
-        auto multiTy = std::static_pointer_cast<LILMultipleType>(ty);
-        bool isNullable = false;
-        std::vector<std::shared_ptr<LILType>> newTypes;
-        for (auto mTy : multiTy->getTypes()) {
-            if (mTy->getName() == "null") {
-                isNullable = true;
-            } else {
-                newTypes.push_back(mTy);
+    std::shared_ptr<LILType> ret;
+    switch (ty->getTypeType()) {
+        case TypeTypeMultiple:
+        {
+            auto multiTy = std::static_pointer_cast<LILMultipleType>(ty);
+            bool isNullable = false;
+            std::vector<std::shared_ptr<LILType>> newTypes;
+            for (auto mTy : multiTy->getTypes()) {
+                if (mTy->getName() == "null") {
+                    isNullable = true;
+                } else {
+                    newTypes.push_back(mTy);
+                }
             }
-        }
-        if (isNullable) {
-            if (newTypes.size() == 1) {
-                auto theType = newTypes.front();
-                
-                if (theType->isA(TypeTypePointer) || (theType->getName() == "bool")) {
-                    theType->setIsNullable(true);
-                    ty = theType;
+            if (isNullable) {
+                if (newTypes.size() == 1) {
+                    auto theType = newTypes.front();
+                    
+                    if (theType->isA(TypeTypePointer) || (theType->getName() == "bool")) {
+                        theType->setIsNullable(true);
+                        ret = theType;
+                    } else {
+                        multiTy->setIsNullable(true);
+                        multiTy->setTypes(std::move(newTypes));
+                    }
                 } else {
                     multiTy->setIsNullable(true);
                     multiTy->setTypes(std::move(newTypes));
                 }
-            } else {
-                multiTy->setIsNullable(true);
-                multiTy->setTypes(std::move(newTypes));
             }
+            break;
         }
+        case TypeTypeObject:
+        {
+            const auto & tmplParams = ty->getTmplParams();
+            if (tmplParams.size() > 0) {
+                std::vector<std::shared_ptr<LILNode>> newTmplParams;
+                bool hasTmplParamChanges = false;
+                for (const auto & tmplParam : tmplParams) {
+                    if (tmplParam->getNodeType() == NodeTypeType) {
+                        auto replacementTy = this->nullsToNullableTypes(std::static_pointer_cast<LILType>(tmplParam));
+                        if (replacementTy) {
+                            newTmplParams.push_back(replacementTy);
+                            hasTmplParamChanges = true;
+                        } else {
+                            newTmplParams.push_back(tmplParam);
+                        }
+                    } else {
+                        newTmplParams.push_back(tmplParam);
+                    }
+                }
+                if (hasTmplParamChanges) {
+                    ty->setTmplParams(std::move(newTmplParams));
+                }
+            }
+            break;
+        }
+        case TypeTypePointer:
+        {
+            auto ptrTy = std::static_pointer_cast<LILPointerType>(ty);
+            auto arg = ptrTy->getArgument();
+            auto replacementTy = this->nullsToNullableTypes(arg);
+            if (replacementTy) {
+                ptrTy->setArgument(replacementTy);
+            }
+            break;
+        }
+
+        case TypeTypeStaticArray:
+        {
+            auto saTy = std::static_pointer_cast<LILStaticArrayType>(ty);
+            auto childTy = saTy->getType();
+            auto replacementTy = this->nullsToNullableTypes(childTy);
+            if (replacementTy) {
+                saTy->setType(replacementTy);
+            }
+            break;
+        }
+        
+        case TypeTypeFunction:
+        {
+            auto fnTy = std::static_pointer_cast<LILFunctionType>(ty);
+            bool hasChanges = false;
+            bool hasChangesArgs = false;
+            bool hasChangesRet = false;
+            std::vector<std::shared_ptr<LILNode>> newArgs;
+            for (auto arg : fnTy->getArguments()) {
+                if (arg->isA(NodeTypeType)) {
+                    std::shared_ptr<LILType> argTy = std::static_pointer_cast<LILType>(arg);
+                    auto replacementTy = this->nullsToNullableTypes(argTy);
+                    if (replacementTy) {
+                        hasChanges = true;
+                        hasChangesArgs = true;
+                        newArgs.push_back(replacementTy);
+                    } else {
+                        newArgs.push_back(arg);
+                    }
+                } else if (arg->isA(NodeTypeVarDecl)){
+                    auto vd = std::static_pointer_cast<LILVarDecl>(arg);
+                    std::shared_ptr<LILType> vdTy = vd->getType();
+                    auto replacementTy = this->nullsToNullableTypes(vdTy);
+                    if (replacementTy) {
+                        vd->setType(replacementTy);
+                    }
+                } else {
+                    std::cerr << "UNKNOWN NODE TYPE OF ARGUMENT OF FUNCTION TYPE FAIL !!!!!\n\n";
+                    break;
+                }
+            }
+            auto retTy = fnTy->getReturnType();
+            std::shared_ptr<LILType> replacementRetTy;
+            if (retTy) {
+                replacementRetTy = this->nullsToNullableTypes(retTy);
+                if (replacementRetTy) {
+                    hasChanges = true;
+                    hasChangesRet = true;
+                }
+            }
+            
+            if (hasChanges) {
+                auto newFnTy = std::make_shared<LILFunctionType>();
+                if (hasChangesArgs) {
+                    newFnTy->setArguments(newArgs);
+                } else {
+                    newFnTy->setArguments(fnTy->getArguments());
+                }
+                if (hasChangesRet) {
+                    newFnTy->setReturnType(replacementRetTy);
+                }
+                ret = newFnTy;
+            }
+            break;
+        }
+
+        default:
+            break;
     }
-    return ty;
+    return ret;
 }
 
 
