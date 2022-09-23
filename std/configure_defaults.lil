@@ -88,6 +88,7 @@
 			linkerFlags +: "-F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks";
             linkerFlags +: "-macosx_version_min %minOSVersion";
             linkerFlags +: "-framework Cocoa";
+            bundleId: "lil.developer.%name";
 
             linkerFlagsApp:
                 '"%buildPath/std_lil_mac.o"',
@@ -122,6 +123,8 @@
         <string>English</string>
         <key>CFBundleExecutable</key>
         <string>%name</string>
+        <key>CFBundleIdentifier</key>
+        <string>%bundleId</string>
         <key>CFBundleInfoDictionaryVersion</key>
         <string>6.0</string>
         <key>CFBundlePackageType</key>
