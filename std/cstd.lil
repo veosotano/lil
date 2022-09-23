@@ -25,11 +25,13 @@
     fn realloc (ptr(any),i64)=>ptr(any) extern;
     fn free (ptr(any)) extern;
     fn memcpy (var.ptr(any) dst; var.ptr(any) src; var.i64 len) extern;
+	fn memset(var.ptr(any) dst; var.i32 val; var.i64 len) extern;
 
     //c strings
     fn strcmp (var.cstr str1; var.cstr str2) => i32 extern;
     fn strncmp (var.cstr str1; var.cstr str2, var.i64 maxLength) => i64 extern;
     fn strnlen (var.cstr str; var.i64 maxLength) => i64 extern;
+    fn snprintf ( var.cstr buffer; var.i64 bufsz; var.cstr format ... ) => i32 extern;
 
     //math
     fn abs(var.i32 value) => i32 extern;
