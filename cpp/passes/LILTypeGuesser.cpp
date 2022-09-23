@@ -2048,6 +2048,9 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(LILValuePath * vp)
                     return ruleTy;
                 }
                 case SelectorTypeIndex:
+                case SelectorTypeI:
+                case SelectorTypeJ:
+                case SelectorTypeK:
                 {
                     return LILType::make("i64");
                 }

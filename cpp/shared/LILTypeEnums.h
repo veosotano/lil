@@ -255,6 +255,9 @@ namespace LIL
         SelectorTypeKey,
         SelectorTypeValue,
         SelectorTypeIndex,
+        SelectorTypeI,
+        SelectorTypeJ,
+        SelectorTypeK,
     };
 
     enum CombinatorType

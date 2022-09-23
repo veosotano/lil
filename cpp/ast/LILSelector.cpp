@@ -88,6 +88,18 @@ void LILSelector::receiveNodeData(const LIL::LILString &data)
     {
         this->setSelectorType(SelectorTypeIndex);
     }
+    else if (data == "@i")
+    {
+        this->setSelectorType(SelectorTypeI);
+    }
+    else if (data == "@j")
+    {
+        this->setSelectorType(SelectorTypeJ);
+    }
+    else if (data == "@k")
+    {
+        this->setSelectorType(SelectorTypeK);
+    }
     else
     {
         this->setSelectorType(SelectorTypeNameSelector);

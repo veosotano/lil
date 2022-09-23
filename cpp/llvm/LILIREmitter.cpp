@@ -2107,6 +2107,7 @@ llvm::Value * LILIREmitter::_emitRuleInner(LILRule * value)
     
     auto indexArg = ruleFn->args().begin() + 1;
     d->namedValues["@index"] = indexArg;
+    d->namedValues["@i"] = indexArg;
     indexArg->setName("@index");
 
     for (const auto & val : value->getValues()) {
@@ -2594,7 +2595,54 @@ llvm::Value * LILIREmitter::_emitSel(LILSelector * value)
             }
             std::cerr << "COULD NOT EMIT @index SELECTOR FAIL!!!!!!!!!!!!!!\n";
             return nullptr;
+        }
             
+        case SelectorTypeI:
+        {
+            const auto iStr = "@i";
+            if (d->namedValues.count(iStr)) {
+                auto iPtr = d->namedValues[iStr];
+                return d->irBuilder.CreateLoad(this->llvmTypeFromLILType(value->getType().get()), iPtr, iStr);
+            }
+            const auto indexStr = "@index";
+            if (d->namedValues.count(indexStr)) {
+                auto indexPtr = d->namedValues[indexStr];
+                return d->irBuilder.CreateLoad(this->llvmTypeFromLILType(value->getType().get()), indexPtr, indexStr);
+            }
+            std::cerr << "COULD NOT EMIT @i SELECTOR FAIL!!!!!!!!!!!!!!\n";
+            return nullptr;
+        }
+            
+        case SelectorTypeJ:
+        {
+            const auto jStr = "@j";
+            if (d->namedValues.count(jStr)) {
+                auto jPtr = d->namedValues[jStr];
+                return d->irBuilder.CreateLoad(this->llvmTypeFromLILType(value->getType().get()), jPtr, jStr);
+            }
+            const auto indexStr = "@index";
+            if (d->namedValues.count(indexStr)) {
+                auto indexPtr = d->namedValues[indexStr];
+                return d->irBuilder.CreateLoad(this->llvmTypeFromLILType(value->getType().get()), indexPtr, indexStr);
+            }
+            std::cerr << "COULD NOT EMIT @j SELECTOR FAIL!!!!!!!!!!!!!!\n";
+            return nullptr;
+        }
+            
+        case SelectorTypeK:
+        {
+            const auto kStr = "@k";
+            if (d->namedValues.count(kStr)) {
+                auto kPtr = d->namedValues[kStr];
+                return d->irBuilder.CreateLoad(this->llvmTypeFromLILType(value->getType().get()), kPtr, kStr);
+            }
+            const auto indexStr = "@index";
+            if (d->namedValues.count(indexStr)) {
+                auto indexPtr = d->namedValues[indexStr];
+                return d->irBuilder.CreateLoad(this->llvmTypeFromLILType(value->getType().get()), indexPtr, indexStr);
+            }
+            std::cerr << "COULD NOT EMIT @k SELECTOR FAIL!!!!!!!!!!!!!!\n";
+            return nullptr;
         }
 
         default:

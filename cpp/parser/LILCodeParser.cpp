@@ -587,6 +587,9 @@ bool LILCodeParser::isObjectSelector() const
                 || objtype == "key"
                 || objtype == "value"
                 || objtype == "index"
+                || objtype == "i"
+                || objtype == "j"
+                || objtype == "k"
                 || objtype == "mainMenu"
                 )
             {
@@ -3581,6 +3584,9 @@ bool LILCodeParser::readObjectSelector()
                     || objtype == "key"
                     || objtype == "value"
                     || objtype == "index"
+                    || objtype == "i"
+                    || objtype == "j"
+                    || objtype == "k"
                     || objtype == "mainMenu"
                     || objtype == "menu"
                     || objtype == "menuItem"
