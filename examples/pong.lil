@@ -162,6 +162,7 @@ fn bounceOnEdges (var.@container ball) {
             vel.x: (xVel * (-1f32));
             ball.velocity: vel;
         }
+        ball.x: left - ((windowWidth + 100f32) - right);
     }
 };
 
@@ -169,10 +170,10 @@ fn checkForGoal (var.@container ball) {
     if goal = false {
         var left: ball.x;
         var right: ball.x + ball.width;
-        if (left <= (0f32)) {
+        if (left <= (0f32 - ball.width)) {
             player2Goal();
         }
-        if (right >= (windowWidth)) {
+        if (right >= (windowWidth + ball.width)) {
             player1Goal();
         }
     }
