@@ -1,7 +1,6 @@
 const DEBUG: false;
 const DEBUG_SHAPE_VERTICES: false;
 
-#snippet entityTypesSize { 10 };
 #snippet namesSize { 256 };
 #snippet selectionSize { 256 };
 #snippet entitiesSize { 2048 };
@@ -85,15 +84,6 @@ fn powf(f32, f32) => f32 extern;
         var.f32 x: 0f32;
         var.f32 y: 0f32;
         var.f32 z: 0f32;
-    };
-    class @collider
-    {
-        var.f32 width;
-        var.f32 height;
-        var.f32 depth;
-        var.f32 x;
-        var.f32 y;
-        var.f32 z;
     };
 	enum.i32 ShapeType {
 		moveTo,
@@ -194,14 +184,12 @@ fn powf(f32, f32) => f32 extern;
 
         fn setWidth(var.f32 value) {
             app.box2ds[@self.componentId].width: value;
-            app.getCollider(@self.id).width: value;
         };
         fn getWidth {
             return app.box2ds[@self.componentId].width;
         };
         fn setHeight(var.f32 value) {
             app.box2ds[@self.componentId].height: value;
-            app.getCollider(@self.id).height: value;
         };
         fn getHeight {
             return app.box2ds[@self.componentId].height;
@@ -217,21 +205,18 @@ fn powf(f32, f32) => f32 extern;
         };
         fn setX(var.f32 value) {
             app.boxPositions[@self.componentId].x: value;
-            app.colliders[@self.id].x: value;
         }
         fn getX() => f32 {
             return app.boxPositions[@self.componentId].x;
         };
         fn setY(var.f32 value) {
             app.boxPositions[@self.componentId].y: value;
-            app.colliders[@self.id].y: value;
         };
         fn getY() => f32 {
             return app.boxPositions[@self.componentId].y;
         };
         fn setZ(var.f32 value) {
             app.boxPositions[@self.componentId].z: value;
-            app.colliders[@self.id].z: value;
         };
         fn getZ() => f32 {
             return app.boxPositions[@self.componentId].z;
@@ -278,35 +263,30 @@ fn powf(f32, f32) => f32 extern;
 
         fn setWidth(var.f32 value) {
             app.imgs[@self.componentId].width: value;
-            app.getCollider(@self.id).width: value;
         };
         fn getWidth {
             return app.imgs[@self.componentId].width;
         };
         fn setHeight(var.f32 value) {
             app.imgs[@self.componentId].height: value;
-            app.getCollider(@self.id).height: value;
         };
         fn getHeight {
             return app.imgs[@self.componentId].height;
         };
         fn setX(var.f32 value) {
             app.imgPositions[@self.componentId].x: value;
-            app.colliders[@self.id].x: value;
         }
         fn getX() => f32 {
             return app.imgPositions[@self.componentId].x;
         };
         fn setY(var.f32 value) {
             app.imgPositions[@self.componentId].y: value;
-            app.colliders[@self.id].y: value;
         };
         fn getY() => f32 {
             return app.imgPositions[@self.componentId].y;
         };
         fn setZ(var.f32 value) {
             app.imgPositions[@self.componentId].z: value;
-            app.colliders[@self.id].z: value;
         };
         fn getZ() => f32 {
             return app.imgPositions[@self.componentId].z;
@@ -554,9 +534,6 @@ fn powf(f32, f32) => f32 extern;
 		//shapes
 		var.[#paste entitiesSize x @shapeData] shapes: [];
         var.i64 shapesCount: 0;
-		//colliders
-        var.[#paste entitiesSize x i64] colliderIds: [];
-        var.[#paste componentsSize x @collider] colliders: [];
         var.[#paste namesSize x cstr] names: [];
         var.i64 nameCount: 0;
         var.i64 typeCount: 0;
@@ -673,14 +650,6 @@ fn powf(f32, f32) => f32 extern;
             var currentCount: @self.shapesCount;
             @self.shapesCount +: 1;
             return currentCount;
-        };
-        fn setCollider(var.i64 id; var.@collider value) {
-            var.i64 colliderId: @self.colliderIds[id];
-            @self.colliders[colliderId]: value;
-        };
-        fn getCollider(var.i64 id) => ptr(@collider) {
-            var.i64 colliderId: @self.colliderIds[id];
-            return pointerTo @self.colliders[colliderId];
         };
         fn newResource(var.i64 id) {
             @self.resourceIds[@self.resourceCount]: id;
