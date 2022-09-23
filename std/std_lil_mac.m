@@ -968,7 +968,11 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
 
     menuItem = [mainMenu addItemWithTitle:@"Apple" action:NULL keyEquivalent:@""];
     submenu = [[NSMenu alloc] initWithTitle:@"Apple"];
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
     [NSApp performSelector:NSSelectorFromString(@"setAppleMenu:") withObject:submenu];
+#pragma clang diagnostic pop
+
     [mainMenu setSubmenu:submenu forItem:menuItem];
 
     [menuStack addObject: submenu];
