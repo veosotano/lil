@@ -610,6 +610,7 @@ long int LIL__ticksTonanoseconds(long int ticks) {
 }
 
 @interface LILMainView : NSView <CALayerDelegate,NSWindowDelegate>
+- (void)setModifierKeyState:(NSUInteger)modifierFlags;
 @property(retain) LILMetalRenderer * renderer;
 @end
 @implementation LILMainView
@@ -684,6 +685,7 @@ long int LIL__ticksTonanoseconds(long int ticks) {
 - (void)mouseDown:(NSEvent *)anEvent {
 	NSPoint loc = [anEvent locationInWindow];
 	CGFloat scaleFactor = self.window.screen.backingScaleFactor;
+    [self setModifierKeyState:[anEvent modifierFlags]];
     LIL__setMouseDown(
 		0,
 		loc.x * scaleFactor,
@@ -693,6 +695,7 @@ long int LIL__ticksTonanoseconds(long int ticks) {
 - (void)mouseDragged:(NSEvent *)anEvent {
 	NSPoint loc = [anEvent locationInWindow];
 	CGFloat scaleFactor = self.window.screen.backingScaleFactor;
+    [self setModifierKeyState:[anEvent modifierFlags]];
     LIL__setMouseDragged(
 		0,
 		loc.x * scaleFactor,
@@ -702,6 +705,7 @@ long int LIL__ticksTonanoseconds(long int ticks) {
 - (void)mouseUp:(NSEvent *)anEvent {
 	NSPoint loc = [anEvent locationInWindow];
 	CGFloat scaleFactor = self.window.screen.backingScaleFactor;
+    [self setModifierKeyState:[anEvent modifierFlags]];
     LIL__setMouseUp(
 		0,
 		loc.x * scaleFactor,
@@ -714,6 +718,31 @@ long int LIL__ticksTonanoseconds(long int ticks) {
 }
 - (void)keyUp:(NSEvent *)anEvent {
     LIL__setKeyUp(anEvent.keyCode);
+}
+- (void)flagsChanged:(NSEvent *)anEvent {
+    [self setModifierKeyState:[anEvent modifierFlags]];
+}
+- (void)setModifierKeyState:(NSUInteger)modifierFlags {
+    if (modifierFlags & NSEventModifierFlagCommand) {
+        LIL__setKeyDown(55);
+    } else {
+        LIL__setKeyUp(55);
+    }
+    if (modifierFlags & NSEventModifierFlagShift) {
+        LIL__setKeyDown(56);
+    } else {
+        LIL__setKeyUp(56);
+    }
+    if (modifierFlags & NSEventModifierFlagOption) {
+        LIL__setKeyDown(58);
+    } else {
+        LIL__setKeyUp(58);
+    }
+    if (modifierFlags & NSEventModifierFlagControl) {
+        LIL__setKeyDown(59);
+    } else {
+        LIL__setKeyUp(59);
+    }
 }
 
 - (void)viewDidMoveToWindow
