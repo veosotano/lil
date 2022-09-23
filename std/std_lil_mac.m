@@ -55,6 +55,8 @@ extern void LIL__setGamepadY2(long int gamepadId, double value);
 extern bool LIL__automaticFullScreen();
 
 extern void msgEmit(char * name, void * data);
+extern void LIL__notifyChange(long int theId, const char * value);
+
 OSStatus LIL__renderAudio(void * inData, AudioUnitRenderActionFlags * flags, const AudioTimeStamp * timestamp, UInt32 busNumber, UInt32 frames, AudioBufferList *ioData)
 {
     LIL__audioDescriptorStruct * audioDescriptor = (LIL__audioDescriptorStruct *)inData;
@@ -808,7 +810,7 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
 
 @end
 
-@interface LILAppDelegate : NSObject <NSApplicationDelegate> {
+@interface LILAppDelegate : NSObject <NSApplicationDelegate, NSTextFieldDelegate> {
     NSWindow * mainWindow;
     LILMainView * mainView;
     NSMenu * mainMenu;
@@ -1038,6 +1040,11 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
 			onCancel();
 		}
 	}];
+}
+
+- (void)controlTextDidChange:(NSNotification *)notification {
+    NSTextField *textField = [notification object];
+    LIL__notifyChange([textField tag], [[textField stringValue] UTF8String]);
 }
 
 @end

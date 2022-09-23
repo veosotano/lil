@@ -9,6 +9,7 @@ const DEBUG_SHAPE_VERTICES: false;
 #snippet actionsSize { 128 };
 #snippet shapesSize { 128 };
 #snippet maxPathSubdiv { 20 };
+#snippet textfieldsSize { 128 };
 
 fn onUpdate(var.f64 deltaTime) extern;
 fn LIL__setWindowBgColor(var.f32 red; var.f32 green; var.f32 blue; var.f32 alpha) extern;
@@ -29,7 +30,9 @@ fn powf(f32, f32) => f32 extern;
     //1: @image
     //2: @sprite
 	//3: @shape2d
-    var.@app app: @app { selectables: []; entityCount: 0; typeCount: 4 };
+	//4: @textfield
+	//4: @label
+    var.@app app: @app { selectables: []; entityCount: 0; typeCount: 5 };
 
     class @size {
         var.f64 width;
@@ -242,6 +245,15 @@ fn powf(f32, f32) => f32 extern;
 		var.i64 elementId;
 		var.ptr(any) ptr;
 	}
+    class @textfieldData {
+        var.@rgb bgColor;
+        var.ptr(any) data;
+        var.ptr(any)|null onChange;
+        var.f32 width: 0;
+        var.f32 height: 0;
+        var.f32 x: 0;
+        var.f32 y: 0;
+    }
     class @container
     {
         //this class MUST only be an i64
@@ -736,6 +748,9 @@ fn powf(f32, f32) => f32 extern;
         var.@pos2d dragOrigin: @pos2d { x: 0; y: 0 };
         var.f32 dragMinDistance: 3.0;
         var.bool dragHasSession: false;
+        //textfields
+        var.[#paste textfieldsSize x @textfieldData] textfields: [];
+        var.i64 textfieldCount: 0;
 		
 		fn initialize {
             //get root's background color
@@ -870,6 +885,11 @@ fn powf(f32, f32) => f32 extern;
             @self.actionCount +: 1;
             return currentCount;
 		}
+        fn newTextfield => i64 {
+            var currentCount: @self.textfieldCount;
+            @self.textfieldCount +: 1;
+            return currentCount;
+        };
         fn newMouseDownActionId => i64 {
             var currentCount: @self.mouseDownActionCount;
             @self.mouseDownActionCount +: 1;

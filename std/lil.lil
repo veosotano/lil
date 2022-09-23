@@ -11,5 +11,6 @@
         #needs "app.lil";
         #needs "input.lil";
         #needs "audio.lil";
+        #needs "textfield.lil";
     }
 };
