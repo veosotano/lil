@@ -18,6 +18,7 @@ fn LIL__unloadTexture(var.i64 idx) extern;
 
 #import "libtess2.lil";
 fn powf(f32, f32) => f32 extern;
+fn fabsf(f32) => f32 extern;
 
 #export {
     #needs "cstd.lil";
