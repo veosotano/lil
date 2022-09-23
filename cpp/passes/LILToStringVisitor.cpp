@@ -414,7 +414,7 @@ LILToStrInfo LILToStringVisitor::_stringify(LILStringFunction * value)
     ret.value = "String function:";
     LILToStrInfo startInfo;
     startInfo.isExported = false;
-    startInfo.value = value->getStartChunk()+"\"";
+    startInfo.value = value->getStartChunk();
     ret.children.push_back(startInfo);
 
     auto children = value->getNodes();
@@ -425,14 +425,14 @@ LILToStrInfo LILToStringVisitor::_stringify(LILStringFunction * value)
         if (midChunks.size() > i) {
             LILToStrInfo midInfo;
             midInfo.isExported = false;
-            midInfo.value = LILString("\"")+midChunks[i]+"\"";
+            midInfo.value = midChunks[i];
             ret.children.push_back(midInfo);
         }
         
     }
     LILToStrInfo endInfo;
     endInfo.isExported = false;
-    endInfo.value = LILString("\"")+value->getEndChunk();
+    endInfo.value = value->getEndChunk();
     ret.children.push_back(endInfo);
     return ret;
 }
