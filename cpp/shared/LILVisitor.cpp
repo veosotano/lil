@@ -548,11 +548,43 @@ std::shared_ptr<LILType> LILVisitor::findIfCastType(LILValuePath * vp, size_t & 
             else
             {
                 auto nodes = vp->getNodes();
-                if (firstArg->isA(NodeTypeVarName) && nodes.size() == 1) {
-                    if (firstArg->equalTo(nodes.front())) {
-                        auto ifCastTy = args.back();
-                        return std::static_pointer_cast<LILType>(ifCastTy);
+                if (firstArg->isA(NodeTypeVarName)) {
+                    if ( nodes.size() == 1) {
+                        if (firstArg->equalTo(nodes.front())) {
+                            auto ifCastTy = args.back();
+                            return std::static_pointer_cast<LILType>(ifCastTy);
+                        }
+                    } else {
+                        if (firstArg->equalTo(nodes.front())) {
+                            auto ifCastTy = args.back();
+                            outStartIndex = 1;
+                            return std::static_pointer_cast<LILType>(ifCastTy);
+                        }
                     }
+                }
+            }
+        }
+        parent = parent->getParentNode();
+    }
+    return ret;
+}
+
+std::shared_ptr<LILType> LILVisitor::findIfCastTypeVN(LILVarName * vn) const
+{
+    std::shared_ptr<LILType> ret;
+    auto parent = vn->getParentNode();
+    while (parent) {
+        if (parent->isA(FlowControlTypeIfCast)) {
+            auto fc = std::static_pointer_cast<LILFlowControl>(parent);
+            auto args = fc->getArguments();
+            if (args.size() != 2) {
+                break;
+            }
+            auto firstArg = args.front();
+            if (firstArg->isA(NodeTypeVarName)) {
+                if (firstArg->equalTo(vn->shared_from_this())) {
+                    auto ifCastTy = args.back();
+                    return std::static_pointer_cast<LILType>(ifCastTy);
                 }
             }
         }
