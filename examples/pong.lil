@@ -223,6 +223,10 @@ fn newGame {
     player2ScoreBar.width: 0f32;
 }
 
+fn newGameMenu(var.ptr(any) data) {
+    newGame();
+}
+
 fn playerWin {
     LIL__beep();
     newGame();
@@ -371,7 +375,7 @@ fn aabbIntersects(var.@container a; var.@container b) => bool {
     // }
 }
 
-fn switchGamepads {
+fn switchGamepads(var.ptr(any) data) {
     if player1Gamepad = 0 {
         player1Gamepad: 1;
         player2Gamepad: 0;
@@ -381,7 +385,7 @@ fn switchGamepads {
     }
 }
 
-fn toggleSoloMode {
+fn toggleSoloMode(var.ptr(any) data) {
     if useSoloMode {
         useSoloMode: false;
     } else {
@@ -395,7 +399,7 @@ fn toggleSoloMode {
 
         #new @menuItem newGame {
             label: "New game";
-            action: pointerTo(newGame);
+            action: pointerTo(newGameMenu);
             shortcut: "n";
         }
         #new @menuItem switchGamepads {
