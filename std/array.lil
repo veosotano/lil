@@ -98,7 +98,7 @@ const DEBUG: false;
 
                     set(pointer, valueOf(firstValue));
                     set(pointer + 1, valueOf(secondValue));
-                    set(pointerTo(@self.buffer)=>ptr(ptr(@subtype)), pointer);
+                    @self.buffer: pointer;
                     set(pointer+@self.size, value);
                 }
 
