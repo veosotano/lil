@@ -2014,8 +2014,20 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(LILValuePath * vp)
                 }
                 case SelectorTypeSelfSelector:
                 {
-                    //FIXME: implement this
-                    break;
+                    auto classDecl = this->findAncestorClass(selector);
+                    if (!classDecl) {
+                        std::cerr << "USING @self OUTSIDE OF A CLASS FAIL !!!!\n";
+                        return nullptr;
+                    }
+                    auto classTy = classDecl->getType();
+                    if (!classTy) {
+                        std::cerr << "CLASS HAD NO TYPE FAIL !!!!\n";
+                        return nullptr;
+                    }
+                    auto ptrTy = std::make_shared<LILPointerType>();
+                    ptrTy->setName("ptr");
+                    ptrTy->setArgument(classTy);
+                    return ptrTy;
                 }
                 case SelectorTypeThisSelector:
                 {
