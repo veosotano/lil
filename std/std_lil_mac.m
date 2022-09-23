@@ -846,7 +846,8 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
     NSMutableArray * menuStack;
 }
 - (id)init;
-- (void)initializeMainWindowWithWidth:(float) width height:(float) height;
+- (void)initializeMainWindow;
+- (void)setMainWindowWidth:(CGFloat)width height:(CGFloat)height;
 - (void)populateMainMenu;
 - (void)addMenu:(const char *) label;
 - (void)addMenuItem:(const char *)label key:(const char *)key fnPtr:(void(*))fnPtr;
@@ -857,6 +858,7 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
 - (void)loadTextureForFile:(NSString *)path index:(unsigned int)idx;
 - (void)unloadTextureForIndex:(unsigned int)idx;
 - (LILMainView *)getMainView;
+- (NSWindow *)getMainWindow;
 - (void)quit;
 - (void)showOpenPanelWithSuccessCallback:(void(*)(const char *))onSuccess cancelCallback:(void(*)())onCancel;
 - (void)showSavePanelWithSuccessCallback:(void(*)(const char *))onSuccess cancelCallback:(void(*)())onCancel;
@@ -868,19 +870,13 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
     }
     return self;
 }
-- (void)initializeMainWindowWithWidth:(float) width height:(float) height {
+- (void)initializeMainWindow {
     NSScreen * mainScreen = [NSScreen mainScreen];
     NSRect screenRect = [mainScreen frame];
 
-    width /= [mainScreen backingScaleFactor];
-    height /= [mainScreen backingScaleFactor];
-    
-    if (width < 300.0) {
-        width = 300.0;
-    }
-    if (height < 300.0) {
-        height = 300.0;
-    }
+    CGFloat width = (screenRect.size.width / 2.0) / [mainScreen backingScaleFactor];
+    CGFloat height = (screenRect.size.height / 2.0) / [mainScreen backingScaleFactor];
+
     
     float x = (screenRect.size.width/2) - (width/2);
     float y = (screenRect.size.height/2) - (height/2);
@@ -899,11 +895,28 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
             NSWindowStyleMaskTitled
             | NSWindowStyleMaskClosable
             | NSWindowStyleMaskMiniaturizable
-            | NSWindowStyleMaskResizable
+            //| NSWindowStyleMaskResizable //FIXME: re-enable when resizing works
         backing:NSBackingStoreBuffered
         defer:YES];
     
     mainView = [[LILMainView alloc] initWithFrame:contentSize];
+}
+
+- (void)setMainWindowWidth:(CGFloat)width height:(CGFloat)height {
+    NSScreen * mainScreen = [NSScreen mainScreen];
+    NSRect screenRect = [mainScreen frame];
+    width /= [mainScreen backingScaleFactor];
+    height /= [mainScreen backingScaleFactor];
+    
+    NSRect windowFrame = [mainWindow frame];
+    CGFloat titleBarHeight = windowFrame.size.height - [mainWindow contentRectForFrameRect: windowFrame].size.height;
+    height += titleBarHeight;
+    
+    CGFloat x = (screenRect.size.width/2) - (width/2);
+    CGFloat y = (screenRect.size.height/2) - (height/2);
+    
+    NSRect newFrame = NSMakeRect(x, y, width, height);
+    [mainWindow setFrame:newFrame display:YES];
 }
 
 - (void)applicationWillFinishLaunching:(NSNotification *)notification {
@@ -1030,6 +1043,11 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
     return mainView;
 }
 
+- (NSWindow *)getMainWindow
+{
+    return mainWindow;
+}
+
 - (void)quit
 {
     [[NSApplication  sharedApplication] terminate:self];
@@ -1097,10 +1115,13 @@ void LIL__run()
     LIL__setupAudio();
     LIL__setupGamepads();
     LIL__timeInit();
-    LIL__init();
 
+    [LIL__applicationDelegate initializeMainWindow];
+    
+    LIL__init();
+    
     CGSize windowSize = LIL__getWindowSize();
-    [LIL__applicationDelegate initializeMainWindowWithWidth: windowSize.width height: windowSize.height];
+    [LIL__applicationDelegate setMainWindowWidth: windowSize.width height: windowSize.height];
 
     // call the run method of our application
     [application run];
