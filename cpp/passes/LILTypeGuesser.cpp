@@ -1426,12 +1426,8 @@ std::shared_ptr<LILType> LILTypeGuesser::getNodeType(LILNode * node) const
                     ) {
                         return staticArrayTy;
                     }
-                } else if (ancestorTy->isA(TypeTypeObject) && ancestorTy->getName() == "array"){
-                    auto objTy = std::static_pointer_cast<LILObjectType>(ancestorTy);
-                    auto paramTy = objTy->getTmplParams().front();
-                    if (paramTy && paramTy->equalTo(vlElementTy)) {
-                        return ancestorTy;
-                    }
+                } else if (ancestorTy->isA(TypeTypeObject) && ancestorTy->getName().substr(0, 9) == "lil_array"){
+                    return ancestorTy;
                 } else if (ancestorTy->getTypeType() == TypeTypeSIMD) {
                     return ancestorTy;
                 }
