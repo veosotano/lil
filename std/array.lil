@@ -148,6 +148,31 @@ const DEBUG: false;
             }
         };
 
+        fn clear {
+            if @self.buffer => ptr(@subtype) {
+                free @self.buffer;
+            }
+            @self.capacity: #paste SMALL_BUFFER_SIZE;
+            @self.size: 0;
+            @self.buffer: [];
+        }
+        
+        fn remove(var.i64 index) {
+            //swap items one place back
+            for (var.i64 i: index; i< @self.size-1; i+:1) {
+                var ptr: @self.at(i);
+                var ptr2: @self.at(i+1);
+                if ptr => ptr(@subtype) {
+                    if ptr2 => ptr(@subtype) {
+                        set(ptr, valueOf(ptr2));
+                    }
+                }
+            }
+
+            //reduce count
+            @self.size -: 1;
+        }
+
         fn initialize(var.i64 newCapacity)=>ptr(@subtype) {
             #if DEBUG {
                 printf(`initialize with %li\n`, newCapacity);
