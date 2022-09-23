@@ -7,7 +7,6 @@
 const.f32 windowWidth: 1440f32;
 const.f32 windowHeight: 900f32;
 
-#export {
 var.bool goal: false;
 var.i64 goalCounter: 0;
 var.i64 goalCounterMax: 50;
@@ -24,7 +23,6 @@ var.i64 player2Score: 0;
 var.i64 player1Gamepad: 0;
 var.i64 player2Gamepad: 1;
 var.bool useSoloMode: false;
-}
 
 fn onUpdate(var.f64 deltaTime) {
     applyUserInput();
