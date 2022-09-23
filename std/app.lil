@@ -2,6 +2,7 @@ const DEBUG: false;
 const DEBUG_SHAPE_VERTICES: false;
 
 #snippet namesSize { 256 };
+#snippet namesMaxLength { 56 };
 #snippet selectionSize { 256 };
 #snippet entitiesSize { 2048 };
 #snippet componentsSize { 32 };
@@ -534,7 +535,8 @@ fn powf(f32, f32) => f32 extern;
 		//shapes
 		var.[#paste entitiesSize x @shapeData] shapes: [];
         var.i64 shapesCount: 0;
-        var.[#paste namesSize x cstr] names: [];
+        //names
+        var.[#paste namesSize x [#paste namesMaxLength x i8]] names: [];
         var.i64 nameCount: 0;
         var.i64 typeCount: 0;
 		//resources
@@ -572,7 +574,7 @@ fn powf(f32, f32) => f32 extern;
         };
         fn registerName(var.cstr name){
             #if DEBUG {
-                puts `Register name`;
+                printf(`Register name %s\n`, name);
             }
             var.bool found: false;
             var.i64 existingId: 0;
@@ -582,8 +584,9 @@ fn powf(f32, f32) => f32 extern;
             for (var.i64 i:0; i<@self.nameCount; i+:1) {
                 #if DEBUG {
                     printf(`Checking id %li\n`, i);
+                    printf(`name %li is %s\n`, i, pointerTo(@self.names[i]) => ptr(i8));
                 }
-                if(strcmp(name, @self.names[i]) = 0i32) {
+                if (strncmp(name, (pointerTo(@self.names[i]) => ptr(i8)), #paste namesMaxLength) = 0i32) {
                     found: true;
                     existingId: i;
                     //break;
@@ -593,13 +596,20 @@ fn powf(f32, f32) => f32 extern;
                 return existingId;
             } else {
                 var currentCount: @self.nameCount;
-                @self.names[currentCount]: name;
+                memcpy(
+                    dst: pointerTo(@self.names[currentCount]) => ptr(i8);
+                    src: name;
+                    len: strnlen(name, #paste namesMaxLength)
+                );
+                #if DEBUG {
+                    printf(`name %li is now %s\n`, currentCount, pointerTo(@self.names[currentCount]) => ptr(i8));
+                }
                 @self.nameCount +: 1;
                 return currentCount;
             }
         };
-        fn getName(var.i64 id){
-            return @self.names[id];
+        fn getName(var.i64 id) => cstr {
+            return pointerTo(@self.names[id]) => cstr;
         };
         fn selectByName(var.i64 parentId; var.i64 nameId)=>@sel {
             var ret: @sel { };
