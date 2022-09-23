@@ -1,7 +1,34 @@
 #export {
+	//deprecated
 	class @mouseEvent {
 		var.i64 clickCount: 0;
 		var.f32 x: 0;
 		var.f32 y: 0;
+	}
+	
+	enum.i32 EventType {
+		mouse,
+		keyboard,
+		gamepad,
+		tablet,
+		touch,
+		timer,
+		audio,
+		animation,
+		control,
+		camera,
+		other
+	}
+	
+	//use this instead
+	class @event {
+		var.EventType eventType;
+		var.f64 x: 0;
+		var.f64 y: 0;
+		var.f64 z: 0;
+		var.i64 count: 0;
+		var.i64 code: 0;
+		var.i64 delta: 0;
+		var.ptr(any)|null data: null;
 	}
 }
