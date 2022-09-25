@@ -133,15 +133,6 @@ class @NSRect {
         fn getHeight {
             return app.textfields[@self.componentId].height;
         };
-        fn setBackground(var.@rgb value) {
-            app.textfields[@self.componentId].bgColor: value;
-        };
-        fn getBackground {
-            return app.textfields[@self.componentId].bgColor;
-        };
-        fn getBackgroundPointer {
-            return pointerTo app.textfields[@self.componentId].bgColor;
-        };
 
         fn setX(var.f64 value) {
             app.textfields[@self.componentId].x: value;
