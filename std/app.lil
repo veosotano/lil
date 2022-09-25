@@ -74,6 +74,10 @@ fn fabs(f64) => f64 extern;
         var.f64 x;
         var.f64 y;
     };
+    class @pos2d32 {
+        var.f32 x;
+        var.f32 y;
+    };
     class @pos {
         var.f64 x;
         var.f64 y;
@@ -1212,7 +1216,7 @@ fn fabs(f64) => f64 extern;
     }
 
 	fn LIL__makeShapeVertices(var.ptr(any) vertexBuffer; var.ptr(i64) vertexCount; var.ptr(any) indexBuffer; var.ptr(i64) indexCount) {
-		var.[1000 x @pos2d] subpaths: [];
+		var.[1000 x @pos2d32] subpaths: [];
 		var.[300 x i64] subpathIndices: [];
 		var.i64 pathElemsCount: 0;
 		var.i64 subpathCount: 0;
@@ -1249,24 +1253,28 @@ fn fabs(f64) => f64 extern;
 					subpathIndices[subpathCount]: pathElemsCount;
 					subpathCount +: 1;
 
-					subpaths[pathElemsCount]: @pos2d {
-						x: shapeItem.x;
-						y: shapeItem.y;
+					subpaths[pathElemsCount]: @pos2d32 {
+						x: shapeItem.x => f32;
+						y: shapeItem.y => f32;
 					};
 					pathElemsCount +: 1;
 				}
 				else if shapeItem.ty = ShapeType.lineTo
 				{
-					subpaths[pathElemsCount]: @pos2d {
-						x: shapeItem.x;
-						y: shapeItem.y;
+					subpaths[pathElemsCount]: @pos2d32 {
+						x: shapeItem.x => f32;
+						y: shapeItem.y => f32;
 					};
 					pathElemsCount +: 1;
 				}
 				else if shapeItem.ty = ShapeType.quadCurveTo
 				{
 					//convert to line segments using adaptive subdivision
-					var fromPoint: subpaths[pathElemsCount - 1];
+					var fromPoint32: subpaths[pathElemsCount - 1];
+					var fromPoint: @pos2d {
+						x: fromPoint32.x => f64;
+						y: fromPoint32.y => f64;
+					};
 					var toPoint: @pos2d {
 						x: shapeItem.x2;
 						y: shapeItem.y2;
@@ -1308,7 +1316,10 @@ fn fabs(f64) => f64 extern;
 						t: candidateT;
 						currentPoint: candidatePoint;
 
-						subpaths[pathElemsCount]:currentPoint;
+						subpaths[pathElemsCount]: @pos2d32 {
+							x: currentPoint.x => f32;
+							y: currentPoint.y => f32;
+						};
 						pathElemsCount +: 1;
 
 						if (t < 1.0) {
@@ -1318,7 +1329,11 @@ fn fabs(f64) => f64 extern;
 				} else if shapeItem.ty = ShapeType.curveTo
 				{
 					//convert to line segments using adaptive subdivision
-					var fromPoint: subpaths[pathElemsCount - 1];
+					var fromPoint32: subpaths[pathElemsCount - 1];
+					var fromPoint: @pos2d {
+						x: fromPoint32.x => f64;
+						y: fromPoint32.y => f64;
+					};
 					var toPoint: @pos2d {
 						x: shapeItem.x3;
 						y: shapeItem.y3;
@@ -1365,7 +1380,10 @@ fn fabs(f64) => f64 extern;
 						t: candidateT;
 						currentPoint: candidatePoint;
 
-						subpaths[pathElemsCount]:currentPoint;
+						subpaths[pathElemsCount]: @pos2d32 {
+							x: currentPoint.x => f32;
+							y: currentPoint.y => f32;
+						};
 						pathElemsCount +: 1;
 
 						if (t < 1.0) {
@@ -1387,7 +1405,7 @@ fn fabs(f64) => f64 extern;
 					tess: tess;
 					size: 2;
 					vertices: (pointerTo(subpaths) => ptr(@pos2d)) + from;
-					stride: sizeOf(type @pos2d) => i32;
+					stride: sizeOf(type @pos2d32) => i32;
 					numVertices: (to - from) => i32
 				);
 			}
@@ -1410,9 +1428,9 @@ fn fabs(f64) => f64 extern;
 
 			for (var.i64 k:0; k<tessVertexCount; k+:1) {
 				theVertices[vtxCount + k]: @vertex {
-					x: (valueOf(tessVertices + (k*2)) => f64) + shape.x;
-					y: (valueOf(tessVertices + ((k*2)+1)) => f64) + shape.y;
-					color: shape.bgColor;
+					x: valueOf(tessVertices + (k*2)) + (shape.x => f32);
+					y: valueOf(tessVertices + ((k*2)+1)) + (shape.y => f32);
+					color: bgColor;
 					textureX: 0;
 					textureY: 0;
 				};
