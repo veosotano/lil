@@ -4,8 +4,8 @@
     onUpdateFn: true;
 }
 
-const.f32 windowWidth: 1440f32;
-const.f32 windowHeight: 900f32;
+const.f64 windowWidth: 1440;
+const.f64 windowHeight: 900;
 
 var.bool goal: false;
 var.i64 goalCounter: 0;
@@ -65,11 +65,11 @@ fn applyUserInput () {
     if input.isKeyDown(1i16) { downIsPressed: true }
     if gamepad.y < (0.0f64 - 0.3f64) { downIsPressed: true }
     if (upIsPressed) {
-        app.boxVelocities[id].y +: 1.5f32;
+        app.boxVelocities[id].y +: 1.5f64;
     } else if (downIsPressed) {
-        app.boxVelocities[id].y -: 1.5f32;
+        app.boxVelocities[id].y -: 1.5f64;
     } else {
-        app.boxVelocities[id].y: 0f32;
+        app.boxVelocities[id].y: 0;
     }
 };
 fn applyUserInput2 () {
@@ -86,33 +86,33 @@ fn applyUserInput2 () {
         gpDownPressed: gpDownPressed OR input.isGamepadButtonDown(player1Gamepad, 2);
     }
     if ( input.isKeyDown(34i16) OR (gamepad.y > 0.3f64) OR gpUpPressed ) {
-        app.boxVelocities[id].y +: 1.5f32;
+        app.boxVelocities[id].y +: 1.5f64;
 
     //I -- down
     } else if ( input.isKeyDown(40i16) OR (gamepad.y < (0.0f64 - 0.3f64)) OR gpDownPressed ) {
-        app.boxVelocities[id].y -: 1.5f32;
+        app.boxVelocities[id].y -: 1.5f64;
     } else {
-        app.boxVelocities[id].y: 0f32;
+        app.boxVelocities[id].y: 0;
     }
 };
 
 fn limitPaddlePositions (var.@container player1; var.@container player2) {
     if ((player1.y + player1.height) > windowHeight) {
         player1.y: windowHeight - player1.height;
-        player1.velocity: @vel { x: 0f32; y: 0f32 };
+        player1.velY: 0;
     }
-    if (player1.y < 0f32) {
-        player1.y: 0f32;
-        player1.velocity: @vel { x: 0f32; y: 0f32 };
+    if (player1.y < 0) {
+        player1.y: 0;
+        player1.velY: 0;
     }
     
     if ((player2.y + player2.height) > windowHeight) {
         player2.y: windowHeight - player2.height;
-        player2.velocity: @vel { x: 0f32; y: 0f32 };
+        player2.velY: 0;
     }
-    if (player2.y < 0f32) {
-        player2.y: 0f32;
-        player2.velocity: @vel { x: 0f32; y: 0f32 };
+    if (player2.y < 0) {
+        player2.y: 0;
+        player2.velY: 0;
     }
 }
 
@@ -122,47 +122,44 @@ fn bounceOnEdges (var.@container ball) {
     var left: ball.x;
     var right: ball.x + ball.width;
     // printf(`x %f y %f \n`, ball.x, bottom);
-    var vel: ball.velocity;
-    if (bottom <= (0f32)) {
-        var.f32 yVel: vel.y;
-        if (yVel < 0f32) {
-            vel.y: (yVel * (-1f32)) + 1f32;
+    var velX: ball.velX;
+    var velY: ball.velY;
+    if (bottom <= 0) {
+        if (velY < 0) {
+            velY: (velY * (-1f64)) + 1;
             LIL__beep();
         }
-        if vel.x < 0f32 {
-            vel.x -: 1f32;
+        if velX < 0 {
+            velX -: 1f64;
         } else {
-            vel.x +: 1f32;
+            velX +: 1f64;
         }
-        ball.velocity: vel;
+        ball.velX: velX;
+        ball.velY: velY;
     }
-    if (left <= (0f32 - 100f32)) {
-        var.f32 xVel: vel.x;
-        if xVel < 0f32 {
-            vel.x: (xVel * (-1f32));
-            ball.velocity: vel;
+    if (left <= -100) {
+        if velX < 0 {
+            ball.velX: (velX * (-1));
         }
     }
     if (top >= windowHeight) {
-        var.f32 yVel: vel.y;
-        if yVel > 0f32 {
-            vel.y: (yVel * (-1f32)) - 1f32;
+        if velY > 0 {
+            velY: (velY * (-1f64)) - (1f64);
             LIL__beep();
         }
-        if vel.x < 0f32 {
-            vel.x -: 1f32;
+        if velX < 0 {
+            velX -: 1f64;
         } else {
-            vel.x +: 1f32;
+            velX +: 1f64;
         }
-        ball.velocity: vel;
+        ball.velX: velX;
+        ball.velY: velY;
     }
-    if (right >= (windowWidth + 100f32)) {
-        var.f32 xVel: vel.x;
-        if xVel > 0f32 {
-            vel.x: (xVel * (-1f32));
-            ball.velocity: vel;
+    if (right >= (windowWidth + 100)) {
+        if velX > 0 {
+            ball.velX: (velX * (-1));
         }
-        ball.x: left - ((windowWidth + 100f32) - right);
+        ball.x: left - ((windowWidth + 100) - right);
     }
 };
 
@@ -170,7 +167,7 @@ fn checkForGoal (var.@container ball) {
     if goal = false {
         var left: ball.x;
         var right: ball.x + ball.width;
-        if (left <= (0f32 - ball.width)) {
+        if (left <= (0 - ball.width)) {
             player2Goal();
         }
         if (right >= (windowWidth + ball.width)) {
@@ -193,7 +190,7 @@ fn player1Goal {
         goalCounterMax: 50;
     }
     var player1ScoreBar: @container { id: 2 };
-    player1ScoreBar.width: (player1Score => f32) * 30f32;
+    player1ScoreBar.width: (player1Score => f64) * 30;
     
 };
 fn player2Goal {
@@ -210,7 +207,7 @@ fn player2Goal {
         goalCounterMax: 50;
     }
     var player2ScoreBar: @container { id: 4 };
-    player2ScoreBar.width: (player2Score => f32) * 30f32;
+    player2ScoreBar.width: (player2Score => f64) * 30;
 };
 
 fn newGame {
@@ -218,9 +215,9 @@ fn newGame {
     player2Score: 0;
     goalCounterMax: 150;
     var player1ScoreBar: @container { id: 2 };
-    player1ScoreBar.width: 0f32;
+    player1ScoreBar.width: 0;
     var player2ScoreBar: @container { id: 4 };
-    player2ScoreBar.width: 0f32;
+    player2ScoreBar.width: 0;
 }
 
 fn newGameMenu(var.ptr(any) data) {
@@ -234,18 +231,20 @@ fn playerWin {
 
 fn restoreBallSpeed {
     var ball: @container { id: 7 };
-    var vel: ball.velocity;
-    if vel.x < 0f32 {
-        vel.x: (0f32 - 6f32);
+    var velX: ball.velX;
+    var velY: ball.velY;
+    if velX < 0 {
+        velX: -6;
     } else {
-        vel.x: 6f32;
+        velX: 6;
     }
-    if vel.y < 0f32 {
-        vel.y: (0f32 - 4f32);
+    if velY < 0 {
+        velY: -4;
     } else {
-        vel.y: 4f32;
+        velY: 4;
     }
-    ball.velocity: vel;
+    ball.velX: velX;
+    ball.velY: velY;
 }
 
 fn goalCounterTick {
@@ -268,21 +267,17 @@ fn beepCounterTick {
 };
 
 fn bounceOnPaddles (var.@container player1; var.@container player2; var.@container ball) {
-    var vel: ball.velocity;
+    var velX: ball.velX;
     if aabbIntersects(player1, ball) {
-        var.f32 xVel: vel.x;
-        if xVel < 0f32 {
-            vel.x: (xVel * (-1f32)) + 1f32;
-            ball.velocity: vel;
+        if velX < 0 {
+            ball.velX: (velX * (-1)) + 1;
             LIL__beep();
         }
     }
     
     if aabbIntersects(player2, ball) {
-        var.f32 xVel: vel.x;
-        if xVel > 0f32 {
-            vel.x: (xVel * (-1f32)) - 1f32;
-            ball.velocity: vel;
+        if velX > 0 {
+            ball.velX: (velX * (-1)) - 1;
             LIL__beep();
         }
     }
@@ -311,63 +306,61 @@ fn aabbIntersects(var.@container a; var.@container b) => bool {
     background: #3;
     
     #new @container player1Score {
-        width: 170f32;
-        height: 50f32;
+        width: 170;
+        height: 50;
         background: #0;
         
-        x: 300f32;
-        y: 800f32;
+        x: 300;
+        y: 800;
     }
     
     #new @container player1ScoreBar {
-        width: 0f32;
-        height: 30f32;
+        width: 0;
+        height: 30;
         background: #6;
-        x: 310f32;
-        y: 810f32;
+        x: 310;
+        y: 810;
     }
     
     #new @container player2Score {
-        width: 170f32;
-        height: 50f32;
+        width: 170;
+        height: 50;
         background: #0000;
         
-        x: 970f32;
-        y: 800f32;
+        x: 970;
+        y: 800;
     }
     
     #new @container player2ScoreBar {
-        width: 0f32;
-        height: 30f32;
+        width: 0;
+        height: 30;
         background: #6;
-        x: 980f32;
-        y: 810f32;
+        x: 980;
+        y: 810;
     }
     
     #new @container player1 {
-        width: 40f32;
-        height: 200f32;
-        x: 10f32;
-        y: (windowHeight / 2f32 ) - 100f32;
+        width: 40;
+        height: 200;
+        x: 10;
+        y: (windowHeight / 2 ) - 100;
         background: #F;
     }
     #new @container player2 {
-        width: 40f32;
-        height: 200f32;
-        x: (windowWidth - 50f32);
-        y: (windowHeight / 2f32 ) - 100f32;
+        width: 40;
+        height: 200;
+        x: (windowWidth - 50);
+        y: (windowHeight / 2 ) - 100;
         background: #F;
     }
     #new @container ball {
-        width: 50f32;
-        height: 50f32;
+        width: 50;
+        height: 50;
         background: #F;
-        x: 80f32;
-        y: 400f32;
-        velocity: @vel {
-            x: (0f32 - 6f32);
-            y: 4f32;
-        };
+        x: 80;
+        y: 400;
+        velX: -6;
+        velY: 4;
     }
 
     // #new @sound goal {
