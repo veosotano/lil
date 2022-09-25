@@ -1233,6 +1233,12 @@ fn fabs(f64) => f64 extern;
 			subpathCount: 0;
 			
 			var shape: pointerTo app.shapes[i];
+			var bgColor: @rgb32 {
+				red: shape.bgColor.red => f32;
+				green: shape.bgColor.green => f32;
+				blue: shape.bgColor.blue => f32;
+				alpha: shape.bgColor.alpha => f32;
+			};
 			for (var.i64 j:0; j<shape.size; j+:1) {
 				var shapeItem: shape.items[j];
 				#if DEBUG_SHAPE_VERTICES {
