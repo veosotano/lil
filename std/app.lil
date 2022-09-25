@@ -285,20 +285,20 @@ fn fabs(f64) => f64 extern;
 
         fn getComponentId => i64 {
             return app.selectables[@self.id].componentId;
-        }
-        
+        };
+
         fn initialize(var.cstr name; var.i64 parentId: 0) => i64 {
             var componentId: app.newBox();
 			var id: app.newElement(name, parentId, 0, componentId);
 			@self.id: id;
             return id;
-        }
+        };
 
         //WARNING: only call this when it is the last entity
         fn deinit {
             app.removeLastBox();
             app.removeLastEntity();
-        }
+        };
 
         fn setWidth(var.f64 value) {
             app.box2ds[@self.componentId].width: value;
@@ -323,7 +323,7 @@ fn fabs(f64) => f64 extern;
         };
         fn setX(var.f64 value) {
             app.boxPositions[@self.componentId].x: value;
-        }
+        };
         fn getX() => f64 {
             return app.boxPositions[@self.componentId].x;
         };
