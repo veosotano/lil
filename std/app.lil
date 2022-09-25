@@ -279,8 +279,10 @@ fn fabs(f64) => f64 extern;
         vvar.f64 x;
         vvar.f64 y;
         vvar.f64 z;
-        vvar.@vel velocity;
-        
+        vvar.f64 velX;
+        vvar.f64 velY;
+        vvar.f64 velZ;
+
         fn getComponentId => i64 {
             return app.selectables[@self.id].componentId;
         }
@@ -337,15 +339,24 @@ fn fabs(f64) => f64 extern;
         fn getZ() => f64 {
             return app.boxPositions[@self.componentId].z;
         };
-        fn setVelocity(var.@vel value) {
-            app.boxVelocities[@self.componentId]: value;
+        fn setVelX(var.f64 value) {
+            app.boxVelocities[@self.componentId].x: value;
         };
-        fn getVelocity() => @vel {
-            return app.boxVelocities[@self.componentId];
-        }
-        fn getVelocityPointer() => ptr(@vel) {
-            return pointerTo app.boxVelocities[@self.componentId];
-        }
+        fn getVelX() => f64 {
+            return app.boxVelocities[@self.componentId].x;
+        };
+        fn setVelY(var.f64 value) {
+            app.boxVelocities[@self.componentId].y: value;
+        };
+        fn getVelY() => f64 {
+            return app.boxVelocities[@self.componentId].y;
+        };
+        fn setVelZ(var.f64 value) {
+            app.boxVelocities[@self.componentId].z: value;
+        };
+        fn getVelZ() => f64 {
+            return app.boxVelocities[@self.componentId].z;
+        };
     };
 
     class @image {
@@ -360,7 +371,9 @@ fn fabs(f64) => f64 extern;
         vvar.f64 x;
         vvar.f64 y;
         vvar.f64 z;
-        vvar.@vel velocity;
+        vvar.f64 velX;
+        vvar.f64 velY;
+        vvar.f64 velZ;
         //fixme: should be =>cstr
         #resource vvar.ptr(@string)=>ptr(i8) src;
 
@@ -418,15 +431,24 @@ fn fabs(f64) => f64 extern;
         fn getZ() => f64 {
             return app.imgPositions[@self.componentId].z;
         };
-        fn setVelocity(var.@vel value) {
-            app.imgVelocities[@self.componentId]: value;
+        fn setVelX(var.f64 value) {
+            app.boxVelocities[@self.componentId].x: value;
         };
-        fn getVelocity() => @vel {
-            return app.imgVelocities[@self.componentId];
-        }
-        fn getVelocityPointer() => ptr(@vel) {
-            return pointerTo app.imgVelocities[@self.componentId];
-        }
+        fn getVelX() => f64 {
+            return app.boxVelocities[@self.componentId].x;
+        };
+        fn setVelY(var.f64 value) {
+            app.boxVelocities[@self.componentId].y: value;
+        };
+        fn getVelY() => f64 {
+            return app.boxVelocities[@self.componentId].y;
+        };
+        fn setVelZ(var.f64 value) {
+            app.boxVelocities[@self.componentId].z: value;
+        };
+        fn getVelZ() => f64 {
+            return app.boxVelocities[@self.componentId].z;
+        };
 
         fn getSrc() => cstr {
             var resourceId: app.selectables[@self.id].resourceId;
