@@ -121,16 +121,16 @@
 			pressed: true;
 		};
 		var mouseEvent: @mouseEvent {
-			x: x => f32;
-			y: y => f32;
+			x: x;
+			y: y;
 		};
 		msgEmit(`onMouseDown`, pointerTo mouseEvent);
 	};
 	fn LIL__setMouseDragged(var.i64 buttonNumber; var.f64 x; var.f64 y) {
 		input.setMousePosition(buttonNumber, x, y);
 		var mouseEvent: @mouseEvent {
-			x: x => f32;
-			y: y => f32;
+			x: x;
+			y: y;
 		};
 		msgEmit(`onMouseDragged`, pointerTo mouseEvent);
 	};
@@ -142,8 +142,8 @@
 		};
 		var mouseEvent: @mouseEvent {
 			clickCount: clickCount;
-			x: x => f32;
-			y: y => f32;
+			x: x;
+			y: y;
 		};
 		if clickCount > 0 {
 			msgEmit(`onClick`, pointerTo mouseEvent);

@@ -4,9 +4,9 @@
 #export {
     class @characterController2d {
         var.@sprite sprite;
-        var.f32 acceleration: 0;
-        var.f32 maxSpeed: 5;
-        var.f32 friction: 10;
+        var.f64 acceleration: 0;
+        var.f64 maxSpeed: 5;
+        var.f64 friction: 10;
     
         fn update {
             @self.applyUserInput();
@@ -65,26 +65,26 @@
     
             var currentX: app.imgVelocities[id].x;
             var frictionX: currentX / @self.friction;
-            if frictionX < 0f32 { frictionX *: (0f32-1f32) }
-            if frictionX < 0.1f32 { frictionX: 0.1f32 }
-            if currentX > 0.1f32 {
+            if frictionX < 0 { frictionX *: (-1) }
+            if frictionX < 0.1 { frictionX: 0.1 }
+            if currentX > 0.1 {
                 app.imgVelocities[id].x -: frictionX;
-            } else if currentX < (0f32 - 0.1f32) {
+            } else if currentX < (-0.1) {
                 app.imgVelocities[id].x +: frictionX;
             } else {
-                app.imgVelocities[id].x: 0f32;
+                app.imgVelocities[id].x: 0;
             }
 
             var currentY: app.imgVelocities[id].y;
             var frictionY: currentY / @self.friction;
-            if frictionY < 0f32 { frictionY *: (0f32-1f32) }
-            if frictionY < 0.1f32 { frictionY: 0.1f32 }
-            if currentY > 0.1f32 {
+            if frictionY < 0 { frictionY *: (-1) }
+            if frictionY < 0.1 { frictionY: 0.1 }
+            if currentY > 0.1 {
                 app.imgVelocities[id].y -: frictionY;
-            } else if currentY < (0f32 - 0.1f32) {
+            } else if currentY < (-0.1) {
                 app.imgVelocities[id].y +: frictionY;
             } else {
-                app.imgVelocities[id].y: 0f32;
+                app.imgVelocities[id].y: 0;
             }
         }
 
@@ -92,14 +92,14 @@
             var selectable: @self.sprite.selectable;
             var id: selectable.componentId;
 
-            if app.imgVelocities[id].x < (0f32 - @self.maxSpeed) {
-                app.imgVelocities[id].x: (0f32 - @self.maxSpeed);
+            if app.imgVelocities[id].x < (0 - @self.maxSpeed) {
+                app.imgVelocities[id].x: (0 - @self.maxSpeed);
             }
             if app.imgVelocities[id].x > @self.maxSpeed {
                 app.imgVelocities[id].x: @self.maxSpeed;
             }
-            if app.imgVelocities[id].y < (0f32 - @self.maxSpeed) {
-                app.imgVelocities[id].y: (0f32 - @self.maxSpeed);
+            if app.imgVelocities[id].y < (0 - @self.maxSpeed) {
+                app.imgVelocities[id].y: (0 - @self.maxSpeed);
             }
             if app.imgVelocities[id].y > @self.maxSpeed {
                 app.imgVelocities[id].y: @self.maxSpeed;

@@ -17,7 +17,7 @@ app.selectByName(
 #===== var boxPositions =====
 #= Position storage for boxes (containers).
 #----------------------------
-<lil>app.boxPositions[i].x +: ((app.boxVelocities[i].x => f64) * dt) => f32;</lil>
+<lil>app.boxPositions[i].x +: ((app.boxVelocities[i].x => f64) * dt) => f64;</lil>
 
 #===== var boxVelocities ====
 #= Storage for the velocities of boxes.
@@ -41,7 +41,7 @@ app.selectByName(
 
 #===== var imgVelocities ====
 #= The velocities of the images are stored in this static array.
-<lil>app.imgPositions[i].x +: ((app.imgVelocities[i].x => f64) * dt) => f32;</lil>
+<lil>app.imgPositions[i].x +: ((app.imgVelocities[i].x => f64) * dt) => f64;</lil>
 
 #===== var imgClips =========
 #= Storage for clipping data of @sprite objects.

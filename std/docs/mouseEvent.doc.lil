@@ -4,8 +4,8 @@
 #---------------------------
 <lil>var mouseEvent: @mouseEvent {
 	clickCount: clickCount;
-	x: x => f32;
-	y: y => f32;
+	x: x => f64;
+	y: y => f64;
 };
 msgEmit(`onClick`, pointerTo mouseEvent);</lil>
 

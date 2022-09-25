@@ -2,8 +2,8 @@
 
 #export {
     class @animationFrame {
-        var.f32 x: 0f32;
-        var.f32 y: 0f32;
+        var.f64 x: 0;
+        var.f64 y: 0;
         var.i64 delay: 0;
     };
 

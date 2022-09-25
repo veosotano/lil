@@ -2,8 +2,8 @@
 	//deprecated
 	class @mouseEvent {
 		var.i64 clickCount: 0;
-		var.f32 x: 0;
-		var.f32 y: 0;
+		var.f64 x: 0;
+		var.f64 y: 0;
 	}
 	
 	enum.i32 EventType {

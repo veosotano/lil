@@ -12,13 +12,13 @@ const DEBUG_SHAPE_VERTICES: false;
 #snippet textfieldsSize { 128 };
 
 fn onUpdate(var.f64 deltaTime) extern;
-fn LIL__setWindowBgColor(var.f32 red; var.f32 green; var.f32 blue; var.f32 alpha) extern;
+fn LIL__setWindowBgColor(var.f64 red; var.f64 green; var.f64 blue; var.f64 alpha) extern;
 fn LIL__loadTexture(var.cstr path; var.i64 idx) extern;
 fn LIL__unloadTexture(var.i64 idx) extern;
 
 #import "libtess2.lil";
-fn powf(f32, f32) => f32 extern;
-fn fabsf(f32) => f32 extern;
+fn pow(f64, f64) => f64 extern;
+fn fabs(f64) => f64 extern;
 
 #export {
     #needs "cstd.lil";
@@ -40,6 +40,12 @@ fn fabsf(f32) => f32 extern;
         var.f64 height;
     };
     class @rgb {
+        var.f64 red;
+        var.f64 green;
+        var.f64 blue;
+        var.f64 alpha;
+    };
+    class @rgb32 {
         var.f32 red;
         var.f32 green;
         var.f32 blue;
@@ -48,7 +54,7 @@ fn fabsf(f32) => f32 extern;
     class @vertex {
         var.f32 x;
         var.f32 y;
-        var.@rgb color;
+        var.@rgb32 color;
         var.f32 textureX;
         var.f32 textureY;
     };
@@ -65,24 +71,24 @@ fn fabsf(f32) => f32 extern;
 		var.i64 dragEndActionId;
     };
     class @pos2d {
-        var.f32 x;
-        var.f32 y;
+        var.f64 x;
+        var.f64 y;
     };
     class @pos {
-        var.f32 x;
-        var.f32 y;
-        var.f32 z;
+        var.f64 x;
+        var.f64 y;
+        var.f64 z;
     };
     class @box2d {
-        var.f32 width;
-        var.f32 height;
+        var.f64 width;
+        var.f64 height;
         var.@rgb bgColor;
     };
     class @img {
-        var.f32 width;
-        var.f32 height;
-		var.f32 textureWidth;
-		var.f32 textureHeight;
+        var.f64 width;
+        var.f64 height;
+		var.f64 textureWidth;
+		var.f64 textureHeight;
 		var.bool useClip;
     };
     class @resource {
@@ -91,9 +97,9 @@ fn fabsf(f32) => f32 extern;
     };
     class @vel
     {
-        var.f32 x: 0f32;
-        var.f32 y: 0f32;
-        var.f32 z: 0f32;
+        var.f64 x: 0;
+        var.f64 y: 0;
+        var.f64 z: 0;
     };
 	enum.i32 ShapeType {
 		moveTo,
@@ -103,19 +109,19 @@ fn fabsf(f32) => f32 extern;
 	};
 	class @shapeItem {
 		var.ShapeType ty;
-		var.f32 x: 0;
-		var.f32 y: 0;
-		var.f32 x2: 0;
-		var.f32 y2: 0;
-		var.f32 x3: 0;
-		var.f32 y3: 0;
+		var.f64 x: 0;
+		var.f64 y: 0;
+		var.f64 x2: 0;
+		var.f64 y2: 0;
+		var.f64 x3: 0;
+		var.f64 y3: 0;
 	};
 	class @shapeData {
-        var.f32 width;
-        var.f32 height;
-        var.f32 x;
-        var.f32 y;
-        var.f32 z;
+        var.f64 width;
+        var.f64 height;
+        var.f64 x;
+        var.f64 y;
+        var.f64 z;
 		var.[#paste shapesSize x @shapeItem] items: [];
 		var.i64 size: 0;
         var.@rgb bgColor;
@@ -250,10 +256,10 @@ fn fabsf(f32) => f32 extern;
         var.@rgb bgColor;
         var.ptr(any) data;
         var.ptr(any)|null onChange;
-        var.f32 width: 0;
-        var.f32 height: 0;
-        var.f32 x: 0;
-        var.f32 y: 0;
+        var.f64 width: 0;
+        var.f64 height: 0;
+        var.f64 x: 0;
+        var.f64 y: 0;
     }
     class @container
     {
@@ -263,12 +269,12 @@ fn fabsf(f32) => f32 extern;
 
         //public interface
         vvar.i64 componentId;
-        vvar.f32 width;
-        vvar.f32 height;
+        vvar.f64 width;
+        vvar.f64 height;
         vvar.@rgb background;
-        vvar.f32 x;
-        vvar.f32 y;
-        vvar.f32 z;
+        vvar.f64 x;
+        vvar.f64 y;
+        vvar.f64 z;
         vvar.@vel velocity;
         
         fn getComponentId => i64 {
@@ -288,13 +294,13 @@ fn fabsf(f32) => f32 extern;
             app.removeLastEntity();
         }
 
-        fn setWidth(var.f32 value) {
+        fn setWidth(var.f64 value) {
             app.box2ds[@self.componentId].width: value;
         };
         fn getWidth {
             return app.box2ds[@self.componentId].width;
         };
-        fn setHeight(var.f32 value) {
+        fn setHeight(var.f64 value) {
             app.box2ds[@self.componentId].height: value;
         };
         fn getHeight {
@@ -309,22 +315,22 @@ fn fabsf(f32) => f32 extern;
         fn getBackgroundPointer {
             return pointerTo app.box2ds[@self.componentId].bgColor;
         };
-        fn setX(var.f32 value) {
+        fn setX(var.f64 value) {
             app.boxPositions[@self.componentId].x: value;
         }
-        fn getX() => f32 {
+        fn getX() => f64 {
             return app.boxPositions[@self.componentId].x;
         };
-        fn setY(var.f32 value) {
+        fn setY(var.f64 value) {
             app.boxPositions[@self.componentId].y: value;
         };
-        fn getY() => f32 {
+        fn getY() => f64 {
             return app.boxPositions[@self.componentId].y;
         };
-        fn setZ(var.f32 value) {
+        fn setZ(var.f64 value) {
             app.boxPositions[@self.componentId].z: value;
         };
-        fn getZ() => f32 {
+        fn getZ() => f64 {
             return app.boxPositions[@self.componentId].z;
         };
         fn setVelocity(var.@vel value) {
@@ -345,11 +351,11 @@ fn fabsf(f32) => f32 extern;
 
         //public interface
         vvar.i64 componentId;
-        vvar.f32 width;
-        vvar.f32 height;
-        vvar.f32 x;
-        vvar.f32 y;
-        vvar.f32 z;
+        vvar.f64 width;
+        vvar.f64 height;
+        vvar.f64 x;
+        vvar.f64 y;
+        vvar.f64 z;
         vvar.@vel velocity;
         //fixme: should be =>cstr
         #resource vvar.ptr(@string)=>ptr(i8) src;
@@ -378,34 +384,34 @@ fn fabsf(f32) => f32 extern;
             }
         }
 
-        fn setWidth(var.f32 value) {
+        fn setWidth(var.f64 value) {
             app.imgs[@self.componentId].width: value;
         };
         fn getWidth {
             return app.imgs[@self.componentId].width;
         };
-        fn setHeight(var.f32 value) {
+        fn setHeight(var.f64 value) {
             app.imgs[@self.componentId].height: value;
         };
         fn getHeight {
             return app.imgs[@self.componentId].height;
         };
-        fn setX(var.f32 value) {
+        fn setX(var.f64 value) {
             app.imgPositions[@self.componentId].x: value;
         }
-        fn getX() => f32 {
+        fn getX() => f64 {
             return app.imgPositions[@self.componentId].x;
         };
-        fn setY(var.f32 value) {
+        fn setY(var.f64 value) {
             app.imgPositions[@self.componentId].y: value;
         };
-        fn getY() => f32 {
+        fn getY() => f64 {
             return app.imgPositions[@self.componentId].y;
         };
-        fn setZ(var.f32 value) {
+        fn setZ(var.f64 value) {
             app.imgPositions[@self.componentId].z: value;
         };
-        fn getZ() => f32 {
+        fn getZ() => f64 {
             return app.imgPositions[@self.componentId].z;
         };
         fn setVelocity(var.@vel value) {
@@ -441,8 +447,8 @@ fn fabsf(f32) => f32 extern;
         //do not add any more vars
         #expand var.@image super: @image { };
         
-        vvar.f32 clipX;
-        vvar.f32 clipY;
+        vvar.f64 clipX;
+        vvar.f64 clipY;
         
         fn initialize(var.cstr name; var.i64 parentId: 0) => i64 {
 			#if DEBUG {
@@ -460,16 +466,16 @@ fn fabsf(f32) => f32 extern;
             @self.super.deinit();
         }
         
-        fn setClipX(var.f32 value) {
+        fn setClipX(var.f64 value) {
             app.imgClips[@self.componentId].x: value;
         }
-        fn getClipX() => f32 {
+        fn getClipX() => f64 {
             return app.imgClips[@self.componentId].x;
         };
-        fn setClipY(var.f32 value) {
+        fn setClipY(var.f64 value) {
             app.imgClips[@self.componentId].y: value;
         };
-        fn getClipY() => f32 {
+        fn getClipY() => f64 {
             return app.imgClips[@self.componentId].y;
         };
     }
@@ -481,11 +487,11 @@ fn fabsf(f32) => f32 extern;
 		
         //public interface
         vvar.i64 componentId;
-        vvar.f32 width;
-        vvar.f32 height;
-        vvar.f32 x;
-        vvar.f32 y;
-        vvar.f32 z;
+        vvar.f64 width;
+        vvar.f64 height;
+        vvar.f64 x;
+        vvar.f64 y;
+        vvar.f64 z;
         vvar.@rgb background;
 
         fn getComponentId => i64 {
@@ -507,34 +513,34 @@ fn fabsf(f32) => f32 extern;
             app.removeLastEntity();
         }
 
-        fn setWidth(var.f32 value) {
+        fn setWidth(var.f64 value) {
             app.shapes[@self.componentId].width: value;
         };
         fn getWidth {
             return app.shapes[@self.componentId].width;
         };
-        fn setHeight(var.f32 value) {
+        fn setHeight(var.f64 value) {
             app.shapes[@self.componentId].height: value;
         };
         fn getHeight {
             return app.shapes[@self.componentId].height;
         };
-        fn setX(var.f32 value) {
+        fn setX(var.f64 value) {
             app.shapes[@self.componentId].x: value;
         }
-        fn getX() => f32 {
+        fn getX() => f64 {
             return app.shapes[@self.componentId].x;
         };
-        fn setY(var.f32 value) {
+        fn setY(var.f64 value) {
             app.shapes[@self.componentId].y: value;
         };
-        fn getY() => f32 {
+        fn getY() => f64 {
             return app.shapes[@self.componentId].y;
         };
-        fn setZ(var.f32 value) {
+        fn setZ(var.f64 value) {
             app.shapes[@self.componentId].z: value;
         };
-        fn getZ() => f32 {
+        fn getZ() => f64 {
             return app.shapes[@self.componentId].z;
         };
         fn setBackground(var.@rgb value) {
@@ -547,7 +553,7 @@ fn fabsf(f32) => f32 extern;
             return pointerTo app.shapes[@self.componentId].bgColor;
         };
 		
-		fn moveTo(var.f32 x; var.f32 y) {
+		fn moveTo(var.f64 x; var.f64 y) {
 			var shape: pointerTo app.shapes[@self.componentId];
 			var size: shape.size;
 			var newItem: @shapeItem {
@@ -561,7 +567,7 @@ fn fabsf(f32) => f32 extern;
 				printf(`created moveTo with x:%f and y:%f\n`, x, y);
 			}
 		}
-		fn lineTo(var.f32 x; var.f32 y) {
+		fn lineTo(var.f64 x; var.f64 y) {
 			var shape: pointerTo app.shapes[@self.componentId];
 			var size: shape.size;
 			var newItem: @shapeItem {
@@ -575,7 +581,7 @@ fn fabsf(f32) => f32 extern;
 				printf(`created lineTo with x:%f and y:%f\n`, x, y);
 			}
 		}
-		fn quadCurveTo(var.f32 ctlPtX; var.f32 ctlPtY; var.f32 toPtX; var.f32 toPtY) {
+		fn quadCurveTo(var.f64 ctlPtX; var.f64 ctlPtY; var.f64 toPtX; var.f64 toPtY) {
 			var shape: pointerTo app.shapes[@self.componentId];
 			var size: shape.size;
 			var newItem: @shapeItem {
@@ -591,7 +597,7 @@ fn fabsf(f32) => f32 extern;
 				printf(`created quadCurveTo with controlPointX: %f, controlPointY: %, toPointX:%f and toPointY:%f\n`, ctlPtX, ctlPtY, toPtX, toPtY);
 			}
 		}
-		fn curveTo(var.f32 ctlPt1X; var.f32 ctlPt1Y; var.f32 ctlPt2X; var.f32 ctlPt2Y; var.f32 toPtX; var.f32 toPtY) {
+		fn curveTo(var.f64 ctlPt1X; var.f64 ctlPt1Y; var.f64 ctlPt2X; var.f64 ctlPt2Y; var.f64 toPtX; var.f64 toPtY) {
 			var shape: pointerTo app.shapes[@self.componentId];
 			var size: shape.size;
 			var newItem: @shapeItem {
@@ -613,8 +619,8 @@ fn fabsf(f32) => f32 extern;
 	
 	fn LIL__mouseClickListener(var.ptr(any) data) {
 		var.ptr(@mouseEvent) event: data;
-		var mouseX: event.x => f32;
-		var mouseY: event.y => f32;
+		var mouseX: event.x;
+		var mouseY: event.y;
 		#if DEBUG {
 			printf(`mouse listener: x:%lf y:%lf\n`, mouseX, mouseY);	
 		}
@@ -630,8 +636,8 @@ fn fabsf(f32) => f32 extern;
     
     fn LIL__mouseDownListener(var.ptr(any) data) {
         var.ptr(@mouseEvent) event: data;
-        var mouseX: event.x => f32;
-        var mouseY: event.y => f32;
+        var mouseX: event.x;
+        var mouseY: event.y;
         for (var.i64 i: 0; i<app.mouseDownActionCount; i +: 1) {
             var action: app.mouseDownActions[i];
             var id: action.elementId;
@@ -649,8 +655,8 @@ fn fabsf(f32) => f32 extern;
         var.ptr(@mouseEvent) event: data;
         if !app.dragHasSession {
             if (
-                (fabsf(event.x - app.dragOrigin.x) >= app.dragMinDistance)
-                OR (fabsf(event.y - app.dragOrigin.y) >= app.dragMinDistance)
+                (fabs(event.x - app.dragOrigin.x) >= app.dragMinDistance)
+                OR (fabs(event.y - app.dragOrigin.y) >= app.dragMinDistance)
             ) {
                 app.dragHasSession: true;
             } else {
@@ -673,8 +679,8 @@ fn fabsf(f32) => f32 extern;
     fn LIL__mouseUpListener(var.ptr(any) data) {
         //send the mouse up events
         var.ptr(@mouseEvent) event: data;
-        var mouseX: event.x => f32;
-        var mouseY: event.y => f32;
+        var mouseX: event.x;
+        var mouseY: event.y;
         for (var.i64 i: 0; i<app.mouseUpActionCount; i +: 1) {
             var action: app.mouseUpActions[i];
             var id: action.elementId;
@@ -700,7 +706,7 @@ fn fabsf(f32) => f32 extern;
         app.dragTargetId: 0;
     }
     
-    fn LIL__mouseIntersectionTest(var.i64 typeId; var.i64 componentId; var.f32 mouseX; var.f32 mouseY) => bool {
+    fn LIL__mouseIntersectionTest(var.i64 typeId; var.i64 componentId; var.f64 mouseX; var.f64 mouseY) => bool {
         if typeId = 0 {
             var pos: app.boxPositions[componentId];
             var box: app.box2ds[componentId];
@@ -724,7 +730,7 @@ fn fabsf(f32) => f32 extern;
         return false;
     }
     
-    fn LIL__intersectionTest(var.@container|@image item; var.f32 testX; var.f32 testY) => bool {
+    fn LIL__intersectionTest(var.@container|@image item; var.f64 testX; var.f64 testY) => bool {
         if item => @container {
             var componentId: item.componentId;
             var pos: app.boxPositions[componentId];
@@ -779,7 +785,7 @@ fn fabsf(f32) => f32 extern;
         var.i64 dragEndActionCount: 0;
         var.i64 dragTargetId: 0;
         var.@pos2d dragOrigin: @pos2d { x: 0; y: 0 };
-        var.f32 dragMinDistance: 3.0;
+        var.f64 dragMinDistance: 3.0;
         var.bool dragHasSession: false;
         //textfields
         var.[#paste textfieldsSize x @textfieldData] textfields: [];
@@ -1014,14 +1020,14 @@ fn fabsf(f32) => f32 extern;
     fn LIL__movementSystem(var.f64 deltaTime) {
         var.f64 dt: deltaTime * 60;
         for (var.i64 i:0; i<app.boxCount; i+:1) {
-            app.boxPositions[i].x +: ((app.boxVelocities[i].x => f64) * dt) => f32;
-            app.boxPositions[i].y +: ((app.boxVelocities[i].y => f64) * dt) => f32;
-            app.boxPositions[i].z +: ((app.boxVelocities[i].z => f64) * dt) => f32;
+            app.boxPositions[i].x +: (app.boxVelocities[i].x * dt);
+            app.boxPositions[i].y +: (app.boxVelocities[i].y * dt);
+            app.boxPositions[i].z +: (app.boxVelocities[i].z * dt);
         }
         for (var.i64 i:0; i<app.imgCount; i+:1) {
-            app.imgPositions[i].x +: ((app.imgVelocities[i].x => f64) * dt) => f32;
-            app.imgPositions[i].y +: ((app.imgVelocities[i].y => f64) * dt) => f32;
-            app.imgPositions[i].z +: ((app.imgVelocities[i].z => f64) * dt) => f32;
+            app.imgPositions[i].x +: (app.imgVelocities[i].x * dt);
+            app.imgPositions[i].y +: (app.imgVelocities[i].y * dt);
+            app.imgPositions[i].z +: (app.imgVelocities[i].z * dt);
         }
     };
 
@@ -1036,7 +1042,7 @@ fn fabsf(f32) => f32 extern;
         LIL__runSystems(deltaTime);
     };
 	
-	fn LIL__setTextureSize(var.i64 imgId; var.f32 width; var.f32 height) {
+	fn LIL__setTextureSize(var.i64 imgId; var.f64 width; var.f64 height) {
 		app.imgs[imgId].textureWidth: width;
 		app.imgs[imgId].textureHeight: height;
 	};
@@ -1048,29 +1054,35 @@ fn fabsf(f32) => f32 extern;
 
             var box: app.box2ds[i];
             var pos: app.boxPositions[i];
-            var color: box.bgColor;
+            var bgColor: box.bgColor;
+            var color: @rgb32 {
+                red: bgColor.red => f32;
+                green: bgColor.green => f32;
+                blue: bgColor.blue => f32;
+                alpha: bgColor.alpha => f32;
+            };
 
             var.i64 triIdx: i*6;
 
             vertices[triIdx]: @vertex {
-                x: pos.x + box.width;
-                y: pos.y;
+                x: (pos.x + box.width) => f32;
+                y: pos.y => f32;
                 color: color;
                 textureX: 1f32;
                 textureY: 1f32;
             };
 
             vertices[triIdx+1]: @vertex {
-                x: pos.x;
-                y: pos.y;
+                x: pos.x => f32;
+                y: pos.y => f32;
                 color: color;
                 textureX: 0f32;
                 textureY: 1f32;
             };
 
             vertices[triIdx+2]: @vertex {
-                x: pos.x;
-                y: pos.y + box.height;
+                x: pos.x => f32;
+                y: (pos.y + box.height) => f32;
                 color: color;
                 textureX: 0f32;
                 textureY: 0f32;
@@ -1078,24 +1090,24 @@ fn fabsf(f32) => f32 extern;
 
 
             vertices[triIdx+3]: @vertex {
-                x: pos.x + box.width;
-                y: pos.y;
+                x: (pos.x + box.width) => f32;
+                y: pos.y => f32;
                 color: color;
                 textureX: 1f32;
                 textureY: 1f32;
             };
 
             vertices[triIdx+4]: @vertex {
-                x: pos.x;
-                y: pos.y + box.height;
+                x: pos.x => f32;
+                y: (pos.y + box.height) => f32;
                 color: color;
                 textureX: 0f32;
                 textureY: 0f32;
             };
 
             vertices[triIdx+5]: @vertex {
-                x: pos.x + box.width;
-                y: pos.y + box.height;
+                x: (pos.x + box.width) => f32;
+                y: (pos.y + box.height) => f32;
                 color: color;
                 textureX: 1f32;
                 textureY: 0f32;
@@ -1117,13 +1129,13 @@ fn fabsf(f32) => f32 extern;
             var clip: app.imgClips[i];
             var.i64 triIdx: i*6;
 			
-			var.f32 minX;
-			var.f32 maxX;
-			var.f32 minY;
-			var.f32 maxY;
+			var.f64 minX;
+			var.f64 maxX;
+			var.f64 minY;
+			var.f64 maxY;
 			
-			var.f32 width: img.width;
-			var.f32 height: img.height;
+			var.f64 width: img.width;
+			var.f64 height: img.height;
 			if width = 0 {
 				width: img.textureWidth;
 			}
@@ -1145,52 +1157,52 @@ fn fabsf(f32) => f32 extern;
 			}
             
             vertices[triIdx]: @vertex {
-                x: pos.x + width;
-                y: pos.y;
+                x: (pos.x + width) => f32;
+                y: pos.y => f32;
                 color: color;
-                textureX: maxX;
-                textureY: maxY;
+                textureX: maxX => f32;
+                textureY: maxY => f32;
             };
 
             vertices[triIdx+1]: @vertex {
-                x: pos.x;
-                y: pos.y;
+                x: pos.x => f32;
+                y: pos.y => f32;
                 color: color;
-                textureX: minX;
-                textureY: maxY;
+                textureX: minX => f32;
+                textureY: maxY => f32;
             };
 
             vertices[triIdx+2]: @vertex {
-                x: pos.x;
-                y: pos.y + height;
+                x: pos.x => f32;
+                y: (pos.y + height) => f32;
                 color: color;
-                textureX: minX;
-                textureY: minY;
+                textureX: minX => f32;
+                textureY: minY => f32;
             };
 
 
             vertices[triIdx+3]: @vertex {
-                x: pos.x + width;
-                y: pos.y;
+                x: (pos.x + width) => f32;
+                y: pos.y => f32;
                 color: color;
-                textureX: maxX;
-                textureY: maxY;
+                textureX: maxX => f32;
+                textureY: maxY => f32;
             };
 
             vertices[triIdx+4]: @vertex {
-                x: pos.x;
-                y: pos.y + height;
+                x: pos.x => f32;
+                y: (pos.y + height) => f32;
                 color: color;
-                textureX: minX;
-                textureY: minY;
+                textureX: minX => f32;
+                textureY: minY => f32;
             };
 
             vertices[triIdx+5]: @vertex {
-                x: pos.x + width;
-                y: pos.y + height;
+                x: (pos.x + width) => f32;
+                y: (pos.y + height) => f32;
                 color: color;
-                textureX: maxX;
-                textureY: minY;
+                textureX: maxX => f32;
+                textureY: minY => f32;
             };
         }
 
@@ -1257,14 +1269,14 @@ fn fabsf(f32) => f32 extern;
 						x: shapeItem.x;
 						y: shapeItem.y;
 					};
-					var.f32 maxTolerance: 0.2;
-					var.f32 t: 0;
-					var.f32 candidateT: 0.5;
+					var.f64 maxTolerance: 0.2;
+					var.f64 t: 0;
+					var.f64 candidateT: 0.5;
 					var.@pos2d currentPoint: fromPoint;
 
 					loop {
 						var.i32 subdivs: 1;
-						var.f32  err: 999.0;
+						var.f64  err: 999.0;
 						var.@pos2d candidatePoint: currentPoint;
 						if (t + 0.5) > 1.0 {
 							candidateT: 1.0;
@@ -1273,10 +1285,10 @@ fn fabsf(f32) => f32 extern;
 						}
 						loop {
 							candidatePoint: LIL__evalQuadCurve(fromPoint, controlPoint, toPoint, candidateT);
-							var.f32 midT: (t + candidateT) / 2;
+							var.f64 midT: (t + candidateT) / 2;
 							var.@pos2d midCurve: LIL__evalQuadCurve(fromPoint, controlPoint, toPoint, midT);
 							var.@pos2d midSeg: LIL__lerpPoints(currentPoint, candidatePoint, 0.5);
-							err: powf(midSeg.x - midCurve.x, 2) + powf(midSeg.y - midCurve.y, 2);
+							err: pow(midSeg.x - midCurve.x, 2) + pow(midSeg.y - midCurve.y, 2);
 
 							if (err > maxTolerance) {
 								candidateT: t + (0.5 * (candidateT - t));
@@ -1313,14 +1325,14 @@ fn fabsf(f32) => f32 extern;
 						x: shapeItem.x2;
 						y: shapeItem.y2;
 					};
-					var.f32 maxTolerance: 0.2;
-					var.f32 t: 0;
-					var.f32 candidateT: 0.5;
+					var.f64 maxTolerance: 0.2;
+					var.f64 t: 0;
+					var.f64 candidateT: 0.5;
 					var.@pos2d currentPoint: fromPoint;
 
 					loop {
 						var.i32 subdivs: 1;
-						var.f32  err: 999.0;
+						var.f64  err: 999.0;
 						var.@pos2d candidatePoint: currentPoint;
 						if (t + 0.5) > 1.0 {
 							candidateT: 1.0;
@@ -1330,10 +1342,10 @@ fn fabsf(f32) => f32 extern;
 
 						loop {
 							candidatePoint: LIL__evalCubicCurve(fromPoint, controlPoint1, controlPoint2, toPoint, candidateT);
-							var.f32 midT: (t + candidateT) / 2;
+							var.f64 midT: (t + candidateT) / 2;
 							var.@pos2d midCurve: LIL__evalCubicCurve(fromPoint, controlPoint1, controlPoint2, toPoint, midT);
 							var.@pos2d midSeg: LIL__lerpPoints(currentPoint, candidatePoint, 0.5);
-							err: powf(midSeg.x - midCurve.x, 2) + powf(midSeg.y - midCurve.y, 2);
+							err: pow(midSeg.x - midCurve.x, 2) + pow(midSeg.y - midCurve.y, 2);
 
 							if (err > maxTolerance) {
 								candidateT: t + (0.5 * (candidateT - t));
@@ -1392,8 +1404,8 @@ fn fabsf(f32) => f32 extern;
 
 			for (var.i64 k:0; k<tessVertexCount; k+:1) {
 				theVertices[vtxCount + k]: @vertex {
-					x: valueOf(tessVertices + (k*2)) + shape.x;
-					y: valueOf(tessVertices + ((k*2)+1)) + shape.y;
+					x: (valueOf(tessVertices + (k*2)) => f64) + shape.x;
+					y: (valueOf(tessVertices + ((k*2)+1)) => f64) + shape.y;
 					color: shape.bgColor;
 					textureX: 0;
 					textureY: 0;
@@ -1443,12 +1455,12 @@ fn fabsf(f32) => f32 extern;
 		}
 	}
 	
-	fn LIL__lerp(var.f32 a; var.f32 b; var.f32 t) => f32
+	fn LIL__lerp(var.f64 a; var.f64 b; var.f64 t) => f64
 	{
 		return a + (t * (b - a));
 	}
 	
-	fn LIL__lerpPoints(var.@pos2d a; var.@pos2d b; var.f32 t) => @pos2d
+	fn LIL__lerpPoints(var.@pos2d a; var.@pos2d b; var.f64 t) => @pos2d
 	{
 		var ret: @pos2d {
 			x: LIL__lerp(a.x, b.x, t);
@@ -1457,7 +1469,7 @@ fn fabsf(f32) => f32 extern;
 		return ret;
 	}
 
-	fn LIL__evalQuadCurve(var.@pos2d fromPoint; var.@pos2d controlPoint; var.@pos2d toPoint; var.f32 t) => @pos2d
+	fn LIL__evalQuadCurve(var.@pos2d fromPoint; var.@pos2d controlPoint; var.@pos2d toPoint; var.f64 t) => @pos2d
 	{
 		var.@pos2d q0: @pos2d { x: LIL__lerp(fromPoint.x, controlPoint.x, t); y: LIL__lerp(fromPoint.y, controlPoint.y, t) };
 		var.@pos2d q1: @pos2d { x: LIL__lerp(controlPoint.x, toPoint.x, t); y: LIL__lerp(controlPoint.y, toPoint.y, t) };
@@ -1465,7 +1477,7 @@ fn fabsf(f32) => f32 extern;
 		return r;
 	}
 
-	fn LIL__evalCubicCurve(var.@pos2d fromPoint; var.@pos2d controlPoint1; var.@pos2d controlPoint2; var.@pos2d toPoint; var.f32 t) => @pos2d
+	fn LIL__evalCubicCurve(var.@pos2d fromPoint; var.@pos2d controlPoint1; var.@pos2d controlPoint2; var.@pos2d toPoint; var.f64 t) => @pos2d
 	{
 		var a: @pos2d { x: LIL__lerp(fromPoint.x, controlPoint1.x, t); y: LIL__lerp(fromPoint.y, controlPoint1.y, t) };
 		var b: @pos2d { x: LIL__lerp(controlPoint1.x, controlPoint2.x, t); y: LIL__lerp(controlPoint1.y, controlPoint2.y, t) };

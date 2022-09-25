@@ -34,7 +34,7 @@ extern void LIL__makeTextureVertices(void * vertexBuffer, long int * vertexCount
 extern void LIL__makeShapeVertices(void * vertexBuffer, long int * vertexCount, void * indexBuffer, long int * indexCount);
 extern long int LIL__getResourceCount();
 extern LIL__resourceStruct * LIL__getResorceById(long int id);
-extern void LIL__setTextureSize(long int imgId, float width, float height);
+extern void LIL__setTextureSize(long int imgId, double width, double height);
 extern void LIL__setMouseDown(long int buttonNumber, double x, double y);
 extern void LIL__setMouseDragged(long int buttonNumber, double x, double y);
 extern void LIL__setMouseUp(long int buttonNumber, double x, double y, long int clickCount);
@@ -854,7 +854,7 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
 - (void)addMenuSeparator;
 - (void)exitMenu;
 - (void)menuItemSelected:(NSMenuItem *) menuItem;
-- (void)setWindowBackgroundRed:(float)red green:(float)green blue:(float)blue alpha:(float)alpha;
+- (void)setWindowBackgroundRed:(double)red green:(double)green blue:(double)blue alpha:(double)alpha;
 - (void)loadTextureForFile:(NSString *)path index:(unsigned int)idx;
 - (void)unloadTextureForIndex:(unsigned int)idx;
 - (LILMainView *)getMainView;
@@ -878,8 +878,8 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
     CGFloat height = (screenRect.size.height / 2.0) / [mainScreen backingScaleFactor];
 
     
-    float x = (screenRect.size.width/2) - (width/2);
-    float y = (screenRect.size.height/2) - (height/2);
+    double x = (screenRect.size.width/2) - (width/2);
+    double y = (screenRect.size.height/2) - (height/2);
     if (x < 0.0) {
         x = 0.0;
     }
@@ -1018,7 +1018,7 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
     fnPtr(NULL);
 }
 
-- (void)setWindowBackgroundRed:(float)red green:(float)green blue:(float)blue alpha:(float)alpha
+- (void)setWindowBackgroundRed:(double)red green:(double)green blue:(double)blue alpha:(double)alpha
 {
     mainView.renderer.windowBgColor = MTLClearColorMake(red, green, blue, alpha);
 }

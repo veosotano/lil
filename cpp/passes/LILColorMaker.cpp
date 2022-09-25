@@ -459,10 +459,10 @@ bool LILColorMaker::_processColorInstr(std::shared_ptr<LILInstruction> value)
 {
     if (value->getIsColorInstruction()) {
         auto instrTy = value->getInstructionType();
-        float redHexVal = 0.0;
-        float blueHexVal = 0.0;
-        float greenHexVal = 0.0;
-        float alphaHexVal = 1.0;
+        double redHexVal = 0.0;
+        double blueHexVal = 0.0;
+        double greenHexVal = 0.0;
+        double alphaHexVal = 1.0;
 
         //get the values
         switch (instrTy) {
@@ -496,7 +496,7 @@ bool LILColorMaker::_processColorInstr(std::shared_ptr<LILInstruction> value)
                 if (instrTy == InstructionTypeGrayscale1) {
                     hexStr += digit;
                 }
-                float hexVal = std::stof(hexStr) / 255.0;
+                double hexVal = std::stod(hexStr) / 255.0;
                 redHexVal = hexVal;
                 greenHexVal = hexVal;
                 blueHexVal = hexVal;
@@ -557,7 +557,7 @@ bool LILColorMaker::_processColorInstr(std::shared_ptr<LILInstruction> value)
         }
 
         //make the object definition
-        auto numTy = LILType::make("f32");
+        auto numTy = LILType::make("f64");
         auto objDef = std::make_shared<LILObjectDefinition>();
         auto objTy = std::make_shared<LILObjectType>();
         objTy->setName("rgb");
@@ -565,7 +565,7 @@ bool LILColorMaker::_processColorInstr(std::shared_ptr<LILInstruction> value)
         //red
         auto redNumLit = std::make_shared<LILNumberLiteral>();
         redNumLit->setType(numTy);
-        redNumLit->setValue(LILString::number((LILUnitF64) redHexVal));
+        redNumLit->setValue(LILString::number(redHexVal));
         auto red = std::make_shared<LILAssignment>();
         auto redPn = std::make_shared<LILPropertyName>();
         redPn->setName("red");
@@ -576,7 +576,7 @@ bool LILColorMaker::_processColorInstr(std::shared_ptr<LILInstruction> value)
         //green
         auto greenNumLit = std::make_shared<LILNumberLiteral>();
         greenNumLit->setType(numTy);
-        greenNumLit->setValue(LILString::number((LILUnitF64) greenHexVal));
+        greenNumLit->setValue(LILString::number(greenHexVal));
         auto green = std::make_shared<LILAssignment>();
         auto greenPn = std::make_shared<LILPropertyName>();
         greenPn->setName("green");
@@ -587,7 +587,7 @@ bool LILColorMaker::_processColorInstr(std::shared_ptr<LILInstruction> value)
         //blue
         auto blueNumLit = std::make_shared<LILNumberLiteral>();
         blueNumLit->setType(numTy);
-        blueNumLit->setValue(LILString::number((LILUnitF64) blueHexVal));
+        blueNumLit->setValue(LILString::number(blueHexVal));
         auto blue = std::make_shared<LILAssignment>();
         auto bluePn = std::make_shared<LILPropertyName>();
         bluePn->setName("blue");
@@ -598,7 +598,7 @@ bool LILColorMaker::_processColorInstr(std::shared_ptr<LILInstruction> value)
         //alpha
         auto alphaNumLit = std::make_shared<LILNumberLiteral>();
         alphaNumLit->setType(numTy);
-        alphaNumLit->setValue(LILString::number((LILUnitF64) alphaHexVal));
+        alphaNumLit->setValue(LILString::number(alphaHexVal));
         auto alpha = std::make_shared<LILAssignment>();
         auto alphaPn = std::make_shared<LILPropertyName>();
         alphaPn->setName("alpha");

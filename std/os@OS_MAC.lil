@@ -28,9 +28,9 @@ var.id LIL__applicationDelegate extern;
         castedPtr(LIL__applicationDelegate, exitSel);
     }
 
-    fn LIL__setWindowBgColor(var.f32 red; var.f32 green; var.f32 blue; var.f32 alpha) {
+    fn LIL__setWindowBgColor(var.f64 red; var.f64 green; var.f64 blue; var.f64 alpha) {
         var.SEL selector: sel_registerName(`setWindowBackgroundRed:green:blue:alpha:`);
-        var.ptr(fn(id,SEL,f32,f32,f32,f32)=>id) castedPtr: (pointerTo(objc_msgSend) => ptr(fn(id,SEL,f32,f32,f32,f32)=>id));
+        var.ptr(fn(id,SEL,f64,f64,f64,f64)=>id) castedPtr: (pointerTo(objc_msgSend) => ptr(fn(id,SEL,f64,f64,f64,f64)=>id));
         castedPtr(LIL__applicationDelegate, selector, red, green, blue, alpha);
     }
 

@@ -27,11 +27,11 @@ class @NSRect {
 
         //public interface
         vvar.i64 componentId;
-        vvar.f32 width;
-        vvar.f32 height;
+        vvar.f64 width;
+        vvar.f64 height;
         vvar.@rgb background;
-        vvar.f32 x;
-        vvar.f32 y;
+        vvar.f64 x;
+        vvar.f64 y;
         vvar.ptr(@string)=>ptr(i8) value;
         vvar.ptr(any)|null onChange;
         vvar.@rgb background;
@@ -81,7 +81,7 @@ class @NSRect {
             return id;
         };
 
-        fn setWidth(var.f32 value) {
+        fn setWidth(var.f64 value) {
             app.textfields[@self.componentId].width: value;
 
             var.id textfieldInstance: app.textfields[@self.componentId].data => id;
@@ -107,7 +107,7 @@ class @NSRect {
         fn getWidth {
             return app.textfields[@self.componentId].width;
         };
-        fn setHeight(var.f32 value) {
+        fn setHeight(var.f64 value) {
             app.textfields[@self.componentId].height: value;
             
             var.id textfieldInstance: app.textfields[@self.componentId].data => id;
@@ -142,7 +142,8 @@ class @NSRect {
         fn getBackgroundPointer {
             return pointerTo app.textfields[@self.componentId].bgColor;
         };
-        fn setX(var.f32 value) {
+
+        fn setX(var.f64 value) {
             app.textfields[@self.componentId].x: value;
 
             var.id textfieldInstance: app.textfields[@self.componentId].data => id;
@@ -165,10 +166,10 @@ class @NSRect {
             var.ptr(fn(id,SEL,@NSPoint)) setOriginMethod: (pointerTo(objc_msgSend) => ptr(fn(id,SEL,@NSPoint)));
             setOriginMethod(textfieldInstance, setOriginSel, tfFrame.origin);
         }
-        fn getX() => f32 {
+        fn getX() => f64 {
             return app.textfields[@self.componentId].x;
         };
-        fn setY(var.f32 value) {
+        fn setY(var.f64 value) {
             app.textfields[@self.componentId].y: value;
 
             var.id textfieldInstance: app.textfields[@self.componentId].data => id;
@@ -191,7 +192,7 @@ class @NSRect {
             var.ptr(fn(id,SEL,@NSPoint)) setOriginMethod: (pointerTo(objc_msgSend) => ptr(fn(id,SEL,@NSPoint)));
             setOriginMethod(textfieldInstance, setOriginSel, tfFrame.origin);
         };
-        fn getY() => f32 {
+        fn getY() => f64 {
             return app.textfields[@self.componentId].y;
         };
         
@@ -217,7 +218,7 @@ class @NSRect {
             var.ptr(fn(id,SEL,id)) setValueMethod: (pointerTo(objc_msgSend) => ptr(fn(id,SEL,id)));
             setValueMethod(textfieldInstance, setValueSel, nsStrInstance);
 
-            if @self.width = 0f32 {
+            if @self.width = 0 {
                 var.SEL getAttrStrSel: sel_registerName(`attributedStringValue`);
                 var.ptr(fn(id,SEL)=>id) getAttrStrMethod: (pointerTo(objc_msgSend) => ptr(fn(id,SEL)=>id));
                 var.id nsAttrStrInstance: getAttrStrMethod(textfieldInstance, getAttrStrSel);
@@ -255,10 +256,10 @@ class @NSRect {
             var.Class colorClass: objc_lookUpClass(`NSColor`);
             var.SEL colorCreateSel: sel_registerName(`colorWithSRGBRed:green:blue:alpha:`);
             var.ptr(fn(id,SEL,f64,f64,f64,f64)=>id) colorCreateMethod: (pointerTo(objc_msgSend) => ptr(fn(id,SEL,f64,f64,f64,f64)=>id));
-            var red: value.red => f64;
-            var green: value.green => f64;
-            var blue: value.blue => f64;
-            var alpha: value.alpha => f64;
+            var red: value.red;
+            var green: value.green;
+            var blue: value.blue;
+            var alpha: value.alpha;
             var.id nsColorInstance: colorCreateMethod(colorClass=>id, colorCreateSel, red, green, blue, alpha);
             
             //set background color
