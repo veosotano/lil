@@ -151,20 +151,24 @@
 		msgEmit(`onMouseUp`, pointerTo mouseEvent);
 	};
     fn LIL__setKeyDown(var.i16 keyCode) {
-        input.setKeyDown(keyCode, true);
-        var event: @event {
-            //eventType: EventType.keyboard;
-            code: keyCode;
+        if !input.isKeyDown(keyCode) {
+            input.setKeyDown(keyCode, true);
+            var event: @event {
+                eventType: EventType.keyboard;
+                code: keyCode;
+            }
+            msgEmit(`onKeyDown`, pointerTo event);
         }
-        msgEmit(`onKeyDown`, pointerTo event);
     };
     fn LIL__setKeyUp(var.i16 keyCode) {
-        input.setKeyDown(keyCode, false);
-        var event: @event {
-            eventType: EventType.keyboard;
-            code: keyCode;
+        if input.isKeyDown(keyCode) {
+            input.setKeyDown(keyCode, false);
+            var event: @event {
+                eventType: EventType.keyboard;
+                code: keyCode;
+            }
+            msgEmit(`onKeyUp`, pointerTo event);
         }
-        msgEmit(`onKeyUp`, pointerTo event);
     };
     fn LIL__setGamepadButtonState(var.i64 gamepadId; var.i64 buttonId; var.bool value) {
         input.setGamepadButtonDown(gamepadId, buttonId, value);
