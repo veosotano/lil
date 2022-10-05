@@ -120,19 +120,21 @@
 			y: y;
 			pressed: true;
 		};
-		var mouseEvent: @mouseEvent {
+		var evt: @event {
+			eventType: EventType.mouse;
 			x: x;
 			y: y;
 		};
-		msgEmit(`onMouseDown`, pointerTo mouseEvent);
+		msgEmit(`onMouseDown`, pointerTo evt);
 	};
 	fn LIL__setMouseDragged(var.i64 buttonNumber; var.f64 x; var.f64 y) {
 		input.setMousePosition(buttonNumber, x, y);
-		var mouseEvent: @mouseEvent {
+		var evt: @event {
+			eventType: EventType.mouse;
 			x: x;
 			y: y;
 		};
-		msgEmit(`onMouseDragged`, pointerTo mouseEvent);
+		msgEmit(`onMouseDragged`, pointerTo evt);
 	};
 	fn LIL__setMouseUp(var.i64 buttonNumber; var.f64 x; var.f64 y; var.i64 clickCount) {
 		input.mouseStates[buttonNumber]: @mouseState {
@@ -140,15 +142,16 @@
 			y: y;
 			pressed: false;
 		};
-		var mouseEvent: @mouseEvent {
-			clickCount: clickCount;
+		var evt: @event {
+			eventType: EventType.mouse;
+			count: clickCount;
 			x: x;
 			y: y;
 		};
 		if clickCount > 0 {
-			msgEmit(`onClick`, pointerTo mouseEvent);
+			msgEmit(`onClick`, pointerTo evt);
 		}
-		msgEmit(`onMouseUp`, pointerTo mouseEvent);
+		msgEmit(`onMouseUp`, pointerTo evt);
 	};
     fn LIL__setKeyDown(var.i16 keyCode) {
         if !input.isKeyDown(keyCode) {

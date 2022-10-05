@@ -1,11 +1,4 @@
 #export {
-	//deprecated
-	class @mouseEvent {
-		var.i64 clickCount: 0;
-		var.f64 x: 0;
-		var.f64 y: 0;
-	}
-	
 	enum.i32 EventType {
 		mouse,
 		keyboard,
@@ -19,8 +12,7 @@
 		camera,
 		other
 	}
-	
-	//use this instead
+
 	class @event {
 		var.EventType eventType;
 		var.f64 x: 0;
@@ -30,5 +22,10 @@
 		var.i64 code: 0;
 		var.i64 delta: 0;
 		var.ptr(any)|null data: null;
+		var.bool isStopped: false;
+		
+		fn stop {
+			@self.isStopped: false;
+		}
 	}
 }

@@ -643,10 +643,9 @@ fn fabs(f64) => f64 extern;
 		}
 	}
 	
-	fn LIL__mouseClickListener(var.ptr(any) data) {
-		var.ptr(@mouseEvent) event: data;
-		var mouseX: event.x;
-		var mouseY: event.y;
+	fn LIL__mouseClickListener(var.ptr(@event) evt) {
+		var mouseX: evt.x;
+		var mouseY: evt.y;
 		#if DEBUG {
 			printf(`mouse listener: x:%lf y:%lf\n`, mouseX, mouseY);	
 		}
@@ -654,16 +653,18 @@ fn fabs(f64) => f64 extern;
 			var action: app.actions[i];
 			var elem: app.selectables[action.elementId];
 			if LIL__mouseIntersectionTest(elem.typeId, elem.componentId, mouseX, mouseY) {
-				var callback: action.ptr => ptr(fn(ptr(any)));
-				callback(data);
+				var callback: action.ptr => ptr(fn(ptr(@event)));
+				callback(evt);
+				if evt.isStopped {
+					break;
+				}
 			}
 		}
 	}
     
-    fn LIL__mouseDownListener(var.ptr(any) data) {
-        var.ptr(@mouseEvent) event: data;
-        var mouseX: event.x;
-        var mouseY: event.y;
+    fn LIL__mouseDownListener(var.ptr(@event) evt) {
+        var mouseX: evt.x;
+        var mouseY: evt.y;
         for (var.i64 i: 0; i<app.mouseDownActionCount; i +: 1) {
             var action: app.mouseDownActions[i];
             var id: action.elementId;
@@ -671,18 +672,20 @@ fn fabs(f64) => f64 extern;
             if LIL__mouseIntersectionTest(elem.typeId, elem.componentId, mouseX, mouseY) {
                 app.dragTargetId: id;
                 app.dragOrigin: @pos2d { x: mouseX; y: mouseY };
-                var callback: action.ptr => ptr(fn(ptr(any)));
-                callback(data);
+                var callback: action.ptr => ptr(fn(ptr(@event)));
+                callback(evt);
+				if evt.isStopped {
+					break;
+				}
             }
         }
     }
     
-    fn LIL__mouseDraggedListener(var.ptr(any) data) {
-        var.ptr(@mouseEvent) event: data;
+    fn LIL__mouseDraggedListener(var.ptr(@event) evt) {
         if !app.dragHasSession {
             if (
-                (fabs(event.x - app.dragOrigin.x) >= app.dragMinDistance)
-                OR (fabs(event.y - app.dragOrigin.y) >= app.dragMinDistance)
+                (fabs(evt.x - app.dragOrigin.x) >= app.dragMinDistance)
+                OR (fabs(evt.y - app.dragOrigin.y) >= app.dragMinDistance)
             ) {
                 app.dragHasSession: true;
             } else {
@@ -695,25 +698,29 @@ fn fabs(f64) => f64 extern;
                 var action: app.mouseDraggedActions[i];
                 var id: action.elementId;
                 if id = app.dragTargetId {
-                    var callback: action.ptr => ptr(fn(ptr(any)));
-                    callback(data);
+                    var callback: action.ptr => ptr(fn(ptr(@event)));
+                    callback(evt);
+					if evt.isStopped {
+						break;
+					}
                 }
             }
         }
     }
     
-    fn LIL__mouseUpListener(var.ptr(any) data) {
-        //send the mouse up events
-        var.ptr(@mouseEvent) event: data;
-        var mouseX: event.x;
-        var mouseY: event.y;
+    fn LIL__mouseUpListener(var.ptr(@event) evt) {
+        var mouseX: evt.x;
+        var mouseY: evt.y;
         for (var.i64 i: 0; i<app.mouseUpActionCount; i +: 1) {
             var action: app.mouseUpActions[i];
             var id: action.elementId;
             var elem: app.selectables[id];
             if LIL__mouseIntersectionTest(elem.typeId, elem.componentId, mouseX, mouseY) {
-                var callback: action.ptr => ptr(fn(ptr(any)));
-                callback(data);
+                var callback: action.ptr => ptr(fn(ptr(@event)));
+                callback(evt);
+				if evt.isStopped {
+					break;
+				}
             }
         }
 
@@ -723,8 +730,11 @@ fn fabs(f64) => f64 extern;
                 var action: app.dragEndActions[i];
                 var id: action.elementId;
                 if id = app.dragTargetId {
-                    var callback: action.ptr => ptr(fn(ptr(any)));
-                    callback(data);
+                    var callback: action.ptr => ptr(fn(ptr(@event)));
+                    callback(evt);
+					if evt.isStopped {
+						break;
+					}
                 }
             }
             app.dragHasSession: false;
@@ -823,10 +833,10 @@ fn fabs(f64) => f64 extern;
             var bgColor: app.box2ds[0].bgColor;
             LIL__setWindowBgColor(bgColor.red, bgColor.green, bgColor.blue, bgColor.alpha);
 			//install the mouse listeners
-			msgSub(`onClick`, LIL__mouseClickListener);
-            msgSub(`onMouseDown`, LIL__mouseDownListener);
-            msgSub(`onMouseDragged`, LIL__mouseDraggedListener);
-            msgSub(`onMouseUp`, LIL__mouseUpListener);
+			msgSub(`onClick`, pointerTo(LIL__mouseClickListener) => msgCallback);
+            msgSub(`onMouseDown`, pointerTo(LIL__mouseDownListener) => msgCallback);
+            msgSub(`onMouseDragged`, pointerTo(LIL__mouseDraggedListener) => msgCallback);
+            msgSub(`onMouseUp`,pointerTo( LIL__mouseUpListener) => msgCallback);
 		};
 
         fn newEntity => i64 {

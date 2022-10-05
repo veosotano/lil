@@ -1,28 +1,29 @@
-#===== class @mouseEvent =======
+#===== class @event =======
 #= The data that is passed to mouse tracking listeners
 #= href https://github.com/veosotano/lil/blob/main/std/events.lil
 #---------------------------
-<lil>var mouseEvent: @mouseEvent {
-	clickCount: clickCount;
+<lil>var event: @event {
+	type: EventTypes.mouse;
+	count: clickCount;
 	x: x => f64;
 	y: y => f64;
 };
-msgEmit(`onClick`, pointerTo mouseEvent);</lil>
+msgEmit(`onClick`, pointerTo event);</lil>
 
 
-#===== var clickCount ===========
+#===== var count ===========
 #= How many clicks have happened in succession.
 #---------------------------
-<lil>if mouseEvent.clickCount = 2 {
+<lil>if event.count = 2 {
 	print "Double click";
 }</lil>
 
 #===== var x ===========
 #= The location in the horizontal axis of where the event happened, in window coordinates.
 #---------------------------
-<lil>var mouseX: mouseEvent.x;</lil>
+<lil>var mouseX: event.x;</lil>
 
 #===== var y ===========
 #= The location in the vertical axis of where the event happened, in window coordinates.
 #---------------------------
-<lil>var mouseY: mouseEvent.y;</lil>
+<lil>var mouseY: event.y;</lil>
