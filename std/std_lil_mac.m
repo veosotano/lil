@@ -282,6 +282,7 @@ typedef struct
 @property(nonatomic, assign) long int textureCount;
 @property(nonatomic, assign) long int shapeVertexCount;
 @property(nonatomic, assign) long int shapeIndexCount;
+@property (nonatomic) double scale;
 
 @end
 
@@ -311,6 +312,7 @@ typedef struct
     long int textureCount_;
     long int shapeVertexCount_;
 	long int shapeIndexCount_;
+	double scale_;
 }
 
 @synthesize windowBgColor = windowBgColor_;
@@ -319,6 +321,7 @@ typedef struct
 @synthesize textureCount = textureCount_;
 @synthesize shapeVertexCount = shapeVertexCount_;
 @synthesize shapeIndexCount = shapeIndexCount_;
+@synthesize scale = scale_;
 
 - (nonnull id)initWithMetalDevice:(nonnull id<MTLDevice>)device_ drawablePixelFormat:(MTLPixelFormat)drawablePixelFormat
 {
@@ -334,6 +337,7 @@ typedef struct
 		shapeIndexCount_ = 0;
         self.windowBgColor = MTLClearColorMake(0., 0., 0., 1.);
         drawablePixelFormat_ = drawablePixelFormat;
+		scale_ = 1.0;
 
         commandQueue = [device newCommandQueue];
 
@@ -508,7 +512,7 @@ typedef struct
         [renderEncoder setVertexBuffer:vertexBuffer offset:0 atIndex:LILVertexInputIndexVertices ];
 
         LILUniforms uniforms;
-        uniforms.scale = 1.0;
+        uniforms.scale = scale_;
         uniforms.viewportSize = viewportSize;
         [renderEncoder setVertexBytes:&uniforms length:sizeof(uniforms) atIndex:LILVertexInputIndexUniforms ];
 
@@ -535,7 +539,7 @@ typedef struct
             [renderEncoder setRenderPipelineState:shapePipeline];
             [renderEncoder setVertexBuffer:vertexBuffer offset:shapeOffset atIndex:LILVertexInputIndexVertices ];
             LILUniforms shapeUniforms;
-            shapeUniforms.scale = 1.0;
+            shapeUniforms.scale = scale_;
             shapeUniforms.viewportSize = viewportSize;
             [renderEncoder setVertexBytes:&shapeUniforms length:sizeof(shapeUniforms) atIndex:LILVertexInputIndexUniforms ];
             [renderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:self.shapeIndexCount indexType:MTLIndexTypeUInt32 indexBuffer:indexBuffer indexBufferOffset:0];
@@ -657,6 +661,8 @@ long int LIL__ticksTonanoseconds(long int ticks) {
     NSSize newSize = bounds;
     newSize.width *= scaleFactor;
     newSize.height *= scaleFactor;
+
+	renderer_.scale = scaleFactor;
 
     if(newSize.width <= 0 || newSize.width <= 0)
     {
@@ -906,8 +912,6 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
 - (void)setMainWindowWidth:(CGFloat)width height:(CGFloat)height {
     NSScreen * mainScreen = [NSScreen mainScreen];
     NSRect screenRect = [mainScreen frame];
-    width /= [mainScreen backingScaleFactor];
-    height /= [mainScreen backingScaleFactor];
     
     NSRect windowFrame = [mainWindow frame];
     CGFloat titleBarHeight = windowFrame.size.height - [mainWindow contentRectForFrameRect: windowFrame].size.height;
