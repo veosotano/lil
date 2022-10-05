@@ -480,6 +480,13 @@ void LILParameterSorter::_process(LILFunctionCall * value)
                 case NodeTypePropertyName:
                 {
                     auto pn = std::static_pointer_cast<LILPropertyName>(currentNode);
+                    if (currentTy && currentTy->isA(TypeTypePointer)) {
+                        auto ptrRetTy = std::static_pointer_cast<LILPointerType>(currentTy);
+                        auto ptrRetArg = ptrRetTy->getArgument();
+                        if (ptrRetArg->isA(TypeTypeObject)) {
+                            currentTy = ptrRetArg;
+                        }
+                    }
                     if (!currentTy->isA(TypeTypeObject)) {
                         std::cerr << "VALUE PATH NODE DOES NOT POINT TO OBJECT FAIL!!!!!!!!\n";
                         return;
