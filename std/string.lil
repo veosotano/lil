@@ -27,6 +27,7 @@ const DEBUG: false;
                 }
                 free valueOf(pointerTo(@self.buffer) => ptr(cstr));
             }
+			@self.length: 0;
         };
 
         fn cstr => cstr {
