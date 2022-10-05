@@ -31,6 +31,8 @@
     fn strncmp (var.cstr str1; var.cstr str2, var.i64 maxLength) => i32 extern;
     fn strnlen (var.cstr str; var.i64 maxLength) => i64 extern;
     fn snprintf ( var.cstr buffer; var.i64 bufsz; var.cstr format ... ) => i32 extern;
+	fn strncpy ( var.cstr dst; var.cstr src; var.i64 len ) => cstr extern;
+	fn strrchr( var.cstr str; var.i32 character) => cstr|null extern;
 
     //math
     fn abs(var.i32 value) => i32 extern;
