@@ -2650,6 +2650,7 @@ std::shared_ptr<LILType> LILTypeGuesser::nullsToNullableTypes(std::shared_ptr<LI
             
             if (hasChanges) {
                 auto newFnTy = std::make_shared<LILFunctionType>();
+                newFnTy->setName("fn");
                 if (hasChangesArgs) {
                     newFnTy->setArguments(newArgs);
                 } else {
