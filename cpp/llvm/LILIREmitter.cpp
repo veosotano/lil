@@ -1348,6 +1348,7 @@ llvm::Value * LILIREmitter::_emitObjDef(LILObjectDefinition * value)
                 auto methodFd = std::static_pointer_cast<LILFunctionDecl>(methodNode);
                 auto fc = std::make_shared<LILFunctionCall>();
                 fc->setName(methodName);
+                fc->setParentNode(callVal->getParentNode());
 
                 fc->addArgument(callVal);
                 fc->addArgumentType(callVal->getType());
