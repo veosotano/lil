@@ -38,8 +38,8 @@
             //fixme: should use selection system to get id instead of hardcoded to 0
             //fixme: upcast should be implicit
             return @size {
-                width: app.box2ds[0].width => f64;
-                height: app.box2ds[0].height => f64;
+                width: app.box2ds[0].width;
+                height: app.box2ds[0].height;
             };
         }
 
