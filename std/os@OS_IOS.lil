@@ -1,5 +1,10 @@
 alias cstr => ptr(i8);
 var.id LIL__applicationDelegate extern;
+class @size {
+	var.f64 width;
+	var.f64 height;
+}
+fn printf (ptr(i8)...)=>i32 extern;
 
 #export {
     #import "objc.lil";
@@ -24,6 +29,30 @@ var.id LIL__applicationDelegate extern;
         var.SEL selector: sel_registerName(`setWindowBackgroundRed:green:blue:alpha:`);
         var.ptr(fn(id,SEL,f64,f64,f64,f64)=>id) castedPtr: (pointerTo(objc_msgSend) => ptr(fn(id,SEL,f64,f64,f64,f64)=>id));
         castedPtr(LIL__applicationDelegate, selector, red, green, blue, alpha);
+    }
+	
+	fn LIL__getUIWindowSize => @size {
+        var.SEL getUIWindowSizeSel: sel_registerName(`getUIWindowSize`);
+        var getUIWindowSizeMethod: pointerTo(objc_msgSend) => ptr(fn(id,SEL)=>@size);
+        return getUIWindowSizeMethod(LIL__applicationDelegate, getUIWindowSizeSel);
+	}
+
+    fn LIL__loadTexture(var.cstr path; var.i64 idx) {
+		printf(`loading texture\n`);
+        var.Class stringClass: objc_lookUpClass(`NSString`);
+        var.SEL strCreateSel: sel_registerName(`stringWithUTF8String:`);
+        var strCreateMethod: pointerTo(objc_msgSend) => ptr(fn(id,SEL,cstr)=>id);
+        var.id nsStrInstance: strCreateMethod(stringClass=>id, strCreateSel, path);
+        
+        var.SEL loadTextureSel: sel_registerName(`loadTextureForFile:index:`);
+        var loadtextureMethod: pointerTo(objc_msgSend) => ptr(fn(id,SEL,id,i64));
+        loadtextureMethod(LIL__applicationDelegate, loadTextureSel, nsStrInstance, idx);
+    }
+
+    fn LIL__unloadTexture(var.i64 idx) {
+        var.SEL unloadTextureSel: sel_registerName(`unloadTextureForIndex:`);
+        var unloadtextureMethod: pointerTo(objc_msgSend) => ptr(fn(id,SEL,i64));
+        unloadtextureMethod(LIL__applicationDelegate, unloadTextureSel, idx);
     }
     
     fn LIL__automaticFullScreen {
