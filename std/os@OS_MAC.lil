@@ -63,15 +63,15 @@ var.id LIL__applicationDelegate extern;
         castedPtr(LIL__applicationDelegate, selector);
     }
 
-    fn showOpenPanel(var.ptr(fn(cstr)) onSuccess; var.ptr(fn) onCancel) {
-        var.SEL openSel: sel_registerName(`showOpenPanelWithSuccessCallback:cancelCallback:`);
-        var.ptr(fn(id,SEL,ptr(fn(cstr)),ptr(fn))=>id) castedPtr: (pointerTo(objc_msgSend) => ptr(fn(id,SEL,ptr(fn(cstr)),ptr(fn))=>id));
-        castedPtr(LIL__applicationDelegate, openSel, onSuccess, onCancel);
+    fn showOpenPanel(var.ptr(fn(cstr)) onSuccess; var.ptr(fn) onCancel; var.cstr fileName; var.cstr allowedTypes) {
+        var.SEL openSel: sel_registerName(`showOpenPanelWithSuccessCallback:cancelCallback:fileName:allowedTypes:`);
+        var castedPtr: pointerTo(objc_msgSend) => ptr(fn(id,SEL,ptr(fn(cstr)),ptr(fn),cstr,cstr)=>id);
+        castedPtr(LIL__applicationDelegate, openSel, onSuccess, onCancel, fileName, allowedTypes);
     }
 
-    fn showSavePanel(var.ptr(fn(cstr)) onSuccess; var.ptr(fn) onCancel) {
-        var.SEL openSel: sel_registerName(`showSavePanelWithSuccessCallback:cancelCallback:`);
-        var.ptr(fn(id,SEL,ptr(fn(cstr)),ptr(fn))=>id) castedPtr: (pointerTo(objc_msgSend) => ptr(fn(id,SEL,ptr(fn(cstr)),ptr(fn))=>id));
-        castedPtr(LIL__applicationDelegate, openSel, onSuccess, onCancel);
+    fn showSavePanel(var.ptr(fn(cstr)) onSuccess; var.ptr(fn) onCancel; var.cstr fileName; var.cstr allowedTypes) {
+        var.SEL openSel: sel_registerName(`showSavePanelWithSuccessCallback:cancelCallback:fileName:allowedTypes:`);
+        var castedPtr: pointerTo(objc_msgSend) => ptr(fn(id,SEL,ptr(fn(cstr)),ptr(fn),cstr,cstr)=>id);
+        castedPtr(LIL__applicationDelegate, openSel, onSuccess, onCancel, fileName, allowedTypes);
     }
 }

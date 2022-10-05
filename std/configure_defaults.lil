@@ -109,6 +109,7 @@
                 "-framework QuartzCore",
                 "-framework Metal",
                 "-framework MetalKit",
+                "-framework UniformTypeIdentifiers",
                 "-macosx_version_min %minOSVersion";
             appBuildSteps:
 				'rm -rf "%name.app"',

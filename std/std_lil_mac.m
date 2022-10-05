@@ -7,6 +7,7 @@
 #include <simd/simd.h>
 #include <math.h>
 #include <mach/mach_time.h>
+#import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 
 typedef struct LIL__audioDescriptorStruct {
     AudioComponentInstance * audioUnit;
@@ -860,8 +861,8 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
 - (LILMainView *)getMainView;
 - (NSWindow *)getMainWindow;
 - (void)quit;
-- (void)showOpenPanelWithSuccessCallback:(void(*)(const char *))onSuccess cancelCallback:(void(*)())onCancel;
-- (void)showSavePanelWithSuccessCallback:(void(*)(const char *))onSuccess cancelCallback:(void(*)())onCancel;
+- (void)showOpenPanelWithSuccessCallback:(void(*)(const char *))onSuccess cancelCallback:(void(*)())onCancel fileName:(const char *)fileName allowedTypes:(const char *)allowedTypes;
+- (void)showSavePanelWithSuccessCallback:(void(*)(const char *))onSuccess cancelCallback:(void(*)())onCancel fileName:(const char *)fileName allowedTypes:(const char *)allowedTypes;
 @end
 @implementation LILAppDelegate
 - (id)init {
@@ -1057,7 +1058,7 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
     [[NSApplication  sharedApplication] terminate:self];
 }
 
-- (void)showOpenPanelWithSuccessCallback:(void(*)(const char *))onSuccess cancelCallback:(void(*)())onCancel
+- (void)showOpenPanelWithSuccessCallback:(void(*)(const char *))onSuccess cancelCallback:(void(*)())onCancel fileName:(const char *)fileName allowedTypes:(const char *)allowedTypes
 {
 	NSOpenPanel* panel = [NSOpenPanel openPanel];
 
@@ -1075,9 +1076,18 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
 	}];
 }
 
-- (void)showSavePanelWithSuccessCallback:(void(*)(const char *))onSuccess cancelCallback:(void(*)())onCancel
+- (void)showSavePanelWithSuccessCallback:(void(*)(const char *))onSuccess cancelCallback:(void(*)())onCancel fileName:(const char *)fileName allowedTypes:(const char *)allowedTypes
 {
 	NSSavePanel* panel = [NSSavePanel savePanel];
+
+	panel.nameFieldStringValue = [NSString stringWithUTF8String: fileName];
+	NSString * allowedTypesStr = [NSString stringWithUTF8String: allowedTypes];
+	NSArray * allowedTypesArr = [allowedTypesStr componentsSeparatedByString:@","];
+	NSMutableArray * allowedTypesUT = [NSMutableArray array];
+	for (size_t i = 0; i<[allowedTypesArr count]; i+=1) {
+		[allowedTypesUT addObject: [UTType typeWithFilenameExtension: [allowedTypesArr objectAtIndex: i]]];
+	}
+	panel.allowedContentTypes = allowedTypesUT;
 
 	// This method displays the panel and returns immediately.
 	// The completion handler is called when the user selects an
