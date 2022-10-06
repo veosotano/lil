@@ -42,7 +42,7 @@ class @NSRect {
 
         fn initialize(var.cstr name; var.i64 parentId: 0) => i64 {
             var componentId: app.newTextfield();
-            var id: app.newElement(name, parentId, 4, componentId);
+            var id: app.newElement(name, parentId, 5, componentId);
             @self.id: id;
             
             //instantiate NSString
@@ -291,7 +291,7 @@ class @NSRect {
 
         fn initialize(var.cstr name; var.i64 parentId: 0) => i64 {
             var componentId: app.newTextfield();
-            var id: app.newElement(name, parentId, 5, componentId);
+            var id: app.newElement(name, parentId, 6, componentId);
             @self.id: id;
 
             return id;

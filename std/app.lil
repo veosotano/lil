@@ -1,4 +1,5 @@
 const DEBUG: false;
+const DEBUG_LAYOUT: true;
 const DEBUG_SHAPE_VERTICES: false;
 
 #snippet namesSize { 256 };
@@ -31,8 +32,9 @@ fn fabs(f64) => f64 extern;
     //1: @image
     //2: @sprite
 	//3: @shape2d
-	//4: @textfield
-	//4: @label
+	//4: @layout
+	//5: @textfield
+	//6: @label
     var.@app app: @app { selectables: []; entityCount: 0; typeCount: 5 };
 
     class @size {
@@ -643,6 +645,85 @@ fn fabs(f64) => f64 extern;
 		}
 	}
 	
+	class @layoutData {
+		var.i64 id;
+	}
+	class @layout {
+		//this class MUST only be an i64
+		//do not add any more vars
+		#expand var.@element super: @element { };
+
+		//public interface
+		vvar.i64 componentId;
+
+		fn getComponentId => i64 {
+			return app.selectables[@self.id].componentId;
+		}
+
+		fn initialize(var.cstr name; var.i64 parentId: 0) => i64 {
+			#if DEBUG {
+				puts `created layout!`;
+			}
+			var componentId: app.newLayout();
+			@self.id: app.newElement(name, parentId, 4, componentId);
+			app.layoutData[componentId].id: @self.id;
+			return @self.id;
+		}
+
+		//WARNING: only call this when it is the last entity
+		fn deinit {
+			app.removeLastLayout();
+			app.removeLastEntity();
+		}
+		
+		fn update {
+			#if DEBUG_LAYOUT {
+				puts `update layout`;
+			}
+			var parentId: app.selectables[@self.id].parentId;
+			var parent: @container { id: parentId };
+			var sel: app.selectChildren(@self.id);
+			var.f64 childrenWidth: 0;
+			for sel.size {
+				var elem: sel.items[@value];
+				var selectable: elem.selectable;
+				if selectable.typeId = 0 {
+					var container: @container { id: elem.id };
+					childrenWidth +: container.width;
+				}
+			}
+			#if DEBUG_LAYOUT {
+				printf(`children width is %lf\n`, childrenWidth);
+			}
+			var.f64 spaceX: (parent.width - childrenWidth);
+			#if DEBUG_LAYOUT {
+				printf(`spaceX is %lf\n`, spaceX);
+			}
+			var.f64 amountOfSpaces: 1 + (sel.size => f64);
+			var.f64 spaceChunkX: spaceX / amountOfSpaces;
+			var.f64 cumulativeWidth: 0;
+			for sel.size {
+				var elem: sel.items[@value];
+				var selectable: elem.selectable;
+				if selectable.typeId = 0 {
+					var container: @container { id: elem.id };
+					var.f64 newX: spaceChunkX + (spaceChunkX * (@value => f64)) + cumulativeWidth;
+					#if DEBUG_LAYOUT {
+						printf(`setting child %li x to %lf\n`, @value, newX);
+					}
+					container.x: newX;
+					cumulativeWidth +: container.width;
+					
+					var.f64 newY: (parent.height / 2) - (container.height / 2);
+					#if DEBUG_LAYOUT {
+						printf(`setting child %li y to %lf\n`, @value, newY);
+					}
+					container.y: newY;
+				}
+			}
+		}
+	}
+	
 	fn LIL__mouseClickListener(var.ptr(@event) evt) {
 		var mouseX: evt.x;
 		var mouseY: evt.y;
@@ -826,6 +907,9 @@ fn fabs(f64) => f64 extern;
         //textfields
         var.[#paste textfieldsSize x @textfieldData] textfields: [];
         var.i64 textfieldCount: 0;
+		//layout
+		var.[#paste entitiesSize x @layoutData] layoutData: [];
+		var.i64 layoutCount;
 		
 		fn initialize {
             //get root's background color
@@ -838,6 +922,14 @@ fn fabs(f64) => f64 extern;
             msgSub(`onMouseDragged`, pointerTo(LIL__mouseDraggedListener) => msgCallback);
             msgSub(`onMouseUp`,pointerTo( LIL__mouseUpListener) => msgCallback);
 		};
+		
+		fn setupLayouts {
+			for @self.layoutCount {
+				var id: @self.layoutData[@value].id;
+				var layout: @layout { id: id };
+				layout.update();
+			}
+		}
 
         fn newEntity => i64 {
             #if DEBUG {
@@ -912,6 +1004,17 @@ fn fabs(f64) => f64 extern;
                         ret.items[ret.size]: @element { id: i };
                         ret.size +: 1;
                     }
+                }
+            }
+            return ret;
+        };
+        fn selectChildren(var.i64 parentId)=>@sel {
+            var ret: @sel { };
+            for(var.i64 i: 0; i<@self.entityCount; i+:1) {
+                var item: pointerTo @self.selectables[i];
+                if item.parentId = parentId {
+                    ret.items[ret.size]: @element { id: i };
+                    ret.size +: 1;
                 }
             }
             return ret;
@@ -1025,6 +1128,14 @@ fn fabs(f64) => f64 extern;
         fn removeLastDragEndActionId {
             @self.dragEndActionCount -: 1;
         }
+		fn newLayout() {
+			var currentCount: @self.layoutCount;
+			@self.layoutCount +: 1;
+			return currentCount;
+		}
+		fn removeLastLayout {
+			@self.layoutCount -: 1;
+		}
     };
 
     fn LIL__nameToNameId(var.cstr name) => i64 {
