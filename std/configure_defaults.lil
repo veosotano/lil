@@ -80,7 +80,13 @@
             buildResources: #arg { name: "buildResources"; default: true };
             resourceBuildSteps:
                 'clang -c %compilerDir/std/std_lil_mac.m -o "%buildPath/std_lil_mac.o" -mmacosx-version-min=%minOSVersion -fobjc-arc',
-				'(cd %compilerDir/std/libtess2 && make) && rm -rf %buildPath/libtess2 && mv -f %compilerDir/std/libtess2/Build %buildPath/libtess2', //parentheses are to not change cwd
+				'clang -c %compilerDir/std/libtess2/Source/bucketalloc.c -o "%buildPath/bucketalloc.o" -I "%compilerDir/std/libtess2/Include" -mmacosx-version-min=%minOSVersion',
+				'clang -c %compilerDir/std/libtess2/Source/dict.c -o "%buildPath/dict.o" -I "%compilerDir/std/libtess2/Include" -mmacosx-version-min=%minOSVersion',
+				'clang -c %compilerDir/std/libtess2/Source/geom.c -o "%buildPath/geom.o" -I "%compilerDir/std/libtess2/Include" -mmacosx-version-min=%minOSVersion',
+				'clang -c %compilerDir/std/libtess2/Source/mesh.c -o "%buildPath/mesh.o" -I "%compilerDir/std/libtess2/Include" -mmacosx-version-min=%minOSVersion',
+				'clang -c %compilerDir/std/libtess2/Source/priorityq.c -o "%buildPath/priorityq.o" -I "%compilerDir/std/libtess2/Include" -mmacosx-version-min=%minOSVersion',
+				'clang -c %compilerDir/std/libtess2/Source/sweep.c -o "%buildPath/sweep.o" -I "%compilerDir/std/libtess2/Include" -mmacosx-version-min=%minOSVersion',
+				'clang -c %compilerDir/std/libtess2/Source/tess.c -o "%buildPath/tess.o" -I "%compilerDir/std/libtess2/Include" -mmacosx-version-min=%minOSVersion',
                 'xcrun -sdk macosx metal -c %compilerDir/std/lil_shaders.metal -o "%buildPath/lil_shaders.air"',
                 'xcrun -sdk macosx metallib "%buildPath/lil_shaders.air" -o "%buildPath/lil_shaders.metallib"'
             ;
@@ -92,13 +98,13 @@
 
             linkerFlagsApp:
                 '"%buildPath/std_lil_mac.o"',
-				'"%buildPath/libtess2/bucketalloc.o"',
-				'"%buildPath/libtess2/dict.o"',
-				'"%buildPath/libtess2/geom.o"',
-				'"%buildPath/libtess2/mesh.o"',
-				'"%buildPath/libtess2/priorityq.o"',
-				'"%buildPath/libtess2/sweep.o"',
-				'"%buildPath/libtess2/tess.o"',
+				'"%buildPath/bucketalloc.o"',
+				'"%buildPath/dict.o"',
+				'"%buildPath/geom.o"',
+				'"%buildPath/mesh.o"',
+				'"%buildPath/priorityq.o"',
+				'"%buildPath/sweep.o"',
+				'"%buildPath/tess.o"',
 				"-L/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/lib",
 				"-F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks",
                 "-lc",
