@@ -649,7 +649,7 @@ fn fabs(f64) => f64 extern;
 		#if DEBUG {
 			printf(`mouse listener: x:%lf y:%lf\n`, mouseX, mouseY);	
 		}
-		for (var.i64 i: 0; i<app.actionCount; i +: 1) {
+		for (var.i64 i: app.actionCount - 1; i>=0; i -: 1) {
 			var action: app.actions[i];
 			var elem: app.selectables[action.elementId];
 			if LIL__mouseIntersectionTest(elem.typeId, elem.componentId, mouseX, mouseY) {
@@ -665,7 +665,7 @@ fn fabs(f64) => f64 extern;
     fn LIL__mouseDownListener(var.ptr(@event) evt) {
         var mouseX: evt.x;
         var mouseY: evt.y;
-        for (var.i64 i: 0; i<app.mouseDownActionCount; i +: 1) {
+        for (var.i64 i: app.mouseDownActionCount - 1; i>=0; i -: 1) {
             var action: app.mouseDownActions[i];
             var id: action.elementId;
             var elem: app.selectables[id];
@@ -694,7 +694,7 @@ fn fabs(f64) => f64 extern;
         }
         
         if app.dragHasSession {
-            for (var.i64 i: 0; i<app.mouseDraggedActionCount; i +: 1) {
+            for (var.i64 i: app.mouseDraggedActionCount - 1; i>=0; i -: 1) {
                 var action: app.mouseDraggedActions[i];
                 var id: action.elementId;
                 if id = app.dragTargetId {
@@ -711,7 +711,7 @@ fn fabs(f64) => f64 extern;
     fn LIL__mouseUpListener(var.ptr(@event) evt) {
         var mouseX: evt.x;
         var mouseY: evt.y;
-        for (var.i64 i: 0; i<app.mouseUpActionCount; i +: 1) {
+        for (var.i64 i: app.mouseUpActionCount - 1; i>=0; i -: 1) {
             var action: app.mouseUpActions[i];
             var id: action.elementId;
             var elem: app.selectables[id];
@@ -726,7 +726,7 @@ fn fabs(f64) => f64 extern;
 
         if app.dragHasSession {
             //send the drag end event
-            for (var.i64 i: 0; i<app.dragEndActionCount; i +: 1) {
+            for (var.i64 i: app.dragEndActionCount - 1; i>=0; i -: 1) {
                 var action: app.dragEndActions[i];
                 var id: action.elementId;
                 if id = app.dragTargetId {
