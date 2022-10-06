@@ -158,22 +158,70 @@
         ios {
             suffix: "OS_IOS";
             constants+: "OS_IOS";
-            minOSVersion: #arg { name: "minOSVersion"; default: "10.2" };
-            cpu: #arg { name: "cpu"; default: "arm64" };
+            minOSVersion: #arg { name: "minOSVersion"; default: "16.0" };
+            cpu: #arg { name: "cpu"; default: "aarch64" };
             vendor: #arg { name: "vendor"; default: "apple-ios%minOSVersion"};
+			buildResources: #arg { name: "buildResources"; default: true };
+            resourceBuildSteps:
+                'clang -c %compilerDir/std/std_lil_ios.m -o "%buildPath/std_lil_ios.o" -miphoneos-version-min=%minOSVersion -fobjc-arc -isysroot $(xcrun --sdk iphoneos --show-sdk-path) -arch arm64',
+				'clang -c %compilerDir/std/libtess2/Source/bucketalloc.c -o "%buildPath/bucketalloc.o" -I "%compilerDir/std/libtess2/Include" -miphoneos-version-min=%minOSVersion -fobjc-arc -isysroot $(xcrun --sdk iphoneos --show-sdk-path) -arch arm64',
+				'clang -c %compilerDir/std/libtess2/Source/dict.c -o "%buildPath/dict.o" -I "%compilerDir/std/libtess2/Include" -miphoneos-version-min=%minOSVersion -fobjc-arc -isysroot $(xcrun --sdk iphoneos --show-sdk-path) -arch arm64',
+				'clang -c %compilerDir/std/libtess2/Source/geom.c -o "%buildPath/geom.o" -I "%compilerDir/std/libtess2/Include" -miphoneos-version-min=%minOSVersion -fobjc-arc -isysroot $(xcrun --sdk iphoneos --show-sdk-path) -arch arm64',
+				'clang -c %compilerDir/std/libtess2/Source/mesh.c -o "%buildPath/mesh.o" -I "%compilerDir/std/libtess2/Include" -miphoneos-version-min=%minOSVersion -fobjc-arc -isysroot $(xcrun --sdk iphoneos --show-sdk-path) -arch arm64',
+				'clang -c %compilerDir/std/libtess2/Source/priorityq.c -o "%buildPath/priorityq.o" -I "%compilerDir/std/libtess2/Include" -miphoneos-version-min=%minOSVersion -fobjc-arc -isysroot $(xcrun --sdk iphoneos --show-sdk-path) -arch arm64',
+				'clang -c %compilerDir/std/libtess2/Source/sweep.c -o "%buildPath/sweep.o" -I "%compilerDir/std/libtess2/Include" -miphoneos-version-min=%minOSVersion -fobjc-arc -isysroot $(xcrun --sdk iphoneos --show-sdk-path) -arch arm64',
+				'clang -c %compilerDir/std/libtess2/Source/tess.c -o "%buildPath/tess.o" -I "%compilerDir/std/libtess2/Include" -miphoneos-version-min=%minOSVersion -fobjc-arc -isysroot $(xcrun --sdk iphoneos --show-sdk-path) -arch arm64',
+                'xcrun -sdk iphoneos metal -c %compilerDir/std/lil_shaders.metal -o "%buildPath/lil_shaders.air"',
+                'xcrun -sdk iphoneos metallib "%buildPath/lil_shaders.air" -o "%buildPath/lil_shaders.metallib"'
+            ;
             linkerFlags: "-r";
-            linkerFlagsApp: "-r";
-			resourcesPath: "%name.app/Contents/Resources/";
+			linkerFlagsApp:
+				'"%buildPath/std_lil_ios.o"',
+				'"%buildPath/bucketalloc.o"',
+				'"%buildPath/dict.o"',
+				'"%buildPath/geom.o"',
+				'"%buildPath/mesh.o"',
+				'"%buildPath/priorityq.o"',
+				'"%buildPath/sweep.o"',
+				'"%buildPath/tess.o"',
+				"-r"
+			;
+			copyResources: false;
+			autoMainFn: false;
         }
         iosSimulator {
             suffix: "OS_IOS";
             constants+: "OS_IOS";
-            minOSVersion: #arg { name: "minOSVersion"; default: "10.2" };
-            cpu: #arg { name: "cpu"; default: "x86_64" };
+            minOSVersion: #arg { name: "minOSVersion"; default: "16.0" };
+            cpu: #arg { name: "cpu"; default: "aarch64" };
             vendor: #arg { name: "vendor"; default: "apple-ios%minOSVersion-simulator"};
+            buildResources: #arg { name: "buildResources"; default: true };
+            resourceBuildSteps:
+                'clang -c %compilerDir/std/std_lil_ios.m -o "%buildPath/std_lil_ios.o" -I "%compilerDir/std/libtess2/Include" -mios-simulator-version-min=%minOSVersion -fobjc-arc -isysroot $(xcrun --sdk iphonesimulator --show-sdk-path) -arch arm64',
+				'clang -c %compilerDir/std/libtess2/Source/bucketalloc.c -o "%buildPath/bucketalloc.o" -I "%compilerDir/std/libtess2/Include" -mios-simulator-version-min=%minOSVersion -fobjc-arc -isysroot $(xcrun --sdk iphonesimulator --show-sdk-path) -arch arm64',
+				'clang -c %compilerDir/std/libtess2/Source/dict.c -o "%buildPath/dict.o" -I "%compilerDir/std/libtess2/Include" -mios-simulator-version-min=%minOSVersion -fobjc-arc -isysroot $(xcrun --sdk iphonesimulator --show-sdk-path) -arch arm64',
+				'clang -c %compilerDir/std/libtess2/Source/geom.c -o "%buildPath/geom.o" -I "%compilerDir/std/libtess2/Include" -mios-simulator-version-min=%minOSVersion -fobjc-arc -isysroot $(xcrun --sdk iphonesimulator --show-sdk-path) -arch arm64',
+				'clang -c %compilerDir/std/libtess2/Source/mesh.c -o "%buildPath/mesh.o" -I "%compilerDir/std/libtess2/Include" -mios-simulator-version-min=%minOSVersion -fobjc-arc -isysroot $(xcrun --sdk iphonesimulator --show-sdk-path) -arch arm64',
+				'clang -c %compilerDir/std/libtess2/Source/priorityq.c -o "%buildPath/priorityq.o" -I "%compilerDir/std/libtess2/Include" -mios-simulator-version-min=%minOSVersion -fobjc-arc -isysroot $(xcrun --sdk iphonesimulator --show-sdk-path) -arch arm64',
+				'clang -c %compilerDir/std/libtess2/Source/sweep.c -o "%buildPath/sweep.o" -I "%compilerDir/std/libtess2/Include" -mios-simulator-version-min=%minOSVersion -fobjc-arc -isysroot $(xcrun --sdk iphonesimulator --show-sdk-path) -arch arm64',
+				'clang -c %compilerDir/std/libtess2/Source/tess.c -o "%buildPath/tess.o" -I "%compilerDir/std/libtess2/Include" -mios-simulator-version-min=%minOSVersion -fobjc-arc -isysroot $(xcrun --sdk iphonesimulator --show-sdk-path) -arch arm64',
+                'xcrun -sdk iphonesimulator metal -c %compilerDir/std/lil_shaders.metal -o "%buildPath/lil_shaders.air"',
+                'xcrun -sdk iphonesimulator metallib "%buildPath/lil_shaders.air" -o "%buildPath/lil_shaders.metallib"'
+            ;
             linkerFlags: "-r";
-            linkerFlagsApp: "-r";
-			resourcesPath: "%name.app/Contents/Resources/";
+			linkerFlagsApp:
+				'"%buildPath/std_lil_ios.o"',
+				'"%buildPath/bucketalloc.o"',
+				'"%buildPath/dict.o"',
+				'"%buildPath/geom.o"',
+				'"%buildPath/mesh.o"',
+				'"%buildPath/priorityq.o"',
+				'"%buildPath/sweep.o"',
+				'"%buildPath/tess.o"',
+				"-r"
+			;
+			copyResources: false;
+			autoMainFn: false;
         }
         android {
             suffix: "OS_ANDROID";
