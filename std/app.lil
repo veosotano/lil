@@ -829,8 +829,8 @@ fn fabs(f64) => f64 extern;
 		
 		fn initialize {
             //get root's background color
-			//fixme: use selection system instead of hardcoded to 0
-            var bgColor: app.box2ds[0].bgColor;
+			var root: $(@root);
+            var bgColor: root.background;
             LIL__setWindowBgColor(bgColor.red, bgColor.green, bgColor.blue, bgColor.alpha);
 			//install the mouse listeners
 			msgSub(`onClick`, pointerTo(LIL__mouseClickListener) => msgCallback);
