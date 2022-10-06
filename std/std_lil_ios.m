@@ -27,6 +27,10 @@ extern void LIL__setMouseDragged(long int buttonNumber, double x, double y);
 extern void LIL__setMouseUp(long int buttonNumber, double x, double y, long int clickCount);
 
 
+static long int LIL__roundUp(long int numToRound, long int multiple) {
+	assert(multiple && ((multiple & (multiple - 1)) == 0));
+	return (numToRound + multiple - 1) & -multiple;
+}
 
 // =========== renderer =============
 static const MTLPixelFormat LILDepthPixelFormat = MTLPixelFormatDepth32Float;
@@ -327,13 +331,17 @@ typedef struct
 
 		[renderEncoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:self.boxVertexCount];
 
+		long int textureOffset = 0;
+		long int shapeOffset = 0;
+
 		for (long int i = 0; i < self.textureCount; i+=1) {
 			//texture
 			if(texturePipelines[i] == nil) {
 				NSLog(@"Error loading pipeline state nr %li\n", i);
 			}
 			[renderEncoder setRenderPipelineState:texturePipelines[i]];
-			[renderEncoder setVertexBuffer:vertexBuffer offset:(sizeof(LILVertex) * self.boxVertexCount) atIndex:LILVertexInputIndexVertices ];
+			textureOffset = LIL__roundUp(sizeof(LILVertex) * self.boxVertexCount, 256);
+			[renderEncoder setVertexBuffer:vertexBuffer offset:textureOffset atIndex:LILVertexInputIndexVertices ];
 			[renderEncoder setVertexBytes:&uniforms length:sizeof(uniforms) atIndex:LILVertexInputIndexUniforms ];
 			[renderEncoder setFragmentTexture:textures[i] atIndex:0];
 
@@ -344,7 +352,7 @@ typedef struct
 
 		//shape
 		if (self.shapeIndexCount > 0) {
-			long int shapeOffset = (sizeof(LILVertex) * (self.boxVertexCount + self.textureVertexCount));
+			shapeOffset = LIL__roundUp(textureOffset + (sizeof(LILVertex) * self.textureVertexCount), 256);
 			[renderEncoder setRenderPipelineState:shapePipeline];
 			[renderEncoder setVertexBuffer:vertexBuffer offset:shapeOffset atIndex:LILVertexInputIndexVertices ];
 			LILUniforms shapeUniforms;
@@ -536,13 +544,14 @@ typedef struct
 		char * vertexBufferPointer = [_renderer getVertexBufferPointer];
 		LIL__makeBoxVertices((void *)vertexBufferPointer, &vertexCount);
 		_renderer.boxVertexCount = vertexCount;
-		LIL__makeTextureVertices((void *)(vertexBufferPointer + (vertexCount * sizeof(LILVertex))), &textureVertexCount);
-		vertexCount += textureVertexCount;
+		char * textureVtxBufferPtr = (char *)LIL__roundUp((long int)(vertexBufferPointer + (vertexCount * sizeof(LILVertex))), 256);
+		LIL__makeTextureVertices((void *)textureVtxBufferPtr, &textureVertexCount);
 		_renderer.textureVertexCount = textureVertexCount;
 		long int shapeVertexCount = 0;
 		long int shapeIndexCount = 0;
 		char * indexBufferPointer = [_renderer getIndexBufferPointer];
-		LIL__makeShapeVertices((void *)(vertexBufferPointer + (vertexCount * sizeof(LILVertex))), &shapeVertexCount, (void *)indexBufferPointer, &shapeIndexCount);
+		char * shapeVtxBufferPtr = (char *)LIL__roundUp((long int)textureVtxBufferPtr + (textureVertexCount * sizeof(LILVertex)), 256);
+		LIL__makeShapeVertices((void *)shapeVtxBufferPtr, &shapeVertexCount, (void *)indexBufferPointer, &shapeIndexCount);
 		_renderer.shapeVertexCount = shapeVertexCount;
 		_renderer.shapeIndexCount = shapeIndexCount;
 	}
