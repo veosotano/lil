@@ -256,7 +256,7 @@ void LILCodeUnit::buildAST()
             std::cerr << "==== CONFIGURE DEFAULTS ====\n";
             std::cerr << "============================\n\n";
         }
-        LILString path = this->getCompilerDir()+"/configure_defaults.lil";
+        LILString path = this->getCompilerDir()+"/std/configure_defaults.lil";
         std::ifstream file(path.data(), std::ios::in);
         if (file.fail()) {
             std::cerr << "\nERROR: Failed to read the file "+path.data()+"\n\n";
