@@ -19,56 +19,6 @@ class @NSRect {
 };
 
 #export {
-            //get the scaling factor from the screen
-            var.Class screenClass: objc_lookUpClass(`NSScreen`);
-            var.SEL mainScreenSel: sel_registerName(`mainScreen`);
-            var.ptr(fn(id,SEL)=>id) mainScreenMethod: (pointerTo(objc_msgSend) => ptr(fn(id,SEL)=>id));
-            var nsScreenInstance: mainScreenMethod(screenClass => id, mainScreenSel);
-            var.SEL backingScaleSel: sel_registerName(`backingScaleFactor`);
-            var.ptr(fn(id,SEL)=>f64) backingScaleMethod: (pointerTo(objc_msgSend) => ptr(fn(id,SEL)=>f64));
-            var.f64 backingScaleFactor: backingScaleMethod(nsScreenInstance, backingScaleSel);
-            tfFrame.size.width: (value => f64) / backingScaleFactor;
-            var.SEL setSizeSel: sel_registerName(`setFrameSize:`);
-            setSizeMethod(textfieldInstance, setSizeSel, tfFrame.size);
-            var.@NSRect tfFrame: getFrameMethod(textfieldInstance, getFrameSel);
-
-            //get the scaling factor from the screen
-            var.Class screenClass: objc_lookUpClass(`NSScreen`);
-            var.SEL mainScreenSel: sel_registerName(`mainScreen`);
-            var.ptr(fn(id,SEL)=>id) mainScreenMethod: (pointerTo(objc_msgSend) => ptr(fn(id,SEL)=>id));
-            var nsScreenInstance: mainScreenMethod(screenClass => id, mainScreenSel);
-            var.SEL backingScaleSel: sel_registerName(`backingScaleFactor`);
-            var.ptr(fn(id,SEL)=>f64) backingScaleMethod: (pointerTo(objc_msgSend) => ptr(fn(id,SEL)=>f64));
-            var.f64 backingScaleFactor: backingScaleMethod(nsScreenInstance, backingScaleSel);
-            tfFrame.size.height: (value => f64) / backingScaleFactor;
-            var.SEL setSizeSel: sel_registerName(`setFrameSize:`);
-            setSizeMethod(textfieldInstance, setSizeSel, tfFrame.size);
-            var.@NSRect tfFrame: getFrameMethod(textfieldInstance, getFrameSel);
-
-            //get the scaling factor from the screen
-            var.Class screenClass: objc_lookUpClass(`NSScreen`);
-            var.SEL mainScreenSel: sel_registerName(`mainScreen`);
-            var.ptr(fn(id,SEL)=>id) mainScreenMethod: (pointerTo(objc_msgSend) => ptr(fn(id,SEL)=>id));
-            var nsScreenInstance: mainScreenMethod(screenClass => id, mainScreenSel);
-            var.SEL backingScaleSel: sel_registerName(`backingScaleFactor`);
-            var.ptr(fn(id,SEL)=>f64) backingScaleMethod: (pointerTo(objc_msgSend) => ptr(fn(id,SEL)=>f64));
-            var.f64 backingScaleFactor: backingScaleMethod(nsScreenInstance, backingScaleSel);
-            tfFrame.origin.x: (value => f64) / backingScaleFactor;
-            var.SEL setOriginSel: sel_registerName(`setFrameOrigin:`);
-            setOriginMethod(textfieldInstance, setOriginSel, tfFrame.origin);
-            var.@NSRect tfFrame: getFrameMethod(textfieldInstance, getFrameSel);
-
-            //get the scaling factor from the screen
-            var.Class screenClass: objc_lookUpClass(`NSScreen`);
-            var.SEL mainScreenSel: sel_registerName(`mainScreen`);
-            var.ptr(fn(id,SEL)=>id) mainScreenMethod: (pointerTo(objc_msgSend) => ptr(fn(id,SEL)=>id));
-            var nsScreenInstance: mainScreenMethod(screenClass => id, mainScreenSel);
-            var.SEL backingScaleSel: sel_registerName(`backingScaleFactor`);
-            var.ptr(fn(id,SEL)=>f64) backingScaleMethod: (pointerTo(objc_msgSend) => ptr(fn(id,SEL)=>f64));
-            var.f64 backingScaleFactor: backingScaleMethod(nsScreenInstance, backingScaleSel);
-            tfFrame.origin.y: (value => f64) / backingScaleFactor;
-            var.SEL setOriginSel: sel_registerName(`setFrameOrigin:`);
-            setOriginMethod(textfieldInstance, setOriginSel, tfFrame.origin);
 	class @textfield
 	{
 		//this class MUST only be an i64
@@ -136,6 +86,13 @@ class @NSRect {
 			var.id textfieldInstance: app.textfields[@self.componentId].data => id;
 			var.SEL getFrameSel: sel_registerName(`frame`);
 			var.ptr(fn(id,SEL)=>@NSRect) getFrameMethod: (pointerTo(objc_msgSend) => ptr(fn(id,SEL)=>@NSRect));
+			var.@NSRect tfFrame: getFrameMethod(textfieldInstance, getFrameSel);
+
+			tfFrame.size.width: value;
+			
+			var.SEL setSizeSel: sel_registerName(`setFrameSize:`);
+			var.ptr(fn(id,SEL,@NSSize)) setSizeMethod: (pointerTo(objc_msgSend) => ptr(fn(id,SEL,@NSSize)));
+			setSizeMethod(textfieldInstance, setSizeSel, tfFrame.size);
 		};
 		fn getWidth {
 			return app.textfields[@self.componentId].width;
@@ -147,6 +104,12 @@ class @NSRect {
 			var.SEL getFrameSel: sel_registerName(`frame`);
 			var.ptr(fn(id,SEL)=>@NSRect) getFrameMethod: (pointerTo(objc_msgSend) => ptr(fn(id,SEL)=>@NSRect));
 			var.@NSRect tfFrame: getFrameMethod(textfieldInstance, getFrameSel);
+
+			tfFrame.size.height: value;
+			
+			var.SEL setSizeSel: sel_registerName(`setFrameSize:`);
+			var.ptr(fn(id,SEL,@NSSize)) setSizeMethod: (pointerTo(objc_msgSend) => ptr(fn(id,SEL,@NSSize)));
+			setSizeMethod(textfieldInstance, setSizeSel, tfFrame.size);
 		};
 		fn getHeight {
 			return app.textfields[@self.componentId].height;
@@ -159,6 +122,12 @@ class @NSRect {
 			var.SEL getFrameSel: sel_registerName(`frame`);
 			var.ptr(fn(id,SEL)=>@NSRect) getFrameMethod: (pointerTo(objc_msgSend) => ptr(fn(id,SEL)=>@NSRect));
 			var.@NSRect tfFrame: getFrameMethod(textfieldInstance, getFrameSel);
+
+			tfFrame.origin.x: value;
+
+			var.SEL setOriginSel: sel_registerName(`setFrameOrigin:`);
+			var.ptr(fn(id,SEL,@NSPoint)) setOriginMethod: (pointerTo(objc_msgSend) => ptr(fn(id,SEL,@NSPoint)));
+			setOriginMethod(textfieldInstance, setOriginSel, tfFrame.origin);
 		}
 		fn getX() => f64 {
 			return app.textfields[@self.componentId].x;
@@ -170,6 +139,12 @@ class @NSRect {
 			var.SEL getFrameSel: sel_registerName(`frame`);
 			var.ptr(fn(id,SEL)=>@NSRect) getFrameMethod: (pointerTo(objc_msgSend) => ptr(fn(id,SEL)=>@NSRect));
 			var.@NSRect tfFrame: getFrameMethod(textfieldInstance, getFrameSel);
+
+			tfFrame.origin.y: value;
+
+			var.SEL setOriginSel: sel_registerName(`setFrameOrigin:`);
+			var.ptr(fn(id,SEL,@NSPoint)) setOriginMethod: (pointerTo(objc_msgSend) => ptr(fn(id,SEL,@NSPoint)));
+			setOriginMethod(textfieldInstance, setOriginSel, tfFrame.origin);
 		};
 		fn getY() => f64 {
 			return app.textfields[@self.componentId].y;
