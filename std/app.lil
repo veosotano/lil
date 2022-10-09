@@ -19,6 +19,7 @@ fn LIL__unloadTexture(var.i64 idx) extern;
 #import "libtess2.lil";
 fn pow(f64, f64) => f64 extern;
 fn fabs(f64) => f64 extern;
+fn floor(f64) => f64 extern;
 
 #export {
 	#needs "cstd.lil";
@@ -70,6 +71,14 @@ fn fabs(f64) => f64 extern;
 		var.i64 mouseUpActionId;
 		var.i64 mouseDraggedActionId;
 		var.i64 dragEndActionId;
+		var.ptr(fn(ptr(any))=>f64)|null getWidthPtr;
+		var.ptr(fn(ptr(any),f64))|null setWidthPtr;
+		var.ptr(fn(ptr(any))=>f64)|null getHeightPtr;
+		var.ptr(fn(ptr(any),f64))|null setHeightPtr;
+		var.ptr(fn(ptr(any))=>f64)|null getXPtr;
+		var.ptr(fn(ptr(any),f64))|null setXPtr;
+		var.ptr(fn(ptr(any))=>f64)|null getYPtr;
+		var.ptr(fn(ptr(any),f64))|null setYPtr;
 	};
 	class @pos2d {
 		var.f64 x;
@@ -140,6 +149,10 @@ fn fabs(f64) => f64 extern;
 		vvar.ptr(any)|null onMouseUp;
 		vvar.ptr(any)|null onMouseDragged;
 		vvar.ptr(any)|null onDragEnd;
+		vvar.f64 width;
+		vvar.f64 height;
+		vvar.f64 x;
+		vvar.f64 y;
 
 		fn getSelectable => @selectable {
 			return app.selectables[@self.id];
@@ -247,6 +260,60 @@ fn fabs(f64) => f64 extern;
 				};
 			}
 		}
+		
+		fn getWidth => f64 {
+			var fnPtr: app.selectables[@self.id].getWidthPtr;
+			if fnPtr => ptr(fn(ptr(any))=>f64) {
+				return fnPtr(@self);
+			}
+			return 0;
+		}
+		fn setWidth(var.f64 value) {
+			var fnPtr: app.selectables[@self.id].setWidthPtr;
+			if fnPtr => ptr(fn(ptr(any),f64)) {
+				fnPtr(@self, value);
+			}
+		}
+		fn getHeight => f64 {
+			var fnPtr: app.selectables[@self.id].getHeightPtr;
+			if fnPtr => ptr(fn(ptr(any))=>f64) {
+				return fnPtr(@self);
+			}
+			return 0;
+		}
+		fn setHeight(var.f64 value) {
+			var fnPtr: app.selectables[@self.id].setHeightPtr;
+			if fnPtr => ptr(fn(ptr(any),f64)) {
+				fnPtr(@self, value);
+			}
+		}
+		
+		fn getX => f64 {
+			var fnPtr: app.selectables[@self.id].getXPtr;
+			if fnPtr => ptr(fn(ptr(any))=>f64) {
+				return fnPtr(@self);
+			}
+			return 0;
+		}
+		fn setX(var.f64 value) {
+			var fnPtr: app.selectables[@self.id].setXPtr;
+			if fnPtr => ptr(fn(ptr(any),f64)) {
+				fnPtr(@self, value);
+			}
+		}
+		fn getY => f64 {
+			var fnPtr: app.selectables[@self.id].getYPtr;
+			if fnPtr => ptr(fn(ptr(any))=>f64) {
+				return fnPtr(@self);
+			}
+			return 0;
+		}
+		fn setY(var.f64 value) {
+			var fnPtr: app.selectables[@self.id].setYPtr;
+			if fnPtr => ptr(fn(ptr(any),f64)) {
+				fnPtr(@self, value);
+			}
+		}
 	};
 	class @sel {
 		var.[#paste selectionSize x @element] items: [];
@@ -290,7 +357,20 @@ fn fabs(f64) => f64 extern;
 
 		fn initialize(var.cstr name; var.i64 parentId: 0) => i64 {
 			var componentId: app.newBox();
-			var id: app.newElement(name, parentId, 0, componentId);
+			var id: app.newSizedElement(
+				name: name;
+				parentId: parentId;
+				typeId: 0;
+				componentId: componentId;
+				getWidthPtr: pointerTo @self.getWidth;
+				setWidthPtr: pointerTo @self.setWidth;
+				getHeightPtr: pointerTo @self.getHeight;
+				setHeightPtr: pointerTo @self.setHeight;
+				getXPtr: pointerTo @self.getX;
+				setXPtr: pointerTo @self.setX;
+				getYPtr: pointerTo @self.getY;
+				setYPtr: pointerTo @self.setY
+			);
 			@self.id: id;
 			return id;
 		};
@@ -387,7 +467,20 @@ fn fabs(f64) => f64 extern;
 				puts `created image!`;
 			}
 			var componentId: app.newImg();
-			@self.id: app.newElement(name, parentId, 1, componentId);
+			@self.id: app.newSizedElement(
+				name: name;
+				parentId: parentId;
+				typeId: 1;
+				componentId: componentId;
+				getWidthPtr: pointerTo @self.getWidthFinal;
+				setWidthPtr: pointerTo @self.setWidth;
+				getHeightPtr: pointerTo @self.getHeightFinal;
+				setHeightPtr: pointerTo @self.setHeight;
+				getXPtr: pointerTo @self.getX;
+				setXPtr: pointerTo @self.setX;
+				getYPtr: pointerTo @self.getY;
+				setYPtr: pointerTo @self.setY
+			);
 			return @self.id;
 		}
 
@@ -408,11 +501,25 @@ fn fabs(f64) => f64 extern;
 		fn getWidth {
 			return app.imgs[@self.componentId].width;
 		};
+		fn getWidthFinal {
+			var width: @self.getWidth();
+			if width = 0 {
+				return app.imgs[@self.componentId].textureWidth;
+			}
+			return width;
+		};
 		fn setHeight(var.f64 value) {
 			app.imgs[@self.componentId].height: value;
 		};
 		fn getHeight {
 			return app.imgs[@self.componentId].height;
+		};
+		fn getHeightFinal {
+			var height: @self.getHeight();
+			if height = 0 {
+				return app.imgs[@self.componentId].textureHeight;
+			}
+			return height;
 		};
 		fn setX(var.f64 value) {
 			app.imgPositions[@self.componentId].x: value;
@@ -482,7 +589,20 @@ fn fabs(f64) => f64 extern;
 				puts `created sprite!`;
 			}
 			var componentId: app.newImg();
-			@self.id: app.newElement(name, parentId, 2, componentId);
+			@self.id: app.newSizedElement(
+				name: name;
+				parentId: parentId;
+				typeId: 2;
+				componentId: componentId;
+				getWidthPtr: pointerTo @self.super.getWidthFinal;
+				setWidthPtr: pointerTo @self.super.setWidth;
+				getHeightPtr: pointerTo @self.super.getHeightFinal;
+				setHeightPtr: pointerTo @self.super.setHeight;
+				getXPtr: pointerTo @self.super.getX;
+				setXPtr: pointerTo @self.super.setX;
+				getYPtr: pointerTo @self.super.getY;
+				setYPtr: pointerTo @self.super.setY
+			);
 			app.imgs[componentId].useClip: true;
 			return @self.id;
 		}
@@ -685,11 +805,7 @@ fn fabs(f64) => f64 extern;
 			var.f64 childrenWidth: 0;
 			for sel.size {
 				var elem: sel.items[@value];
-				var selectable: elem.selectable;
-				if selectable.typeId = 0 {
-					var container: @container { id: elem.id };
-					childrenWidth +: container.width;
-				}
+				childrenWidth +: elem.width;
 			}
 			#if DEBUG_LAYOUT {
 				printf(`children width is %lf\n`, childrenWidth);
@@ -703,22 +819,18 @@ fn fabs(f64) => f64 extern;
 			var.f64 cumulativeWidth: 0;
 			for sel.size {
 				var elem: sel.items[@value];
-				var selectable: elem.selectable;
-				if selectable.typeId = 0 {
-					var container: @container { id: elem.id };
-					var.f64 newX: spaceChunkX + (spaceChunkX * (@value => f64)) + cumulativeWidth;
-					#if DEBUG_LAYOUT {
-						printf(`setting child %li x to %lf\n`, @value, newX);
-					}
-					container.x: newX;
-					cumulativeWidth +: container.width;
-					
-					var.f64 newY: (parent.height / 2) - (container.height / 2);
-					#if DEBUG_LAYOUT {
-						printf(`setting child %li y to %lf\n`, @value, newY);
-					}
-					container.y: newY;
+				var.f64 newX: spaceChunkX + (spaceChunkX * (@value => f64)) + cumulativeWidth;
+				#if DEBUG_LAYOUT {
+					printf(`setting child %li x to %lf\n`, @value, floor(newX));
 				}
+				elem.x: floor(newX);
+				cumulativeWidth +: elem.width;
+				
+				var.f64 newY: (parent.height / 2) - (elem.height / 2);
+				#if DEBUG_LAYOUT {
+					printf(`setting child %li y to %lf\n`, @value, floor(newY));
+				}
+				elem.y: floor(newY);
 			}
 		}
 	}
@@ -1041,6 +1153,56 @@ fn fabs(f64) => f64 extern;
 				mouseDraggedActionId: (0-1);
 				mouseUpActionId: (0-1);
 				dragEndActionId: (0-1);
+				getWidthPtr: null;
+				setWidthPtr: null;
+				getHeightPtr: null;
+				setHeightPtr: null;
+				getXPtr: null;
+				setXPtr: null;
+				getYPtr: null;
+				setYPtr: null;
+			});
+			return id;
+		};
+		fn newSizedElement(
+			var.cstr name;
+			var.i64 parentId: 0;
+			var.i64 typeId: 0;
+			var.i64 componentId: 0;
+			var.ptr(fn=>f64) getWidthPtr;
+			var.ptr(fn(ptr(any),f64)) setWidthPtr;
+			var.ptr(fn=>f64) getHeightPtr;
+			var.ptr(fn(ptr(any),f64)) setHeightPtr;
+			var.ptr(fn=>f64) getXPtr;
+			var.ptr(fn(ptr(any),f64)) setXPtr;
+			var.ptr(fn=>f64) getYPtr;
+			var.ptr(fn(ptr(any),f64)) setYPtr
+		) => i64
+		{
+			#if DEBUG {
+				puts `Creating new element`;
+			}
+			var.i64 id: @self.newEntity();
+			var.i64 nameId: @self.registerName(name);
+			@self.setSelectable(id, @selectable {
+				nameId: nameId;
+				parentId: parentId;
+				typeId: typeId;
+				componentId: componentId;
+				resourceId: -1;
+				actionId: -1;
+				mouseDownActionId: -1;
+				mouseDraggedActionId: -1;
+				mouseUpActionId: -1;
+				dragEndActionId: -1;
+				getWidthPtr: getWidthPtr;
+				setWidthPtr: setWidthPtr;
+				getHeightPtr: getHeightPtr;
+				setHeightPtr: setHeightPtr;
+				getXPtr: getXPtr;
+				setXPtr: setXPtr;
+				getYPtr: getYPtr;
+				setYPtr: setYPtr;
 			});
 			return id;
 		};
