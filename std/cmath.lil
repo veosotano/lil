@@ -1,55 +1,55 @@
 fn acosf(f32) => f32 extern;
 fn acos(f64) => f64 extern;
 //fn acosl(f128) => f128 extern;
-    
+
 fn asinf(f32) => f32 extern;
 fn asin(f64) => f64 extern;
 //fn asinl(f128) => f128 extern;
-    
+
 fn atanf(f32) => f32 extern;
 fn atan(f64) => f64 extern;
 //fn atanl(f128) => f128 extern;
-    
+
 fn atan2f(f32, f32) => f32 extern;
 fn atan2(f64, f64) => f64 extern;
 //fn atan2l(f128, f128) => f128 extern;
-    
+
 fn cosf(f32) => f32 extern;
 fn cos(f64) => f64 extern;
 //fn cosl(f128) => f128 extern;
-    
+
 fn sinf(f32) => f32 extern;
 fn sin(f64) => f64 extern;
 //fn sinl(f128) => f128 extern;
-    
+
 fn tanf(f32) => f32 extern;
 fn tan(f64) => f64 extern;
 //fn tanl(f128) => f128 extern;
-    
+
 fn acoshf(f32) => f32 extern;
 fn acosh(f64) => f64 extern;
 //fn acoshl(f128) => f128 extern;
-    
+
 fn asinhf(f32) => f32 extern;
 fn asinh(f64) => f64 extern;
 //fn asinhl(f128) => f128 extern;
-    
+
 fn atanhf(f32) => f32 extern;
 fn atanh(f64) => f64 extern;
 //fn atanhl(f128) => f128 extern;
-    
+
 fn coshf(f32) => f32 extern;
 fn cosh(f64) => f64 extern;
 //fn coshl(f128) => f128 extern;
-    
+
 fn sinhf(f32) => f32 extern;
 fn sinh(f64) => f64 extern;
 //fn sinhl(f128) => f128 extern;
-    
+
 fn tanhf(f32) => f32 extern;
 fn tanh(f64) => f64 extern;
 //fn tanhl(f128) => f128 extern;
-    
+
 fn expf(f32) => f32 extern;
 fn exp(f64) => f64 extern;
 //fn expl(f128) => f128 extern;
@@ -170,7 +170,7 @@ fn round(f64) => f64 extern;
 fn lroundf(f32) => i64 extern;
 fn lround(f64) => i64 extern;
 fn lroundl(f128) => i64 extern;
-    
+
 //fn llrintf(f32) => i128 extern;
 //fn llrint(f64) => i128 extern;
 //fn llrintl(f128) => i128 extern;

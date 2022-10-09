@@ -6,100 +6,100 @@
 #snippet HID_PRODUCTS_TABLE_LENGTH { 20 };
 
 #export {
-    #import "keyCodes.lil";
+	#import "keyCodes.lil";
 
-    class @HIDVendorPair {
-        var.ptr(i8) name;
-        var.i64 id: 0;
-    };
-    class @HIDProductPair {
-        var.ptr(i8) name;
-        var.i64 id: 0;
-        var.i64 vendorId: 0;
-    };
-    var.[#paste HID_VENDORS_TABLE_LENGTH x @HIDVendorPair] HIDVendorsTable:
-        @HIDVendorPair { name: `Unknown`; id: 0 },
-        @HIDVendorPair { name: `Sony`; id: 1356 },
-        @HIDVendorPair { name: `Microsoft`; id: 1118 },
-        @HIDVendorPair { name: `Logitech`; id: 1133 }
-    ;
-    var.[#paste HID_PRODUCTS_TABLE_LENGTH x @HIDProductPair] HIDProductsTable:
-        //generic
-        @HIDProductPair { name: `Controller`; id: 0; vendorId: 0 },
+	class @HIDVendorPair {
+		var.ptr(i8) name;
+		var.i64 id: 0;
+	};
+	class @HIDProductPair {
+		var.ptr(i8) name;
+		var.i64 id: 0;
+		var.i64 vendorId: 0;
+	};
+	var.[#paste HID_VENDORS_TABLE_LENGTH x @HIDVendorPair] HIDVendorsTable:
+		@HIDVendorPair { name: `Unknown`; id: 0 },
+		@HIDVendorPair { name: `Sony`; id: 1356 },
+		@HIDVendorPair { name: `Microsoft`; id: 1118 },
+		@HIDVendorPair { name: `Logitech`; id: 1133 }
+	;
+	var.[#paste HID_PRODUCTS_TABLE_LENGTH x @HIDProductPair] HIDProductsTable:
+		//generic
+		@HIDProductPair { name: `Controller`; id: 0; vendorId: 0 },
 
-        //sony
-        @HIDProductPair { name: `DualShock 4`; id: 1476; vendorId: 1356 },
-        @HIDProductPair { name: `DualSense 5`; id: 3302; vendorId: 1356 },
+		//sony
+		@HIDProductPair { name: `DualShock 4`; id: 1476; vendorId: 1356 },
+		@HIDProductPair { name: `DualSense 5`; id: 3302; vendorId: 1356 },
 
-        //microsoft
-        @HIDProductPair { name: `Xbox360 Controller`; id: 654; vendorId: 1118 },
-        @HIDProductPair { name: `Xbox360 Wireless Controller`; id: 655; vendorId: 1118 },
-        @HIDProductPair { name: `Xbox One Controller`; id: 721; vendorId: 1118 },
-        @HIDProductPair { name: `Xbox One Controller (Firmware 2015)`; id: 733; vendorId: 1118 },
-        @HIDProductPair { name: `Xbox One Elite Controller`; id: 739; vendorId: 1118 },
-        @HIDProductPair { name: `Xbox One S Controller`; id: 746; vendorId: 1118 },
-        @HIDProductPair { name: `Xbox One S Controller [Bluetooth]`; id: 765; vendorId: 1118 },
-        @HIDProductPair { name: `Xbox Wireless Controller`; id: 2834; vendorId: 1118 },
+		//microsoft
+		@HIDProductPair { name: `Xbox360 Controller`; id: 654; vendorId: 1118 },
+		@HIDProductPair { name: `Xbox360 Wireless Controller`; id: 655; vendorId: 1118 },
+		@HIDProductPair { name: `Xbox One Controller`; id: 721; vendorId: 1118 },
+		@HIDProductPair { name: `Xbox One Controller (Firmware 2015)`; id: 733; vendorId: 1118 },
+		@HIDProductPair { name: `Xbox One Elite Controller`; id: 739; vendorId: 1118 },
+		@HIDProductPair { name: `Xbox One S Controller`; id: 746; vendorId: 1118 },
+		@HIDProductPair { name: `Xbox One S Controller [Bluetooth]`; id: 765; vendorId: 1118 },
+		@HIDProductPair { name: `Xbox Wireless Controller`; id: 2834; vendorId: 1118 },
 
-        //logitech
-        @HIDProductPair { name: `WingMan Gamepad Extreme`; id: 49672; vendorId: 1133 },
-        @HIDProductPair { name: `WingMan Gamepad`; id: 49673; vendorId: 1133 },
-        @HIDProductPair { name: `F310 Gamepad [DirectInput Mode]`; id: 49686; vendorId: 1133 },
-        @HIDProductPair { name: `F510 Gamepad [DirectInput Mode]`; id: 49688; vendorId: 1133 },
-        @HIDProductPair { name: `F710 Wireless Gamepad [DirectInput Mode]`; id: 49689; vendorId: 1133 },
-        @HIDProductPair { name: `F310 Gamepad [XInput Mode]`; id: 49693; vendorId: 1133 },
-        @HIDProductPair { name: `F510 Gamepad [XInput Mode]`; id: 49694; vendorId: 1133 },
-        @HIDProductPair { name: `F710 Wireless Gamepad [XInput Mode]`; id: 49695; vendorId: 1133 }
-    ;
+		//logitech
+		@HIDProductPair { name: `WingMan Gamepad Extreme`; id: 49672; vendorId: 1133 },
+		@HIDProductPair { name: `WingMan Gamepad`; id: 49673; vendorId: 1133 },
+		@HIDProductPair { name: `F310 Gamepad [DirectInput Mode]`; id: 49686; vendorId: 1133 },
+		@HIDProductPair { name: `F510 Gamepad [DirectInput Mode]`; id: 49688; vendorId: 1133 },
+		@HIDProductPair { name: `F710 Wireless Gamepad [DirectInput Mode]`; id: 49689; vendorId: 1133 },
+		@HIDProductPair { name: `F310 Gamepad [XInput Mode]`; id: 49693; vendorId: 1133 },
+		@HIDProductPair { name: `F510 Gamepad [XInput Mode]`; id: 49694; vendorId: 1133 },
+		@HIDProductPair { name: `F710 Wireless Gamepad [XInput Mode]`; id: 49695; vendorId: 1133 }
+	;
 
-    var.@input input;
-    class @gamepad {
-        var.i64 vendorIndex: 0;
-        var.i64 productIndex: 0;
-        var.[64 x bool] buttonStates: [];
-        var.f64 x: 0.0;
-        var.f64 y: 0.0;
-        var.f64 x2: 0.0;
-        var.f64 y2: 0.0;
-    };
+	var.@input input;
+	class @gamepad {
+		var.i64 vendorIndex: 0;
+		var.i64 productIndex: 0;
+		var.[64 x bool] buttonStates: [];
+		var.f64 x: 0.0;
+		var.f64 y: 0.0;
+		var.f64 x2: 0.0;
+		var.f64 y2: 0.0;
+	};
 	class @mouseState {
 		var.f64 x: 0.0;
 		var.f64 y: 0.0;
 		var.bool pressed: false;
 	}
-    class @input {
-        var.[65536 x bool] keyStates: [];
-        var.[8 x @gamepad] gamepads: [];
-        var.i64 gamepadCount: 0;
+	class @input {
+		var.[65536 x bool] keyStates: [];
+		var.[8 x @gamepad] gamepads: [];
+		var.i64 gamepadCount: 0;
 		var.[8 x @mouseState] mouseStates: [];
 
-        fn isKeyDown (var.i16 keyCode) => bool {
-            return @self.keyStates[keyCode];
-        };
-        fn setKeyDown (var.i16 keyCode; var.bool value) {
-            @self.keyStates[keyCode]: value;
-        };
-        fn getGamepad (var.i64 gamepadId: 0) {
-            return @self.gamepads[gamepadId];
-        };
-        fn isGamepadButtonDown (var.i64 gamepadId; var.i64 buttonId) => bool {
-            return @self.gamepads[gamepadId].buttonStates[buttonId];
-        };
-        fn setGamepadButtonDown (var.i64 gamepadId; var.i64 buttonId; var.bool value) {
-            @self.gamepads[gamepadId].buttonStates[buttonId]: value;
-        };
-        fn setGamepadX (var.i64 gamepadId; var.f64 value) {
-            @self.gamepads[gamepadId].x: value;
-        };
-        fn setGamepadY (var.i64 gamepadId; var.f64 value) {
-            @self.gamepads[gamepadId].y: value;
-        };
-        fn setGamepadX2 (var.i64 gamepadId; var.f64 value) {
-            @self.gamepads[gamepadId].x2: value;
-        };
-        fn setGamepadY2 (var.i64 gamepadId; var.f64 value) {
-            @self.gamepads[gamepadId].y2: value;
-        };
+		fn isKeyDown (var.i16 keyCode) => bool {
+			return @self.keyStates[keyCode];
+		};
+		fn setKeyDown (var.i16 keyCode; var.bool value) {
+			@self.keyStates[keyCode]: value;
+		};
+		fn getGamepad (var.i64 gamepadId: 0) {
+			return @self.gamepads[gamepadId];
+		};
+		fn isGamepadButtonDown (var.i64 gamepadId; var.i64 buttonId) => bool {
+			return @self.gamepads[gamepadId].buttonStates[buttonId];
+		};
+		fn setGamepadButtonDown (var.i64 gamepadId; var.i64 buttonId; var.bool value) {
+			@self.gamepads[gamepadId].buttonStates[buttonId]: value;
+		};
+		fn setGamepadX (var.i64 gamepadId; var.f64 value) {
+			@self.gamepads[gamepadId].x: value;
+		};
+		fn setGamepadY (var.i64 gamepadId; var.f64 value) {
+			@self.gamepads[gamepadId].y: value;
+		};
+		fn setGamepadX2 (var.i64 gamepadId; var.f64 value) {
+			@self.gamepads[gamepadId].x2: value;
+		};
+		fn setGamepadY2 (var.i64 gamepadId; var.f64 value) {
+			@self.gamepads[gamepadId].y2: value;
+		};
 		fn getMouseX (var.i64 num: 0) => f64 {
 			return @self.mouseStates[num].x;
 		};
@@ -113,7 +113,7 @@
 			@self.mouseStates[num].x: x;
 			@self.mouseStates[num].y: y;
 		};
-    };
+	};
 	fn LIL__setMouseDown(var.i64 buttonNumber; var.f64 x; var.f64 y) {
 		input.mouseStates[buttonNumber]: @mouseState {
 			x: x;
@@ -153,76 +153,76 @@
 		}
 		msgEmit(`onMouseUp`, pointerTo evt);
 	};
-    fn LIL__setKeyDown(var.i16 keyCode) {
-        if !input.isKeyDown(keyCode) {
-            input.setKeyDown(keyCode, true);
-            var event: @event {
-                eventType: EventType.keyboard;
-                code: keyCode;
-            }
-            msgEmit(`onKeyDown`, pointerTo event);
-        }
-    };
-    fn LIL__setKeyUp(var.i16 keyCode) {
-        if input.isKeyDown(keyCode) {
-            input.setKeyDown(keyCode, false);
-            var event: @event {
-                eventType: EventType.keyboard;
-                code: keyCode;
-            }
-            msgEmit(`onKeyUp`, pointerTo event);
-        }
-    };
-    fn LIL__setGamepadButtonState(var.i64 gamepadId; var.i64 buttonId; var.bool value) {
-        input.setGamepadButtonDown(gamepadId, buttonId, value);
-    };
-    fn LIL__setGamepadX(var.i64 gamepadId; var.f64 value) {
-        input.setGamepadX(gamepadId, value);
-    };
-    fn LIL__setGamepadY(var.i64 gamepadId; var.f64 value) {
-        input.setGamepadY(gamepadId, value);
-    };
-    fn LIL__setGamepadX2(var.i64 gamepadId; var.f64 value) {
-        input.setGamepadX2(gamepadId, value);
-    };
-    fn LIL__setGamepadY2(var.i64 gamepadId; var.f64 value) {
-        input.setGamepadY2(gamepadId, value);
-    };
-    
-    fn LIL__findVendor(var.i64 vendorId) => i64
-    {
-        var.i64 length: #paste HID_VENDORS_TABLE_LENGTH;
-        for (var.i64 i: 0; i<length; i +: 1) {
-            if HIDVendorsTable[i].id = vendorId {
-                return i;
-            }
-        }
-        return 0;
-    }
-    
-    fn LIL__findProduct(var.i64 vendorId; var.i64 productId) => i64
-    {
-        var.i64 length: #paste HID_PRODUCTS_TABLE_LENGTH;
-        for (var.i64 i: 0; i<length; i +: 1) {
-            if HIDProductsTable[i].vendorId = vendorId {
-                if HIDProductsTable[i].id = productId {
-                    return i;
-                }
-            }
-        }
-        return 0;
-    }
-    
-    fn LIL__gamepadConnected(var.i64 vendorId, var.i64 productId) => i64 {
-        var id: input.gamepadCount;
-        input.gamepadCount +: 1;
-        var vendorIndex: LIL__findVendor(vendorId);
-        var productIndex: LIL__findProduct(vendorId, productId);
-        input.gamepads[id]: @gamepad {
-            vendorIndex: vendorIndex;
-            productIndex: productIndex;
-        };
-        //printf(`Gamepad connected: vendor: %s, product: %s\n`, HIDVendorsTable[vendorIndex].name, HIDProductsTable[productIndex].name);
-        return id;
-    };
+	fn LIL__setKeyDown(var.i16 keyCode) {
+		if !input.isKeyDown(keyCode) {
+			input.setKeyDown(keyCode, true);
+			var event: @event {
+				eventType: EventType.keyboard;
+				code: keyCode;
+			}
+			msgEmit(`onKeyDown`, pointerTo event);
+		}
+	};
+	fn LIL__setKeyUp(var.i16 keyCode) {
+		if input.isKeyDown(keyCode) {
+			input.setKeyDown(keyCode, false);
+			var event: @event {
+				eventType: EventType.keyboard;
+				code: keyCode;
+			}
+			msgEmit(`onKeyUp`, pointerTo event);
+		}
+	};
+	fn LIL__setGamepadButtonState(var.i64 gamepadId; var.i64 buttonId; var.bool value) {
+		input.setGamepadButtonDown(gamepadId, buttonId, value);
+	};
+	fn LIL__setGamepadX(var.i64 gamepadId; var.f64 value) {
+		input.setGamepadX(gamepadId, value);
+	};
+	fn LIL__setGamepadY(var.i64 gamepadId; var.f64 value) {
+		input.setGamepadY(gamepadId, value);
+	};
+	fn LIL__setGamepadX2(var.i64 gamepadId; var.f64 value) {
+		input.setGamepadX2(gamepadId, value);
+	};
+	fn LIL__setGamepadY2(var.i64 gamepadId; var.f64 value) {
+		input.setGamepadY2(gamepadId, value);
+	};
+	
+	fn LIL__findVendor(var.i64 vendorId) => i64
+	{
+		var.i64 length: #paste HID_VENDORS_TABLE_LENGTH;
+		for (var.i64 i: 0; i<length; i +: 1) {
+			if HIDVendorsTable[i].id = vendorId {
+				return i;
+			}
+		}
+		return 0;
+	}
+	
+	fn LIL__findProduct(var.i64 vendorId; var.i64 productId) => i64
+	{
+		var.i64 length: #paste HID_PRODUCTS_TABLE_LENGTH;
+		for (var.i64 i: 0; i<length; i +: 1) {
+			if HIDProductsTable[i].vendorId = vendorId {
+				if HIDProductsTable[i].id = productId {
+					return i;
+				}
+			}
+		}
+		return 0;
+	}
+	
+	fn LIL__gamepadConnected(var.i64 vendorId, var.i64 productId) => i64 {
+		var id: input.gamepadCount;
+		input.gamepadCount +: 1;
+		var vendorIndex: LIL__findVendor(vendorId);
+		var productIndex: LIL__findProduct(vendorId, productId);
+		input.gamepads[id]: @gamepad {
+			vendorIndex: vendorIndex;
+			productIndex: productIndex;
+		};
+		//printf(`Gamepad connected: vendor: %s, product: %s\n`, HIDVendorsTable[vendorIndex].name, HIDProductsTable[productIndex].name);
+		return id;
+	};
 }

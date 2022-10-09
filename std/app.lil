@@ -21,91 +21,91 @@ fn pow(f64, f64) => f64 extern;
 fn fabs(f64) => f64 extern;
 
 #export {
-    #needs "cstd.lil";
+	#needs "cstd.lil";
 	#needs "events.lil";
 	#needs "msg.lil";
-    #needs "string.lil";
+	#needs "string.lil";
 
-    //default entity types:
-    //0: @container
-    //1: @image
-    //2: @sprite
+	//default entity types:
+	//0: @container
+	//1: @image
+	//2: @sprite
 	//3: @shape2d
 	//4: @layout
 	//5: @textfield
 	//6: @label
-    var.@app app: @app { selectables: []; entityCount: 0; typeCount: 5 };
+	var.@app app: @app { selectables: []; entityCount: 0; typeCount: 5 };
 
-    class @size {
-        var.f64 width;
-        var.f64 height;
-    };
-    class @rgb {
-        var.f64 red;
-        var.f64 green;
-        var.f64 blue;
-        var.f64 alpha;
-    };
-    class @rgb32 {
-        var.f32 red;
-        var.f32 green;
-        var.f32 blue;
-        var.f32 alpha;
-    };
-    class @vertex {
-        var.f32 x;
-        var.f32 y;
-        var.@rgb32 color;
-        var.f32 textureX;
-        var.f32 textureY;
-    };
-    class @selectable {
-        var.i64 nameId;
-        var.i64 parentId;
-        var.i64 typeId;
-        var.i64 componentId;
-        var.i64 resourceId;
+	class @size {
+		var.f64 width;
+		var.f64 height;
+	};
+	class @rgb {
+		var.f64 red;
+		var.f64 green;
+		var.f64 blue;
+		var.f64 alpha;
+	};
+	class @rgb32 {
+		var.f32 red;
+		var.f32 green;
+		var.f32 blue;
+		var.f32 alpha;
+	};
+	class @vertex {
+		var.f32 x;
+		var.f32 y;
+		var.@rgb32 color;
+		var.f32 textureX;
+		var.f32 textureY;
+	};
+	class @selectable {
+		var.i64 nameId;
+		var.i64 parentId;
+		var.i64 typeId;
+		var.i64 componentId;
+		var.i64 resourceId;
 		var.i64 actionId;
 		var.i64 mouseDownActionId;
 		var.i64 mouseUpActionId;
 		var.i64 mouseDraggedActionId;
 		var.i64 dragEndActionId;
-    };
-    class @pos2d {
-        var.f64 x;
-        var.f64 y;
-    };
-    class @pos2d32 {
-        var.f32 x;
-        var.f32 y;
-    };
-    class @pos {
-        var.f64 x;
-        var.f64 y;
-        var.f64 z;
-    };
-    class @box2d {
-        var.f64 width;
-        var.f64 height;
-        var.@rgb bgColor;
-    };
-    class @img {
-        var.f64 width;
-        var.f64 height;
+	};
+	class @pos2d {
+		var.f64 x;
+		var.f64 y;
+	};
+	class @pos2d32 {
+		var.f32 x;
+		var.f32 y;
+	};
+	class @pos {
+		var.f64 x;
+		var.f64 y;
+		var.f64 z;
+	};
+	class @box2d {
+		var.f64 width;
+		var.f64 height;
+		var.@rgb bgColor;
+	};
+	class @img {
+		var.f64 width;
+		var.f64 height;
 		var.f64 textureWidth;
 		var.f64 textureHeight;
 		var.bool useClip;
-    };
-    class @resource {
-        var.[1024 x i8] path;
-        var.ptr(any)|null data;
-    };
-    class @vel
-    {
-        var.f64 x: 0;
-        var.f64 y: 0;
-        var.f64 z: 0;
-    };
+	};
+	class @resource {
+		var.[1024 x i8] path;
+		var.ptr(any)|null data;
+	};
+	class @vel
+	{
+		var.f64 x: 0;
+		var.f64 y: 0;
+		var.f64 z: 0;
+	};
 	enum.i32 ShapeType {
 		moveTo,
 		lineTo,
@@ -122,35 +122,35 @@ fn fabs(f64) => f64 extern;
 		var.f64 y3: 0;
 	};
 	class @shapeData {
-        var.f64 width;
-        var.f64 height;
-        var.f64 x;
-        var.f64 y;
-        var.f64 z;
+		var.f64 width;
+		var.f64 height;
+		var.f64 x;
+		var.f64 y;
+		var.f64 z;
 		var.[#paste shapesSize x @shapeItem] items: [];
 		var.i64 size: 0;
-        var.@rgb bgColor;
+		var.@rgb bgColor;
 	};
-    class @element {
-        var.i64 id: 0;
-        
-        vvar.@selectable selectable;
-        vvar.ptr(any)|null action;
-        vvar.ptr(any)|null onMouseDown;
-        vvar.ptr(any)|null onMouseUp;
-        vvar.ptr(any)|null onMouseDragged;
-        vvar.ptr(any)|null onDragEnd;
+	class @element {
+		var.i64 id: 0;
+		
+		vvar.@selectable selectable;
+		vvar.ptr(any)|null action;
+		vvar.ptr(any)|null onMouseDown;
+		vvar.ptr(any)|null onMouseUp;
+		vvar.ptr(any)|null onMouseDragged;
+		vvar.ptr(any)|null onDragEnd;
 
-        fn getSelectable => @selectable {
-            return app.selectables[@self.id];
-        }
-        fn getSelectablePointer => ptr(@selectable) {
-            return pointerTo app.selectables[@self.id];
-        }
-        fn getName => cstr {
-            var selectable: @self.selectable;
-            return app.getName(selectable.nameId);
-        }
+		fn getSelectable => @selectable {
+			return app.selectables[@self.id];
+		}
+		fn getSelectablePointer => ptr(@selectable) {
+			return pointerTo app.selectables[@self.id];
+		}
+		fn getName => cstr {
+			var selectable: @self.selectable;
+			return app.getName(selectable.nameId);
+		}
 
 		fn getAction => ptr(any)|null {
 			var actionId: app.selectables[@self.id].actionId;
@@ -171,414 +171,414 @@ fn fabs(f64) => f64 extern;
 				};
 			}
 		}
-        fn getOnMouseDown => ptr(any)|null {
-            var actionId: app.selectables[@self.id].mouseDownActionId;
-            if actionId >= 0 {
-                return app.mouseDownActions[actionId].ptr;
-            } else {
-                return null;
-            }
-        }
-        fn setOnMouseDown(var.ptr(any) ptr) {
-            var existingAction: @self.getOnMouseDown();
-            if existingAction => null {
-                var actionId: app.newMouseDownActionId();
-                app.selectables[@self.id].mouseDownActionId: actionId;
-                app.mouseDownActions[actionId]: @action {
-                    elementId: @self.id;
-                    ptr: ptr;
-                };
-            }
-        }
-        fn getOnMouseUp => ptr(any)|null {
-            var actionId: app.selectables[@self.id].mouseUpActionId;
-            if actionId >= 0 {
-                return app.mouseUpActions[actionId].ptr;
-            } else {
-                return null;
-            }
-        }
-        fn setOnMouseUp(var.ptr(any) ptr) {
-            var existingAction: @self.getOnMouseUp();
-            if existingAction => null {
-                var actionId: app.newMouseUpActionId();
-                app.selectables[@self.id].mouseUpActionId: actionId;
-                app.mouseUpActions[actionId]: @action {
-                    elementId: @self.id;
-                    ptr: ptr;
-                };
-            }
-        }
-        fn getOnMouseDragged => ptr(any)|null {
-            var actionId: app.selectables[@self.id].mouseDraggedActionId;
-            if actionId >= 0 {
-                return app.mouseDraggedActions[actionId].ptr;
-            } else {
-                return null;
-            }
-        }
-        fn setOnMouseDragged(var.ptr(any) ptr) {
-            var existingAction: @self.getOnMouseDragged();
-            if existingAction => null {
-                var actionId: app.newMouseDraggedActionId();
-                app.selectables[@self.id].mouseDraggedActionId: actionId;
-                app.mouseDraggedActions[actionId]: @action {
-                    elementId: @self.id;
-                    ptr: ptr;
-                };
-            }
-        }
-        fn getOnDragEnd => ptr(any)|null {
-            var actionId: app.selectables[@self.id].dragEndActionId;
-            if actionId >= 0 {
-                return app.dragEndActions[actionId].ptr;
-            } else {
-                return null;
-            }
-        }
-        fn setOnDragEnd(var.ptr(any) ptr) {
-            var existingAction: @self.getOnDragEnd();
-            if existingAction => null {
-                var actionId: app.newDragEndActionId();
-                app.selectables[@self.id].dragEndActionId: actionId;
-                app.dragEndActions[actionId]: @action {
-                    elementId: @self.id;
-                    ptr: ptr;
-                };
-            }
-        }
-    };
-    class @sel {
-        var.[#paste selectionSize x @element] items: [];
-        var.i64 size: 0;
-    };
+		fn getOnMouseDown => ptr(any)|null {
+			var actionId: app.selectables[@self.id].mouseDownActionId;
+			if actionId >= 0 {
+				return app.mouseDownActions[actionId].ptr;
+			} else {
+				return null;
+			}
+		}
+		fn setOnMouseDown(var.ptr(any) ptr) {
+			var existingAction: @self.getOnMouseDown();
+			if existingAction => null {
+				var actionId: app.newMouseDownActionId();
+				app.selectables[@self.id].mouseDownActionId: actionId;
+				app.mouseDownActions[actionId]: @action {
+					elementId: @self.id;
+					ptr: ptr;
+				};
+			}
+		}
+		fn getOnMouseUp => ptr(any)|null {
+			var actionId: app.selectables[@self.id].mouseUpActionId;
+			if actionId >= 0 {
+				return app.mouseUpActions[actionId].ptr;
+			} else {
+				return null;
+			}
+		}
+		fn setOnMouseUp(var.ptr(any) ptr) {
+			var existingAction: @self.getOnMouseUp();
+			if existingAction => null {
+				var actionId: app.newMouseUpActionId();
+				app.selectables[@self.id].mouseUpActionId: actionId;
+				app.mouseUpActions[actionId]: @action {
+					elementId: @self.id;
+					ptr: ptr;
+				};
+			}
+		}
+		fn getOnMouseDragged => ptr(any)|null {
+			var actionId: app.selectables[@self.id].mouseDraggedActionId;
+			if actionId >= 0 {
+				return app.mouseDraggedActions[actionId].ptr;
+			} else {
+				return null;
+			}
+		}
+		fn setOnMouseDragged(var.ptr(any) ptr) {
+			var existingAction: @self.getOnMouseDragged();
+			if existingAction => null {
+				var actionId: app.newMouseDraggedActionId();
+				app.selectables[@self.id].mouseDraggedActionId: actionId;
+				app.mouseDraggedActions[actionId]: @action {
+					elementId: @self.id;
+					ptr: ptr;
+				};
+			}
+		}
+		fn getOnDragEnd => ptr(any)|null {
+			var actionId: app.selectables[@self.id].dragEndActionId;
+			if actionId >= 0 {
+				return app.dragEndActions[actionId].ptr;
+			} else {
+				return null;
+			}
+		}
+		fn setOnDragEnd(var.ptr(any) ptr) {
+			var existingAction: @self.getOnDragEnd();
+			if existingAction => null {
+				var actionId: app.newDragEndActionId();
+				app.selectables[@self.id].dragEndActionId: actionId;
+				app.dragEndActions[actionId]: @action {
+					elementId: @self.id;
+					ptr: ptr;
+				};
+			}
+		}
+	};
+	class @sel {
+		var.[#paste selectionSize x @element] items: [];
+		var.i64 size: 0;
+	};
 	class @action
 	{
 		var.i64 elementId;
 		var.ptr(any) ptr;
 	}
-    class @textfieldData {
-        var.@rgb bgColor;
-        var.ptr(any) data;
-        var.ptr(any)|null onChange;
-        var.f64 width: 0;
-        var.f64 height: 0;
-        var.f64 x: 0;
-        var.f64 y: 0;
-    }
-    class @container
-    {
-        //this class MUST only be an i64
-        //do not add any more vars
-        #expand var.@element super: @element { };
+	class @textfieldData {
+		var.@rgb bgColor;
+		var.ptr(any) data;
+		var.ptr(any)|null onChange;
+		var.f64 width: 0;
+		var.f64 height: 0;
+		var.f64 x: 0;
+		var.f64 y: 0;
+	}
+	class @container
+	{
+		//this class MUST only be an i64
+		//do not add any more vars
+		#expand var.@element super: @element { };
 
-        //public interface
-        vvar.i64 componentId;
-        vvar.f64 width;
-        vvar.f64 height;
-        vvar.@rgb background;
-        vvar.f64 x;
-        vvar.f64 y;
-        vvar.f64 z;
-        vvar.f64 velX;
-        vvar.f64 velY;
-        vvar.f64 velZ;
+		//public interface
+		vvar.i64 componentId;
+		vvar.f64 width;
+		vvar.f64 height;
+		vvar.@rgb background;
+		vvar.f64 x;
+		vvar.f64 y;
+		vvar.f64 z;
+		vvar.f64 velX;
+		vvar.f64 velY;
+		vvar.f64 velZ;
 
-        fn getComponentId => i64 {
-            return app.selectables[@self.id].componentId;
-        };
+		fn getComponentId => i64 {
+			return app.selectables[@self.id].componentId;
+		};
 
-        fn initialize(var.cstr name; var.i64 parentId: 0) => i64 {
-            var componentId: app.newBox();
+		fn initialize(var.cstr name; var.i64 parentId: 0) => i64 {
+			var componentId: app.newBox();
 			var id: app.newElement(name, parentId, 0, componentId);
 			@self.id: id;
-            return id;
-        };
+			return id;
+		};
 
-        //WARNING: only call this when it is the last entity
-        fn deinit {
-            app.removeLastBox();
-            app.removeLastEntity();
-        };
+		//WARNING: only call this when it is the last entity
+		fn deinit {
+			app.removeLastBox();
+			app.removeLastEntity();
+		};
 
-        fn setWidth(var.f64 value) {
-            app.box2ds[@self.componentId].width: value;
-        };
-        fn getWidth {
-            return app.box2ds[@self.componentId].width;
-        };
-        fn setHeight(var.f64 value) {
-            app.box2ds[@self.componentId].height: value;
-        };
-        fn getHeight {
-            return app.box2ds[@self.componentId].height;
-        };
-        fn setBackground(var.@rgb value) {
-            app.box2ds[@self.componentId].bgColor: value;
-        };
-        fn getBackground {
-            return app.box2ds[@self.componentId].bgColor;
-        };
-        fn getBackgroundPointer {
-            return pointerTo app.box2ds[@self.componentId].bgColor;
-        };
-        fn setX(var.f64 value) {
-            app.boxPositions[@self.componentId].x: value;
-        };
-        fn getX() => f64 {
-            return app.boxPositions[@self.componentId].x;
-        };
-        fn setY(var.f64 value) {
-            app.boxPositions[@self.componentId].y: value;
-        };
-        fn getY() => f64 {
-            return app.boxPositions[@self.componentId].y;
-        };
-        fn setZ(var.f64 value) {
-            app.boxPositions[@self.componentId].z: value;
-        };
-        fn getZ() => f64 {
-            return app.boxPositions[@self.componentId].z;
-        };
-        fn setVelX(var.f64 value) {
-            app.boxVelocities[@self.componentId].x: value;
-        };
-        fn getVelX() => f64 {
-            return app.boxVelocities[@self.componentId].x;
-        };
-        fn setVelY(var.f64 value) {
-            app.boxVelocities[@self.componentId].y: value;
-        };
-        fn getVelY() => f64 {
-            return app.boxVelocities[@self.componentId].y;
-        };
-        fn setVelZ(var.f64 value) {
-            app.boxVelocities[@self.componentId].z: value;
-        };
-        fn getVelZ() => f64 {
-            return app.boxVelocities[@self.componentId].z;
-        };
-    };
+		fn setWidth(var.f64 value) {
+			app.box2ds[@self.componentId].width: value;
+		};
+		fn getWidth {
+			return app.box2ds[@self.componentId].width;
+		};
+		fn setHeight(var.f64 value) {
+			app.box2ds[@self.componentId].height: value;
+		};
+		fn getHeight {
+			return app.box2ds[@self.componentId].height;
+		};
+		fn setBackground(var.@rgb value) {
+			app.box2ds[@self.componentId].bgColor: value;
+		};
+		fn getBackground {
+			return app.box2ds[@self.componentId].bgColor;
+		};
+		fn getBackgroundPointer {
+			return pointerTo app.box2ds[@self.componentId].bgColor;
+		};
+		fn setX(var.f64 value) {
+			app.boxPositions[@self.componentId].x: value;
+		};
+		fn getX() => f64 {
+			return app.boxPositions[@self.componentId].x;
+		};
+		fn setY(var.f64 value) {
+			app.boxPositions[@self.componentId].y: value;
+		};
+		fn getY() => f64 {
+			return app.boxPositions[@self.componentId].y;
+		};
+		fn setZ(var.f64 value) {
+			app.boxPositions[@self.componentId].z: value;
+		};
+		fn getZ() => f64 {
+			return app.boxPositions[@self.componentId].z;
+		};
+		fn setVelX(var.f64 value) {
+			app.boxVelocities[@self.componentId].x: value;
+		};
+		fn getVelX() => f64 {
+			return app.boxVelocities[@self.componentId].x;
+		};
+		fn setVelY(var.f64 value) {
+			app.boxVelocities[@self.componentId].y: value;
+		};
+		fn getVelY() => f64 {
+			return app.boxVelocities[@self.componentId].y;
+		};
+		fn setVelZ(var.f64 value) {
+			app.boxVelocities[@self.componentId].z: value;
+		};
+		fn getVelZ() => f64 {
+			return app.boxVelocities[@self.componentId].z;
+		};
+	};
 
-    class @image {
-        //this class MUST only be an i64
-        //do not add any more vars
-        #expand var.@element super: @element { };
+	class @image {
+		//this class MUST only be an i64
+		//do not add any more vars
+		#expand var.@element super: @element { };
 
-        //public interface
-        vvar.i64 componentId;
-        vvar.f64 width;
-        vvar.f64 height;
-        vvar.f64 x;
-        vvar.f64 y;
-        vvar.f64 z;
-        vvar.f64 velX;
-        vvar.f64 velY;
-        vvar.f64 velZ;
-        //fixme: should be =>cstr
-        #resource vvar.ptr(@string)=>ptr(i8) src;
+		//public interface
+		vvar.i64 componentId;
+		vvar.f64 width;
+		vvar.f64 height;
+		vvar.f64 x;
+		vvar.f64 y;
+		vvar.f64 z;
+		vvar.f64 velX;
+		vvar.f64 velY;
+		vvar.f64 velZ;
+		//fixme: should be =>cstr
+		#resource vvar.ptr(@string)=>ptr(i8) src;
 
-        fn getComponentId => i64 {
-            return app.selectables[@self.id].componentId;
-        }
+		fn getComponentId => i64 {
+			return app.selectables[@self.id].componentId;
+		}
 
-        fn initialize(var.cstr name; var.i64 parentId: 0) => i64 {
+		fn initialize(var.cstr name; var.i64 parentId: 0) => i64 {
 			#if DEBUG {
 				puts `created image!`;
 			}
-            var componentId: app.newImg();
-            @self.id: app.newElement(name, parentId, 1, componentId);
-            return @self.id;
-        }
+			var componentId: app.newImg();
+			@self.id: app.newElement(name, parentId, 1, componentId);
+			return @self.id;
+		}
 
-        //WARNING: only call this when it is the last entity
-        fn deinit {
-            app.removeLastImg();
-            app.removeLastEntity();
-            var resourceId: app.selectables[@self.id].resourceId;
-            if resourceId >= 0 {
-                LIL__unloadTexture(resourceId);
-                app.removeLastResource();
-            }
-        }
+		//WARNING: only call this when it is the last entity
+		fn deinit {
+			app.removeLastImg();
+			app.removeLastEntity();
+			var resourceId: app.selectables[@self.id].resourceId;
+			if resourceId >= 0 {
+				LIL__unloadTexture(resourceId);
+				app.removeLastResource();
+			}
+		}
 
-        fn setWidth(var.f64 value) {
-            app.imgs[@self.componentId].width: value;
-        };
-        fn getWidth {
-            return app.imgs[@self.componentId].width;
-        };
-        fn setHeight(var.f64 value) {
-            app.imgs[@self.componentId].height: value;
-        };
-        fn getHeight {
-            return app.imgs[@self.componentId].height;
-        };
-        fn setX(var.f64 value) {
-            app.imgPositions[@self.componentId].x: value;
-        }
-        fn getX() => f64 {
-            return app.imgPositions[@self.componentId].x;
-        };
-        fn setY(var.f64 value) {
-            app.imgPositions[@self.componentId].y: value;
-        };
-        fn getY() => f64 {
-            return app.imgPositions[@self.componentId].y;
-        };
-        fn setZ(var.f64 value) {
-            app.imgPositions[@self.componentId].z: value;
-        };
-        fn getZ() => f64 {
-            return app.imgPositions[@self.componentId].z;
-        };
-        fn setVelX(var.f64 value) {
-            app.boxVelocities[@self.componentId].x: value;
-        };
-        fn getVelX() => f64 {
-            return app.boxVelocities[@self.componentId].x;
-        };
-        fn setVelY(var.f64 value) {
-            app.boxVelocities[@self.componentId].y: value;
-        };
-        fn getVelY() => f64 {
-            return app.boxVelocities[@self.componentId].y;
-        };
-        fn setVelZ(var.f64 value) {
-            app.boxVelocities[@self.componentId].z: value;
-        };
-        fn getVelZ() => f64 {
-            return app.boxVelocities[@self.componentId].z;
-        };
+		fn setWidth(var.f64 value) {
+			app.imgs[@self.componentId].width: value;
+		};
+		fn getWidth {
+			return app.imgs[@self.componentId].width;
+		};
+		fn setHeight(var.f64 value) {
+			app.imgs[@self.componentId].height: value;
+		};
+		fn getHeight {
+			return app.imgs[@self.componentId].height;
+		};
+		fn setX(var.f64 value) {
+			app.imgPositions[@self.componentId].x: value;
+		}
+		fn getX() => f64 {
+			return app.imgPositions[@self.componentId].x;
+		};
+		fn setY(var.f64 value) {
+			app.imgPositions[@self.componentId].y: value;
+		};
+		fn getY() => f64 {
+			return app.imgPositions[@self.componentId].y;
+		};
+		fn setZ(var.f64 value) {
+			app.imgPositions[@self.componentId].z: value;
+		};
+		fn getZ() => f64 {
+			return app.imgPositions[@self.componentId].z;
+		};
+		fn setVelX(var.f64 value) {
+			app.boxVelocities[@self.componentId].x: value;
+		};
+		fn getVelX() => f64 {
+			return app.boxVelocities[@self.componentId].x;
+		};
+		fn setVelY(var.f64 value) {
+			app.boxVelocities[@self.componentId].y: value;
+		};
+		fn getVelY() => f64 {
+			return app.boxVelocities[@self.componentId].y;
+		};
+		fn setVelZ(var.f64 value) {
+			app.boxVelocities[@self.componentId].z: value;
+		};
+		fn getVelZ() => f64 {
+			return app.boxVelocities[@self.componentId].z;
+		};
 
-        fn getSrc() => cstr {
-            var resourceId: app.selectables[@self.id].resourceId;
-            return pointerTo(app.resources[resourceId].path) => ptr(i8);
-        }
-        fn setSrc(var.ptr(@string) value) {
-            var resourceId: app.selectables[@self.id].resourceId;
-            if resourceId < 0 {
-                app.selectables[@self.id].resourceId: app.newResource();
-            }
-            memcpy(@self.src, value.cstr(), value.length);
-        }
+		fn getSrc() => cstr {
+			var resourceId: app.selectables[@self.id].resourceId;
+			return pointerTo(app.resources[resourceId].path) => ptr(i8);
+		}
+		fn setSrc(var.ptr(@string) value) {
+			var resourceId: app.selectables[@self.id].resourceId;
+			if resourceId < 0 {
+				app.selectables[@self.id].resourceId: app.newResource();
+			}
+			memcpy(@self.src, value.cstr(), value.length);
+		}
 
 		fn load(var.ptr(@string) value) {
-            @self.setSrc(value);
+			@self.setSrc(value);
 			LIL__loadTexture(value.cstr(), app.selectables[@self.id].resourceId);
 		}
-    };
-    
-    class @sprite {
-        //this class MUST only be an i64
-        //do not add any more vars
-        #expand var.@image super: @image { };
-        
-        vvar.f64 clipX;
-        vvar.f64 clipY;
-        
-        fn initialize(var.cstr name; var.i64 parentId: 0) => i64 {
+	};
+	
+	class @sprite {
+		//this class MUST only be an i64
+		//do not add any more vars
+		#expand var.@image super: @image { };
+		
+		vvar.f64 clipX;
+		vvar.f64 clipY;
+		
+		fn initialize(var.cstr name; var.i64 parentId: 0) => i64 {
 			#if DEBUG {
 				puts `created sprite!`;
 			}
-            var componentId: app.newImg();
-            @self.id: app.newElement(name, parentId, 2, componentId);
+			var componentId: app.newImg();
+			@self.id: app.newElement(name, parentId, 2, componentId);
 			app.imgs[componentId].useClip: true;
-            return @self.id;
-        }
+			return @self.id;
+		}
 
-        //FIXME: this should not be needed. It means that somewhere
-        //the path expander is not working
-        fn deinit {
-            @self.super.deinit();
-        }
-        
-        fn setClipX(var.f64 value) {
-            app.imgClips[@self.componentId].x: value;
-        }
-        fn getClipX() => f64 {
-            return app.imgClips[@self.componentId].x;
-        };
-        fn setClipY(var.f64 value) {
-            app.imgClips[@self.componentId].y: value;
-        };
-        fn getClipY() => f64 {
-            return app.imgClips[@self.componentId].y;
-        };
-    }
+		//FIXME: this should not be needed. It means that somewhere
+		//the path expander is not working
+		fn deinit {
+			@self.super.deinit();
+		}
+		
+		fn setClipX(var.f64 value) {
+			app.imgClips[@self.componentId].x: value;
+		}
+		fn getClipX() => f64 {
+			return app.imgClips[@self.componentId].x;
+		};
+		fn setClipY(var.f64 value) {
+			app.imgClips[@self.componentId].y: value;
+		};
+		fn getClipY() => f64 {
+			return app.imgClips[@self.componentId].y;
+		};
+	}
 	
 	class @shape2d {
-        //this class MUST only be an i64
-        //do not add any more vars
-        #expand var.@element super: @element { };
+		//this class MUST only be an i64
+		//do not add any more vars
+		#expand var.@element super: @element { };
 		
-        //public interface
-        vvar.i64 componentId;
-        vvar.f64 width;
-        vvar.f64 height;
-        vvar.f64 x;
-        vvar.f64 y;
-        vvar.f64 z;
-        vvar.@rgb background;
+		//public interface
+		vvar.i64 componentId;
+		vvar.f64 width;
+		vvar.f64 height;
+		vvar.f64 x;
+		vvar.f64 y;
+		vvar.f64 z;
+		vvar.@rgb background;
 
-        fn getComponentId => i64 {
-            return app.selectables[@self.id].componentId;
-        }
+		fn getComponentId => i64 {
+			return app.selectables[@self.id].componentId;
+		}
 
-        fn initialize(var.cstr name; var.i64 parentId: 0) => i64 {
+		fn initialize(var.cstr name; var.i64 parentId: 0) => i64 {
 			#if DEBUG {
 				puts `created shape!`;
 			}
-            var componentId: app.newShape();
-            @self.id: app.newElement(name, parentId, 3, componentId);
-            return @self.id;
-        }
+			var componentId: app.newShape();
+			@self.id: app.newElement(name, parentId, 3, componentId);
+			return @self.id;
+		}
 
-        //WARNING: only call this when it is the last entity
-        fn deinit {
-            app.removeLastShape();
-            app.removeLastEntity();
-        }
+		//WARNING: only call this when it is the last entity
+		fn deinit {
+			app.removeLastShape();
+			app.removeLastEntity();
+		}
 
-        fn setWidth(var.f64 value) {
-            app.shapes[@self.componentId].width: value;
-        };
-        fn getWidth {
-            return app.shapes[@self.componentId].width;
-        };
-        fn setHeight(var.f64 value) {
-            app.shapes[@self.componentId].height: value;
-        };
-        fn getHeight {
-            return app.shapes[@self.componentId].height;
-        };
-        fn setX(var.f64 value) {
-            app.shapes[@self.componentId].x: value;
-        }
-        fn getX() => f64 {
-            return app.shapes[@self.componentId].x;
-        };
-        fn setY(var.f64 value) {
-            app.shapes[@self.componentId].y: value;
-        };
-        fn getY() => f64 {
-            return app.shapes[@self.componentId].y;
-        };
-        fn setZ(var.f64 value) {
-            app.shapes[@self.componentId].z: value;
-        };
-        fn getZ() => f64 {
-            return app.shapes[@self.componentId].z;
-        };
-        fn setBackground(var.@rgb value) {
-            app.shapes[@self.componentId].bgColor: value;
-        };
-        fn getBackground {
-            return app.shapes[@self.componentId].bgColor;
-        };
-        fn getBackgroundPointer {
-            return pointerTo app.shapes[@self.componentId].bgColor;
-        };
+		fn setWidth(var.f64 value) {
+			app.shapes[@self.componentId].width: value;
+		};
+		fn getWidth {
+			return app.shapes[@self.componentId].width;
+		};
+		fn setHeight(var.f64 value) {
+			app.shapes[@self.componentId].height: value;
+		};
+		fn getHeight {
+			return app.shapes[@self.componentId].height;
+		};
+		fn setX(var.f64 value) {
+			app.shapes[@self.componentId].x: value;
+		}
+		fn getX() => f64 {
+			return app.shapes[@self.componentId].x;
+		};
+		fn setY(var.f64 value) {
+			app.shapes[@self.componentId].y: value;
+		};
+		fn getY() => f64 {
+			return app.shapes[@self.componentId].y;
+		};
+		fn setZ(var.f64 value) {
+			app.shapes[@self.componentId].z: value;
+		};
+		fn getZ() => f64 {
+			return app.shapes[@self.componentId].z;
+		};
+		fn setBackground(var.@rgb value) {
+			app.shapes[@self.componentId].bgColor: value;
+		};
+		fn getBackground {
+			return app.shapes[@self.componentId].bgColor;
+		};
+		fn getBackgroundPointer {
+			return pointerTo app.shapes[@self.componentId].bgColor;
+		};
 		
 		fn moveTo(var.f64 x; var.f64 y) {
 			var shape: pointerTo app.shapes[@self.componentId];
@@ -741,185 +741,185 @@ fn fabs(f64) => f64 extern;
 			}
 		}
 	}
-    
-    fn LIL__mouseDownListener(var.ptr(@event) evt) {
-        var mouseX: evt.x;
-        var mouseY: evt.y;
-        for (var.i64 i: app.mouseDownActionCount - 1; i>=0; i -: 1) {
-            var action: app.mouseDownActions[i];
-            var id: action.elementId;
-            var elem: app.selectables[id];
-            if LIL__mouseIntersectionTest(elem.typeId, elem.componentId, mouseX, mouseY) {
-                app.dragTargetId: id;
-                app.dragOrigin: @pos2d { x: mouseX; y: mouseY };
-                var callback: action.ptr => ptr(fn(ptr(@event)));
-                callback(evt);
+	
+	fn LIL__mouseDownListener(var.ptr(@event) evt) {
+		var mouseX: evt.x;
+		var mouseY: evt.y;
+		for (var.i64 i: app.mouseDownActionCount - 1; i>=0; i -: 1) {
+			var action: app.mouseDownActions[i];
+			var id: action.elementId;
+			var elem: app.selectables[id];
+			if LIL__mouseIntersectionTest(elem.typeId, elem.componentId, mouseX, mouseY) {
+				app.dragTargetId: id;
+				app.dragOrigin: @pos2d { x: mouseX; y: mouseY };
+				var callback: action.ptr => ptr(fn(ptr(@event)));
+				callback(evt);
 				if evt.isStopped {
 					break;
 				}
-            }
-        }
-    }
-    
-    fn LIL__mouseDraggedListener(var.ptr(@event) evt) {
-        if !app.dragHasSession {
-            if (
-                (fabs(evt.x - app.dragOrigin.x) >= app.dragMinDistance)
-                OR (fabs(evt.y - app.dragOrigin.y) >= app.dragMinDistance)
-            ) {
-                app.dragHasSession: true;
-            } else {
-                app.dragHasSession: false;
-            }
-        }
-        
-        if app.dragHasSession {
-            for (var.i64 i: app.mouseDraggedActionCount - 1; i>=0; i -: 1) {
-                var action: app.mouseDraggedActions[i];
-                var id: action.elementId;
-                if id = app.dragTargetId {
-                    var callback: action.ptr => ptr(fn(ptr(@event)));
-                    callback(evt);
+			}
+		}
+	}
+	
+	fn LIL__mouseDraggedListener(var.ptr(@event) evt) {
+		if !app.dragHasSession {
+			if (
+				(fabs(evt.x - app.dragOrigin.x) >= app.dragMinDistance)
+				OR (fabs(evt.y - app.dragOrigin.y) >= app.dragMinDistance)
+			) {
+				app.dragHasSession: true;
+			} else {
+				app.dragHasSession: false;
+			}
+		}
+		
+		if app.dragHasSession {
+			for (var.i64 i: app.mouseDraggedActionCount - 1; i>=0; i -: 1) {
+				var action: app.mouseDraggedActions[i];
+				var id: action.elementId;
+				if id = app.dragTargetId {
+					var callback: action.ptr => ptr(fn(ptr(@event)));
+					callback(evt);
 					if evt.isStopped {
 						break;
 					}
-                }
-            }
-        }
-    }
-    
-    fn LIL__mouseUpListener(var.ptr(@event) evt) {
-        var mouseX: evt.x;
-        var mouseY: evt.y;
-        for (var.i64 i: app.mouseUpActionCount - 1; i>=0; i -: 1) {
-            var action: app.mouseUpActions[i];
-            var id: action.elementId;
-            var elem: app.selectables[id];
-            if LIL__mouseIntersectionTest(elem.typeId, elem.componentId, mouseX, mouseY) {
-                var callback: action.ptr => ptr(fn(ptr(@event)));
-                callback(evt);
+				}
+			}
+		}
+	}
+	
+	fn LIL__mouseUpListener(var.ptr(@event) evt) {
+		var mouseX: evt.x;
+		var mouseY: evt.y;
+		for (var.i64 i: app.mouseUpActionCount - 1; i>=0; i -: 1) {
+			var action: app.mouseUpActions[i];
+			var id: action.elementId;
+			var elem: app.selectables[id];
+			if LIL__mouseIntersectionTest(elem.typeId, elem.componentId, mouseX, mouseY) {
+				var callback: action.ptr => ptr(fn(ptr(@event)));
+				callback(evt);
 				if evt.isStopped {
 					break;
 				}
-            }
-        }
+			}
+		}
 
-        if app.dragHasSession {
-            //send the drag end event
-            for (var.i64 i: app.dragEndActionCount - 1; i>=0; i -: 1) {
-                var action: app.dragEndActions[i];
-                var id: action.elementId;
-                if id = app.dragTargetId {
-                    var callback: action.ptr => ptr(fn(ptr(@event)));
-                    callback(evt);
+		if app.dragHasSession {
+			//send the drag end event
+			for (var.i64 i: app.dragEndActionCount - 1; i>=0; i -: 1) {
+				var action: app.dragEndActions[i];
+				var id: action.elementId;
+				if id = app.dragTargetId {
+					var callback: action.ptr => ptr(fn(ptr(@event)));
+					callback(evt);
 					if evt.isStopped {
 						break;
 					}
-                }
-            }
-            app.dragHasSession: false;
-        }
-        app.dragTargetId: 0;
-    }
-    
-    fn LIL__mouseIntersectionTest(var.i64 typeId; var.i64 componentId; var.f64 mouseX; var.f64 mouseY) => bool {
-        if typeId = 0 {
-            var pos: app.boxPositions[componentId];
-            var box: app.box2ds[componentId];
-            return  (mouseX >= pos.x) AND (mouseX < (pos.x + box.width)) AND (mouseY >= pos.y) AND (mouseY < (pos.y + box.height));
-        } else if ((typeId = 1) OR (typeId = 2)) {
-            var pos: app.imgPositions[componentId];
-            var img: app.imgs[componentId];
-            var width: img.width;
-            var height: img.height;
-            if width = 0 { width: img.textureWidth }
-            if height = 0 { height: img.textureHeight }
-            return (mouseX >= pos.x) AND (mouseX < (pos.x + width)) AND (mouseY >= pos.y) AND (mouseY < (pos.y + height));
-        } else if typeId = 3 {
-            var shape: app.shapes[componentId];
-            var x: shape.x;
-            var y: shape.y;
-            var width: shape.width;
-            var height: shape.height;
-            return  (mouseX >= x) AND (mouseX < (x + width)) AND (mouseY >= y) AND (mouseY < (y + height));
-        }
-        return false;
-    }
-    
-    fn LIL__intersectionTest(var.@container|@image item; var.f64 testX; var.f64 testY) => bool {
-        if item => @container {
-            var componentId: item.componentId;
-            var pos: app.boxPositions[componentId];
-            var box: app.box2ds[componentId];
-            return  (testX >= pos.x) AND (testX < (pos.x + box.width)) AND (testY >= pos.y) AND (testY < (pos.y + box.height));
-        } else if item => @image {
-            var componentId: item.componentId;
-            var pos: app.imgPositions[componentId];
-            var img: app.imgs[componentId];
-            var width: img.width;
-            var height: img.height;
-            if width = 0 { width: img.textureWidth }
-            if height = 0 { height: img.textureHeight }
-            return (testX >= pos.x) AND (testX < (pos.x + width)) AND (testY >= pos.y) AND (testY < (pos.y + height));
-        }
-    }
+				}
+			}
+			app.dragHasSession: false;
+		}
+		app.dragTargetId: 0;
+	}
+	
+	fn LIL__mouseIntersectionTest(var.i64 typeId; var.i64 componentId; var.f64 mouseX; var.f64 mouseY) => bool {
+		if typeId = 0 {
+			var pos: app.boxPositions[componentId];
+			var box: app.box2ds[componentId];
+			return  (mouseX >= pos.x) AND (mouseX < (pos.x + box.width)) AND (mouseY >= pos.y) AND (mouseY < (pos.y + box.height));
+		} else if ((typeId = 1) OR (typeId = 2)) {
+			var pos: app.imgPositions[componentId];
+			var img: app.imgs[componentId];
+			var width: img.width;
+			var height: img.height;
+			if width = 0 { width: img.textureWidth }
+			if height = 0 { height: img.textureHeight }
+			return (mouseX >= pos.x) AND (mouseX < (pos.x + width)) AND (mouseY >= pos.y) AND (mouseY < (pos.y + height));
+		} else if typeId = 3 {
+			var shape: app.shapes[componentId];
+			var x: shape.x;
+			var y: shape.y;
+			var width: shape.width;
+			var height: shape.height;
+			return  (mouseX >= x) AND (mouseX < (x + width)) AND (mouseY >= y) AND (mouseY < (y + height));
+		}
+		return false;
+	}
+	
+	fn LIL__intersectionTest(var.@container|@image item; var.f64 testX; var.f64 testY) => bool {
+		if item => @container {
+			var componentId: item.componentId;
+			var pos: app.boxPositions[componentId];
+			var box: app.box2ds[componentId];
+			return  (testX >= pos.x) AND (testX < (pos.x + box.width)) AND (testY >= pos.y) AND (testY < (pos.y + box.height));
+		} else if item => @image {
+			var componentId: item.componentId;
+			var pos: app.imgPositions[componentId];
+			var img: app.imgs[componentId];
+			var width: img.width;
+			var height: img.height;
+			if width = 0 { width: img.textureWidth }
+			if height = 0 { height: img.textureHeight }
+			return (testX >= pos.x) AND (testX < (pos.x + width)) AND (testY >= pos.y) AND (testY < (pos.y + height));
+		}
+	}
 
-    class @app {
-        var.[#paste entitiesSize x @selectable] selectables: [];
-        var.i64 entityCount: 0;
-        //boxes
-        var.[#paste entitiesSize x @pos] boxPositions: [];
-        var.[#paste entitiesSize x @vel] boxVelocities: [];
-        var.[#paste entitiesSize x @box2d] box2ds: [];
-        var.i64 boxCount: 0;
-        //imgs
-        var.[#paste entitiesSize x @pos] imgPositions: [];
-        var.[#paste entitiesSize x @vel] imgVelocities: [];
-        var.[#paste entitiesSize x @pos2d] imgClips: [];
-        var.[#paste entitiesSize x @img] imgs: [];
-        var.i64 imgCount: 0;
+	class @app {
+		var.[#paste entitiesSize x @selectable] selectables: [];
+		var.i64 entityCount: 0;
+		//boxes
+		var.[#paste entitiesSize x @pos] boxPositions: [];
+		var.[#paste entitiesSize x @vel] boxVelocities: [];
+		var.[#paste entitiesSize x @box2d] box2ds: [];
+		var.i64 boxCount: 0;
+		//imgs
+		var.[#paste entitiesSize x @pos] imgPositions: [];
+		var.[#paste entitiesSize x @vel] imgVelocities: [];
+		var.[#paste entitiesSize x @pos2d] imgClips: [];
+		var.[#paste entitiesSize x @img] imgs: [];
+		var.i64 imgCount: 0;
 		//shapes
 		var.[#paste entitiesSize x @shapeData] shapes: [];
-        var.i64 shapesCount: 0;
-        //names
-        var.[#paste namesSize x [#paste namesMaxLength x i8]] names: [];
-        var.i64 nameCount: 0;
-        var.i64 typeCount: 0;
+		var.i64 shapesCount: 0;
+		//names
+		var.[#paste namesSize x [#paste namesMaxLength x i8]] names: [];
+		var.i64 nameCount: 0;
+		var.i64 typeCount: 0;
 		//resources
-        var.[#paste entitiesSize x @resource] resources: [];
-        var.i64 resourceCount: 0;
+		var.[#paste entitiesSize x @resource] resources: [];
+		var.i64 resourceCount: 0;
 		//actions
 		var.[#paste actionsSize x @action] actions: [];
 		var.i64 actionCount: 0;
 		var.[#paste actionsSize x @action] mouseDownActions: [];
 		var.i64 mouseDownActionCount: 0;
-        var.[#paste actionsSize x @action] mouseUpActions: [];
-        var.i64 mouseUpActionCount: 0;
+		var.[#paste actionsSize x @action] mouseUpActions: [];
+		var.i64 mouseUpActionCount: 0;
 		var.[#paste actionsSize x @action] mouseDraggedActions: [];
 		var.i64 mouseDraggedActionCount: 0;
-        var.[#paste actionsSize x @action] dragEndActions: [];
-        var.i64 dragEndActionCount: 0;
-        var.i64 dragTargetId: 0;
-        var.@pos2d dragOrigin: @pos2d { x: 0; y: 0 };
-        var.f64 dragMinDistance: 3.0;
-        var.bool dragHasSession: false;
-        //textfields
-        var.[#paste textfieldsSize x @textfieldData] textfields: [];
-        var.i64 textfieldCount: 0;
+		var.[#paste actionsSize x @action] dragEndActions: [];
+		var.i64 dragEndActionCount: 0;
+		var.i64 dragTargetId: 0;
+		var.@pos2d dragOrigin: @pos2d { x: 0; y: 0 };
+		var.f64 dragMinDistance: 3.0;
+		var.bool dragHasSession: false;
+		//textfields
+		var.[#paste textfieldsSize x @textfieldData] textfields: [];
+		var.i64 textfieldCount: 0;
 		//layout
 		var.[#paste entitiesSize x @layoutData] layoutData: [];
 		var.i64 layoutCount;
 		
 		fn initialize {
-            //get root's background color
+			//get root's background color
 			var root: $(@root);
-            var bgColor: root.background;
-            LIL__setWindowBgColor(bgColor.red, bgColor.green, bgColor.blue, bgColor.alpha);
+			var bgColor: root.background;
+			LIL__setWindowBgColor(bgColor.red, bgColor.green, bgColor.blue, bgColor.alpha);
 			//install the mouse listeners
 			msgSub(`onClick`, pointerTo(LIL__mouseClickListener) => msgCallback);
-            msgSub(`onMouseDown`, pointerTo(LIL__mouseDownListener) => msgCallback);
-            msgSub(`onMouseDragged`, pointerTo(LIL__mouseDraggedListener) => msgCallback);
-            msgSub(`onMouseUp`,pointerTo( LIL__mouseUpListener) => msgCallback);
+			msgSub(`onMouseDown`, pointerTo(LIL__mouseDownListener) => msgCallback);
+			msgSub(`onMouseDragged`, pointerTo(LIL__mouseDraggedListener) => msgCallback);
+			msgSub(`onMouseUp`,pointerTo( LIL__mouseUpListener) => msgCallback);
 		};
 		
 		fn setupLayouts {
@@ -930,203 +930,203 @@ fn fabs(f64) => f64 extern;
 			}
 		}
 
-        fn newEntity => i64 {
-            #if DEBUG {
-                puts `Creating new entity`;
-            }
-            var currentCount: @self.entityCount;
-            @self.entityCount +: 1;
-            return currentCount;
-        };
-        fn removeLastEntity {
-            @self.entityCount -: 1;
-        }
-        fn newType => i64 {
-            #if DEBUG {
-                puts `Creating new type`;
-            }
-            var currentCount: @self.typeCount;
-            @self.typeCount +: 1;
-            return currentCount;
-        };
-        fn removeLastType {
-            @self.typeCount -: 1;
-        }
-        fn registerName(var.cstr name){
-            #if DEBUG {
-                printf(`Register name %s\n`, name);
-            }
-            var.bool found: false;
-            var.i64 existingId: 0;
-            #if DEBUG {
-                printf(`Name count %li\n`, @self.nameCount);
-            }
-            for (var.i64 i:0; i<@self.nameCount; i+:1) {
-                #if DEBUG {
-                    printf(`Checking id %li\n`, i);
-                    printf(`name %li is %s\n`, i, pointerTo(@self.names[i]) => ptr(i8));
-                }
-                if (strncmp(name, (pointerTo(@self.names[i]) => ptr(i8)), #paste namesMaxLength) = 0i32) {
-                    found: true;
-                    existingId: i;
-                    //break;
-                }
-            }
-            if found {
-                return existingId;
-            } else {
-                var currentCount: @self.nameCount;
-                memcpy(
-                    dst: pointerTo(@self.names[currentCount]) => ptr(i8);
-                    src: name;
-                    len: strnlen(name, #paste namesMaxLength)
-                );
-                #if DEBUG {
-                    printf(`name %li is now %s\n`, currentCount, pointerTo(@self.names[currentCount]) => ptr(i8));
-                }
-                @self.nameCount +: 1;
-                return currentCount;
-            }
-        };
-        fn getName(var.i64 id) => cstr {
-            return pointerTo(@self.names[id]) => cstr;
-        };
-        fn removeLastName {
-            @self.nameCount -: 1;
-        }
-        fn selectByName(var.i64 parentId; var.i64 nameId)=>@sel {
-            var ret: @sel { };
-            for(var.i64 i: 0; i<@self.entityCount; i+:1) {
-                var item: pointerTo @self.selectables[i];
-                if item.parentId = parentId {
-                    if item.nameId = nameId {
-                        ret.items[ret.size]: @element { id: i };
-                        ret.size +: 1;
-                    }
-                }
-            }
-            return ret;
-        };
-        fn selectChildren(var.i64 parentId)=>@sel {
-            var ret: @sel { };
-            for(var.i64 i: 0; i<@self.entityCount; i+:1) {
-                var item: pointerTo @self.selectables[i];
-                if item.parentId = parentId {
-                    ret.items[ret.size]: @element { id: i };
-                    ret.size +: 1;
-                }
-            }
-            return ret;
-        };
-        fn setSelectable(var.i64 id; var.@selectable value) {
-            #if DEBUG {
-                printf(`Setting selectable with name %s for id %li with type %li\n`, @self.getName(value.nameId), id, value.typeId);
-            }
-            @self.selectables[id]: value;
-        };
-        fn newElement(var.cstr name; var.i64 parentId: 0; var.i64 typeId: 0; var.i64 componentId: 0)=>i64 {
-            #if DEBUG {
-                puts `Creating new element`;
-            }
-            var.i64 id: @self.newEntity();
-            var.i64 nameId: @self.registerName(name);
-            @self.setSelectable(id, @selectable {
-                nameId: nameId;
-                parentId: parentId;
-                typeId: typeId;
-                componentId: componentId;
+		fn newEntity => i64 {
+			#if DEBUG {
+				puts `Creating new entity`;
+			}
+			var currentCount: @self.entityCount;
+			@self.entityCount +: 1;
+			return currentCount;
+		};
+		fn removeLastEntity {
+			@self.entityCount -: 1;
+		}
+		fn newType => i64 {
+			#if DEBUG {
+				puts `Creating new type`;
+			}
+			var currentCount: @self.typeCount;
+			@self.typeCount +: 1;
+			return currentCount;
+		};
+		fn removeLastType {
+			@self.typeCount -: 1;
+		}
+		fn registerName(var.cstr name){
+			#if DEBUG {
+				printf(`Register name %s\n`, name);
+			}
+			var.bool found: false;
+			var.i64 existingId: 0;
+			#if DEBUG {
+				printf(`Name count %li\n`, @self.nameCount);
+			}
+			for (var.i64 i:0; i<@self.nameCount; i+:1) {
+				#if DEBUG {
+					printf(`Checking id %li\n`, i);
+					printf(`name %li is %s\n`, i, pointerTo(@self.names[i]) => ptr(i8));
+				}
+				if (strncmp(name, (pointerTo(@self.names[i]) => ptr(i8)), #paste namesMaxLength) = 0i32) {
+					found: true;
+					existingId: i;
+					//break;
+				}
+			}
+			if found {
+				return existingId;
+			} else {
+				var currentCount: @self.nameCount;
+				memcpy(
+					dst: pointerTo(@self.names[currentCount]) => ptr(i8);
+					src: name;
+					len: strnlen(name, #paste namesMaxLength)
+				);
+				#if DEBUG {
+					printf(`name %li is now %s\n`, currentCount, pointerTo(@self.names[currentCount]) => ptr(i8));
+				}
+				@self.nameCount +: 1;
+				return currentCount;
+			}
+		};
+		fn getName(var.i64 id) => cstr {
+			return pointerTo(@self.names[id]) => cstr;
+		};
+		fn removeLastName {
+			@self.nameCount -: 1;
+		}
+		fn selectByName(var.i64 parentId; var.i64 nameId)=>@sel {
+			var ret: @sel { };
+			for(var.i64 i: 0; i<@self.entityCount; i+:1) {
+				var item: pointerTo @self.selectables[i];
+				if item.parentId = parentId {
+					if item.nameId = nameId {
+						ret.items[ret.size]: @element { id: i };
+						ret.size +: 1;
+					}
+				}
+			}
+			return ret;
+		};
+		fn selectChildren(var.i64 parentId)=>@sel {
+			var ret: @sel { };
+			for(var.i64 i: 0; i<@self.entityCount; i+:1) {
+				var item: pointerTo @self.selectables[i];
+				if item.parentId = parentId {
+					ret.items[ret.size]: @element { id: i };
+					ret.size +: 1;
+				}
+			}
+			return ret;
+		};
+		fn setSelectable(var.i64 id; var.@selectable value) {
+			#if DEBUG {
+				printf(`Setting selectable with name %s for id %li with type %li\n`, @self.getName(value.nameId), id, value.typeId);
+			}
+			@self.selectables[id]: value;
+		};
+		fn newElement(var.cstr name; var.i64 parentId: 0; var.i64 typeId: 0; var.i64 componentId: 0)=>i64 {
+			#if DEBUG {
+				puts `Creating new element`;
+			}
+			var.i64 id: @self.newEntity();
+			var.i64 nameId: @self.registerName(name);
+			@self.setSelectable(id, @selectable {
+				nameId: nameId;
+				parentId: parentId;
+				typeId: typeId;
+				componentId: componentId;
 				resourceId: (0-1);
 				actionId: (0-1);
-                mouseDownActionId: (0-1);
-                mouseDraggedActionId: (0-1);
-                mouseUpActionId: (0-1);
-                dragEndActionId: (0-1);
-            });
-            return id;
-        };
-        fn newBox => i64 {
-            var currentCount: @self.boxCount;
-            @self.boxCount +: 1;
-            return currentCount;
-        };
-        fn removeLastBox {
-            @self.boxCount -: 1;
-        }
-        fn newImg => i64 {
-            var currentCount: @self.imgCount;
-            @self.imgCount +: 1;
-            return currentCount;
-        };
-        fn removeLastImg {
-            @self.imgCount -: 1;
-        }
-        fn newShape => i64 {
-            var currentCount: @self.shapesCount;
-            @self.shapesCount +: 1;
-            return currentCount;
-        };
-        fn removeLastShape {
-            @self.shapesCount -: 1;
-        }
-        fn newResource => i64 {
-            var currentCount: @self.resourceCount;
-            @self.resourceCount +: 1;
-            return currentCount;
-        }
-        fn removeLastResource {
-            @self.resourceCount -: 1;
-        }
-		fn newActionId => i64 {
-            #if DEBUG {
-                puts `Creating new action id`;
-            }
-            var currentCount: @self.actionCount;
-            @self.actionCount +: 1;
-            return currentCount;
+				mouseDownActionId: (0-1);
+				mouseDraggedActionId: (0-1);
+				mouseUpActionId: (0-1);
+				dragEndActionId: (0-1);
+			});
+			return id;
+		};
+		fn newBox => i64 {
+			var currentCount: @self.boxCount;
+			@self.boxCount +: 1;
+			return currentCount;
+		};
+		fn removeLastBox {
+			@self.boxCount -: 1;
 		}
-        fn removeLastActionId {
-            @self.actionCount -: 1;
-        }
-        fn newTextfield => i64 {
-            var currentCount: @self.textfieldCount;
-            @self.textfieldCount +: 1;
-            return currentCount;
-        };
-        fn removeLastTextfield {
-            @self.textfieldCount -: 1;
-        }
-        fn newMouseDownActionId => i64 {
-            var currentCount: @self.mouseDownActionCount;
-            @self.mouseDownActionCount +: 1;
-            return currentCount;
-        }
-        fn removeLastMouseDownActionId {
-            @self.mouseDownActionCount -: 1;
-        }
-        fn newMouseUpActionId => i64 {
-            var currentCount: @self.mouseUpActionCount;
-            @self.mouseUpActionCount +: 1;
-            return currentCount;
-        }
-        fn removeLastMouseUpActionId {
-            @self.mouseUpActionCount -: 1;
-        }
-        fn newMouseDraggedActionId => i64 {
-            var currentCount: @self.mouseDraggedActionCount;
-            @self.mouseDraggedActionCount +: 1;
-            return currentCount;
-        }
-        fn removeLastMouseDraggedActionId {
-            @self.mouseDraggedActionCount -: 1;
-        }
-        fn newDragEndActionId => i64 {
-            var currentCount: @self.dragEndActionCount;
-            @self.dragEndActionCount +: 1;
-            return currentCount;
-        }
-        fn removeLastDragEndActionId {
-            @self.dragEndActionCount -: 1;
-        }
+		fn newImg => i64 {
+			var currentCount: @self.imgCount;
+			@self.imgCount +: 1;
+			return currentCount;
+		};
+		fn removeLastImg {
+			@self.imgCount -: 1;
+		}
+		fn newShape => i64 {
+			var currentCount: @self.shapesCount;
+			@self.shapesCount +: 1;
+			return currentCount;
+		};
+		fn removeLastShape {
+			@self.shapesCount -: 1;
+		}
+		fn newResource => i64 {
+			var currentCount: @self.resourceCount;
+			@self.resourceCount +: 1;
+			return currentCount;
+		}
+		fn removeLastResource {
+			@self.resourceCount -: 1;
+		}
+		fn newActionId => i64 {
+			#if DEBUG {
+				puts `Creating new action id`;
+			}
+			var currentCount: @self.actionCount;
+			@self.actionCount +: 1;
+			return currentCount;
+		}
+		fn removeLastActionId {
+			@self.actionCount -: 1;
+		}
+		fn newTextfield => i64 {
+			var currentCount: @self.textfieldCount;
+			@self.textfieldCount +: 1;
+			return currentCount;
+		};
+		fn removeLastTextfield {
+			@self.textfieldCount -: 1;
+		}
+		fn newMouseDownActionId => i64 {
+			var currentCount: @self.mouseDownActionCount;
+			@self.mouseDownActionCount +: 1;
+			return currentCount;
+		}
+		fn removeLastMouseDownActionId {
+			@self.mouseDownActionCount -: 1;
+		}
+		fn newMouseUpActionId => i64 {
+			var currentCount: @self.mouseUpActionCount;
+			@self.mouseUpActionCount +: 1;
+			return currentCount;
+		}
+		fn removeLastMouseUpActionId {
+			@self.mouseUpActionCount -: 1;
+		}
+		fn newMouseDraggedActionId => i64 {
+			var currentCount: @self.mouseDraggedActionCount;
+			@self.mouseDraggedActionCount +: 1;
+			return currentCount;
+		}
+		fn removeLastMouseDraggedActionId {
+			@self.mouseDraggedActionCount -: 1;
+		}
+		fn newDragEndActionId => i64 {
+			var currentCount: @self.dragEndActionCount;
+			@self.dragEndActionCount +: 1;
+			return currentCount;
+		}
+		fn removeLastDragEndActionId {
+			@self.dragEndActionCount -: 1;
+		}
 		fn newLayout() {
 			var currentCount: @self.layoutCount;
 			@self.layoutCount +: 1;
@@ -1135,145 +1135,145 @@ fn fabs(f64) => f64 extern;
 		fn removeLastLayout {
 			@self.layoutCount -: 1;
 		}
-    };
+	};
 
-    fn LIL__nameToNameId(var.cstr name) => i64 {
-        return app.registerName(name);
-    };
+	fn LIL__nameToNameId(var.cstr name) => i64 {
+		return app.registerName(name);
+	};
 
-    fn LIL__selectByName(var.i64 nameId; var.i64 parentId) => @sel {
-        var ret: @sel { };
-        for(var.i64 i:0; i<app.entityCount; i+:1){
-            var selectable: app.selectables[i];
-            if (selectable.parentId = parentId) {
-                if(selectable.nameId = nameId){
-                    ret.items[ret.size]: @element { id: i };
-                    ret.size +: 1;
-                }
-            }
-        }
-        return ret;
-    };
-    
-    fn LIL__getResourceCount => i64 {
-        return app.resourceCount;
-    }
-    
-    fn LIL__getResorceById(var.i64 id) => ptr(@resource) {
-        return pointerTo app.resources[id];
-    }
-    
-    fn LIL__movementSystem(var.f64 deltaTime) {
-        var.f64 dt: deltaTime * 60;
-        for (var.i64 i:0; i<app.boxCount; i+:1) {
-            app.boxPositions[i].x +: (app.boxVelocities[i].x * dt);
-            app.boxPositions[i].y +: (app.boxVelocities[i].y * dt);
-            app.boxPositions[i].z +: (app.boxVelocities[i].z * dt);
-        }
-        for (var.i64 i:0; i<app.imgCount; i+:1) {
-            app.imgPositions[i].x +: (app.imgVelocities[i].x * dt);
-            app.imgPositions[i].y +: (app.imgVelocities[i].y * dt);
-            app.imgPositions[i].z +: (app.imgVelocities[i].z * dt);
-        }
-    };
+	fn LIL__selectByName(var.i64 nameId; var.i64 parentId) => @sel {
+		var ret: @sel { };
+		for(var.i64 i:0; i<app.entityCount; i+:1){
+			var selectable: app.selectables[i];
+			if (selectable.parentId = parentId) {
+				if(selectable.nameId = nameId){
+					ret.items[ret.size]: @element { id: i };
+					ret.size +: 1;
+				}
+			}
+		}
+		return ret;
+	};
+	
+	fn LIL__getResourceCount => i64 {
+		return app.resourceCount;
+	}
+	
+	fn LIL__getResorceById(var.i64 id) => ptr(@resource) {
+		return pointerTo app.resources[id];
+	}
+	
+	fn LIL__movementSystem(var.f64 deltaTime) {
+		var.f64 dt: deltaTime * 60;
+		for (var.i64 i:0; i<app.boxCount; i+:1) {
+			app.boxPositions[i].x +: (app.boxVelocities[i].x * dt);
+			app.boxPositions[i].y +: (app.boxVelocities[i].y * dt);
+			app.boxPositions[i].z +: (app.boxVelocities[i].z * dt);
+		}
+		for (var.i64 i:0; i<app.imgCount; i+:1) {
+			app.imgPositions[i].x +: (app.imgVelocities[i].x * dt);
+			app.imgPositions[i].y +: (app.imgVelocities[i].y * dt);
+			app.imgPositions[i].z +: (app.imgVelocities[i].z * dt);
+		}
+	};
 
-    fn LIL__runSystems(var.f64 deltaTime) {
-        LIL__movementSystem(deltaTime);
-    };
+	fn LIL__runSystems(var.f64 deltaTime) {
+		LIL__movementSystem(deltaTime);
+	};
 
-    fn LIL__nextFrame(var.ptr(any) vertexBuffer; var.ptr(i64) vertexCount; var.f64 deltaTime) {
-        #if #getConfig(onUpdateFn) {
-            onUpdate(deltaTime);
-        }
-        LIL__runSystems(deltaTime);
-    };
+	fn LIL__nextFrame(var.ptr(any) vertexBuffer; var.ptr(i64) vertexCount; var.f64 deltaTime) {
+		#if #getConfig(onUpdateFn) {
+			onUpdate(deltaTime);
+		}
+		LIL__runSystems(deltaTime);
+	};
 	
 	fn LIL__setTextureSize(var.i64 imgId; var.f64 width; var.f64 height) {
 		app.imgs[imgId].textureWidth: width;
 		app.imgs[imgId].textureHeight: height;
 	};
-    
-    fn LIL__makeBoxVertices(var.ptr(any) vertexBuffer; var.ptr(i64) vertexCount) {
+	
+	fn LIL__makeBoxVertices(var.ptr(any) vertexBuffer; var.ptr(i64) vertexCount) {
 
-        var.[1000 x @vertex] vertices: [];
-        for (var.i64 i:0; i<app.boxCount; i+:1) {
+		var.[1000 x @vertex] vertices: [];
+		for (var.i64 i:0; i<app.boxCount; i+:1) {
 
-            var box: app.box2ds[i];
-            var pos: app.boxPositions[i];
-            var bgColor: box.bgColor;
-            var color: @rgb32 {
-                red: bgColor.red => f32;
-                green: bgColor.green => f32;
-                blue: bgColor.blue => f32;
-                alpha: bgColor.alpha => f32;
-            };
+			var box: app.box2ds[i];
+			var pos: app.boxPositions[i];
+			var bgColor: box.bgColor;
+			var color: @rgb32 {
+				red: bgColor.red => f32;
+				green: bgColor.green => f32;
+				blue: bgColor.blue => f32;
+				alpha: bgColor.alpha => f32;
+			};
 
-            var.i64 triIdx: i*6;
+			var.i64 triIdx: i*6;
 
-            vertices[triIdx]: @vertex {
-                x: (pos.x + box.width) => f32;
-                y: pos.y => f32;
-                color: color;
-                textureX: 1f32;
-                textureY: 1f32;
-            };
+			vertices[triIdx]: @vertex {
+				x: (pos.x + box.width) => f32;
+				y: pos.y => f32;
+				color: color;
+				textureX: 1f32;
+				textureY: 1f32;
+			};
 
-            vertices[triIdx+1]: @vertex {
-                x: pos.x => f32;
-                y: pos.y => f32;
-                color: color;
-                textureX: 0f32;
-                textureY: 1f32;
-            };
+			vertices[triIdx+1]: @vertex {
+				x: pos.x => f32;
+				y: pos.y => f32;
+				color: color;
+				textureX: 0f32;
+				textureY: 1f32;
+			};
 
-            vertices[triIdx+2]: @vertex {
-                x: pos.x => f32;
-                y: (pos.y + box.height) => f32;
-                color: color;
-                textureX: 0f32;
-                textureY: 0f32;
-            };
+			vertices[triIdx+2]: @vertex {
+				x: pos.x => f32;
+				y: (pos.y + box.height) => f32;
+				color: color;
+				textureX: 0f32;
+				textureY: 0f32;
+			};
 
 
-            vertices[triIdx+3]: @vertex {
-                x: (pos.x + box.width) => f32;
-                y: pos.y => f32;
-                color: color;
-                textureX: 1f32;
-                textureY: 1f32;
-            };
+			vertices[triIdx+3]: @vertex {
+				x: (pos.x + box.width) => f32;
+				y: pos.y => f32;
+				color: color;
+				textureX: 1f32;
+				textureY: 1f32;
+			};
 
-            vertices[triIdx+4]: @vertex {
-                x: pos.x => f32;
-                y: (pos.y + box.height) => f32;
-                color: color;
-                textureX: 0f32;
-                textureY: 0f32;
-            };
+			vertices[triIdx+4]: @vertex {
+				x: pos.x => f32;
+				y: (pos.y + box.height) => f32;
+				color: color;
+				textureX: 0f32;
+				textureY: 0f32;
+			};
 
-            vertices[triIdx+5]: @vertex {
-                x: (pos.x + box.width) => f32;
-                y: (pos.y + box.height) => f32;
-                color: color;
-                textureX: 1f32;
-                textureY: 0f32;
-            };
-        }
+			vertices[triIdx+5]: @vertex {
+				x: (pos.x + box.width) => f32;
+				y: (pos.y + box.height) => f32;
+				color: color;
+				textureX: 1f32;
+				textureY: 0f32;
+			};
+		}
 
-        var.i64 bufferSize: (sizeOf(type @vertex) * 6 * app.boxCount);
-        memcpy (vertexBuffer, pointerTo(vertices), bufferSize);
-        vertexCount: app.boxCount * 6;
-    }
-    
-    fn LIL__makeTextureVertices(var.ptr(any) vertexBuffer; var.ptr(i64) vertexCount) {
-        var.[1000 x @vertex] vertices: [];
+		var.i64 bufferSize: (sizeOf(type @vertex) * 6 * app.boxCount);
+		memcpy (vertexBuffer, pointerTo(vertices), bufferSize);
+		vertexCount: app.boxCount * 6;
+	}
+	
+	fn LIL__makeTextureVertices(var.ptr(any) vertexBuffer; var.ptr(i64) vertexCount) {
+		var.[1000 x @vertex] vertices: [];
 		var color: #F00;
-        for (var.i64 i:0; i<app.imgCount; i+:1) {
+		for (var.i64 i:0; i<app.imgCount; i+:1) {
 
-            var img: app.imgs[i];
-            var pos: app.imgPositions[i];
-            var clip: app.imgClips[i];
-            var.i64 triIdx: i*6;
+			var img: app.imgs[i];
+			var pos: app.imgPositions[i];
+			var clip: app.imgClips[i];
+			var.i64 triIdx: i*6;
 			
 			var.f64 minX;
 			var.f64 maxX;
@@ -1301,61 +1301,61 @@ fn fabs(f64) => f64 extern;
 				minY: 0;
 				maxY: 1;
 			}
-            
-            vertices[triIdx]: @vertex {
-                x: (pos.x + width) => f32;
-                y: pos.y => f32;
-                color: color;
-                textureX: maxX => f32;
-                textureY: maxY => f32;
-            };
+			
+			vertices[triIdx]: @vertex {
+				x: (pos.x + width) => f32;
+				y: pos.y => f32;
+				color: color;
+				textureX: maxX => f32;
+				textureY: maxY => f32;
+			};
 
-            vertices[triIdx+1]: @vertex {
-                x: pos.x => f32;
-                y: pos.y => f32;
-                color: color;
-                textureX: minX => f32;
-                textureY: maxY => f32;
-            };
+			vertices[triIdx+1]: @vertex {
+				x: pos.x => f32;
+				y: pos.y => f32;
+				color: color;
+				textureX: minX => f32;
+				textureY: maxY => f32;
+			};
 
-            vertices[triIdx+2]: @vertex {
-                x: pos.x => f32;
-                y: (pos.y + height) => f32;
-                color: color;
-                textureX: minX => f32;
-                textureY: minY => f32;
-            };
+			vertices[triIdx+2]: @vertex {
+				x: pos.x => f32;
+				y: (pos.y + height) => f32;
+				color: color;
+				textureX: minX => f32;
+				textureY: minY => f32;
+			};
 
 
-            vertices[triIdx+3]: @vertex {
-                x: (pos.x + width) => f32;
-                y: pos.y => f32;
-                color: color;
-                textureX: maxX => f32;
-                textureY: maxY => f32;
-            };
+			vertices[triIdx+3]: @vertex {
+				x: (pos.x + width) => f32;
+				y: pos.y => f32;
+				color: color;
+				textureX: maxX => f32;
+				textureY: maxY => f32;
+			};
 
-            vertices[triIdx+4]: @vertex {
-                x: pos.x => f32;
-                y: (pos.y + height) => f32;
-                color: color;
-                textureX: minX => f32;
-                textureY: minY => f32;
-            };
+			vertices[triIdx+4]: @vertex {
+				x: pos.x => f32;
+				y: (pos.y + height) => f32;
+				color: color;
+				textureX: minX => f32;
+				textureY: minY => f32;
+			};
 
-            vertices[triIdx+5]: @vertex {
-                x: (pos.x + width) => f32;
-                y: (pos.y + height) => f32;
-                color: color;
-                textureX: maxX => f32;
-                textureY: minY => f32;
-            };
-        }
+			vertices[triIdx+5]: @vertex {
+				x: (pos.x + width) => f32;
+				y: (pos.y + height) => f32;
+				color: color;
+				textureX: maxX => f32;
+				textureY: minY => f32;
+			};
+		}
 
-        var.i64 bufferSize: (sizeOf(type @vertex) * 6 * app.imgCount);
-        memcpy (vertexBuffer, pointerTo(vertices), bufferSize);
-        vertexCount: app.imgCount * 6;
-    }
+		var.i64 bufferSize: (sizeOf(type @vertex) * 6 * app.imgCount);
+		memcpy (vertexBuffer, pointerTo(vertices), bufferSize);
+		vertexCount: app.imgCount * 6;
+	}
 
 	fn LIL__makeShapeVertices(var.ptr(any) vertexBuffer; var.ptr(i64) vertexCount; var.ptr(any) indexBuffer; var.ptr(i64) indexCount) {
 		var.[1000 x @pos2d32] subpaths: [];
@@ -1611,7 +1611,7 @@ fn fabs(f64) => f64 extern;
 		#if DEBUG_SHAPE_VERTICES {
 			printf(`copying %li vertices to buffer\n`, vtxCount);
 		}
-    	memcpy (vertexBuffer, pointerTo(theVertices), bufferSize);
+		memcpy (vertexBuffer, pointerTo(theVertices), bufferSize);
 		vertexCount: vtxCount;
 		indexCount: idxCount;
 		memcpy (indexBuffer, pointerTo(theIndices), (sizeOf(type i32) * idxCount));

@@ -7,135 +7,135 @@
 const DEBUG: false;
 
 #export {
-    alias msgCallback => ptr(fn(ptr(any)));
+	alias msgCallback => ptr(fn(ptr(any)));
 
-    class @msgType {
-        var.[#paste MSG_NAME_MAX x i8] name;
-        var.[#paste MSG_LISTENERS_MAX x msgCallback] callbacks: [];
-        var.i64 listenerSize: 0;
-        var.ptr(@msgType)|null next;
-    };
+	class @msgType {
+		var.[#paste MSG_NAME_MAX x i8] name;
+		var.[#paste MSG_LISTENERS_MAX x msgCallback] callbacks: [];
+		var.i64 listenerSize: 0;
+		var.ptr(@msgType)|null next;
+	};
 
-    var.[#paste MSG_TABLE_SIZE x @msgType] msgTable: [];
-    var.[#paste MSG_TABLE_SIZE x @msgType] msgCollisionTable: [];
-    var.i64 msgCollisionSize: 0;
-    
-    fn msgHash (var.cstr name) => i64 {
-        #if DEBUG {
-            puts `msgHash`;
-        }
-        var.i64 len: strnlen(name, #paste MSG_NAME_MAX);
-        #if DEBUG {
-            printf `the length of the name is %li\n`, len);
-        }
-        var.i64 val: 0;
-        for (var.i64 i: 0; i < len; i +: 1) {
-            val +: (valueOf(name + i) => i64) * 23 * i;
-        }
-        var.i64 modulo: val MOD #paste MSG_TABLE_SIZE;
-        val: modulo;
-        #if DEBUG {
-            printf(`val is %li\n`, val);
-        }
-        return val;
-    }
-    
-    fn msgGetTy (var.cstr name) => ptr(@msgType) {
-        #if DEBUG {
-            puts `msgGetTy`;
-        }
-        var.i64 i: 0;
-        var.i64 index: msgHash name;
-        var.ptr(@msgType)|null tmp: pointerTo msgTable[index];
-        loop {
-            if tmp => ptr(@msgType) {
-                #if DEBUG {
-                    puts name;
-                }
+	var.[#paste MSG_TABLE_SIZE x @msgType] msgTable: [];
+	var.[#paste MSG_TABLE_SIZE x @msgType] msgCollisionTable: [];
+	var.i64 msgCollisionSize: 0;
+	
+	fn msgHash (var.cstr name) => i64 {
+		#if DEBUG {
+			puts `msgHash`;
+		}
+		var.i64 len: strnlen(name, #paste MSG_NAME_MAX);
+		#if DEBUG {
+			printf `the length of the name is %li\n`, len);
+		}
+		var.i64 val: 0;
+		for (var.i64 i: 0; i < len; i +: 1) {
+			val +: (valueOf(name + i) => i64) * 23 * i;
+		}
+		var.i64 modulo: val MOD #paste MSG_TABLE_SIZE;
+		val: modulo;
+		#if DEBUG {
+			printf(`val is %li\n`, val);
+		}
+		return val;
+	}
+	
+	fn msgGetTy (var.cstr name) => ptr(@msgType) {
+		#if DEBUG {
+			puts `msgGetTy`;
+		}
+		var.i64 i: 0;
+		var.i64 index: msgHash name;
+		var.ptr(@msgType)|null tmp: pointerTo msgTable[index];
+		loop {
+			if tmp => ptr(@msgType) {
+				#if DEBUG {
+					puts name;
+				}
 
-                if tmp.name[0] = 0 {
-                    #if DEBUG {
-                        puts `name was empty`;
-                    }
-                    memcpy(pointerTo(tmp.name[0]), name, strnlen(name, #paste MSG_NAME_MAX));
-                } else if (strncmp(pointerTo(tmp.name[0]), name, #paste MSG_NAME_MAX) != 0) {
-                    #if DEBUG {
-                        puts `name doesnt match, looking for the next one`;
-                    }
-                    var next: tmp.next;
-                    if next = null {
-                        var newEntry: pointerTo msgCollisionTable[msgCollisionSize];
-                        msgCollisionSize +: 1;
-                        #if DEBUG {
-                            printf(`collision size is now %li\n`, msgCollisionSize);
-                        }
-                        tmp.next: newEntry;
-                        tmp: newEntry;
-                    } else {
-                        tmp: next;
-                        repeat;
-                    }
-                }
-            }
-        }
-        return tmp => ptr(@msgType);
-    }
-    
-    fn msgSub (var.cstr name; var.msgCallback callback) {
-        #if DEBUG {
-            puts `msgSub`;
-        }
-        var entry: msgGetTy name;
+				if tmp.name[0] = 0 {
+					#if DEBUG {
+						puts `name was empty`;
+					}
+					memcpy(pointerTo(tmp.name[0]), name, strnlen(name, #paste MSG_NAME_MAX));
+				} else if (strncmp(pointerTo(tmp.name[0]), name, #paste MSG_NAME_MAX) != 0) {
+					#if DEBUG {
+						puts `name doesnt match, looking for the next one`;
+					}
+					var next: tmp.next;
+					if next = null {
+						var newEntry: pointerTo msgCollisionTable[msgCollisionSize];
+						msgCollisionSize +: 1;
+						#if DEBUG {
+							printf(`collision size is now %li\n`, msgCollisionSize);
+						}
+						tmp.next: newEntry;
+						tmp: newEntry;
+					} else {
+						tmp: next;
+						repeat;
+					}
+				}
+			}
+		}
+		return tmp => ptr(@msgType);
+	}
+	
+	fn msgSub (var.cstr name; var.msgCallback callback) {
+		#if DEBUG {
+			puts `msgSub`;
+		}
+		var entry: msgGetTy name;
 
-        var listenerIndex: entry.listenerSize;
-        entry.listenerSize +: 1;
-        entry.callbacks[listenerIndex]: callback;
-    }
-    
-    fn msgUnsub (var.cstr name; var.msgCallback callback) {
-        #if DEBUG {
-            puts `msgUnsub`;
-        }
-        var entry: msgGetTy name;
-        //iterate backwards
-        #if DEBUG {
-            printf `listenerSize is %li\n`, entry.listenerSize);
-        }
-        for (var.i64 i: entry.listenerSize; i>0; i-:1) {
-            #if DEBUG {
-                printf `checking item %li\n`, i);
-            }
-            if callback = entry.callbacks[i-1] {
-                #if DEBUG {
-                    puts `pointers are equal!`;
-                }
-                //move all next items backward
-                #if DEBUG {
-                    printf `listenerSize is %li and i is %li\n`, entry.listenerSize, i);
-                }
-                for (var.i64 j: i; j<(entry.listenerSize); j+:1) {
-                    #if DEBUG {
-                        printf `setting entry %li to %li\n`, j, j-1);
-                    }
-                    set(pointerTo entry.callbacks[j-1], entry.callbacks[j]);
-                }
-                entry.listenerSize -: 1;
-                #if DEBUG {
-                    printf `listenerSize is now %li\n`, entry.listenerSize);
-                }
-            }
-        }
-    }
-    
-    fn msgEmit (var.cstr name; var.ptr(any) data) {
-        #if DEBUG {
-            puts `msgEmit`;
-        }
-        
-        var entry: msgGetTy name;
-        for (var.i64 i:0; i<entry.listenerSize; i+:1) {
-            var callback: entry.callbacks[i];
-            callback(data);
-        }
-    }
+		var listenerIndex: entry.listenerSize;
+		entry.listenerSize +: 1;
+		entry.callbacks[listenerIndex]: callback;
+	}
+	
+	fn msgUnsub (var.cstr name; var.msgCallback callback) {
+		#if DEBUG {
+			puts `msgUnsub`;
+		}
+		var entry: msgGetTy name;
+		//iterate backwards
+		#if DEBUG {
+			printf `listenerSize is %li\n`, entry.listenerSize);
+		}
+		for (var.i64 i: entry.listenerSize; i>0; i-:1) {
+			#if DEBUG {
+				printf `checking item %li\n`, i);
+			}
+			if callback = entry.callbacks[i-1] {
+				#if DEBUG {
+					puts `pointers are equal!`;
+				}
+				//move all next items backward
+				#if DEBUG {
+					printf `listenerSize is %li and i is %li\n`, entry.listenerSize, i);
+				}
+				for (var.i64 j: i; j<(entry.listenerSize); j+:1) {
+					#if DEBUG {
+						printf `setting entry %li to %li\n`, j, j-1);
+					}
+					set(pointerTo entry.callbacks[j-1], entry.callbacks[j]);
+				}
+				entry.listenerSize -: 1;
+				#if DEBUG {
+					printf `listenerSize is now %li\n`, entry.listenerSize);
+				}
+			}
+		}
+	}
+	
+	fn msgEmit (var.cstr name; var.ptr(any) data) {
+		#if DEBUG {
+			puts `msgEmit`;
+		}
+		
+		var entry: msgGetTy name;
+		for (var.i64 i:0; i<entry.listenerSize; i+:1) {
+			var callback: entry.callbacks[i];
+			callback(data);
+		}
+	}
 }

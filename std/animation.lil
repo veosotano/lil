@@ -1,59 +1,59 @@
 #needs "app.lil";
 
 #export {
-    class @animationFrame {
-        var.f64 x: 0;
-        var.f64 y: 0;
-        var.i64 delay: 0;
-    };
+	class @animationFrame {
+		var.f64 x: 0;
+		var.f64 y: 0;
+		var.i64 delay: 0;
+	};
 
-    class @animationSequence {
-        var.[100 x @animationFrame] frames;
-        var.i64 index: 0;
-        var.i64 delay: 0;
-        var.i64 length: 0;
-    }
+	class @animationSequence {
+		var.[100 x @animationFrame] frames;
+		var.i64 index: 0;
+		var.i64 delay: 0;
+		var.i64 length: 0;
+	}
 
-    class @animationController {
-        var.[32 x @animationSequence] sequences;
-        var.@sprite sprite;
-        var.i64 index: 0;
-        var.i64 length: 0;
-        var.bool paused: false;
-    
-        fn update {
-            if @self.paused {
-                return;
-            }
-        
-            var currentSeq: pointerTo @self.sequences[@self.index];
-            var currentFrameIdx: currentSeq.index;
-            var currentFrame: currentSeq.frames[currentFrameIdx];
-            @self.sprite.clipX: currentFrame.x;
-            @self.sprite.clipY: currentFrame.y;
-        
-            @self.nextFrame();
-        };
-    
-        fn nextFrame {
-            var currentSeq: pointerTo @self.sequences[@self.index];
-        
-            var currentFrameIdx: currentSeq.index;
-            var currentFrame: currentSeq.frames[currentFrameIdx];
-            var.i64 nextDelay: currentSeq.delay + 1;
-            if nextDelay < currentFrame.delay {
-                currentSeq.delay +: 1;
-                return;
-            } else {
-                currentSeq.delay: 0;
-            }
+	class @animationController {
+		var.[32 x @animationSequence] sequences;
+		var.@sprite sprite;
+		var.i64 index: 0;
+		var.i64 length: 0;
+		var.bool paused: false;
+	
+		fn update {
+			if @self.paused {
+				return;
+			}
+		
+			var currentSeq: pointerTo @self.sequences[@self.index];
+			var currentFrameIdx: currentSeq.index;
+			var currentFrame: currentSeq.frames[currentFrameIdx];
+			@self.sprite.clipX: currentFrame.x;
+			@self.sprite.clipY: currentFrame.y;
+		
+			@self.nextFrame();
+		};
+	
+		fn nextFrame {
+			var currentSeq: pointerTo @self.sequences[@self.index];
+		
+			var currentFrameIdx: currentSeq.index;
+			var currentFrame: currentSeq.frames[currentFrameIdx];
+			var.i64 nextDelay: currentSeq.delay + 1;
+			if nextDelay < currentFrame.delay {
+				currentSeq.delay +: 1;
+				return;
+			} else {
+				currentSeq.delay: 0;
+			}
 
-            var.i64 nextIndex: currentSeq.index + 1;
-            if nextIndex < currentSeq.length {
-                currentSeq.index: nextIndex;
-            } else {
-                currentSeq.index: 0;
-            }
-        };
-    };
+			var.i64 nextIndex: currentSeq.index + 1;
+			if nextIndex < currentSeq.length {
+				currentSeq.index: nextIndex;
+			} else {
+				currentSeq.index: 0;
+			}
+		};
+	};
 }

@@ -2,108 +2,108 @@
 #needs "input.lil";
 
 #export {
-    class @characterController2d {
-        var.@sprite sprite;
-        var.f64 acceleration: 0;
-        var.f64 maxSpeed: 5;
-        var.f64 friction: 10;
-    
-        fn update {
-            @self.applyUserInput();
-            @self.limitSpeed();
-            @self.applyFriction();
-        }
-    
-        fn applyUserInput {
-            var selectable: @self.sprite.selectable;
-            var id: selectable.componentId;
+	class @characterController2d {
+		var.@sprite sprite;
+		var.f64 acceleration: 0;
+		var.f64 maxSpeed: 5;
+		var.f64 friction: 10;
+	
+		fn update {
+			@self.applyUserInput();
+			@self.limitSpeed();
+			@self.applyFriction();
+		}
+	
+		fn applyUserInput {
+			var selectable: @self.sprite.selectable;
+			var id: selectable.componentId;
 
-            //fixme: argument should not be required
-            //var gamepad: input.getGamepad();
-            var gamepad: input.getGamepad(0);
-    
-            //W -- up
-            // fixme: I'd like this to be:
-            // if input.isKeyDown(Keyboard.w) OR input.isKeyDown(Keyboard.upArrow) OR input.isKeyDown(GamePad.up) { }
-            // until then, we are using the platform-specific codes for now
-            var.bool upIsPressed: false;
-            if input.isKeyDown(126i16) { upIsPressed: true }
-            if input.isKeyDown(13i16) { upIsPressed: true }
-            if gamepad.y > 0.3 { upIsPressed: true }
-            if (upIsPressed) {
-                app.imgVelocities[id].y +: @self.acceleration;
-            }
-            //A -- left
-            var.bool leftIsPressed: false;
-            if input.isKeyDown(123i16) { leftIsPressed: true }
-            if input.isKeyDown(0i16) { leftIsPressed: true }
-            if gamepad.x < (0.0 - 0.3) { leftIsPressed: true }
-            if (leftIsPressed) {
-                app.imgVelocities[id].x -: @self.acceleration;
-            }
-            //S -- down
-            var.bool downIsPressed: false;
-            if input.isKeyDown(125i16) { downIsPressed: true }
-            if input.isKeyDown(1i16) { downIsPressed: true }
-            if gamepad.y < (0.0 - 0.3) { downIsPressed: true }
-            if (downIsPressed) {
-                app.imgVelocities[id].y -: @self.acceleration;
-            }
-            //D -- right
-            var.bool rightIsPressed: false;
-            if input.isKeyDown(124i16) { rightIsPressed: true }
-            if input.isKeyDown(2i16) { rightIsPressed: true }
-            if gamepad.x > 0.3 { rightIsPressed: true }
-            if (rightIsPressed) {
-                app.imgVelocities[id].x +: @self.acceleration;
-            }
-        }
+			//fixme: argument should not be required
+			//var gamepad: input.getGamepad();
+			var gamepad: input.getGamepad(0);
+	
+			//W -- up
+			// fixme: I'd like this to be:
+			// if input.isKeyDown(Keyboard.w) OR input.isKeyDown(Keyboard.upArrow) OR input.isKeyDown(GamePad.up) { }
+			// until then, we are using the platform-specific codes for now
+			var.bool upIsPressed: false;
+			if input.isKeyDown(126i16) { upIsPressed: true }
+			if input.isKeyDown(13i16) { upIsPressed: true }
+			if gamepad.y > 0.3 { upIsPressed: true }
+			if (upIsPressed) {
+				app.imgVelocities[id].y +: @self.acceleration;
+			}
+			//A -- left
+			var.bool leftIsPressed: false;
+			if input.isKeyDown(123i16) { leftIsPressed: true }
+			if input.isKeyDown(0i16) { leftIsPressed: true }
+			if gamepad.x < (0.0 - 0.3) { leftIsPressed: true }
+			if (leftIsPressed) {
+				app.imgVelocities[id].x -: @self.acceleration;
+			}
+			//S -- down
+			var.bool downIsPressed: false;
+			if input.isKeyDown(125i16) { downIsPressed: true }
+			if input.isKeyDown(1i16) { downIsPressed: true }
+			if gamepad.y < (0.0 - 0.3) { downIsPressed: true }
+			if (downIsPressed) {
+				app.imgVelocities[id].y -: @self.acceleration;
+			}
+			//D -- right
+			var.bool rightIsPressed: false;
+			if input.isKeyDown(124i16) { rightIsPressed: true }
+			if input.isKeyDown(2i16) { rightIsPressed: true }
+			if gamepad.x > 0.3 { rightIsPressed: true }
+			if (rightIsPressed) {
+				app.imgVelocities[id].x +: @self.acceleration;
+			}
+		}
 
-        fn applyFriction {
-            var selectable: @self.sprite.selectable;
-            var id: selectable.componentId;
-    
-            var currentX: app.imgVelocities[id].x;
-            var frictionX: currentX / @self.friction;
-            if frictionX < 0 { frictionX *: (-1) }
-            if frictionX < 0.1 { frictionX: 0.1 }
-            if currentX > 0.1 {
-                app.imgVelocities[id].x -: frictionX;
-            } else if currentX < (-0.1) {
-                app.imgVelocities[id].x +: frictionX;
-            } else {
-                app.imgVelocities[id].x: 0;
-            }
+		fn applyFriction {
+			var selectable: @self.sprite.selectable;
+			var id: selectable.componentId;
+	
+			var currentX: app.imgVelocities[id].x;
+			var frictionX: currentX / @self.friction;
+			if frictionX < 0 { frictionX *: (-1) }
+			if frictionX < 0.1 { frictionX: 0.1 }
+			if currentX > 0.1 {
+				app.imgVelocities[id].x -: frictionX;
+			} else if currentX < (-0.1) {
+				app.imgVelocities[id].x +: frictionX;
+			} else {
+				app.imgVelocities[id].x: 0;
+			}
 
-            var currentY: app.imgVelocities[id].y;
-            var frictionY: currentY / @self.friction;
-            if frictionY < 0 { frictionY *: (-1) }
-            if frictionY < 0.1 { frictionY: 0.1 }
-            if currentY > 0.1 {
-                app.imgVelocities[id].y -: frictionY;
-            } else if currentY < (-0.1) {
-                app.imgVelocities[id].y +: frictionY;
-            } else {
-                app.imgVelocities[id].y: 0;
-            }
-        }
+			var currentY: app.imgVelocities[id].y;
+			var frictionY: currentY / @self.friction;
+			if frictionY < 0 { frictionY *: (-1) }
+			if frictionY < 0.1 { frictionY: 0.1 }
+			if currentY > 0.1 {
+				app.imgVelocities[id].y -: frictionY;
+			} else if currentY < (-0.1) {
+				app.imgVelocities[id].y +: frictionY;
+			} else {
+				app.imgVelocities[id].y: 0;
+			}
+		}
 
-        fn limitSpeed {
-            var selectable: @self.sprite.selectable;
-            var id: selectable.componentId;
+		fn limitSpeed {
+			var selectable: @self.sprite.selectable;
+			var id: selectable.componentId;
 
-            if app.imgVelocities[id].x < (0 - @self.maxSpeed) {
-                app.imgVelocities[id].x: (0 - @self.maxSpeed);
-            }
-            if app.imgVelocities[id].x > @self.maxSpeed {
-                app.imgVelocities[id].x: @self.maxSpeed;
-            }
-            if app.imgVelocities[id].y < (0 - @self.maxSpeed) {
-                app.imgVelocities[id].y: (0 - @self.maxSpeed);
-            }
-            if app.imgVelocities[id].y > @self.maxSpeed {
-                app.imgVelocities[id].y: @self.maxSpeed;
-            }
-        }
-    };
+			if app.imgVelocities[id].x < (0 - @self.maxSpeed) {
+				app.imgVelocities[id].x: (0 - @self.maxSpeed);
+			}
+			if app.imgVelocities[id].x > @self.maxSpeed {
+				app.imgVelocities[id].x: @self.maxSpeed;
+			}
+			if app.imgVelocities[id].y < (0 - @self.maxSpeed) {
+				app.imgVelocities[id].y: (0 - @self.maxSpeed);
+			}
+			if app.imgVelocities[id].y > @self.maxSpeed {
+				app.imgVelocities[id].y: @self.maxSpeed;
+			}
+		}
+	};
 }

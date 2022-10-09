@@ -1,85 +1,85 @@
 #configure {
-    out: #arg { name: "out"; default: null };
-    buildPath: "lil_build_tmp";
-    printOnly: #arg { name: "printOnly"; default: false };
-    format: #arg { name: "format"; default: "o" }; //o, ll or s
-    singleFile: #arg { name: "singleFile"; default: false };
-    isMain: #arg { name: "isMain"; default: true };
-    compile: #arg { name: "compile"; default: true };
-    link: #arg { name: "link"; default: true };
+	out: #arg { name: "out"; default: null };
+	buildPath: "lil_build_tmp";
+	printOnly: #arg { name: "printOnly"; default: false };
+	format: #arg { name: "format"; default: "o" }; //o, ll or s
+	singleFile: #arg { name: "singleFile"; default: false };
+	isMain: #arg { name: "isMain"; default: true };
+	compile: #arg { name: "compile"; default: true };
+	link: #arg { name: "link"; default: true };
 	copyResources: #arg { name: "copyResources"; default: true };
 	resourcesPath: #arg { name: "resourcesPath"; default: "" }; //if used, add trailing slash
-    run: #arg { name: "run"; default: false };
-    isApp: #arg { name: "isApp"; default: "auto" };
-    autoMainFn: #arg { name: "autoMainFn"; default: true };
-    onUpdateFn: #arg { name: "onUpdateFn"; default: false };
-    automaticFullScreen: #arg { name: "automaticFullScreen"; default: false };
-    documentation: #arg { name: "documentation"; default: false };
+	run: #arg { name: "run"; default: false };
+	isApp: #arg { name: "isApp"; default: "auto" };
+	autoMainFn: #arg { name: "autoMainFn"; default: true };
+	onUpdateFn: #arg { name: "onUpdateFn"; default: false };
+	automaticFullScreen: #arg { name: "automaticFullScreen"; default: false };
+	documentation: #arg { name: "documentation"; default: false };
 	docTemplatesPath: #arg { name: "docTemplatesPath"; default: "%compilerDir/std/docs/" };
-    optimize: #arg { name: "optimize"; default: 1 };
-    importStdLil: #arg { name: "importStdLil"; default: true };
-    debugStdLil: #arg { name: "debugStdLil"; default: false };
-    stdLilPath: #arg { name: "stdLilPath"; default: "%compilerDir/std/lil.lil" };
-    linkerFlags: #arg { name: "linkerFlags"; default: "-lc" };
-    imports: #arg { name: "initImportPath"; default: "%compilerDir/std/init.lil" };
-    memorySize: 268435456; //in bytes, 256 MB by default (not used yet)
+	optimize: #arg { name: "optimize"; default: 1 };
+	importStdLil: #arg { name: "importStdLil"; default: true };
+	debugStdLil: #arg { name: "debugStdLil"; default: false };
+	stdLilPath: #arg { name: "stdLilPath"; default: "%compilerDir/std/lil.lil" };
+	linkerFlags: #arg { name: "linkerFlags"; default: "-lc" };
+	imports: #arg { name: "initImportPath"; default: "%compilerDir/std/init.lil" };
+	memorySize: 268435456; //in bytes, 256 MB by default (not used yet)
 
-    objExt: ".o";
-    exeExt: "";
+	objExt: ".o";
+	exeExt: "";
 
-    name: #arg { name: "name"; default: "My App" };
+	name: #arg { name: "name"; default: "My App" };
 
-    //set this to the name of the build settings to use
-    build: #arg { name: "build"; default: "debug" };
+	//set this to the name of the build settings to use
+	build: #arg { name: "build"; default: "debug" };
 
-    //if the target is auto, it will be autodetected
-    target: #arg { name: "target"; default: "auto" };
+	//if the target is auto, it will be autodetected
+	target: #arg { name: "target"; default: "auto" };
 
-    //audio settings
-    audioSamplesPerSecond: 44100i32;
-    audioBitsPerSample: 16i32;
-    audioBytesPerFrame: 4i32;
-    audioBufferSeconds: 2i32;
+	//audio settings
+	audioSamplesPerSecond: 44100i32;
+	audioBitsPerSample: 16i32;
+	audioBytesPerFrame: 4i32;
+	audioBufferSeconds: 2i32;
 
-    builds {
-        debug {
-            optimize: #arg { name: "optimize"; default: 1 };
-            buildPath: #arg { name: "buildPath"; default: "lil_build_tmp/debug" };
-            constants+: "DEBUG_BUILD";
-        }
+	builds {
+		debug {
+			optimize: #arg { name: "optimize"; default: 1 };
+			buildPath: #arg { name: "buildPath"; default: "lil_build_tmp/debug" };
+			constants+: "DEBUG_BUILD";
+		}
 
-        release {
-            optimize: #arg { name: "optimize"; default: 3 };
-            buildPath: #arg { name: "buildPath"; default: "lil_build_tmp/release" };
-            constants+: "RELEASE_BUILD";
-        }
+		release {
+			optimize: #arg { name: "optimize"; default: 3 };
+			buildPath: #arg { name: "buildPath"; default: "lil_build_tmp/release" };
+			constants+: "RELEASE_BUILD";
+		}
 
-        docs {
-            compile: false;
-            documentation: true;
-        }
-    }
-    
-    targets {
-        windows {
-            suffix: #arg { name: "suffix"; default: "OS_WINDOWS" };
-            constants+: "OS_WINDOWS";
-            objExt: ".obj";
-            exeExt: ".exe";
-        }
-        linux {
-            suffix: #arg { name: "suffix"; default: "OS_LINUX" };
-            constants+: "OS_LINUX";
-        }
-        mac {
-            suffix: #arg { name: "suffix"; default: "OS_MAC" };
-            constants+: "OS_MAC";
-            minOSVersion: #arg { name: "minOSVersion"; default: "11.0" };
-            cpu: #arg { name: "cpu"; default: "aarch64" };
-            vendor: #arg { name: "vendor"; default: "apple-macos%minOSVersion"};
-            buildResources: #arg { name: "buildResources"; default: true };
-            resourceBuildSteps:
-                'clang -c %compilerDir/std/std_lil_mac.m -o "%buildPath/std_lil_mac.o" -mmacosx-version-min=%minOSVersion -fobjc-arc',
+		docs {
+			compile: false;
+			documentation: true;
+		}
+	}
+	
+	targets {
+		windows {
+			suffix: #arg { name: "suffix"; default: "OS_WINDOWS" };
+			constants+: "OS_WINDOWS";
+			objExt: ".obj";
+			exeExt: ".exe";
+		}
+		linux {
+			suffix: #arg { name: "suffix"; default: "OS_LINUX" };
+			constants+: "OS_LINUX";
+		}
+		mac {
+			suffix: #arg { name: "suffix"; default: "OS_MAC" };
+			constants+: "OS_MAC";
+			minOSVersion: #arg { name: "minOSVersion"; default: "11.0" };
+			cpu: #arg { name: "cpu"; default: "aarch64" };
+			vendor: #arg { name: "vendor"; default: "apple-macos%minOSVersion"};
+			buildResources: #arg { name: "buildResources"; default: true };
+			resourceBuildSteps:
+				'clang -c %compilerDir/std/std_lil_mac.m -o "%buildPath/std_lil_mac.o" -mmacosx-version-min=%minOSVersion -fobjc-arc',
 				'clang -c %compilerDir/std/libtess2/Source/bucketalloc.c -o "%buildPath/bucketalloc.o" -I "%compilerDir/std/libtess2/Include" -mmacosx-version-min=%minOSVersion',
 				'clang -c %compilerDir/std/libtess2/Source/dict.c -o "%buildPath/dict.o" -I "%compilerDir/std/libtess2/Include" -mmacosx-version-min=%minOSVersion',
 				'clang -c %compilerDir/std/libtess2/Source/geom.c -o "%buildPath/geom.o" -I "%compilerDir/std/libtess2/Include" -mmacosx-version-min=%minOSVersion',
@@ -87,17 +87,17 @@
 				'clang -c %compilerDir/std/libtess2/Source/priorityq.c -o "%buildPath/priorityq.o" -I "%compilerDir/std/libtess2/Include" -mmacosx-version-min=%minOSVersion',
 				'clang -c %compilerDir/std/libtess2/Source/sweep.c -o "%buildPath/sweep.o" -I "%compilerDir/std/libtess2/Include" -mmacosx-version-min=%minOSVersion',
 				'clang -c %compilerDir/std/libtess2/Source/tess.c -o "%buildPath/tess.o" -I "%compilerDir/std/libtess2/Include" -mmacosx-version-min=%minOSVersion',
-                'xcrun -sdk macosx metal -c %compilerDir/std/lil_shaders.metal -o "%buildPath/lil_shaders.air"',
-                'xcrun -sdk macosx metallib "%buildPath/lil_shaders.air" -o "%buildPath/lil_shaders.metallib"'
-            ;
+				'xcrun -sdk macosx metal -c %compilerDir/std/lil_shaders.metal -o "%buildPath/lil_shaders.air"',
+				'xcrun -sdk macosx metallib "%buildPath/lil_shaders.air" -o "%buildPath/lil_shaders.metallib"'
+			;
 			linkerFlags +: "-L/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/lib";
 			linkerFlags +: "-F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks";
-            linkerFlags +: "-macosx_version_min %minOSVersion";
-            linkerFlags +: "-framework Cocoa";
-            bundleId: "lil.developer.%name";
+			linkerFlags +: "-macosx_version_min %minOSVersion";
+			linkerFlags +: "-framework Cocoa";
+			bundleId: "lil.developer.%name";
 
-            linkerFlagsApp:
-                '"%buildPath/std_lil_mac.o"',
+			linkerFlagsApp:
+				'"%buildPath/std_lil_mac.o"',
 				'"%buildPath/bucketalloc.o"',
 				'"%buildPath/dict.o"',
 				'"%buildPath/geom.o"',
@@ -107,63 +107,63 @@
 				'"%buildPath/tess.o"',
 				"-L/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/lib",
 				"-F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks",
-                "-lc",
-                "-framework Cocoa",
-                "-framework AudioToolbox",
-                "-framework IOKit",
-                "-framework CoreVideo",
-                "-framework QuartzCore",
-                "-framework Metal",
-                "-framework MetalKit",
-                "-framework UniformTypeIdentifiers",
-                "-macosx_version_min %minOSVersion";
-            appBuildSteps:
+				"-lc",
+				"-framework Cocoa",
+				"-framework AudioToolbox",
+				"-framework IOKit",
+				"-framework CoreVideo",
+				"-framework QuartzCore",
+				"-framework Metal",
+				"-framework MetalKit",
+				"-framework UniformTypeIdentifiers",
+				"-macosx_version_min %minOSVersion";
+			appBuildSteps:
 				'rm -rf "%name.app"',
-                'mkdir -p "%name.app/Contents/MacOS"',
-                'mkdir -p "%name.app/Contents/Resources"',
-                'echo "APPL????" > "%name.app/Contents/PkgInfo"',
-                'echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+				'mkdir -p "%name.app/Contents/MacOS"',
+				'mkdir -p "%name.app/Contents/Resources"',
+				'echo "APPL????" > "%name.app/Contents/PkgInfo"',
+				'echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
 <!DOCTYPE plist PUBLIC \"-//Apple Computer//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
 <plist version=\"1.0\">
 <dict>
-        <key>CFBundleDevelopmentRegion</key>
-        <string>English</string>
-        <key>CFBundleExecutable</key>
-        <string>%name</string>
-        <key>CFBundleIdentifier</key>
-        <string>%bundleId</string>
-        <key>CFBundleInfoDictionaryVersion</key>
-        <string>6.0</string>
-        <key>CFBundlePackageType</key>
-        <string>APPL</string>
-        <key>CFBundleSignature</key>
-        <string>????</string>
-        <key>CFBundleVersion</key>
-        <string>1.0</string>
-        <key>NSPrincipalClass</key>
-        <string>NSApplication</string>
-        <key>NSHighResolutionCapable</key>
-        <string>True</string>
+		<key>CFBundleDevelopmentRegion</key>
+		<string>English</string>
+		<key>CFBundleExecutable</key>
+		<string>%name</string>
+		<key>CFBundleIdentifier</key>
+		<string>%bundleId</string>
+		<key>CFBundleInfoDictionaryVersion</key>
+		<string>6.0</string>
+		<key>CFBundlePackageType</key>
+		<string>APPL</string>
+		<key>CFBundleSignature</key>
+		<string>????</string>
+		<key>CFBundleVersion</key>
+		<string>1.0</string>
+		<key>NSPrincipalClass</key>
+		<string>NSApplication</string>
+		<key>NSHighResolutionCapable</key>
+		<string>True</string>
 </dict>
 </plist>" > "%name.app/Contents/Info.plist"',
-                'cp "%buildPath/%out" "%name.app/Contents/MacOS/%name"',
-                'cp "%buildPath/lil_shaders.metallib" "%name.app/Contents/Resources/lil_shaders.metallib"'
-            ; //linkerFlagsApp
+				'cp "%buildPath/%out" "%name.app/Contents/MacOS/%name"',
+				'cp "%buildPath/lil_shaders.metallib" "%name.app/Contents/Resources/lil_shaders.metallib"'
+			; //linkerFlagsApp
 
 			resourcesPath: "%name.app/Contents/Resources/";
 
-            runCommand: '%buildPath/"%out"';
-            runCommandApp: './"%name.app/Contents/MacOS/%name"'
-        }
-        ios {
-            suffix: "OS_IOS";
-            constants+: "OS_IOS";
-            minOSVersion: #arg { name: "minOSVersion"; default: "16.0" };
-            cpu: #arg { name: "cpu"; default: "aarch64" };
-            vendor: #arg { name: "vendor"; default: "apple-ios%minOSVersion"};
+			runCommand: '%buildPath/"%out"';
+			runCommandApp: './"%name.app/Contents/MacOS/%name"'
+		}
+		ios {
+			suffix: "OS_IOS";
+			constants+: "OS_IOS";
+			minOSVersion: #arg { name: "minOSVersion"; default: "16.0" };
+			cpu: #arg { name: "cpu"; default: "aarch64" };
+			vendor: #arg { name: "vendor"; default: "apple-ios%minOSVersion"};
 			buildResources: #arg { name: "buildResources"; default: true };
-            resourceBuildSteps:
-                'clang -c %compilerDir/std/std_lil_ios.m -o "%buildPath/std_lil_ios.o" -miphoneos-version-min=%minOSVersion -fobjc-arc -isysroot $(xcrun --sdk iphoneos --show-sdk-path) -arch arm64',
+			resourceBuildSteps:
+				'clang -c %compilerDir/std/std_lil_ios.m -o "%buildPath/std_lil_ios.o" -miphoneos-version-min=%minOSVersion -fobjc-arc -isysroot $(xcrun --sdk iphoneos --show-sdk-path) -arch arm64',
 				'clang -c %compilerDir/std/libtess2/Source/bucketalloc.c -o "%buildPath/bucketalloc.o" -I "%compilerDir/std/libtess2/Include" -miphoneos-version-min=%minOSVersion -fobjc-arc -isysroot $(xcrun --sdk iphoneos --show-sdk-path) -arch arm64',
 				'clang -c %compilerDir/std/libtess2/Source/dict.c -o "%buildPath/dict.o" -I "%compilerDir/std/libtess2/Include" -miphoneos-version-min=%minOSVersion -fobjc-arc -isysroot $(xcrun --sdk iphoneos --show-sdk-path) -arch arm64',
 				'clang -c %compilerDir/std/libtess2/Source/geom.c -o "%buildPath/geom.o" -I "%compilerDir/std/libtess2/Include" -miphoneos-version-min=%minOSVersion -fobjc-arc -isysroot $(xcrun --sdk iphoneos --show-sdk-path) -arch arm64',
@@ -171,10 +171,10 @@
 				'clang -c %compilerDir/std/libtess2/Source/priorityq.c -o "%buildPath/priorityq.o" -I "%compilerDir/std/libtess2/Include" -miphoneos-version-min=%minOSVersion -fobjc-arc -isysroot $(xcrun --sdk iphoneos --show-sdk-path) -arch arm64',
 				'clang -c %compilerDir/std/libtess2/Source/sweep.c -o "%buildPath/sweep.o" -I "%compilerDir/std/libtess2/Include" -miphoneos-version-min=%minOSVersion -fobjc-arc -isysroot $(xcrun --sdk iphoneos --show-sdk-path) -arch arm64',
 				'clang -c %compilerDir/std/libtess2/Source/tess.c -o "%buildPath/tess.o" -I "%compilerDir/std/libtess2/Include" -miphoneos-version-min=%minOSVersion -fobjc-arc -isysroot $(xcrun --sdk iphoneos --show-sdk-path) -arch arm64',
-                'xcrun -sdk iphoneos metal -c %compilerDir/std/lil_shaders.metal -o "%buildPath/lil_shaders.air"',
-                'xcrun -sdk iphoneos metallib "%buildPath/lil_shaders.air" -o "%buildPath/lil_shaders.metallib"'
-            ;
-            linkerFlags: "-r";
+				'xcrun -sdk iphoneos metal -c %compilerDir/std/lil_shaders.metal -o "%buildPath/lil_shaders.air"',
+				'xcrun -sdk iphoneos metallib "%buildPath/lil_shaders.air" -o "%buildPath/lil_shaders.metallib"'
+			;
+			linkerFlags: "-r";
 			linkerFlagsApp:
 				'"%buildPath/std_lil_ios.o"',
 				'"%buildPath/bucketalloc.o"',
@@ -188,16 +188,16 @@
 			;
 			copyResources: false;
 			autoMainFn: false;
-        }
-        iosSimulator {
-            suffix: "OS_IOS";
-            constants+: "OS_IOS";
-            minOSVersion: #arg { name: "minOSVersion"; default: "16.0" };
-            cpu: #arg { name: "cpu"; default: "aarch64" };
-            vendor: #arg { name: "vendor"; default: "apple-ios%minOSVersion-simulator"};
-            buildResources: #arg { name: "buildResources"; default: true };
-            resourceBuildSteps:
-                'clang -c %compilerDir/std/std_lil_ios.m -o "%buildPath/std_lil_ios.o" -I "%compilerDir/std/libtess2/Include" -mios-simulator-version-min=%minOSVersion -fobjc-arc -isysroot $(xcrun --sdk iphonesimulator --show-sdk-path) -arch arm64',
+		}
+		iosSimulator {
+			suffix: "OS_IOS";
+			constants+: "OS_IOS";
+			minOSVersion: #arg { name: "minOSVersion"; default: "16.0" };
+			cpu: #arg { name: "cpu"; default: "aarch64" };
+			vendor: #arg { name: "vendor"; default: "apple-ios%minOSVersion-simulator"};
+			buildResources: #arg { name: "buildResources"; default: true };
+			resourceBuildSteps:
+				'clang -c %compilerDir/std/std_lil_ios.m -o "%buildPath/std_lil_ios.o" -I "%compilerDir/std/libtess2/Include" -mios-simulator-version-min=%minOSVersion -fobjc-arc -isysroot $(xcrun --sdk iphonesimulator --show-sdk-path) -arch arm64',
 				'clang -c %compilerDir/std/libtess2/Source/bucketalloc.c -o "%buildPath/bucketalloc.o" -I "%compilerDir/std/libtess2/Include" -mios-simulator-version-min=%minOSVersion -fobjc-arc -isysroot $(xcrun --sdk iphonesimulator --show-sdk-path) -arch arm64',
 				'clang -c %compilerDir/std/libtess2/Source/dict.c -o "%buildPath/dict.o" -I "%compilerDir/std/libtess2/Include" -mios-simulator-version-min=%minOSVersion -fobjc-arc -isysroot $(xcrun --sdk iphonesimulator --show-sdk-path) -arch arm64',
 				'clang -c %compilerDir/std/libtess2/Source/geom.c -o "%buildPath/geom.o" -I "%compilerDir/std/libtess2/Include" -mios-simulator-version-min=%minOSVersion -fobjc-arc -isysroot $(xcrun --sdk iphonesimulator --show-sdk-path) -arch arm64',
@@ -205,10 +205,10 @@
 				'clang -c %compilerDir/std/libtess2/Source/priorityq.c -o "%buildPath/priorityq.o" -I "%compilerDir/std/libtess2/Include" -mios-simulator-version-min=%minOSVersion -fobjc-arc -isysroot $(xcrun --sdk iphonesimulator --show-sdk-path) -arch arm64',
 				'clang -c %compilerDir/std/libtess2/Source/sweep.c -o "%buildPath/sweep.o" -I "%compilerDir/std/libtess2/Include" -mios-simulator-version-min=%minOSVersion -fobjc-arc -isysroot $(xcrun --sdk iphonesimulator --show-sdk-path) -arch arm64',
 				'clang -c %compilerDir/std/libtess2/Source/tess.c -o "%buildPath/tess.o" -I "%compilerDir/std/libtess2/Include" -mios-simulator-version-min=%minOSVersion -fobjc-arc -isysroot $(xcrun --sdk iphonesimulator --show-sdk-path) -arch arm64',
-                'xcrun -sdk iphonesimulator metal -c %compilerDir/std/lil_shaders.metal -o "%buildPath/lil_shaders.air"',
-                'xcrun -sdk iphonesimulator metallib "%buildPath/lil_shaders.air" -o "%buildPath/lil_shaders.metallib"'
-            ;
-            linkerFlags: "-r";
+				'xcrun -sdk iphonesimulator metal -c %compilerDir/std/lil_shaders.metal -o "%buildPath/lil_shaders.air"',
+				'xcrun -sdk iphonesimulator metallib "%buildPath/lil_shaders.air" -o "%buildPath/lil_shaders.metallib"'
+			;
+			linkerFlags: "-r";
 			linkerFlagsApp:
 				'"%buildPath/std_lil_ios.o"',
 				'"%buildPath/bucketalloc.o"',
@@ -222,12 +222,12 @@
 			;
 			copyResources: false;
 			autoMainFn: false;
-        }
-        android {
-            suffix: "OS_ANDROID";
-            constants+: "OS_ANDROID";
-            cpu: #arg { name: "cpu"; default: "arm64" };
-            vendor: #arg { name: "vendor"; default: "unkown-elf"};
-        }
-    }
+		}
+		android {
+			suffix: "OS_ANDROID";
+			constants+: "OS_ANDROID";
+			cpu: #arg { name: "cpu"; default: "arm64" };
+			vendor: #arg { name: "vendor"; default: "unkown-elf"};
+		}
+	}
 };

@@ -2,76 +2,76 @@ alias cstr => ptr(i8);
 var.id LIL__applicationDelegate extern;
 
 #export {
-    #import "objc.lil";
+	#import "objc.lil";
 
-    fn LIL__addMenu(var.cstr label) {
-        var.SEL addMenuSel: sel_registerName(`addMenu:`);
-        var.ptr(fn(id,SEL,cstr)=>id) castedPtr: (pointerTo(objc_msgSend) => ptr(fn(id,SEL,cstr)=>id));
-        castedPtr(LIL__applicationDelegate, addMenuSel, label);
-    }
+	fn LIL__addMenu(var.cstr label) {
+		var.SEL addMenuSel: sel_registerName(`addMenu:`);
+		var.ptr(fn(id,SEL,cstr)=>id) castedPtr: (pointerTo(objc_msgSend) => ptr(fn(id,SEL,cstr)=>id));
+		castedPtr(LIL__applicationDelegate, addMenuSel, label);
+	}
 
-    fn LIL__addMenuItem(var.cstr label; var.cstr shortcut; var.ptr(fn(ptr(any))) fnPtr) {
-        var.SEL addItemSel: sel_registerName(`addMenuItem:key:fnPtr:`);
-        var.ptr(fn(id,SEL,cstr,cstr,ptr(fn(ptr(any))))=>id) castedPtr: (pointerTo(objc_msgSend) => ptr(fn(id,SEL,cstr,cstr,ptr(fn(ptr(any))))=>id));
-        castedPtr(LIL__applicationDelegate, addItemSel, label, shortcut, fnPtr);
-    }
+	fn LIL__addMenuItem(var.cstr label; var.cstr shortcut; var.ptr(fn(ptr(any))) fnPtr) {
+		var.SEL addItemSel: sel_registerName(`addMenuItem:key:fnPtr:`);
+		var.ptr(fn(id,SEL,cstr,cstr,ptr(fn(ptr(any))))=>id) castedPtr: (pointerTo(objc_msgSend) => ptr(fn(id,SEL,cstr,cstr,ptr(fn(ptr(any))))=>id));
+		castedPtr(LIL__applicationDelegate, addItemSel, label, shortcut, fnPtr);
+	}
 
-    fn LIL__addMenuSeparator {
-        var.SEL addSeparatorSel: sel_registerName(`addMenuSeparator`);
-        var.ptr(fn(id,SEL)=>id) castedPtr: (pointerTo(objc_msgSend) => ptr(fn(id,SEL)=>id));
-        castedPtr(LIL__applicationDelegate, addSeparatorSel);
-    }
+	fn LIL__addMenuSeparator {
+		var.SEL addSeparatorSel: sel_registerName(`addMenuSeparator`);
+		var.ptr(fn(id,SEL)=>id) castedPtr: (pointerTo(objc_msgSend) => ptr(fn(id,SEL)=>id));
+		castedPtr(LIL__applicationDelegate, addSeparatorSel);
+	}
 
-    fn LIL__exitMenu {
-        var.SEL exitSel: sel_registerName(`exitMenu`);
-        var.ptr(fn(id,SEL)=>id) castedPtr: (pointerTo(objc_msgSend) => ptr(fn(id,SEL)=>id));
-        castedPtr(LIL__applicationDelegate, exitSel);
-    }
+	fn LIL__exitMenu {
+		var.SEL exitSel: sel_registerName(`exitMenu`);
+		var.ptr(fn(id,SEL)=>id) castedPtr: (pointerTo(objc_msgSend) => ptr(fn(id,SEL)=>id));
+		castedPtr(LIL__applicationDelegate, exitSel);
+	}
 
-    fn LIL__setWindowBgColor(var.f64 red; var.f64 green; var.f64 blue; var.f64 alpha) {
-        var.SEL selector: sel_registerName(`setWindowBackgroundRed:green:blue:alpha:`);
-        var.ptr(fn(id,SEL,f64,f64,f64,f64)=>id) castedPtr: (pointerTo(objc_msgSend) => ptr(fn(id,SEL,f64,f64,f64,f64)=>id));
-        castedPtr(LIL__applicationDelegate, selector, red, green, blue, alpha);
-    }
+	fn LIL__setWindowBgColor(var.f64 red; var.f64 green; var.f64 blue; var.f64 alpha) {
+		var.SEL selector: sel_registerName(`setWindowBackgroundRed:green:blue:alpha:`);
+		var.ptr(fn(id,SEL,f64,f64,f64,f64)=>id) castedPtr: (pointerTo(objc_msgSend) => ptr(fn(id,SEL,f64,f64,f64,f64)=>id));
+		castedPtr(LIL__applicationDelegate, selector, red, green, blue, alpha);
+	}
 
-    fn LIL__loadTexture(var.cstr path; var.i64 idx) {
-        var.Class stringClass: objc_lookUpClass(`NSString`);
-        var.SEL strCreateSel: sel_registerName(`stringWithUTF8String:`);
-        var strCreateMethod: pointerTo(objc_msgSend) => ptr(fn(id,SEL,cstr)=>id);
-        var.id nsStrInstance: strCreateMethod(stringClass=>id, strCreateSel, path);
-        
-        var.SEL loadTextureSel: sel_registerName(`loadTextureForFile:index:`);
-        var loadtextureMethod: pointerTo(objc_msgSend) => ptr(fn(id,SEL,id,i64));
-        loadtextureMethod(LIL__applicationDelegate, loadTextureSel, nsStrInstance, idx);
-    }
+	fn LIL__loadTexture(var.cstr path; var.i64 idx) {
+		var.Class stringClass: objc_lookUpClass(`NSString`);
+		var.SEL strCreateSel: sel_registerName(`stringWithUTF8String:`);
+		var strCreateMethod: pointerTo(objc_msgSend) => ptr(fn(id,SEL,cstr)=>id);
+		var.id nsStrInstance: strCreateMethod(stringClass=>id, strCreateSel, path);
+		
+		var.SEL loadTextureSel: sel_registerName(`loadTextureForFile:index:`);
+		var loadtextureMethod: pointerTo(objc_msgSend) => ptr(fn(id,SEL,id,i64));
+		loadtextureMethod(LIL__applicationDelegate, loadTextureSel, nsStrInstance, idx);
+	}
 
-    fn LIL__unloadTexture(var.i64 idx) {
-        var.SEL unloadTextureSel: sel_registerName(`unloadTextureForIndex:`);
-        var unloadtextureMethod: pointerTo(objc_msgSend) => ptr(fn(id,SEL,i64));
-        unloadtextureMethod(LIL__applicationDelegate, unloadTextureSel, idx);
-    }
+	fn LIL__unloadTexture(var.i64 idx) {
+		var.SEL unloadTextureSel: sel_registerName(`unloadTextureForIndex:`);
+		var unloadtextureMethod: pointerTo(objc_msgSend) => ptr(fn(id,SEL,i64));
+		unloadtextureMethod(LIL__applicationDelegate, unloadTextureSel, idx);
+	}
 
-    fn LIL__automaticFullScreen {
-        //fixme the separate var decl should not be needed
-        var.bool value: #getConfig(automaticFullScreen);
-        return value;
-    }
+	fn LIL__automaticFullScreen {
+		//fixme the separate var decl should not be needed
+		var.bool value: #getConfig(automaticFullScreen);
+		return value;
+	}
 
-    fn LIL__quit {
-        var.SEL selector: sel_registerName(`quit`);
-        var.ptr(fn(id,SEL)=>id) castedPtr: (pointerTo(objc_msgSend) => ptr(fn(id,SEL)=>id));
-        castedPtr(LIL__applicationDelegate, selector);
-    }
+	fn LIL__quit {
+		var.SEL selector: sel_registerName(`quit`);
+		var.ptr(fn(id,SEL)=>id) castedPtr: (pointerTo(objc_msgSend) => ptr(fn(id,SEL)=>id));
+		castedPtr(LIL__applicationDelegate, selector);
+	}
 
-    fn showOpenPanel(var.ptr(fn(cstr)) onSuccess; var.ptr(fn) onCancel; var.cstr fileName; var.cstr allowedTypes) {
-        var.SEL openSel: sel_registerName(`showOpenPanelWithSuccessCallback:cancelCallback:fileName:allowedTypes:`);
-        var castedPtr: pointerTo(objc_msgSend) => ptr(fn(id,SEL,ptr(fn(cstr)),ptr(fn),cstr,cstr)=>id);
-        castedPtr(LIL__applicationDelegate, openSel, onSuccess, onCancel, fileName, allowedTypes);
-    }
+	fn showOpenPanel(var.ptr(fn(cstr)) onSuccess; var.ptr(fn) onCancel; var.cstr fileName; var.cstr allowedTypes) {
+		var.SEL openSel: sel_registerName(`showOpenPanelWithSuccessCallback:cancelCallback:fileName:allowedTypes:`);
+		var castedPtr: pointerTo(objc_msgSend) => ptr(fn(id,SEL,ptr(fn(cstr)),ptr(fn),cstr,cstr)=>id);
+		castedPtr(LIL__applicationDelegate, openSel, onSuccess, onCancel, fileName, allowedTypes);
+	}
 
-    fn showSavePanel(var.ptr(fn(cstr)) onSuccess; var.ptr(fn) onCancel; var.cstr fileName; var.cstr allowedTypes) {
-        var.SEL openSel: sel_registerName(`showSavePanelWithSuccessCallback:cancelCallback:fileName:allowedTypes:`);
-        var castedPtr: pointerTo(objc_msgSend) => ptr(fn(id,SEL,ptr(fn(cstr)),ptr(fn),cstr,cstr)=>id);
-        castedPtr(LIL__applicationDelegate, openSel, onSuccess, onCancel, fileName, allowedTypes);
-    }
+	fn showSavePanel(var.ptr(fn(cstr)) onSuccess; var.ptr(fn) onCancel; var.cstr fileName; var.cstr allowedTypes) {
+		var.SEL openSel: sel_registerName(`showSavePanelWithSuccessCallback:cancelCallback:fileName:allowedTypes:`);
+		var castedPtr: pointerTo(objc_msgSend) => ptr(fn(id,SEL,ptr(fn(cstr)),ptr(fn),cstr,cstr)=>id);
+		castedPtr(LIL__applicationDelegate, openSel, onSuccess, onCancel, fileName, allowedTypes);
+	}
 }

@@ -3,232 +3,232 @@
 const DEBUG: false;
 
 #export {
-    class @string {
-        var.i64 length: 0;
+	class @string {
+		var.i64 length: 0;
 
-        //the idea here is to keep the string inside of one cache line
-        //which is usually 64 bytes. The i64 are 8 bytes, so 64 - 8 = 56
-        var.[56 x i8] buffer;
+		//the idea here is to keep the string inside of one cache line
+		//which is usually 64 bytes. The i64 are 8 bytes, so 64 - 8 = 56
+		var.[56 x i8] buffer;
 
-        fn construct {
-            #if DEBUG {
-                puts `Constructing string`;
+		fn construct {
+			#if DEBUG {
+				puts `Constructing string`;
 				printf(`Length is %li\n`, @self.length);
-            }
-        };
-    
-        fn destruct {
-            #if DEBUG {
-                puts `Destructing string`;
-            }
-            if (@self.length > 55){
-                #if DEBUG {
-                    printf(`Long version: Freeing %li\n`, valueOf(pointerTo(@self.buffer) => ptr(i64)));
-                }
-                free valueOf(pointerTo(@self.buffer) => ptr(cstr));
-            }
+			}
+		};
+	
+		fn destruct {
+			#if DEBUG {
+				puts `Destructing string`;
+			}
+			if (@self.length > 55){
+				#if DEBUG {
+					printf(`Long version: Freeing %li\n`, valueOf(pointerTo(@self.buffer) => ptr(i64)));
+				}
+				free valueOf(pointerTo(@self.buffer) => ptr(cstr));
+			}
 			@self.length: 0;
-        };
+		};
 
-        fn cstr => cstr {
-            #if DEBUG {
-                puts `Called cstr function of @string object`;
-            }
-            if (@self.length > 55){
-                #if DEBUG {
+		fn cstr => cstr {
+			#if DEBUG {
+				puts `Called cstr function of @string object`;
+			}
+			if (@self.length > 55){
+				#if DEBUG {
 					printf(`Length is %li\n`, @self.length);
-                    printf(`Long version: Returning string at %li\n`, valueOf(pointerTo(@self.buffer) => ptr(i64)));
-                }
-                return valueOf(pointerTo(@self.buffer) => ptr(cstr));
-            } else {
-                #if DEBUG {
+					printf(`Long version: Returning string at %li\n`, valueOf(pointerTo(@self.buffer) => ptr(i64)));
+				}
+				return valueOf(pointerTo(@self.buffer) => ptr(cstr));
+			} else {
+				#if DEBUG {
 					printf(`Length is %li\n`, @self.length);
-                    printf(`Short version: Returning string at %li\n`, pointerTo(@self.buffer) => i64);
-                }
-                return pointerTo(@self.buffer) => cstr;
-            }
-        };
+					printf(`Short version: Returning string at %li\n`, pointerTo(@self.buffer) => i64);
+				}
+				return pointerTo(@self.buffer) => cstr;
+			}
+		};
 
-        fn append(var.ptr(@string) otherStr) {
-            #if DEBUG {
-                puts `Appending to string`;
-            }
-            var otherLength: otherStr.length;
-            var currentLength: @self.length;
-            var newLength: currentLength + otherLength;
-            //the last character is reserved for zero terminator of c string \0
-            if (newLength < 56) {
-                #if DEBUG {
-                    puts `Short version`;
-                }
-                var loc: ((pointerTo(@self.buffer) => i64) + currentLength) => cstr;
-                //printf(`Inserting at: index %li -> %li\n`, currentLength, loc=>i64);
-                memcpy(loc, (pointerTo(otherStr.buffer) => cstr), otherLength);
-                var zeroLoc: ((loc => i64) + otherLength) => cstr;
-                //printf(`Setting zero at: %li -> %li\n`, currentLength + otherLength, zeroLoc=>i64);
-                set(zeroLoc, 0i8);
-                @self.length: newLength;
-            } else {
-                #if DEBUG {
-                    puts `Long version`;
-                    printf(`Needs %li characters now\n`, newLength);
-                }
-                var newBuffer: malloc (newLength+1);
-                #if DEBUG {
-                    printf(`New buffer points to %li\n`, newBuffer => i64);
-                }
+		fn append(var.ptr(@string) otherStr) {
+			#if DEBUG {
+				puts `Appending to string`;
+			}
+			var otherLength: otherStr.length;
+			var currentLength: @self.length;
+			var newLength: currentLength + otherLength;
+			//the last character is reserved for zero terminator of c string \0
+			if (newLength < 56) {
+				#if DEBUG {
+					puts `Short version`;
+				}
+				var loc: ((pointerTo(@self.buffer) => i64) + currentLength) => cstr;
+				//printf(`Inserting at: index %li -> %li\n`, currentLength, loc=>i64);
+				memcpy(loc, (pointerTo(otherStr.buffer) => cstr), otherLength);
+				var zeroLoc: ((loc => i64) + otherLength) => cstr;
+				//printf(`Setting zero at: %li -> %li\n`, currentLength + otherLength, zeroLoc=>i64);
+				set(zeroLoc, 0i8);
+				@self.length: newLength;
+			} else {
+				#if DEBUG {
+					puts `Long version`;
+					printf(`Needs %li characters now\n`, newLength);
+				}
+				var newBuffer: malloc (newLength+1);
+				#if DEBUG {
+					printf(`New buffer points to %li\n`, newBuffer => i64);
+				}
 
-                //copy the existing portion of the string into the new buffer
-                if (currentLength > 55){
-                    #if DEBUG {
-                        puts `Copying existing portion of string, long version`;
-                    }
-                    memcpy(newBuffer, valueOf(pointerTo(@self.buffer) => ptr(cstr)), currentLength);
-                } else {
-                    #if DEBUG {
-                        puts `Copying existing portion of string, short version`;
-                    }
-                    memcpy(newBuffer, (pointerTo(@self.buffer) => cstr), currentLength);
-                }
+				//copy the existing portion of the string into the new buffer
+				if (currentLength > 55){
+					#if DEBUG {
+						puts `Copying existing portion of string, long version`;
+					}
+					memcpy(newBuffer, valueOf(pointerTo(@self.buffer) => ptr(cstr)), currentLength);
+				} else {
+					#if DEBUG {
+						puts `Copying existing portion of string, short version`;
+					}
+					memcpy(newBuffer, (pointerTo(@self.buffer) => cstr), currentLength);
+				}
 
-                //copy otherString into the new buffer
-                var loc: ((newBuffer => i64) + currentLength) => cstr;
-                if(otherLength < 56) {
-                    #if DEBUG {
-                        printf(`Other string is short: Copying %li bytes from %li\n`, otherLength, pointerTo(otherStr.buffer) => i64);
-                    }
-                    memcpy(loc, (pointerTo(otherStr.buffer) => cstr), otherLength);
-                } else {
-                    #if DEBUG {
-                        printf(`Other string is long: Copying %li bytes from %li\n`, otherLength, valueOf(pointerTo(otherStr.buffer) => ptr(i64)));
-                    }
-                    memcpy(loc, valueOf(pointerTo(otherStr.buffer) => ptr(cstr)), otherLength);
-                }
+				//copy otherString into the new buffer
+				var loc: ((newBuffer => i64) + currentLength) => cstr;
+				if(otherLength < 56) {
+					#if DEBUG {
+						printf(`Other string is short: Copying %li bytes from %li\n`, otherLength, pointerTo(otherStr.buffer) => i64);
+					}
+					memcpy(loc, (pointerTo(otherStr.buffer) => cstr), otherLength);
+				} else {
+					#if DEBUG {
+						printf(`Other string is long: Copying %li bytes from %li\n`, otherLength, valueOf(pointerTo(otherStr.buffer) => ptr(i64)));
+					}
+					memcpy(loc, valueOf(pointerTo(otherStr.buffer) => ptr(cstr)), otherLength);
+				}
 
-                //add \0 for c string
-                var zeroLoc: ((newBuffer => i64) + newLength) => cstr;
-                #if DEBUG {
-                    printf(`Setting zero at: %li -> %li\n`, newLength, zeroLoc=>i64);
-                }
-                set(zeroLoc, 0i8);
-                
-                #if DEBUG {
-                    puts newBuffer;
-                }
+				//add \0 for c string
+				var zeroLoc: ((newBuffer => i64) + newLength) => cstr;
+				#if DEBUG {
+					printf(`Setting zero at: %li -> %li\n`, newLength, zeroLoc=>i64);
+				}
+				set(zeroLoc, 0i8);
+				
+				#if DEBUG {
+					puts newBuffer;
+				}
 
-                if (currentLength > 55) {
-                    #if DEBUG {
-                        printf(`Freeing string at %li\n`, valueOf(pointerTo(@self.buffer) => ptr(i64)));
-                    }
-                    free valueOf(pointerTo(@self.buffer) => ptr(cstr));
-                }
-                
-                //store pointer to the heap data into the buffer of the string object
-                set(pointerTo(@self.buffer) => ptr(cstr), newBuffer);
-                #if DEBUG {
-                    printf(`Buffer now contains: %li\n`, valueOf(pointerTo(@self.buffer) => ptr(cstr)) => i64);
-                }
+				if (currentLength > 55) {
+					#if DEBUG {
+						printf(`Freeing string at %li\n`, valueOf(pointerTo(@self.buffer) => ptr(i64)));
+					}
+					free valueOf(pointerTo(@self.buffer) => ptr(cstr));
+				}
+				
+				//store pointer to the heap data into the buffer of the string object
+				set(pointerTo(@self.buffer) => ptr(cstr), newBuffer);
+				#if DEBUG {
+					printf(`Buffer now contains: %li\n`, valueOf(pointerTo(@self.buffer) => ptr(cstr)) => i64);
+				}
 
-                //update the length on the string object
-                @self.length: newLength;
-            }
-        };
+				//update the length on the string object
+				@self.length: newLength;
+			}
+		};
 
-        fn add(var.ptr(@string)|i32|i64|f32|f64 value) {
-            if value => ptr(@string)
-            {
-                @self.append(value);
-            }
-            else
-            {
-                var.cstr format;
-                if value => i32 {
-                    format: `%d`;
-                } else if value => i64 {
-                    format: `%li`;
-                } else if value => f32 {
-                    format: `%f`;
-                } else if value => f64 {
-                    format: `%lf`;
-                }
-            
-                var nullptr: 0;
-                var otherLength: (snprintf(nullptr => ptr(i8), 0, format, value) => i64);
-                var currentLength: @self.length;
-                var newLength: currentLength + otherLength;
-            
-                if (newLength < 56) {
-                    #if DEBUG {
-                        puts `Short version`;
-                    }
-                    var loc: ((pointerTo(@self.buffer) => i64) + currentLength) => cstr;
-                    #if DEBUG {
-                        printf(`Inserting at: index %li -> %li\n`, currentLength, loc=>i64);
-                    }
-                
-                    snprintf(loc, otherLength + 1, format, value);
-                    var zeroLoc: ((loc => i64) + otherLength) => cstr;
-                    #if DEBUG {
-                        printf(`Setting zero at: %li -> %li\n`, currentLength + otherLength, zeroLoc=>i64);
-                    }
-                    set(zeroLoc, 0i8);
-                    @self.length: newLength;
-                } else {
-                    #if DEBUG {
-                        puts `Long version`;
-                        printf(`Needs %li characters now\n`, newLength);
-                    }
-                    var newBuffer: malloc (newLength+1);
-                    #if DEBUG {
-                        printf(`New buffer points to %li\n`, newBuffer => i64);
-                    }
+		fn add(var.ptr(@string)|i32|i64|f32|f64 value) {
+			if value => ptr(@string)
+			{
+				@self.append(value);
+			}
+			else
+			{
+				var.cstr format;
+				if value => i32 {
+					format: `%d`;
+				} else if value => i64 {
+					format: `%li`;
+				} else if value => f32 {
+					format: `%f`;
+				} else if value => f64 {
+					format: `%lf`;
+				}
+			
+				var nullptr: 0;
+				var otherLength: (snprintf(nullptr => ptr(i8), 0, format, value) => i64);
+				var currentLength: @self.length;
+				var newLength: currentLength + otherLength;
+			
+				if (newLength < 56) {
+					#if DEBUG {
+						puts `Short version`;
+					}
+					var loc: ((pointerTo(@self.buffer) => i64) + currentLength) => cstr;
+					#if DEBUG {
+						printf(`Inserting at: index %li -> %li\n`, currentLength, loc=>i64);
+					}
+				
+					snprintf(loc, otherLength + 1, format, value);
+					var zeroLoc: ((loc => i64) + otherLength) => cstr;
+					#if DEBUG {
+						printf(`Setting zero at: %li -> %li\n`, currentLength + otherLength, zeroLoc=>i64);
+					}
+					set(zeroLoc, 0i8);
+					@self.length: newLength;
+				} else {
+					#if DEBUG {
+						puts `Long version`;
+						printf(`Needs %li characters now\n`, newLength);
+					}
+					var newBuffer: malloc (newLength+1);
+					#if DEBUG {
+						printf(`New buffer points to %li\n`, newBuffer => i64);
+					}
 
-                    //copy the existing portion of the string into the new buffer
-                    if (currentLength > 55){
-                        #if DEBUG {
-                            puts `Copying existing portion of string, long version`;
-                        }
-                        memcpy(newBuffer, valueOf(pointerTo(@self.buffer) => ptr(cstr)), currentLength);
-                    } else {
-                        #if DEBUG {
-                            puts `Copying existing portion of string, short version`;
-                        }
-                        memcpy(newBuffer, (pointerTo(@self.buffer) => cstr), currentLength);
-                    }
+					//copy the existing portion of the string into the new buffer
+					if (currentLength > 55){
+						#if DEBUG {
+							puts `Copying existing portion of string, long version`;
+						}
+						memcpy(newBuffer, valueOf(pointerTo(@self.buffer) => ptr(cstr)), currentLength);
+					} else {
+						#if DEBUG {
+							puts `Copying existing portion of string, short version`;
+						}
+						memcpy(newBuffer, (pointerTo(@self.buffer) => cstr), currentLength);
+					}
 
-                    //copy otherString into the new buffer
-                    var loc: ((newBuffer => i64) + currentLength) => cstr;
-                    snprintf(loc, otherLength+1, format, value);
+					//copy otherString into the new buffer
+					var loc: ((newBuffer => i64) + currentLength) => cstr;
+					snprintf(loc, otherLength+1, format, value);
 
-                    //add \0 for c string
-                    var zeroLoc: ((newBuffer => i64) + newLength) => cstr;
-                    #if DEBUG {
-                        printf(`Setting zero at: %li -> %li\n`, newLength, zeroLoc=>i64);
-                    }
-                    set(zeroLoc, 0i8);
-                
-                    #if DEBUG {
-                        puts newBuffer;
-                    }
+					//add \0 for c string
+					var zeroLoc: ((newBuffer => i64) + newLength) => cstr;
+					#if DEBUG {
+						printf(`Setting zero at: %li -> %li\n`, newLength, zeroLoc=>i64);
+					}
+					set(zeroLoc, 0i8);
+				
+					#if DEBUG {
+						puts newBuffer;
+					}
 
-                    if (currentLength > 55) {
-                        #if DEBUG {
-                            printf(`Freeing string at %li\n`, valueOf(pointerTo(@self.buffer) => ptr(i64)));
-                        }
-                        free valueOf(pointerTo(@self.buffer) => ptr(cstr));
-                    }
-                
-                    //store pointer to the heap data into the buffer of the string object
-                    set(pointerTo(@self.buffer) => ptr(cstr), newBuffer);
-                    #if DEBUG {
-                        printf(`Buffer now contains: %li\n`, valueOf(pointerTo(@self.buffer) => ptr(cstr)) => i64);
-                    }
+					if (currentLength > 55) {
+						#if DEBUG {
+							printf(`Freeing string at %li\n`, valueOf(pointerTo(@self.buffer) => ptr(i64)));
+						}
+						free valueOf(pointerTo(@self.buffer) => ptr(cstr));
+					}
+				
+					//store pointer to the heap data into the buffer of the string object
+					set(pointerTo(@self.buffer) => ptr(cstr), newBuffer);
+					#if DEBUG {
+						printf(`Buffer now contains: %li\n`, valueOf(pointerTo(@self.buffer) => ptr(cstr)) => i64);
+					}
 
-                    //update the length on the string object
-                    @self.length: newLength;
-                }
-            }
-        }
+					//update the length on the string object
+					@self.length: newLength;
+				}
+			}
+		}
 
 		fn initialize(var.cstr value; var.i64 length) {
 			#if DEBUG {
@@ -243,22 +243,22 @@ const DEBUG: false;
 				set(pointerTo(@self.buffer) => ptr(cstr), newBuffer);
 			}
 		};
-        
-        fn reserve(var.i64 length) {
-            if length < 56
-            {
-                //short string, no need to do anything
-                return;
-            }
-            else
-            {
-                //+1 because of zero terminator of c string \0
-                var newBuffer: malloc (length+1);
-                set(pointerTo(@self.buffer) => ptr(cstr), newBuffer);
-                var zeroLoc: newBuffer + length;
-                set(zeroLoc, 0i8);
-            }
-            @self.length: length;
-        }
-    };
+		
+		fn reserve(var.i64 length) {
+			if length < 56
+			{
+				//short string, no need to do anything
+				return;
+			}
+			else
+			{
+				//+1 because of zero terminator of c string \0
+				var newBuffer: malloc (length+1);
+				set(pointerTo(@self.buffer) => ptr(cstr), newBuffer);
+				var zeroLoc: newBuffer + length;
+				set(zeroLoc, 0i8);
+			}
+			@self.length: length;
+		}
+	};
 }

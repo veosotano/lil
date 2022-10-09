@@ -578,12 +578,12 @@ typedef struct
 	}
 
 	//load textures
-    long int count = LIL__getResourceCount();
-    for(long int i = 0; i<count; i+=1) {
-        LIL__resourceStruct * res = LIL__getResorceById(i);
-        NSString * path = [[NSString alloc] initWithUTF8String: res->path];
-        [_renderer loadTextureForFile: path index:i];
-    }
+	long int count = LIL__getResourceCount();
+	for(long int i = 0; i<count; i+=1) {
+		LIL__resourceStruct * res = LIL__getResorceById(i);
+		NSString * path = [[NSString alloc] initWithUTF8String: res->path];
+		[_renderer loadTextureForFile: path index:i];
+	}
 
 	[self setupCADisplayLinkForScreen:self.window.screen];
 

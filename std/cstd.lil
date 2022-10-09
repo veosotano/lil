@@ -1,39 +1,39 @@
 #export {
-    alias cstr => ptr(i8);
+	alias cstr => ptr(i8);
 
-    //IO
-    class @FILE { };
-    var.ptr(@FILE) __stdinp extern;
-    var.ptr(@FILE) __stdoutp extern;
-    var.ptr(@FILE) __stderrp extern;
-    #snippet stdIn { __stdinp };
-    #snippet stdOut { __stdoutp };
-    #snippet stdErr { __stderrp };
+	//IO
+	class @FILE { };
+	var.ptr(@FILE) __stdinp extern;
+	var.ptr(@FILE) __stdoutp extern;
+	var.ptr(@FILE) __stderrp extern;
+	#snippet stdIn { __stdinp };
+	#snippet stdOut { __stdoutp };
+	#snippet stdErr { __stderrp };
 
-    fn fopen (var.cstr path, var.cstr mode) => ptr(@FILE) extern;
-    fn fread(var.ptr(any) destination; var.i64 elementSize; var.i64 numElements; var.ptr(@FILE) stream) => i64 extern;
-    fn fclose (var.ptr(@FILE) stream) => i32 extern;
-    fn fwrite (var.ptr(any) data; var.i64 elementSize; var.i64 numElements; var.ptr(@FILE) stream) => i64 extern;
-    fn printf (cstr...)=>i32 extern;
-    fn puts (cstr)=>i32 extern;
-    fn fseek (var.ptr(@FILE) stream; var.i64 offset; var.i32 origin) => i32 extern;
-    fn ftell (var.ptr(@FILE) stream) => i64 extern;
-    fn rewind ( var.ptr(@FILE) stream ) extern;
+	fn fopen (var.cstr path, var.cstr mode) => ptr(@FILE) extern;
+	fn fread(var.ptr(any) destination; var.i64 elementSize; var.i64 numElements; var.ptr(@FILE) stream) => i64 extern;
+	fn fclose (var.ptr(@FILE) stream) => i32 extern;
+	fn fwrite (var.ptr(any) data; var.i64 elementSize; var.i64 numElements; var.ptr(@FILE) stream) => i64 extern;
+	fn printf (cstr...)=>i32 extern;
+	fn puts (cstr)=>i32 extern;
+	fn fseek (var.ptr(@FILE) stream; var.i64 offset; var.i32 origin) => i32 extern;
+	fn ftell (var.ptr(@FILE) stream) => i64 extern;
+	fn rewind ( var.ptr(@FILE) stream ) extern;
 
-    //memory
-    fn malloc (i64)=>ptr(any) extern;
-    fn realloc (ptr(any),i64)=>ptr(any) extern;
-    fn free (ptr(any)) extern;
-    fn memcpy (var.ptr(any) dst; var.ptr(any) src; var.i64 len) extern;
+	//memory
+	fn malloc (i64)=>ptr(any) extern;
+	fn realloc (ptr(any),i64)=>ptr(any) extern;
+	fn free (ptr(any)) extern;
+	fn memcpy (var.ptr(any) dst; var.ptr(any) src; var.i64 len) extern;
 	fn memset(var.ptr(any) dst; var.i32 val; var.i64 len) extern;
 
-    //c strings
-    fn strncmp (var.cstr str1; var.cstr str2, var.i64 maxLength) => i32 extern;
-    fn strnlen (var.cstr str; var.i64 maxLength) => i64 extern;
-    fn snprintf ( var.cstr buffer; var.i64 bufsz; var.cstr format ... ) => i32 extern;
+	//c strings
+	fn strncmp (var.cstr str1; var.cstr str2, var.i64 maxLength) => i32 extern;
+	fn strnlen (var.cstr str; var.i64 maxLength) => i64 extern;
+	fn snprintf ( var.cstr buffer; var.i64 bufsz; var.cstr format ... ) => i32 extern;
 	fn strncpy ( var.cstr dst; var.cstr src; var.i64 len ) => cstr extern;
 	fn strrchr( var.cstr str; var.i32 character) => cstr|null extern;
 
-    //math
-    fn abs(var.i32 value) => i32 extern;
+	//math
+	fn abs(var.i32 value) => i32 extern;
 }

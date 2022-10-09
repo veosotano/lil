@@ -6,201 +6,201 @@
 const DEBUG: false;
 
 #export {
-    class @array (type @subtype) {
-        alias sbuf => [#paste SMALL_BUFFER_SIZE x @subtype];
+	class @array (type @subtype) {
+		alias sbuf => [#paste SMALL_BUFFER_SIZE x @subtype];
 
-        var.sbuf|ptr(@subtype) buffer;
-        var.i64 size: 0;
+		var.sbuf|ptr(@subtype) buffer;
+		var.i64 size: 0;
 
-        var.i64 capacity: #paste SMALL_BUFFER_SIZE;
+		var.i64 capacity: #paste SMALL_BUFFER_SIZE;
 
-        fn destruct {
-            if @self.buffer => ptr(@subtype) {
-                free @self.buffer;
-            }
-        }
+		fn destruct {
+			if @self.buffer => ptr(@subtype) {
+				free @self.buffer;
+			}
+		}
 
-        fn at(var.i64 index)=>ptr(@subtype)|null {
-            #if DEBUG {
-                puts `start of at method`;
-            }
-            if index >= 0 {
-                #if DEBUG {
-                    puts `index was greater or equal to 0`;
-                    printf(`index: %li\n`, index);
-                    printf(`size: %li\n`, @self.size);
-                }
-                if index < @self.size {
-                    #if DEBUG {
-                        puts `index was lower than @self.size`;
-                    }
-                    if @self.buffer => sbuf {
-                        #if DEBUG {
-                            puts `buffer was sbuf`;
-                        }
-                        return pointerTo @self.buffer[index];
-                    }
-                    if @self.buffer => ptr(@subtype) {
-                        #if DEBUG {
-                            puts `buffer was pointer`;
-                        }
-                        return @self.buffer + index;
-                    }
-                }
-            }
-            return null;
-        };
+		fn at(var.i64 index)=>ptr(@subtype)|null {
+			#if DEBUG {
+				puts `start of at method`;
+			}
+			if index >= 0 {
+				#if DEBUG {
+					puts `index was greater or equal to 0`;
+					printf(`index: %li\n`, index);
+					printf(`size: %li\n`, @self.size);
+				}
+				if index < @self.size {
+					#if DEBUG {
+						puts `index was lower than @self.size`;
+					}
+					if @self.buffer => sbuf {
+						#if DEBUG {
+							puts `buffer was sbuf`;
+						}
+						return pointerTo @self.buffer[index];
+					}
+					if @self.buffer => ptr(@subtype) {
+						#if DEBUG {
+							puts `buffer was pointer`;
+						}
+						return @self.buffer + index;
+					}
+				}
+			}
+			return null;
+		};
 
-        fn value(var.i64 index)=>@subtype {
-            if @self.buffer => sbuf {
-                return @self.buffer[index];
-            }
-            if @self.buffer => ptr(@subtype) {
-                return valueOf(@self.buffer + index);
-            }
-        };
+		fn value(var.i64 index)=>@subtype {
+			if @self.buffer => sbuf {
+				return @self.buffer[index];
+			}
+			if @self.buffer => ptr(@subtype) {
+				return valueOf(@self.buffer + index);
+			}
+		};
 
-        fn add(var.@subtype value){
-            #if DEBUG {
-                puts `start of method add`;
-            }
-            if @self.capacity > @self.size {
-                #if DEBUG {
-                    puts `capacity was bigger than size`;
-                }
-                if @self.buffer => sbuf {
-                    #if DEBUG {
-                        puts `buffer was sbuf`;
-                    }
-                    @self.buffer[@self.size]: value;
-                }
-                if @self.buffer => ptr(@subtype) {
-                    #if DEBUG {
-                        puts `buffer was pointer`;
-                    }
-                    var.ptr(@subtype) pointer: @self.buffer + @self.size;
-                    set(pointer, value);
-                }
-            } else {
-                #if DEBUG {
-                    puts `capacity was lower than size`;
-                }
-                if @self.buffer => sbuf {
-                    #if DEBUG {
-                        puts `buffer was sbuf`;
-                    }
-                    @self.capacity: #paste BIG_BUFFER_MIN_SIZE;
+		fn add(var.@subtype value){
+			#if DEBUG {
+				puts `start of method add`;
+			}
+			if @self.capacity > @self.size {
+				#if DEBUG {
+					puts `capacity was bigger than size`;
+				}
+				if @self.buffer => sbuf {
+					#if DEBUG {
+						puts `buffer was sbuf`;
+					}
+					@self.buffer[@self.size]: value;
+				}
+				if @self.buffer => ptr(@subtype) {
+					#if DEBUG {
+						puts `buffer was pointer`;
+					}
+					var.ptr(@subtype) pointer: @self.buffer + @self.size;
+					set(pointer, value);
+				}
+			} else {
+				#if DEBUG {
+					puts `capacity was lower than size`;
+				}
+				if @self.buffer => sbuf {
+					#if DEBUG {
+						puts `buffer was sbuf`;
+					}
+					@self.capacity: #paste BIG_BUFFER_MIN_SIZE;
 
-                    var.ptr(@subtype) firstValue: pointerTo @self.buffer[0];
-                    var.ptr(@subtype) secondValue: pointerTo @self.buffer[1];
+					var.ptr(@subtype) firstValue: pointerTo @self.buffer[0];
+					var.ptr(@subtype) secondValue: pointerTo @self.buffer[1];
 
-                    var.ptr(@subtype) pointer: malloc(sizeOf(type @subtype) * #paste BIG_BUFFER_MIN_SIZE) => ptr(@subtype);
+					var.ptr(@subtype) pointer: malloc(sizeOf(type @subtype) * #paste BIG_BUFFER_MIN_SIZE) => ptr(@subtype);
 
-                    set(pointer, valueOf(firstValue));
-                    set(pointer + 1, valueOf(secondValue));
-                    @self.buffer: pointer;
-                    set(pointer+@self.size, value);
-                }
+					set(pointer, valueOf(firstValue));
+					set(pointer + 1, valueOf(secondValue));
+					@self.buffer: pointer;
+					set(pointer+@self.size, value);
+				}
 
-                if @self.buffer => ptr(@subtype) {
-                    #if DEBUG {
-                        puts `buffer was pointer`;
-                    }
-                    var.ptr(@subtype) pointer: realloc((@self.buffer => ptr(i8)), sizeOf(type @subtype) * @self.capacity) => ptr(@subtype);
-                    @self.buffer: pointer;
-                    set(pointer+@self.size, value);
-                }
-            }
-            #if DEBUG {
-                puts `increasing size by one`;
-            }
-            @self.size +: 1;
-        };
+				if @self.buffer => ptr(@subtype) {
+					#if DEBUG {
+						puts `buffer was pointer`;
+					}
+					var.ptr(@subtype) pointer: realloc((@self.buffer => ptr(i8)), sizeOf(type @subtype) * @self.capacity) => ptr(@subtype);
+					@self.buffer: pointer;
+					set(pointer+@self.size, value);
+				}
+			}
+			#if DEBUG {
+				puts `increasing size by one`;
+			}
+			@self.size +: 1;
+		};
 
-        fn reserve(var.i64 newCapacity) {
-            #if DEBUG {
-                printf(`Reserve called with %li\n`, newCapacity);
-            }
-            if @self.capacity >= newCapacity {
-                #if DEBUG {
-                    puts `already had enough capacity`;
-                }
-                return;
-            }
-            #if DEBUG {
-                puts `reserving new capacity`;
-            }
-            if @self.buffer => ptr(@subtype) {
-                #if DEBUG {
-                    puts `was pointer, realloc`;
-                }
-                var.ptr(@subtype) pointer: realloc((@self.buffer => ptr(i8)), sizeOf(type @subtype) * newCapacity) => ptr(@subtype);
-                @self.buffer: pointer;
-            } else {
-                #if DEBUG {
-                    puts `was static array, malloc`;
-                }
-                var.ptr(@subtype) pointer: malloc(sizeOf(type @subtype) * newCapacity) => ptr(@subtype);
-                @self.buffer: pointer;
-            }
-            #if DEBUG {
-                puts `finished reserving`;
-            }
-        };
+		fn reserve(var.i64 newCapacity) {
+			#if DEBUG {
+				printf(`Reserve called with %li\n`, newCapacity);
+			}
+			if @self.capacity >= newCapacity {
+				#if DEBUG {
+					puts `already had enough capacity`;
+				}
+				return;
+			}
+			#if DEBUG {
+				puts `reserving new capacity`;
+			}
+			if @self.buffer => ptr(@subtype) {
+				#if DEBUG {
+					puts `was pointer, realloc`;
+				}
+				var.ptr(@subtype) pointer: realloc((@self.buffer => ptr(i8)), sizeOf(type @subtype) * newCapacity) => ptr(@subtype);
+				@self.buffer: pointer;
+			} else {
+				#if DEBUG {
+					puts `was static array, malloc`;
+				}
+				var.ptr(@subtype) pointer: malloc(sizeOf(type @subtype) * newCapacity) => ptr(@subtype);
+				@self.buffer: pointer;
+			}
+			#if DEBUG {
+				puts `finished reserving`;
+			}
+		};
 
-        fn clear {
-            if @self.buffer => ptr(@subtype) {
-                free @self.buffer;
-            }
-            @self.capacity: #paste SMALL_BUFFER_SIZE;
-            @self.size: 0;
-            @self.buffer: [];
-        }
-        
-        fn remove(var.i64 index) {
-            //swap items one place back
-            for (var.i64 i: index; i< @self.size-1; i+:1) {
-                var ptr: @self.at(i);
-                var ptr2: @self.at(i+1);
-                if ptr => ptr(@subtype) {
-                    if ptr2 => ptr(@subtype) {
-                        set(ptr, valueOf(ptr2));
-                    }
-                }
-            }
+		fn clear {
+			if @self.buffer => ptr(@subtype) {
+				free @self.buffer;
+			}
+			@self.capacity: #paste SMALL_BUFFER_SIZE;
+			@self.size: 0;
+			@self.buffer: [];
+		}
+		
+		fn remove(var.i64 index) {
+			//swap items one place back
+			for (var.i64 i: index; i< @self.size-1; i+:1) {
+				var ptr: @self.at(i);
+				var ptr2: @self.at(i+1);
+				if ptr => ptr(@subtype) {
+					if ptr2 => ptr(@subtype) {
+						set(ptr, valueOf(ptr2));
+					}
+				}
+			}
 
-            //reduce count
-            @self.size -: 1;
-        }
+			//reduce count
+			@self.size -: 1;
+		}
 
-        fn initialize(var.i64 newCapacity)=>ptr(@subtype) {
-            #if DEBUG {
-                printf(`initialize with %li\n`, newCapacity);
-            }
-            @self.size: 0;
+		fn initialize(var.i64 newCapacity)=>ptr(@subtype) {
+			#if DEBUG {
+				printf(`initialize with %li\n`, newCapacity);
+			}
+			@self.size: 0;
 
-            if newCapacity <= #paste SMALL_BUFFER_SIZE {
-	            #if DEBUG {
-	                printf(`newCapacity was smaller or equal to %li\n`, #paste SMALL_BUFFER_SIZE);
-	            }
-                @self.buffer: [];
-                @self.capacity: #paste SMALL_BUFFER_SIZE;
-	            #if DEBUG {
-	                printf(`returning pointer to internal buffer: %li\n`, pointerTo(@self.buffer) => i64);
-	            }
-                return pointerTo(@self.buffer) => ptr(@subtype);
-            } else {
-	            #if DEBUG {
-	                printf(`newCapacity was bigger than %li\n`, #paste SMALL_BUFFER_SIZE);
-	            }
-                var.ptr(@subtype) pointer: malloc(sizeOf(type @subtype) * newCapacity) => ptr(@subtype);
-                @self.capacity: newCapacity;
-                @self.buffer: pointer;
-	            #if DEBUG {
-	                printf(`returning malloc'd pointer: %li\n`, pointer => i64);
-	            }
-                return pointer;
-            }
-        };
-    };
+			if newCapacity <= #paste SMALL_BUFFER_SIZE {
+				#if DEBUG {
+					printf(`newCapacity was smaller or equal to %li\n`, #paste SMALL_BUFFER_SIZE);
+				}
+				@self.buffer: [];
+				@self.capacity: #paste SMALL_BUFFER_SIZE;
+				#if DEBUG {
+					printf(`returning pointer to internal buffer: %li\n`, pointerTo(@self.buffer) => i64);
+				}
+				return pointerTo(@self.buffer) => ptr(@subtype);
+			} else {
+				#if DEBUG {
+					printf(`newCapacity was bigger than %li\n`, #paste SMALL_BUFFER_SIZE);
+				}
+				var.ptr(@subtype) pointer: malloc(sizeOf(type @subtype) * newCapacity) => ptr(@subtype);
+				@self.capacity: newCapacity;
+				@self.buffer: pointer;
+				#if DEBUG {
+					printf(`returning malloc'd pointer: %li\n`, pointer => i64);
+				}
+				return pointer;
+			}
+		};
+	};
 };
