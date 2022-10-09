@@ -1661,6 +1661,8 @@ bool LILCodeParser::readType()
 				case TokenTypeLineComment:
 				case TokenTypeBlockComment:
 				case TokenTypeVerticalBar:
+				case TokenTypeFatArrow:
+				case TokenTypeComma:
 				{
 					peekToken = d->lexer->peekNextToken();
 					break;
