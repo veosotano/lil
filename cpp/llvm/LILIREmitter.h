@@ -102,6 +102,7 @@ namespace LIL
 		llvm::Value * _emitType(LILType * value);
 		llvm::Value * _emitVarDecl(LILVarDecl * value);
 		llvm::Value * _emitConvDecl(LILConversionDecl * value);
+		llvm::Value * _emitClassSignature(LILClassDecl * value);
 		llvm::Value * _emitClassDecl(LILClassDecl * value);
 		llvm::Value * _emitObjDef(LILObjectDefinition * value);
 		llvm::Value * _emitAsgmt(LILAssignment * value);

@@ -191,7 +191,7 @@ void LILIREmitter::hoistDeclarations(std::shared_ptr<LILRootNode> rootNode)
 			case NodeTypeClassDecl:
 			{
 				LILClassDecl * value = std::static_pointer_cast<LILClassDecl>(node).get();
-				this->_emitClassDecl(value);
+				this->_emitClassSignature(value);
 				break;
 			}
 			case NodeTypeFunctionDecl:
@@ -320,8 +320,8 @@ llvm::Value * LILIREmitter::emit(LILNode * node)
 		}
 		case NodeTypeClassDecl:
 		{
-			//ignore, has already been emitted in the hoistin stage
-			return nullptr;
+			LILClassDecl * value = static_cast<LILClassDecl *>(node);
+			return this->_emitClassDecl(value);
 		}
 		case NodeTypeObjectDefinition:
 		{
@@ -1215,6 +1215,33 @@ llvm::Value * LILIREmitter::_emitConvDecl(LILConversionDecl * value)
 	
 	this->_emitFn(fd.get());
 	
+	return nullptr;
+}
+
+llvm::Value * LILIREmitter::_emitClassSignature(LILClassDecl * value)
+{
+	if (value->isTemplate()) {
+		return nullptr;
+	}
+	std::string name = value->getName().data();
+
+	this->extractStructFromClass(value);
+
+	for (auto methodPair : value->getMethods()) {
+		auto methodNode = methodPair.second;
+		auto fd = std::static_pointer_cast<LILFunctionDecl>(methodNode);
+		if (fd->getHasMultipleImpls()) {
+			for (const auto & impl: fd->getImpls()) {
+				auto name = impl->getName().data();
+				auto fun = this->_emitFnSignature(name, impl->getFnType().get());
+				d->namedValues[name] = fun;
+			}
+		} else {
+			auto name = fd->getName().data();
+			auto fun = this->_emitFnSignature(name, fd->getFnType().get());
+			d->namedValues[name] = fun;
+		}
+	}
 	return nullptr;
 }
 
