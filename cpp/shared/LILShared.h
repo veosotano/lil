@@ -1,15 +1,15 @@
 /********************************************************************
  *
- *      LIL Is a Language
+ *	  LIL Is a Language
  *
- *      AUTHORS: Miro Keller
+ *	  AUTHORS: Miro Keller
  *
- *      COPYRIGHT: ©2020-today:  All Rights Reserved
+ *	  COPYRIGHT: ©2020-today:  All Rights Reserved
  *
- *      LICENSE: see LICENSE file
+ *	  LICENSE: see LICENSE file
  *
- *      This file is a convenience header to include all the most
- *      commonly used headers at once
+ *	  This file is a convenience header to include all the most
+ *	  commonly used headers at once
  *
  ********************************************************************/
 

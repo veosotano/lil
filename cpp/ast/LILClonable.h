@@ -1,14 +1,14 @@
 /********************************************************************
  *
- *      LIL Is a Language
+ *	  LIL Is a Language
  *
- *      AUTHORS: Miro Keller
+ *	  AUTHORS: Miro Keller
  *
- *      COPYRIGHT: ©2020-today:  All Rights Reserved
+ *	  COPYRIGHT: ©2020-today:  All Rights Reserved
  *
- *      LICENSE: see LICENSE file
+ *	  LICENSE: see LICENSE file
  *
- *      This file implements cloning behavior
+ *	  This file implements cloning behavior
  *
  ********************************************************************/
 
@@ -17,15 +17,15 @@
 
 namespace LIL
 {
-    class LILClonable
-    {
-    public:
-        virtual ~LILClonable();
-        std::shared_ptr<LILClonable> clone() const;
+	class LILClonable
+	{
+	public:
+		virtual ~LILClonable();
+		std::shared_ptr<LILClonable> clone() const;
 
-    private:
-        virtual std::shared_ptr<LILClonable> cloneImpl() const;
-    };
+	private:
+		virtual std::shared_ptr<LILClonable> cloneImpl() const;
+	};
 }
 
 #endif

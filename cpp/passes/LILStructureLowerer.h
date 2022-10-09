@@ -1,14 +1,14 @@
 /********************************************************************
  *
- *      LIL Is a Language
+ *	  LIL Is a Language
  *
- *      AUTHORS: Miro Keller
+ *	  AUTHORS: Miro Keller
  *
- *      COPYRIGHT: ©2020-today:  All Rights Reserved
+ *	  COPYRIGHT: ©2020-today:  All Rights Reserved
  *
- *      LICENSE: see LICENSE file
+ *	  LICENSE: see LICENSE file
  *
- *      This file disambiguates nodes in the AST with multiple types
+ *	  This file disambiguates nodes in the AST with multiple types
  *
  ********************************************************************/
 
@@ -56,58 +56,58 @@
 
 namespace LIL
 {
-    class LILStructureLowerer : public LILVisitor
-    {
-    public:
-        LILStructureLowerer();
-        virtual ~LILStructureLowerer();
-        void initializeVisit() override;
-        void performVisit(std::shared_ptr<LILRootNode> rootNode) override;
-        void visit(LILNode * node) override;
+	class LILStructureLowerer : public LILVisitor
+	{
+	public:
+		LILStructureLowerer();
+		virtual ~LILStructureLowerer();
+		void initializeVisit() override;
+		void performVisit(std::shared_ptr<LILRootNode> rootNode) override;
+		void visit(LILNode * node) override;
 
-        void process(std::shared_ptr<LILNode> node);
-        void _process(std::shared_ptr<LILBoolLiteral> value);
-        void _process(std::shared_ptr<LILNumberLiteral> value);
-        void _process(std::shared_ptr<LILPercentageLiteral> value);
-        void _process(std::shared_ptr<LILExpression> value);
-        void _process(std::shared_ptr<LILUnaryExpression> value);
-        void _process(std::shared_ptr<LILStringLiteral> value);
-        void _process(std::shared_ptr<LILStringFunction> value);
-        void _process(std::shared_ptr<LILNullLiteral> value);
-        void _process(std::shared_ptr<LILType> value);
-        void _process(std::shared_ptr<LILVarDecl> value);
-        void _process(std::shared_ptr<LILClassDecl> value);
-        void _process(std::shared_ptr<LILObjectDefinition> value);
-        void _process(std::shared_ptr<LILAssignment> value);
-        void _process(std::shared_ptr<LILValuePath> value);
-        void _process(std::shared_ptr<LILPropertyName> value);
-        void _process(std::shared_ptr<LILVarName> value);
-        void _process(std::shared_ptr<LILRule> value);
-        void _processRuleInner(std::shared_ptr<LILRule> value);
-        std::shared_ptr<LILNode> _expandPaths(const std::shared_ptr<LILNode> & val);
-        void _process(std::shared_ptr<LILSimpleSelector> value);
-        void _process(std::shared_ptr<LILSelectorChain> value);
-        void _process(std::shared_ptr<LILSelector> value);
-        void _process(std::shared_ptr<LILCombinator> value);
-        void _process(std::shared_ptr<LILFilter> value);
-        void _process(std::shared_ptr<LILFlag> value);
-        void _process(std::shared_ptr<LILFunctionDecl> value);
-        void _process(std::shared_ptr<LILFunctionCall> value);
-        void _process(std::shared_ptr<LILFlowControl> value);
-        void _process(std::shared_ptr<LILFlowControlCall> value);
-        void _process(std::shared_ptr<LILInstruction> value);
-        void _process(std::shared_ptr<LILIfInstruction> value);
-        void _process(std::shared_ptr<LILValueList> value);
-        void _process(std::shared_ptr<LILDocumentation> value);
-        void _process(std::shared_ptr<LILIndexAccessor> value);
+		void process(std::shared_ptr<LILNode> node);
+		void _process(std::shared_ptr<LILBoolLiteral> value);
+		void _process(std::shared_ptr<LILNumberLiteral> value);
+		void _process(std::shared_ptr<LILPercentageLiteral> value);
+		void _process(std::shared_ptr<LILExpression> value);
+		void _process(std::shared_ptr<LILUnaryExpression> value);
+		void _process(std::shared_ptr<LILStringLiteral> value);
+		void _process(std::shared_ptr<LILStringFunction> value);
+		void _process(std::shared_ptr<LILNullLiteral> value);
+		void _process(std::shared_ptr<LILType> value);
+		void _process(std::shared_ptr<LILVarDecl> value);
+		void _process(std::shared_ptr<LILClassDecl> value);
+		void _process(std::shared_ptr<LILObjectDefinition> value);
+		void _process(std::shared_ptr<LILAssignment> value);
+		void _process(std::shared_ptr<LILValuePath> value);
+		void _process(std::shared_ptr<LILPropertyName> value);
+		void _process(std::shared_ptr<LILVarName> value);
+		void _process(std::shared_ptr<LILRule> value);
+		void _processRuleInner(std::shared_ptr<LILRule> value);
+		std::shared_ptr<LILNode> _expandPaths(const std::shared_ptr<LILNode> & val);
+		void _process(std::shared_ptr<LILSimpleSelector> value);
+		void _process(std::shared_ptr<LILSelectorChain> value);
+		void _process(std::shared_ptr<LILSelector> value);
+		void _process(std::shared_ptr<LILCombinator> value);
+		void _process(std::shared_ptr<LILFilter> value);
+		void _process(std::shared_ptr<LILFlag> value);
+		void _process(std::shared_ptr<LILFunctionDecl> value);
+		void _process(std::shared_ptr<LILFunctionCall> value);
+		void _process(std::shared_ptr<LILFlowControl> value);
+		void _process(std::shared_ptr<LILFlowControlCall> value);
+		void _process(std::shared_ptr<LILInstruction> value);
+		void _process(std::shared_ptr<LILIfInstruction> value);
+		void _process(std::shared_ptr<LILValueList> value);
+		void _process(std::shared_ptr<LILDocumentation> value);
+		void _process(std::shared_ptr<LILIndexAccessor> value);
 
-        void processChildren(const std::vector<std::shared_ptr<LILNode> > &children);
+		void processChildren(const std::vector<std::shared_ptr<LILNode> > &children);
 
-    private:
-        std::vector<std::vector<std::shared_ptr<LILNode>>> _nodeBuffer;
+	private:
+		std::vector<std::vector<std::shared_ptr<LILNode>>> _nodeBuffer;
 
-        std::vector<std::shared_ptr<LILNode>> reduceIfCastBlocks(std::shared_ptr<LILNode> node, LILString argName, std::shared_ptr<LILType> ty);
-    };
+		std::vector<std::shared_ptr<LILNode>> reduceIfCastBlocks(std::shared_ptr<LILNode> node, LILString argName, std::shared_ptr<LILType> ty);
+	};
 }
 
 #endif

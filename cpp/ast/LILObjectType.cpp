@@ -1,14 +1,14 @@
 /********************************************************************
  *
- *      LIL Is a Language
+ *	  LIL Is a Language
  *
- *      AUTHORS: Miro Keller
+ *	  AUTHORS: Miro Keller
  *
- *      COPYRIGHT: ©2020-today:  All Rights Reserved
+ *	  COPYRIGHT: ©2020-today:  All Rights Reserved
  *
- *      LICENSE: see LICENSE file
+ *	  LICENSE: see LICENSE file
  *
- *      This file encapsulates the type for an object
+ *	  This file encapsulates the type for an object
  *
  ********************************************************************/
 
@@ -18,15 +18,15 @@ using namespace LIL;
 
 std::shared_ptr<LILObjectType> LILObjectType::make(LILString name)
 {
-    auto ret = std::make_shared<LILObjectType>();
-    ret->setName(name);
-    return ret;
+	auto ret = std::make_shared<LILObjectType>();
+	ret->setName(name);
+	return ret;
 }
 
 LILObjectType::LILObjectType()
 : LILType(TypeTypeObject)
 {
-    
+	
 }
 
 LILObjectType::LILObjectType(const LILObjectType &other)
@@ -37,29 +37,29 @@ LILObjectType::LILObjectType(const LILObjectType &other)
 
 std::shared_ptr<LILObjectType> LILObjectType::clone() const
 {
-    return std::static_pointer_cast<LILObjectType> (this->cloneImpl());
+	return std::static_pointer_cast<LILObjectType> (this->cloneImpl());
 }
 
 std::shared_ptr<LILClonable> LILObjectType::cloneImpl() const
 {
-    std::shared_ptr<LILObjectType> clone(new LILObjectType(*this));
-    return clone;
+	std::shared_ptr<LILObjectType> clone(new LILObjectType(*this));
+	return clone;
 }
 
 LILObjectType::~LILObjectType()
 {
-    
+	
 }
 
 bool LILObjectType::equalTo(std::shared_ptr<LILNode> otherNode)
 {
-    if ( ! LILType::equalTo(otherNode)) return false;
-    std::shared_ptr<LILObjectType> castedNode = std::static_pointer_cast<LILObjectType>(otherNode);
-    
-    return true;
+	if ( ! LILType::equalTo(otherNode)) return false;
+	std::shared_ptr<LILObjectType> castedNode = std::static_pointer_cast<LILObjectType>(otherNode);
+	
+	return true;
 }
 
 void LILObjectType::receiveNodeData(const LIL::LILString &data)
 {
-    this->setName(data);
+	this->setName(data);
 }

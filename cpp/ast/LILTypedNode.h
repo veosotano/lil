@@ -1,14 +1,14 @@
 /********************************************************************
  *
- *      LIL Is a Language
+ *	  LIL Is a Language
  *
- *      AUTHORS: Miro Keller
+ *	  AUTHORS: Miro Keller
  *
- *      COPYRIGHT: ©2020-today:  All Rights Reserved
+ *	  COPYRIGHT: ©2020-today:  All Rights Reserved
  *
- *      LICENSE: see LICENSE file
+ *	  LICENSE: see LICENSE file
  *
- *      This is a node that participates in local variables
+ *	  This is a node that participates in local variables
  *
  ********************************************************************/
 
@@ -19,22 +19,22 @@
 #include "LILType.h"
 
 namespace LIL {
-    
-    class LILTypedNode : public LILNode
-    {
-    public:
-        virtual ~LILTypedNode();
-        bool isTypedNode() const;
-        virtual bool equalTo(std::shared_ptr<LILNode> otherNode);
+	
+	class LILTypedNode : public LILNode
+	{
+	public:
+		virtual ~LILTypedNode();
+		bool isTypedNode() const;
+		virtual bool equalTo(std::shared_ptr<LILNode> otherNode);
 
-        virtual void setType(std::shared_ptr<LILType> value);
-        virtual std::shared_ptr<LILType> getType() const;
-        
-    protected:
-        std::shared_ptr<LILType> _type;
-        LILTypedNode(NodeType type);
-        LILTypedNode(const LILTypedNode & other);
-    };
+		virtual void setType(std::shared_ptr<LILType> value);
+		virtual std::shared_ptr<LILType> getType() const;
+		
+	protected:
+		std::shared_ptr<LILType> _type;
+		LILTypedNode(NodeType type);
+		LILTypedNode(const LILTypedNode & other);
+	};
 }
 
 #endif

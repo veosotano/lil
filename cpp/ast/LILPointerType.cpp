@@ -1,14 +1,14 @@
 /********************************************************************
  *
- *      LIL Is a Language
+ *	  LIL Is a Language
  *
- *      AUTHORS: Miro Keller
+ *	  AUTHORS: Miro Keller
  *
- *      COPYRIGHT: ©2020-today:  All Rights Reserved
+ *	  COPYRIGHT: ©2020-today:  All Rights Reserved
  *
- *      LICENSE: see LICENSE file
+ *	  LICENSE: see LICENSE file
  *
- *      This file encapsulates the type for a function
+ *	  This file encapsulates the type for a function
  *
  ********************************************************************/
 
@@ -18,66 +18,66 @@ using namespace LIL;
 
 std::shared_ptr<LILPointerType> LILPointerType::make(LILString typeName)
 {
-    auto ret = std::make_shared<LILPointerType>();
-    ret->setName("ptr");
-    auto argTy = std::make_shared<LILType>();
-    argTy->setName(typeName);
-    ret->setArgument(argTy);
-    return ret;
+	auto ret = std::make_shared<LILPointerType>();
+	ret->setName("ptr");
+	auto argTy = std::make_shared<LILType>();
+	argTy->setName(typeName);
+	ret->setArgument(argTy);
+	return ret;
 }
 
 LILPointerType::LILPointerType()
 : LILType(TypeTypePointer)
 {
-    
+	
 }
 
 LILPointerType::LILPointerType(const LILPointerType &other)
 : LILType(other)
 {
-    this->_argument = other._argument;
+	this->_argument = other._argument;
 }
 
 std::shared_ptr<LILPointerType> LILPointerType::clone() const
 {
-    return std::static_pointer_cast<LILPointerType> (this->cloneImpl());
+	return std::static_pointer_cast<LILPointerType> (this->cloneImpl());
 }
 
 std::shared_ptr<LILClonable> LILPointerType::cloneImpl() const
 {
-    std::shared_ptr<LILPointerType> clone(new LILPointerType(*this));
-    if (this->_argument) {
-        clone->setArgument(this->_argument->clone());
-    }
-    return clone;
+	std::shared_ptr<LILPointerType> clone(new LILPointerType(*this));
+	if (this->_argument) {
+		clone->setArgument(this->_argument->clone());
+	}
+	return clone;
 }
 
 LILPointerType::~LILPointerType()
 {
-    
+	
 }
 
 bool LILPointerType::equalTo(std::shared_ptr<LILNode> otherNode)
 {
-    if ( ! LILType::equalTo(otherNode)) return false;
-    std::shared_ptr<LILPointerType> castedNode = std::static_pointer_cast<LILPointerType>(otherNode);
-    if (this->_argument && !castedNode->_argument) return false;
-    if (!this->_argument && castedNode->_argument) return false;
-    if ( this->_argument && ! this->_argument->equalTo(castedNode->_argument) ) return false;
-    return true;
+	if ( ! LILType::equalTo(otherNode)) return false;
+	std::shared_ptr<LILPointerType> castedNode = std::static_pointer_cast<LILPointerType>(otherNode);
+	if (this->_argument && !castedNode->_argument) return false;
+	if (!this->_argument && castedNode->_argument) return false;
+	if ( this->_argument && ! this->_argument->equalTo(castedNode->_argument) ) return false;
+	return true;
 }
 
 void LILPointerType::receiveNodeData(const LIL::LILString &data)
 {
-    this->setName(data);
+	this->setName(data);
 }
 
 void LILPointerType::setArgument(std::shared_ptr<LILType> node)
 {
-    this->_argument = node;
+	this->_argument = node;
 }
 
 std::shared_ptr<LILType> LILPointerType::getArgument() const
 {
-    return this->_argument;
+	return this->_argument;
 }

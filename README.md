@@ -80,9 +80,9 @@ We already have some rudimentary physics (more to come), so let's play with velo
 Let's set some configuration values. We give the app a name, we automatically enter fullscreen mode and we enable the onUpdate function and do some work on every frame.
 
 	#configure {
-    	name: "Professor";
-    	automaticFullScreen: true;
-    	onUpdateFn: true;
+		name: "Professor";
+		automaticFullScreen: true;
+		onUpdateFn: true;
 	}
 	fn onUpdate(var.f64 deltaTime) {
 		//cheating here, no selection system yet

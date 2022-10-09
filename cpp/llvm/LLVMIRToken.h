@@ -34,7 +34,7 @@ enum Kind {
   lparen,
   rparen,  // (  )
   exclaim, // !
-  bar,     // |
+  bar,	 // |
   colon,   // :
 
   kw_vscale,
@@ -432,31 +432,31 @@ enum Kind {
   kw_varFlags,
 
   // Unsigned Valued tokens (UIntVal).
-  LabelID,    // 42:
+  LabelID,	// 42:
   GlobalID,   // @42
   LocalVarID, // %42
   AttrGrpID,  // #42
   SummaryID,  // ^42
 
   // String valued tokens (StrVal).
-  LabelStr,         // foo:
-  GlobalVar,        // @foo @"foo"
-  ComdatVar,        // $foo
-  LocalVar,         // %foo %"foo"
-  MetadataVar,      // !foo
+  LabelStr,		 // foo:
+  GlobalVar,		// @foo @"foo"
+  ComdatVar,		// $foo
+  LocalVar,		 // %foo %"foo"
+  MetadataVar,	  // !foo
   StringConstant,   // "foo"
-  DwarfTag,         // DW_TAG_foo
+  DwarfTag,		 // DW_TAG_foo
   DwarfAttEncoding, // DW_ATE_foo
   DwarfVirtuality,  // DW_VIRTUALITY_foo
-  DwarfLang,        // DW_LANG_foo
-  DwarfCC,          // DW_CC_foo
-  EmissionKind,     // lineTablesOnly
-  NameTableKind,    // GNU
-  DwarfOp,          // DW_OP_foo
-  DIFlag,           // DIFlagFoo
-  DISPFlag,         // DISPFlagFoo
-  DwarfMacinfo,     // DW_MACINFO_foo
-  ChecksumKind,     // CSK_foo
+  DwarfLang,		// DW_LANG_foo
+  DwarfCC,		  // DW_CC_foo
+  EmissionKind,	 // lineTablesOnly
+  NameTableKind,	// GNU
+  DwarfOp,		  // DW_OP_foo
+  DIFlag,		   // DIFlagFoo
+  DISPFlag,		 // DISPFlagFoo
+  DwarfMacinfo,	 // DW_MACINFO_foo
+  ChecksumKind,	 // CSK_foo
 
   // Type valued tokens (TyVal).
   Type,

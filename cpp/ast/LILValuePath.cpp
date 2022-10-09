@@ -1,14 +1,14 @@
 /********************************************************************
  *
- *      LIL Is a Language
+ *	  LIL Is a Language
  *
- *      AUTHORS: Miro Keller
+ *	  AUTHORS: Miro Keller
  *
- *      COPYRIGHT: ©2020-today:  All Rights Reserved
+ *	  COPYRIGHT: ©2020-today:  All Rights Reserved
  *
- *      LICENSE: see LICENSE file
+ *	  LICENSE: see LICENSE file
  *
- *      This file represents a value path
+ *	  This file represents a value path
  *
  ********************************************************************/
 
@@ -32,18 +32,18 @@ LILValuePath::LILValuePath(const LILValuePath &other)
 
 std::shared_ptr<LILValuePath> LILValuePath::clone() const
 {
-    return std::static_pointer_cast<LILValuePath> (this->cloneImpl());
+	return std::static_pointer_cast<LILValuePath> (this->cloneImpl());
 }
 
 std::shared_ptr<LILClonable> LILValuePath::cloneImpl() const
 {
-    std::shared_ptr<LILValuePath> clone(new LILValuePath(*this));
-    LILNode::cloneChildNodes(clone);
-    //clone LILTypedNode
-    if (this->_type) {
-        clone->setType(this->_type->clone());
-    }
-    return clone;
+	std::shared_ptr<LILValuePath> clone(new LILValuePath(*this));
+	LILNode::cloneChildNodes(clone);
+	//clone LILTypedNode
+	if (this->_type) {
+		clone->setType(this->_type->clone());
+	}
+	return clone;
 }
 
 LILValuePath::~LILValuePath()
@@ -53,28 +53,28 @@ LILValuePath::~LILValuePath()
 
 const std::vector<std::shared_ptr<LILNode>> & LILValuePath::getNodes() const
 {
-    return this->getChildNodes();
+	return this->getChildNodes();
 }
 
 void LILValuePath::setNodes(const std::vector<std::shared_ptr<LILNode>> & newNodes)
 {
-    this->clearChildNodes();
-    for (const auto & node : newNodes) {
-        this->addChild(node);
-    }
+	this->clearChildNodes();
+	for (const auto & node : newNodes) {
+		this->addChild(node);
+	}
 }
 
 void LILValuePath::addChild(std::shared_ptr<LILNode> child)
 {
-    this->addNode(child);
+	this->addNode(child);
 }
 
 void LILValuePath::setPreventEmitCallToIVar(bool newValue)
 {
-    this->_preventEmitCallToIVar = newValue;
+	this->_preventEmitCallToIVar = newValue;
 }
 
 bool LILValuePath::getPreventEmitCallToIVar() const
 {
-    return this->_preventEmitCallToIVar;
+	return this->_preventEmitCallToIVar;
 }

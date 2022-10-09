@@ -1,14 +1,14 @@
 /********************************************************************
  *
- *      LIL Is a Language
+ *	  LIL Is a Language
  *
- *      AUTHORS: Miro Keller
+ *	  AUTHORS: Miro Keller
  *
- *      COPYRIGHT: ©2020-today:  All Rights Reserved
+ *	  COPYRIGHT: ©2020-today:  All Rights Reserved
  *
- *      LICENSE: see LICENSE file
+ *	  LICENSE: see LICENSE file
  *
- *      This file is the smallest piece in the parsing system
+ *	  This file is the smallest piece in the parsing system
  *
  ********************************************************************/
 
@@ -20,36 +20,36 @@
 
 namespace LIL
 {
-    class LILToken
-    {
-    public:
-        static LILString tokenStringRepresentation(TokenType type);
+	class LILToken
+	{
+	public:
+		static LILString tokenStringRepresentation(TokenType type);
 
-        LILToken(TokenType type, size_t line, size_t column, size_t index);
-        LILToken(TokenType type, LILString value, size_t line, size_t column, size_t index);
-        LILToken(TokenType type, LILUnitF64 value, size_t line, size_t column, size_t index);
-        virtual ~LILToken();
-        bool isA(TokenType otherType) const;
-        TokenType getType() const;
-        virtual LILString toString();
+		LILToken(TokenType type, size_t line, size_t column, size_t index);
+		LILToken(TokenType type, LILString value, size_t line, size_t column, size_t index);
+		LILToken(TokenType type, LILUnitF64 value, size_t line, size_t column, size_t index);
+		virtual ~LILToken();
+		bool isA(TokenType otherType) const;
+		TokenType getType() const;
+		virtual LILString toString();
 
-        size_t line;
-        size_t column;
-        size_t index;
+		size_t line;
+		size_t column;
+		size_t index;
 
-        LILString getString();
-        void setString(LILString newValue);
+		LILString getString();
+		void setString(LILString newValue);
 
-        LILUnitF64 getNumber();
-        bool equals(TokenType otherType, LILString otherValue);
-        bool equals(TokenType otherType, LILUnitF64 otherValue);
-        bool isNumeric();
+		LILUnitF64 getNumber();
+		bool equals(TokenType otherType, LILString otherValue);
+		bool equals(TokenType otherType, LILUnitF64 otherValue);
+		bool isNumeric();
 
-    protected:
-        TokenType type;
-        LILString _value;
-        LILUnitF64 _number;
-    };
+	protected:
+		TokenType type;
+		LILString _value;
+		LILUnitF64 _number;
+	};
 }
 
 #endif

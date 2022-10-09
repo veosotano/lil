@@ -1,14 +1,14 @@
 /********************************************************************
  *
- *      LIL Is a Language
+ *	  LIL Is a Language
  *
- *      AUTHORS: Miro Keller
+ *	  AUTHORS: Miro Keller
  *
- *      COPYRIGHT: ©2020-today:  All Rights Reserved
+ *	  COPYRIGHT: ©2020-today:  All Rights Reserved
  *
- *      LICENSE: see LICENSE file
+ *	  LICENSE: see LICENSE file
  *
- *      This file inserts default methods into classes
+ *	  This file inserts default methods into classes
  *
  ********************************************************************/
 
@@ -23,21 +23,21 @@
 
 namespace LIL
 {
-    class LILMethodInserter : public LILVisitor
-    {
-    public:
-        LILMethodInserter();
-        virtual ~LILMethodInserter();
-        void initializeVisit();
-        virtual void visit(LILNode * node);
-        
-        void process(LILNode * node);
-        
-    private:
-        std::shared_ptr<LILNode> _findMethod(bool getter, LILClassDecl * value, LILString name);
-        std::vector<std::shared_ptr<LILNode>> _findReturnStatements(const std::vector<std::shared_ptr<LILNode>> & body);
-        std::vector<std::shared_ptr<LILNode>> _findSetterStatements(LILString name, const std::vector<std::shared_ptr<LILNode>> & body);
-    };
+	class LILMethodInserter : public LILVisitor
+	{
+	public:
+		LILMethodInserter();
+		virtual ~LILMethodInserter();
+		void initializeVisit();
+		virtual void visit(LILNode * node);
+		
+		void process(LILNode * node);
+		
+	private:
+		std::shared_ptr<LILNode> _findMethod(bool getter, LILClassDecl * value, LILString name);
+		std::vector<std::shared_ptr<LILNode>> _findReturnStatements(const std::vector<std::shared_ptr<LILNode>> & body);
+		std::vector<std::shared_ptr<LILNode>> _findSetterStatements(LILString name, const std::vector<std::shared_ptr<LILNode>> & body);
+	};
 }
 
 #endif

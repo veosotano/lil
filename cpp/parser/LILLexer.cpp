@@ -1,15 +1,15 @@
 /********************************************************************
  *
- *      LIL Is a Language
+ *	  LIL Is a Language
  *
- *      AUTHORS: Miro Keller
+ *	  AUTHORS: Miro Keller
  *
- *      COPYRIGHT: ©2020-today:  All Rights Reserved
+ *	  COPYRIGHT: ©2020-today:  All Rights Reserved
  *
- *      LICENSE: see LICENSE file
+ *	  LICENSE: see LICENSE file
  *
- *      This file implements converting characters into tokens,
- *      the smallest parts in the parsing system
+ *	  This file implements converting characters into tokens,
+ *	  the smallest parts in the parsing system
  *
  ********************************************************************/
 
@@ -27,80 +27,80 @@ using namespace LIL;
 
 bool isLatin1Letter(LILChar ch)
 {
-    return ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'));
+	return ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'));
 }
 
 namespace LIL
 {
-    class LILLexerPrivate
-    {
-    public:
-        LILLexerPrivate()
-        : sourceString("")
-        , currentChar()
-        , index(0)
-        , bufferLength(0)
-        , currentTokenText()
-        , currentLine()
-        , currentColumn()
-        , peekPositionOffset()
-        , peekLineOffset()
-        , peekColumnOffset()
-        , preferHex()
-        , previousTokenIndex(0)
-        , previousTokenLine(0)
-        , previousTokenColumn(0)
-        {
-        }
+	class LILLexerPrivate
+	{
+	public:
+		LILLexerPrivate()
+		: sourceString("")
+		, currentChar()
+		, index(0)
+		, bufferLength(0)
+		, currentTokenText()
+		, currentLine()
+		, currentColumn()
+		, peekPositionOffset()
+		, peekLineOffset()
+		, peekColumnOffset()
+		, preferHex()
+		, previousTokenIndex(0)
+		, previousTokenLine(0)
+		, previousTokenColumn(0)
+		{
+		}
 
-        //The source string
-        LILString sourceString;
+		//The source string
+		LILString sourceString;
 
-        // The Unicode character that is currently being processed
-        LILChar currentChar;
+		// The Unicode character that is currently being processed
+		LILChar currentChar;
 
-        size_t index;
-        size_t bufferLength;
-        std::string::const_iterator iterator;
-        std::string::const_iterator bufferBegin;
-        std::string::const_iterator bufferEnd;
+		size_t index;
+		size_t bufferLength;
+		std::string::const_iterator iterator;
+		std::string::const_iterator bufferBegin;
+		std::string::const_iterator bufferEnd;
 
-        // The text of a string token that is currently being processed
-        LILString currentTokenText;
+		// The text of a string token that is currently being processed
+		LILString currentTokenText;
 
-        // The line and column number of the current character
-        size_t currentLine;
-        size_t currentColumn;
+		// The line and column number of the current character
+		size_t currentLine;
+		size_t currentColumn;
 
-        // Offsets from the buffer position and line/column numbers used when
-        // peeking ahead in the stream
-        size_t peekPositionOffset;
-        size_t peekLineOffset;
-        size_t peekColumnOffset;
+		// Offsets from the buffer position and line/column numbers used when
+		// peeking ahead in the stream
+		size_t peekPositionOffset;
+		size_t peekLineOffset;
+		size_t peekColumnOffset;
 
-        // If you are expecting a hexadecimal number, set this to true
-        // don't forget to reset it afterwards
-        bool preferHex;
+		// If you are expecting a hexadecimal number, set this to true
+		// don't forget to reset it afterwards
+		bool preferHex;
 
-        //stores the start of the previous token in case we want to rewind
-        size_t previousTokenIndex;
-        size_t previousTokenLine;
-        size_t previousTokenColumn;
-        std::string::const_iterator previousTokenIterator;
-    };
+		//stores the start of the previous token in case we want to rewind
+		size_t previousTokenIndex;
+		size_t previousTokenLine;
+		size_t previousTokenColumn;
+		std::string::const_iterator previousTokenIterator;
+	};
 }
 
 LILLexer::LILLexer()
 : d(new LILLexerPrivate)
 {
-    this->reset();
-    d->sourceString = "";
-    d->bufferLength = 0;
+	this->reset();
+	d->sourceString = "";
+	d->bufferLength = 0;
 }
 
 LILLexer::~LILLexer()
 {
-    delete d;
+	delete d;
 }
 
 /*!
@@ -109,63 +109,63 @@ LILLexer::~LILLexer()
  */
 void LILLexer::reset()
 {
-    d->currentChar = '\0';
-    d->currentTokenText = LILString();
+	d->currentChar = '\0';
+	d->currentTokenText = LILString();
 
-    d->index = 0;
+	d->index = 0;
 
-    d->currentLine = 1;
-    d->currentColumn = 1;
+	d->currentLine = 1;
+	d->currentColumn = 1;
 
-    d->peekPositionOffset = 0;
-    d->peekLineOffset = 0;
-    d->peekColumnOffset = 0;
+	d->peekPositionOffset = 0;
+	d->peekLineOffset = 0;
+	d->peekColumnOffset = 0;
 
-    // By default, numbers are read as real numbers and A-F will be an identifier
-    d->preferHex = false;
+	// By default, numbers are read as real numbers and A-F will be an identifier
+	d->preferHex = false;
 
-    d->previousTokenIndex = 0;
+	d->previousTokenIndex = 0;
 }
 
 void LILLexer::setString(const LILString & theString)
 {
-    this->reset();
-    d->sourceString = theString;
-    d->bufferLength = theString.length();
+	this->reset();
+	d->sourceString = theString;
+	d->bufferLength = theString.length();
 
-    std::string::const_iterator beginIt = d->sourceString.begin();
-    d->bufferBegin = d->iterator = beginIt;
-    d->bufferEnd = d->sourceString.end();
+	std::string::const_iterator beginIt = d->sourceString.begin();
+	d->bufferBegin = d->iterator = beginIt;
+	d->bufferEnd = d->sourceString.end();
 }
 
 bool LILLexer::isHexPreferred() const
 {
-    return d->preferHex;
+	return d->preferHex;
 }
 
 void LILLexer::setHexPreferred(bool prefer)
 {
-    d->preferHex = prefer;
+	d->preferHex = prefer;
 }
 
 size_t LILLexer::currentLine() const
 {
-    return d->currentLine;
+	return d->currentLine;
 }
 
 size_t LILLexer::currentColumn() const
 {
-    return d->currentColumn;
+	return d->currentColumn;
 }
 
 size_t LILLexer::currentIndex() const
 {
-    return d->index;
+	return d->index;
 }
 
 bool LILLexer::atEndOfSource() const
 {
-    return (d->iterator == d->bufferEnd) && (d->currentChar == '\0');
+	return (d->iterator == d->bufferEnd) && (d->currentChar == '\0');
 }
 
 /*!
@@ -173,26 +173,26 @@ bool LILLexer::atEndOfSource() const
  */
 void LILLexer::readNextChar()
 {
-    if (d->iterator == d->bufferEnd)
-    {
-        d->currentChar = '\0';
-    }
-    else
-    {
-        d->currentChar = LILChar(utf8::next(d->iterator, d->bufferEnd));
+	if (d->iterator == d->bufferEnd)
+	{
+		d->currentChar = '\0';
+	}
+	else
+	{
+		d->currentChar = LILChar(utf8::next(d->iterator, d->bufferEnd));
 #ifdef LILLEXERDEBUG
-        wchar_t theChar = (wchar_t)d->currentChar.data();
-        std::cerr << "read char: ";
-        std::wcerr << theChar;
-        std::cerr << "\n";
+		wchar_t theChar = (wchar_t)d->currentChar.data();
+		std::cerr << "read char: ";
+		std::wcerr << theChar;
+		std::cerr << "\n";
 #endif
-    }
+	}
 
-    //LILLog(LoggerChannelLexer, LILString::format("Read character %c (line %d, col %d)", d->currentChar.data(), d->currentLine, d->currentColumn));
+	//LILLog(LoggerChannelLexer, LILString::format("Read character %c (line %d, col %d)", d->currentChar.data(), d->currentLine, d->currentColumn));
 
-    d->index += 1;
+	d->index += 1;
 
-    d->currentColumn += 1;
+	d->currentColumn += 1;
 }
 
 /*!
@@ -200,138 +200,138 @@ void LILLexer::readNextChar()
  */
 std::shared_ptr<LILToken> LILLexer::readNextToken()
 {
-    std::shared_ptr<LILToken> ret;
+	std::shared_ptr<LILToken> ret;
 
-    if (this->atEndOfSource() && d->currentChar == '\0')
-    {
-        return ret;
-    }
+	if (this->atEndOfSource() && d->currentChar == '\0')
+	{
+		return ret;
+	}
 
-    //store start index
-    d->previousTokenIndex = d->index;
-    d->previousTokenLine = d->currentLine;
-    d->previousTokenColumn = d->currentColumn;
-    d->previousTokenIterator = d->iterator;
+	//store start index
+	d->previousTokenIndex = d->index;
+	d->previousTokenLine = d->currentLine;
+	d->previousTokenColumn = d->currentColumn;
+	d->previousTokenIterator = d->iterator;
 
-    LILChar cc = d->currentChar;
+	LILChar cc = d->currentChar;
 
-    // Identifiers can start with a letter or an underscore
-    if (isLatin1Letter(cc) || cc == '_')
-    {
-        if (d->preferHex)
-            return this->readHexOrIdentifier();
-        else
-            return this->readIdentifier();
-    }
+	// Identifiers can start with a letter or an underscore
+	if (isLatin1Letter(cc) || cc == '_')
+	{
+		if (d->preferHex)
+			return this->readHexOrIdentifier();
+		else
+			return this->readIdentifier();
+	}
 
-    if (cc.isSpace())
-        return this->readWhitespace();
+	if (cc.isSpace())
+		return this->readWhitespace();
 
-    // If it starts with a number it is either a number or a percentage
-    if (cc.isDigit())
-    {
-        if (d->preferHex)
-            return this->readHexOrIdentifier();
-        else
-            return this->readNumberOrPercentage();
-    }
+	// If it starts with a number it is either a number or a percentage
+	if (cc.isDigit())
+	{
+		if (d->preferHex)
+			return this->readHexOrIdentifier();
+		else
+			return this->readNumberOrPercentage();
+	}
 
-    switch (cc.data())
-    {
-        // If it starts with quotes, either single or double, it is a string
-        case '"':
-        case '\'':
-            return this->readString();
-        case '#':
-            return this->readInstructionSignOrDoc();
-        case '@':
-            ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeObjectSign, cc, d->currentLine, d->currentColumn - 1, d->index));
-            this->readNextChar();
-            return ret;
-        case '&':
-            ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeAmpersand, cc, d->currentLine, d->currentColumn - 1, d->index));
-            this->readNextChar();
-            return ret;
-        case '{':
-            ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeBlockOpen, cc, d->currentLine, d->currentColumn - 1, d->index));
-            this->readNextChar();
-            return ret;
-        case '}':
-            ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeBlockClose, cc, d->currentLine, d->currentColumn - 1, d->index));
-            this->readNextChar();
-            return ret;
-        case ',':
-            ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeComma, cc, d->currentLine, d->currentColumn - 1, d->index));
-            this->readNextChar();
-            return ret;
-        case ':':
-            ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeColon, cc, d->currentLine, d->currentColumn - 1, d->index));
-            this->readNextChar();
-            return ret;
-        case ';':
-            ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeSemicolon, cc, d->currentLine, d->currentColumn - 1, d->index));
-            this->readNextChar();
-            return ret;
-        case '(':
-            ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeParenthesisOpen, cc, d->currentLine, d->currentColumn - 1, d->index));
-            this->readNextChar();
-            return ret;
-        case ')':
-            ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeParenthesisClose, cc, d->currentLine, d->currentColumn - 1, d->index));
-            this->readNextChar();
-            return ret;
-        case '|':
-            ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeVerticalBar, cc, d->currentLine, d->currentColumn - 1, d->index));
-            this->readNextChar();
-            return ret;
-        case '/':
-            return this->readCommentOrSymbol();
-        case '!':
-            ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeNegator, cc, d->currentLine, d->currentColumn - 1, d->index));
-            this->readNextChar();
-            return ret;
-        case '.':
-            return this->readDotChars();
+	switch (cc.data())
+	{
+		// If it starts with quotes, either single or double, it is a string
+		case '"':
+		case '\'':
+			return this->readString();
+		case '#':
+			return this->readInstructionSignOrDoc();
+		case '@':
+			ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeObjectSign, cc, d->currentLine, d->currentColumn - 1, d->index));
+			this->readNextChar();
+			return ret;
+		case '&':
+			ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeAmpersand, cc, d->currentLine, d->currentColumn - 1, d->index));
+			this->readNextChar();
+			return ret;
+		case '{':
+			ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeBlockOpen, cc, d->currentLine, d->currentColumn - 1, d->index));
+			this->readNextChar();
+			return ret;
+		case '}':
+			ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeBlockClose, cc, d->currentLine, d->currentColumn - 1, d->index));
+			this->readNextChar();
+			return ret;
+		case ',':
+			ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeComma, cc, d->currentLine, d->currentColumn - 1, d->index));
+			this->readNextChar();
+			return ret;
+		case ':':
+			ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeColon, cc, d->currentLine, d->currentColumn - 1, d->index));
+			this->readNextChar();
+			return ret;
+		case ';':
+			ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeSemicolon, cc, d->currentLine, d->currentColumn - 1, d->index));
+			this->readNextChar();
+			return ret;
+		case '(':
+			ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeParenthesisOpen, cc, d->currentLine, d->currentColumn - 1, d->index));
+			this->readNextChar();
+			return ret;
+		case ')':
+			ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeParenthesisClose, cc, d->currentLine, d->currentColumn - 1, d->index));
+			this->readNextChar();
+			return ret;
+		case '|':
+			ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeVerticalBar, cc, d->currentLine, d->currentColumn - 1, d->index));
+			this->readNextChar();
+			return ret;
+		case '/':
+			return this->readCommentOrSymbol();
+		case '!':
+			ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeNegator, cc, d->currentLine, d->currentColumn - 1, d->index));
+			this->readNextChar();
+			return ret;
+		case '.':
+			return this->readDotChars();
 
-        case '=':
-            return this->readEqualSignOrFatArrow();
+		case '=':
+			return this->readEqualSignOrFatArrow();
 
-        case '>':
-            return this->readComparator();
+		case '>':
+			return this->readComparator();
 
-        case '<':
-            return this->readComparatorOrForeignLang();
+		case '<':
+			return this->readComparatorOrForeignLang();
 
-        case '[':
-            ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeSquareBracketOpen, cc, d->currentLine, d->currentColumn - 1, d->index));
-            this->readNextChar();
-            return ret;
-        case ']':
-            ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeSquareBracketClose, cc, d->currentLine, d->currentColumn - 1, d->index));
-            this->readNextChar();
-            return ret;
-        case '+':
-            ret = std::shared_ptr<LILToken>(new LILToken(TokenTypePlusSign, cc, d->currentLine, d->currentColumn - 1, d->index));
-            this->readNextChar();
-            return ret;
-        case '-':
-            return this->readMinusSignOrThinArrow();
-        case '*':
-            ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeAsterisk, cc, d->currentLine, d->currentColumn - 1, d->index));
-            this->readNextChar();
-            return ret;
-        case '`':
-            return this->readCString();
-        case '%':
-            ret = std::shared_ptr<LILToken>(new LILToken(TokenTypePercentSign, cc, d->currentLine, d->currentColumn - 1, d->index));
-            this->readNextChar();
-            return ret;
-        case '$':
-            return this->readIdentifier();
+		case '[':
+			ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeSquareBracketOpen, cc, d->currentLine, d->currentColumn - 1, d->index));
+			this->readNextChar();
+			return ret;
+		case ']':
+			ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeSquareBracketClose, cc, d->currentLine, d->currentColumn - 1, d->index));
+			this->readNextChar();
+			return ret;
+		case '+':
+			ret = std::shared_ptr<LILToken>(new LILToken(TokenTypePlusSign, cc, d->currentLine, d->currentColumn - 1, d->index));
+			this->readNextChar();
+			return ret;
+		case '-':
+			return this->readMinusSignOrThinArrow();
+		case '*':
+			ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeAsterisk, cc, d->currentLine, d->currentColumn - 1, d->index));
+			this->readNextChar();
+			return ret;
+		case '`':
+			return this->readCString();
+		case '%':
+			ret = std::shared_ptr<LILToken>(new LILToken(TokenTypePercentSign, cc, d->currentLine, d->currentColumn - 1, d->index));
+			this->readNextChar();
+			return ret;
+		case '$':
+			return this->readIdentifier();
 
-        default:
-            return this->readInvalidChar();
-    }
+		default:
+			return this->readInvalidChar();
+	}
 }
 
 /*!
@@ -343,27 +343,27 @@ std::shared_ptr<LILToken> LILLexer::readNextToken()
  */
 std::shared_ptr<LILToken> LILLexer::peekNextToken()
 {
-    std::shared_ptr<LILToken> ret;
+	std::shared_ptr<LILToken> ret;
 
-    // Store the current position in the buffer
-    size_t savedPosition = d->index;
-    size_t savedLine = d->currentLine;
-    size_t savedColumn = d->currentColumn;
+	// Store the current position in the buffer
+	size_t savedPosition = d->index;
+	size_t savedLine = d->currentLine;
+	size_t savedColumn = d->currentColumn;
 
-    // Read the next token
-    ret = this->readNextToken();
+	// Read the next token
+	ret = this->readNextToken();
 
-    // Store the new offset
-    d->peekPositionOffset += (d->index - savedPosition);
-    d->peekLineOffset += (d->currentLine - savedLine);
-    d->peekColumnOffset += (d->currentColumn - savedColumn);
+	// Store the new offset
+	d->peekPositionOffset += (d->index - savedPosition);
+	d->peekLineOffset += (d->currentLine - savedLine);
+	d->peekColumnOffset += (d->currentColumn - savedColumn);
 
-//    if (ret)
-        //LILLog(LoggerChannelLexer, LILString::format("Peeked (offset: %d, current position: %d, saved position: %d), read token %s", d->peekPositionOffset, d->index, savedPosition, ret->toString().chardata()));
-//    else
-        //LILLog(LoggerChannelLexer, LILString::format("Peeked (offset: %d, current position: %d, saved position: %d), no token read", d->peekPositionOffset, d->index, savedPosition));
+//	if (ret)
+		//LILLog(LoggerChannelLexer, LILString::format("Peeked (offset: %d, current position: %d, saved position: %d), read token %s", d->peekPositionOffset, d->index, savedPosition, ret->toString().chardata()));
+//	else
+		//LILLog(LoggerChannelLexer, LILString::format("Peeked (offset: %d, current position: %d, saved position: %d), no token read", d->peekPositionOffset, d->index, savedPosition));
 
-    return ret;
+	return ret;
 }
 
 /*!
@@ -374,39 +374,39 @@ std::shared_ptr<LILToken> LILLexer::peekNextToken()
  */
 void LILLexer::resetPeek()
 {
-    // Restore the saved position in the buffer
-    // We start one character before we were before, since we are re-reading the character
-    size_t delta = (d->peekPositionOffset + 1);
+	// Restore the saved position in the buffer
+	// We start one character before we were before, since we are re-reading the character
+	size_t delta = (d->peekPositionOffset + 1);
 
-    d->index -= delta;
-    d->currentLine -= d->peekLineOffset;
-    d->currentColumn -= (d->peekColumnOffset + 1);
+	d->index -= delta;
+	d->currentLine -= d->peekLineOffset;
+	d->currentColumn -= (d->peekColumnOffset + 1);
 
-    if (d->currentChar == '\0')
-        delta -= 1;
+	if (d->currentChar == '\0')
+		delta -= 1;
 
-    for (int i = 0; i<delta; ++i)
-    {
-        LILChar currentChar = utf8::prior(d->iterator, d->bufferBegin);
-    }
-    this->readNextChar();
+	for (int i = 0; i<delta; ++i)
+	{
+		LILChar currentChar = utf8::prior(d->iterator, d->bufferBegin);
+	}
+	this->readNextChar();
 
-    // Reset the peek offsets
-    d->peekPositionOffset = 0;
-    d->peekLineOffset = 0;
-    d->peekColumnOffset = 0;
+	// Reset the peek offsets
+	d->peekPositionOffset = 0;
+	d->peekLineOffset = 0;
+	d->peekColumnOffset = 0;
 
-    //LILLog(LoggerChannelLexer, LILString("Peek reset"));
+	//LILLog(LoggerChannelLexer, LILString("Peek reset"));
 }
 
 void LILLexer::rewindToPreviousToken()
 {
-    d->index = d->previousTokenIndex;
-    d->currentLine = d->previousTokenLine;
-    d->currentColumn = d->previousTokenColumn;
-    d->iterator = d->previousTokenIterator;
-    utf8::prior(d->iterator, d->bufferBegin);
-    d->currentChar = LILChar(utf8::next(d->iterator, d->bufferEnd));
+	d->index = d->previousTokenIndex;
+	d->currentLine = d->previousTokenLine;
+	d->currentColumn = d->previousTokenColumn;
+	d->iterator = d->previousTokenIterator;
+	utf8::prior(d->iterator, d->bufferBegin);
+	d->currentChar = LILChar(utf8::next(d->iterator, d->bufferEnd));
 }
 
 /*!
@@ -415,8 +415,8 @@ void LILLexer::rewindToPreviousToken()
  */
 void LILLexer::storeCurrentCharAndReadNext()
 {
-    d->currentTokenText += d->currentChar;
-    this->readNextChar();
+	d->currentTokenText += d->currentChar;
+	this->readNextChar();
 }
 
 /*!
@@ -424,9 +424,9 @@ void LILLexer::storeCurrentCharAndReadNext()
  */
 LILString LILLexer::extractCurrentTokenText()
 {
-    LILString text = d->currentTokenText;
-    d->currentTokenText.clear();
-    return text;
+	LILString text = d->currentTokenText;
+	d->currentTokenText.clear();
+	return text;
 }
 
 /*!
@@ -434,27 +434,27 @@ LILString LILLexer::extractCurrentTokenText()
  */
 std::shared_ptr<LILToken> LILLexer::readWhitespace()
 {
-    const size_t line = d->currentLine;
-    const size_t column = d->currentColumn - 1;
-    const size_t index = d->index;
+	const size_t line = d->currentLine;
+	const size_t column = d->currentColumn - 1;
+	const size_t index = d->index;
 
-    while (d->currentChar.isSpace())
-    {
-        // We only want to consider something after \n to be a new line, as this
-        // effectively matches \n and \r\n. No modern system considers \r alone
-        // to be a new line, and checking for it here would cause most Windows
-        // files to show incorrect line numbers, as a new line would be registered
-        // for both the \r AND the \n.
-        if (d->currentChar == '\n')
-        {
-            d->currentLine++;
-            d->currentColumn = 1;
-        }
+	while (d->currentChar.isSpace())
+	{
+		// We only want to consider something after \n to be a new line, as this
+		// effectively matches \n and \r\n. No modern system considers \r alone
+		// to be a new line, and checking for it here would cause most Windows
+		// files to show incorrect line numbers, as a new line would be registered
+		// for both the \r AND the \n.
+		if (d->currentChar == '\n')
+		{
+			d->currentLine++;
+			d->currentColumn = 1;
+		}
 
-        this->storeCurrentCharAndReadNext();
-    }
+		this->storeCurrentCharAndReadNext();
+	}
 
-    return std::shared_ptr<LILToken>(new LILToken(TokenTypeWhitespace, this->extractCurrentTokenText(), line, column, index));
+	return std::shared_ptr<LILToken>(new LILToken(TokenTypeWhitespace, this->extractCurrentTokenText(), line, column, index));
 }
 
 /*!
@@ -462,16 +462,16 @@ std::shared_ptr<LILToken> LILLexer::readWhitespace()
  */
 std::shared_ptr<LILToken> LILLexer::readIdentifier()
 {
-    const size_t line = d->currentLine;
-    const size_t column = d->currentColumn - 1;
-    const size_t index = d->index;
+	const size_t line = d->currentLine;
+	const size_t column = d->currentColumn - 1;
+	const size_t index = d->index;
 
-    while (isLatin1Letter(d->currentChar) || d->currentChar.isDigit() || d->currentChar == '_' || d->currentChar == '$')
-    {
-        this->storeCurrentCharAndReadNext();
-    }
+	while (isLatin1Letter(d->currentChar) || d->currentChar.isDigit() || d->currentChar == '_' || d->currentChar == '$')
+	{
+		this->storeCurrentCharAndReadNext();
+	}
 
-    return std::shared_ptr<LILToken>(new LILToken(TokenTypeIdentifier, this->extractCurrentTokenText(), line, column, index));
+	return std::shared_ptr<LILToken>(new LILToken(TokenTypeIdentifier, this->extractCurrentTokenText(), line, column, index));
 }
 
 /*!
@@ -479,59 +479,59 @@ std::shared_ptr<LILToken> LILLexer::readIdentifier()
  */
 std::shared_ptr<LILToken> LILLexer::readHexOrIdentifier()
 {
-    const size_t line = d->currentLine;
-    const size_t column = d->currentColumn - 1;
-    const size_t index = d->index;
+	const size_t line = d->currentLine;
+	const size_t column = d->currentColumn - 1;
+	const size_t index = d->index;
 
-    bool done = false;
-    d->currentTokenText.clear();
-    while (!done)
-    {
-        switch (d->currentChar.data())
-        {
-        case 'a':
-        case 'A':
-        case 'b':
-        case 'B':
-        case 'c':
-        case 'C':
-        case 'd':
-        case 'D':
-        case 'e':
-        case 'E':
-        case 'f':
-        case 'F':
-            this->storeCurrentCharAndReadNext();
-            continue;
+	bool done = false;
+	d->currentTokenText.clear();
+	while (!done)
+	{
+		switch (d->currentChar.data())
+		{
+		case 'a':
+		case 'A':
+		case 'b':
+		case 'B':
+		case 'c':
+		case 'C':
+		case 'd':
+		case 'D':
+		case 'e':
+		case 'E':
+		case 'f':
+		case 'F':
+			this->storeCurrentCharAndReadNext();
+			continue;
 
-        default:
-            if (d->currentChar.isDigit())
-            {
-                this->storeCurrentCharAndReadNext();
-                continue;
-            }
-            else
-            {
-                if (isLatin1Letter(d->currentChar))
-                {
-                    done = true;
-                    break;
-                }
-                else if (d->currentTokenText.length() > 0)
-                {
-                    return std::shared_ptr<LILToken>(new LILToken(TokenTypeHexNumber, this->extractCurrentTokenText(), line, column, index));
-                }
-                else
-                {
-                    done = true;
-                    break;
-                }
-            }
-        }
-    }
+		default:
+			if (d->currentChar.isDigit())
+			{
+				this->storeCurrentCharAndReadNext();
+				continue;
+			}
+			else
+			{
+				if (isLatin1Letter(d->currentChar))
+				{
+					done = true;
+					break;
+				}
+				else if (d->currentTokenText.length() > 0)
+				{
+					return std::shared_ptr<LILToken>(new LILToken(TokenTypeHexNumber, this->extractCurrentTokenText(), line, column, index));
+				}
+				else
+				{
+					done = true;
+					break;
+				}
+			}
+		}
+	}
 
-    // If we reached this far, it is an identifier - finish reading it
-    return this->readIdentifier();
+	// If we reached this far, it is an identifier - finish reading it
+	return this->readIdentifier();
 }
 
 /*!
@@ -542,45 +542,45 @@ std::shared_ptr<LILToken> LILLexer::readHexOrIdentifier()
  */
 std::shared_ptr<LILToken> LILLexer::readNumberOrPercentage()
 {
-    const size_t line = d->currentLine;
-    const size_t column = d->currentColumn - 1;
-    const size_t index = d->index;
+	const size_t line = d->currentLine;
+	const size_t column = d->currentColumn - 1;
+	const size_t index = d->index;
 
-    bool dotFound = false;
-    while (d->currentChar.isDigit() || d->currentChar == '.')
-    {
-        if (d->currentChar == '.')
-        {
-            if (dotFound)
-                break;
-            else
-                dotFound = true;
-        }
+	bool dotFound = false;
+	while (d->currentChar.isDigit() || d->currentChar == '.')
+	{
+		if (d->currentChar == '.')
+		{
+			if (dotFound)
+				break;
+			else
+				dotFound = true;
+		}
 
-        this->storeCurrentCharAndReadNext();
-    }
+		this->storeCurrentCharAndReadNext();
+	}
 
-    std::shared_ptr<LILToken> ret;
-    if (d->currentChar == '%')
-    {
-        if (dotFound) {
-            ret = std::shared_ptr<LILToken>(new LILToken(TokenTypePercentageNumberFP, this->extractCurrentTokenText(), line, column, index));
-        } else {
-            ret = std::shared_ptr<LILToken>(new LILToken(TokenTypePercentageNumberInt, this->extractCurrentTokenText(), line, column, index));
-        }
-        
-        this->readNextChar();
-    }
-    else
-    {
-        if (dotFound) {
-            ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeNumberFP, this->extractCurrentTokenText(), line, column, index));
-        } else {
-            ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeNumberInt, this->extractCurrentTokenText(), line, column, index));
-        }
-    }
+	std::shared_ptr<LILToken> ret;
+	if (d->currentChar == '%')
+	{
+		if (dotFound) {
+			ret = std::shared_ptr<LILToken>(new LILToken(TokenTypePercentageNumberFP, this->extractCurrentTokenText(), line, column, index));
+		} else {
+			ret = std::shared_ptr<LILToken>(new LILToken(TokenTypePercentageNumberInt, this->extractCurrentTokenText(), line, column, index));
+		}
+		
+		this->readNextChar();
+	}
+	else
+	{
+		if (dotFound) {
+			ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeNumberFP, this->extractCurrentTokenText(), line, column, index));
+		} else {
+			ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeNumberInt, this->extractCurrentTokenText(), line, column, index));
+		}
+	}
 
-    return ret;
+	return ret;
 }
 
 /*!
@@ -590,179 +590,179 @@ std::shared_ptr<LILToken> LILLexer::readNumberOrPercentage()
  */
 std::shared_ptr<LILToken> LILLexer::readString()
 {
-    std::shared_ptr<LILToken> errorState;
-    const size_t line = d->currentLine;
-    const size_t column = d->currentColumn - 1;
-    const size_t index = d->index;
+	std::shared_ptr<LILToken> errorState;
+	const size_t line = d->currentLine;
+	const size_t column = d->currentColumn - 1;
+	const size_t index = d->index;
 
-    if (d->currentChar != '"' && d->currentChar != '\'')
-        return errorState;
+	if (d->currentChar != '"' && d->currentChar != '\'')
+		return errorState;
 
-    bool isDoubleQuote = d->currentChar == '"';
-    const char compareChar = isDoubleQuote ? '"' : '\'';
+	bool isDoubleQuote = d->currentChar == '"';
+	const char compareChar = isDoubleQuote ? '"' : '\'';
 
-    std::shared_ptr<LILStringToken> strToken(new LILStringToken((isDoubleQuote ?TokenTypeDoubleQuoteString : TokenTypeSingleQuoteString), line, column, index));
+	std::shared_ptr<LILStringToken> strToken(new LILStringToken((isDoubleQuote ?TokenTypeDoubleQuoteString : TokenTypeSingleQuoteString), line, column, index));
 
-    size_t strIndex = 1;
+	size_t strIndex = 1;
 
-    this->storeCurrentCharAndReadNext();
-    bool stringDone = false;
-    while (!stringDone)
-    {
-        stringDone = true;
-        if (this->atEndOfSource())
-        {
-            break;
-        }
-        if (d->currentChar == '%')
-        {
-            LILChar peekChar = utf8::peek_next(d->iterator, d->bufferEnd);
-            if (isLatin1Letter(peekChar) || peekChar == '_' || peekChar == '{'||peekChar == '@') {
-                strToken->setHasArguments(true);
-                strToken->addIndex(strIndex);
-            }
-            else
-            {
-                //it is a regular char of the string
-                //continue
-                stringDone = false;
-                this->storeCurrentCharAndReadNext();
-                ++strIndex;
-            }
-            //stop here
-        }
-        else if (d->currentChar != compareChar)
-        {
-            //continue
-            stringDone = false;
-            this->storeCurrentCharAndReadNext();
-            ++strIndex;
-        }
-        else
-        {
-            //read end quotes
-            this->storeCurrentCharAndReadNext();
-        }
-    }
+	this->storeCurrentCharAndReadNext();
+	bool stringDone = false;
+	while (!stringDone)
+	{
+		stringDone = true;
+		if (this->atEndOfSource())
+		{
+			break;
+		}
+		if (d->currentChar == '%')
+		{
+			LILChar peekChar = utf8::peek_next(d->iterator, d->bufferEnd);
+			if (isLatin1Letter(peekChar) || peekChar == '_' || peekChar == '{'||peekChar == '@') {
+				strToken->setHasArguments(true);
+				strToken->addIndex(strIndex);
+			}
+			else
+			{
+				//it is a regular char of the string
+				//continue
+				stringDone = false;
+				this->storeCurrentCharAndReadNext();
+				++strIndex;
+			}
+			//stop here
+		}
+		else if (d->currentChar != compareChar)
+		{
+			//continue
+			stringDone = false;
+			this->storeCurrentCharAndReadNext();
+			++strIndex;
+		}
+		else
+		{
+			//read end quotes
+			this->storeCurrentCharAndReadNext();
+		}
+	}
 
-    strToken->setString(this->extractCurrentTokenText());
-    return strToken;
+	strToken->setString(this->extractCurrentTokenText());
+	return strToken;
 }
 
 std::shared_ptr<LILToken> LILLexer::readCString()
 {
-    std::shared_ptr<LILToken> errorState;
-    const size_t line = d->currentLine;
-    const size_t column = d->currentColumn - 1;
-    const size_t index = d->index;
+	std::shared_ptr<LILToken> errorState;
+	const size_t line = d->currentLine;
+	const size_t column = d->currentColumn - 1;
+	const size_t index = d->index;
 
-    if (d->currentChar != '`')
-        return errorState;
+	if (d->currentChar != '`')
+		return errorState;
 
-    std::shared_ptr<LILToken> ret =  std::make_shared<LILToken>(TokenTypeCString, line, column, index);
+	std::shared_ptr<LILToken> ret =  std::make_shared<LILToken>(TokenTypeCString, line, column, index);
 
-    size_t strIndex = 1;
+	size_t strIndex = 1;
 
-    this->storeCurrentCharAndReadNext();
-    bool stringDone = false;
-    while (!stringDone)
-    {
-        stringDone = true;
-        if (this->atEndOfSource())
-        {
-            break;
-        }
-        else if (d->currentChar != '`')
-        {
-            //continue
-            stringDone = false;
-            this->storeCurrentCharAndReadNext();
-            ++strIndex;
-        }
-        else
-        {
-            //read end backtick
-            this->storeCurrentCharAndReadNext();
-        }
-    }
+	this->storeCurrentCharAndReadNext();
+	bool stringDone = false;
+	while (!stringDone)
+	{
+		stringDone = true;
+		if (this->atEndOfSource())
+		{
+			break;
+		}
+		else if (d->currentChar != '`')
+		{
+			//continue
+			stringDone = false;
+			this->storeCurrentCharAndReadNext();
+			++strIndex;
+		}
+		else
+		{
+			//read end backtick
+			this->storeCurrentCharAndReadNext();
+		}
+	}
 
-    ret->setString(this->extractCurrentTokenText());
-    return ret;
+	ret->setString(this->extractCurrentTokenText());
+	return ret;
 }
 
 std::shared_ptr<LILStringToken> LILLexer::readString(std::shared_ptr<LILStringToken> strToken, bool & done)
 {
-    done = true;
+	done = true;
 
-    LILString currentStr = strToken->getString();
-    bool isDoubleQuote = strToken->getType() == TokenTypeDoubleQuoteString;
-    const char compareChar = isDoubleQuote ? '"' : '\'';
+	LILString currentStr = strToken->getString();
+	bool isDoubleQuote = strToken->getType() == TokenTypeDoubleQuoteString;
+	const char compareChar = isDoubleQuote ? '"' : '\'';
 
-    size_t strIndex = currentStr.length();
+	size_t strIndex = currentStr.length();
 
-    bool stringDone = false;
-    while (!stringDone)
-    {
-        stringDone = true;
-        if (this->atEndOfSource())
-        {
-            break;
-        }
-        if (d->currentChar == '%')
-        {
-            //communicate to outside
-            done = false;
-            strToken->addIndex(strIndex);
-            //stop here
-        }
-        else if (d->currentChar != compareChar)
-        {
-            //continue
-            stringDone = false;
-            this->storeCurrentCharAndReadNext();
-            ++strIndex;
-        }
-        else
-        {
-            //read end quotes
-            this->storeCurrentCharAndReadNext();
-        }
-    }
+	bool stringDone = false;
+	while (!stringDone)
+	{
+		stringDone = true;
+		if (this->atEndOfSource())
+		{
+			break;
+		}
+		if (d->currentChar == '%')
+		{
+			//communicate to outside
+			done = false;
+			strToken->addIndex(strIndex);
+			//stop here
+		}
+		else if (d->currentChar != compareChar)
+		{
+			//continue
+			stringDone = false;
+			this->storeCurrentCharAndReadNext();
+			++strIndex;
+		}
+		else
+		{
+			//read end quotes
+			this->storeCurrentCharAndReadNext();
+		}
+	}
 
-    LILString endStr = this->extractCurrentTokenText();
-    std::shared_ptr<LILStringToken> endToken = std::shared_ptr<LILStringToken>(new LILStringToken(strToken->getType(), strToken->line, strToken->column, strToken->index));
-    endToken->setString(endStr);
+	LILString endStr = this->extractCurrentTokenText();
+	std::shared_ptr<LILStringToken> endToken = std::shared_ptr<LILStringToken>(new LILStringToken(strToken->getType(), strToken->line, strToken->column, strToken->index));
+	endToken->setString(endStr);
 
-    strToken->setString(currentStr + endStr);
+	strToken->setString(currentStr + endStr);
 
-    return endToken;
+	return endToken;
 }
 
 std::shared_ptr<LILToken> LILLexer::readInstructionSignOrDoc()
 {
-    const size_t line = d->currentLine;
-    const size_t column = d->currentColumn - 1;
-    const size_t index = d->index;
-    
-    std::shared_ptr<LILToken> ret;
-    this->storeCurrentCharAndReadNext();
-    if (d->currentChar == '=' || d->currentChar == '-')
-    {
-        this->storeCurrentCharAndReadNext(); // skip '=' or '-'
-        
-        // Read all chars until end of line
-        while (d->currentChar != '\n' && d->currentChar != '\r' && d->currentChar != '\f' && !this->atEndOfSource())
-        {
-            this->storeCurrentCharAndReadNext();
-        }
-        
-        ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeDocumentation, this->extractCurrentTokenText(), line, column, index));
-    }
-    else
-    {
-        ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeInstructionSign, this->extractCurrentTokenText(), line, column, index));
-    }
-    return ret;
+	const size_t line = d->currentLine;
+	const size_t column = d->currentColumn - 1;
+	const size_t index = d->index;
+	
+	std::shared_ptr<LILToken> ret;
+	this->storeCurrentCharAndReadNext();
+	if (d->currentChar == '=' || d->currentChar == '-')
+	{
+		this->storeCurrentCharAndReadNext(); // skip '=' or '-'
+		
+		// Read all chars until end of line
+		while (d->currentChar != '\n' && d->currentChar != '\r' && d->currentChar != '\f' && !this->atEndOfSource())
+		{
+			this->storeCurrentCharAndReadNext();
+		}
+		
+		ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeDocumentation, this->extractCurrentTokenText(), line, column, index));
+	}
+	else
+	{
+		ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeInstructionSign, this->extractCurrentTokenText(), line, column, index));
+	}
+	return ret;
 }
 
 /*!
@@ -772,58 +772,58 @@ std::shared_ptr<LILToken> LILLexer::readInstructionSignOrDoc()
  */
 std::shared_ptr<LILToken> LILLexer::readCommentOrSymbol()
 {
-    const size_t line = d->currentLine;
-    const size_t column = d->currentColumn - 1;
-    const size_t index = d->index;
+	const size_t line = d->currentLine;
+	const size_t column = d->currentColumn - 1;
+	const size_t index = d->index;
 
-    std::shared_ptr<LILToken> ret;
-    this->storeCurrentCharAndReadNext();
-    if (d->currentChar == '/')
-    {
-        this->storeCurrentCharAndReadNext(); // skip '/'
+	std::shared_ptr<LILToken> ret;
+	this->storeCurrentCharAndReadNext();
+	if (d->currentChar == '/')
+	{
+		this->storeCurrentCharAndReadNext(); // skip '/'
 
-        // Read all chars until end of line
-        while (d->currentChar != '\n' && d->currentChar != '\r' && d->currentChar != '\f' && !this->atEndOfSource())
-        {
-            this->storeCurrentCharAndReadNext();
-        }
+		// Read all chars until end of line
+		while (d->currentChar != '\n' && d->currentChar != '\r' && d->currentChar != '\f' && !this->atEndOfSource())
+		{
+			this->storeCurrentCharAndReadNext();
+		}
 
-        ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeLineComment, this->extractCurrentTokenText(), line, column, index));
-    }
-    else if (d->currentChar == '*')
-    {
-        this->storeCurrentCharAndReadNext(); //skip '*'
-        while (true)
-        {
-            if (d->currentChar == '*')
-            {
-                this->storeCurrentCharAndReadNext(); // We won't know if it is the end of the comment until we seek further
-                if (d->currentChar == '/')
-                {
-                    // It is the end, break the loop
-                    d->currentTokenText += d->currentChar;
-                    break;
-                }
-            }
-            else if (this->atEndOfSource())
-            {
-                break;
-            }
-            else
-            {
-                this->storeCurrentCharAndReadNext();
-            }
-        }
+		ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeLineComment, this->extractCurrentTokenText(), line, column, index));
+	}
+	else if (d->currentChar == '*')
+	{
+		this->storeCurrentCharAndReadNext(); //skip '*'
+		while (true)
+		{
+			if (d->currentChar == '*')
+			{
+				this->storeCurrentCharAndReadNext(); // We won't know if it is the end of the comment until we seek further
+				if (d->currentChar == '/')
+				{
+					// It is the end, break the loop
+					d->currentTokenText += d->currentChar;
+					break;
+				}
+			}
+			else if (this->atEndOfSource())
+			{
+				break;
+			}
+			else
+			{
+				this->storeCurrentCharAndReadNext();
+			}
+		}
 
-        ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeBlockComment, this->extractCurrentTokenText(), line, column, index));
-        readNextChar();
-    }
-    else
-    {
-        ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeSlash, this->extractCurrentTokenText(), line, column, index));
-    }
+		ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeBlockComment, this->extractCurrentTokenText(), line, column, index));
+		readNextChar();
+	}
+	else
+	{
+		ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeSlash, this->extractCurrentTokenText(), line, column, index));
+	}
 
-    return ret;
+	return ret;
 }
 
 /*!
@@ -833,146 +833,146 @@ std::shared_ptr<LILToken> LILLexer::readCommentOrSymbol()
  */
 std::shared_ptr<LILToken> LILLexer::readDotChars()
 {
-    const size_t line = d->currentLine;
-    const size_t column = d->currentColumn - 1;
-    const size_t index = d->index;
-    std::shared_ptr<LILToken> ret;
-    if (d->currentChar == '.')
-    {
-        this->readNextChar();
-        if (d->currentChar == '.')
-        {
-            this->readNextChar();
+	const size_t line = d->currentLine;
+	const size_t column = d->currentColumn - 1;
+	const size_t index = d->index;
+	std::shared_ptr<LILToken> ret;
+	if (d->currentChar == '.')
+	{
+		this->readNextChar();
+		if (d->currentChar == '.')
+		{
+			this->readNextChar();
 
-            if (d->currentChar == '.')
-            {
-                this->readNextChar();
-                ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeEllipsis, "...", line, column, index));
-                return ret;
-            } else {
-                ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeDoubleDot, "..", line, column, index));
-                return ret;
-            }
-        }
-        else
-        {
-            ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeDot, ".", line, column, index));
-            return ret;
-        }
-    }
-    return ret;
+			if (d->currentChar == '.')
+			{
+				this->readNextChar();
+				ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeEllipsis, "...", line, column, index));
+				return ret;
+			} else {
+				ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeDoubleDot, "..", line, column, index));
+				return ret;
+			}
+		}
+		else
+		{
+			ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeDot, ".", line, column, index));
+			return ret;
+		}
+	}
+	return ret;
 }
 
 std::shared_ptr<LILToken> LILLexer::readComparatorOrForeignLang()
 {
-    const size_t line = d->currentLine;
-    const size_t column = d->currentColumn - 1;
-    const size_t index = d->index;
-    std::shared_ptr<LILToken> ret;
-    LILChar peekChar;
-    auto iterator = d->iterator;
-    LILString completeString;
-    if (d->currentChar == '<') {
-        bool done = false;
-        bool isTag = false;
-        while (!done) {
-            done = true;
-            if (this->atEndOfSource())
-            {
-                break;
-            }
-            peekChar = utf8::peek_next(iterator, d->bufferEnd);
-            if (isLatin1Letter(peekChar)) {
-                done = false;
-            } else if (peekChar == '>') {
-                isTag = true;
-            }
-            iterator += 1;
-        }
-        if (isTag) {
-            //add the initial <
-            completeString += d->currentChar;
-            this->readNextChar();
-            //read the foreign language name
-            done = false;
-            while (!done) {
-                done = true;
-                if (this->atEndOfSource())
-                {
-                    break;
-                }
-                if (d->currentChar != '>') {
-                    this->storeCurrentCharAndReadNext();
-                    done = false;
-                }
-            }
-            auto token = std::make_shared<LILForeignLangToken>(TokenTypeForeignLang, line, column, index);
-            auto languageStr = this->extractCurrentTokenText();
-            completeString += languageStr;
-            token->setLanguage(languageStr);
-            //add the > to the complete string
-            completeString += d->currentChar;
+	const size_t line = d->currentLine;
+	const size_t column = d->currentColumn - 1;
+	const size_t index = d->index;
+	std::shared_ptr<LILToken> ret;
+	LILChar peekChar;
+	auto iterator = d->iterator;
+	LILString completeString;
+	if (d->currentChar == '<') {
+		bool done = false;
+		bool isTag = false;
+		while (!done) {
+			done = true;
+			if (this->atEndOfSource())
+			{
+				break;
+			}
+			peekChar = utf8::peek_next(iterator, d->bufferEnd);
+			if (isLatin1Letter(peekChar)) {
+				done = false;
+			} else if (peekChar == '>') {
+				isTag = true;
+			}
+			iterator += 1;
+		}
+		if (isTag) {
+			//add the initial <
+			completeString += d->currentChar;
+			this->readNextChar();
+			//read the foreign language name
+			done = false;
+			while (!done) {
+				done = true;
+				if (this->atEndOfSource())
+				{
+					break;
+				}
+				if (d->currentChar != '>') {
+					this->storeCurrentCharAndReadNext();
+					done = false;
+				}
+			}
+			auto token = std::make_shared<LILForeignLangToken>(TokenTypeForeignLang, line, column, index);
+			auto languageStr = this->extractCurrentTokenText();
+			completeString += languageStr;
+			token->setLanguage(languageStr);
+			//add the > to the complete string
+			completeString += d->currentChar;
 
-            this->readNextChar();
+			this->readNextChar();
 
-            //read the content of the tag
-            done = false;
-            while (!done) {
-                done = true;
-                if (this->atEndOfSource())
-                {
-                    break;
-                }
-                if (d->currentChar == '<') {
-                    peekChar = utf8::peek_next(d->iterator, d->bufferEnd);
-                    if (peekChar != '/') {
-                        this->storeCurrentCharAndReadNext();
-                        done = false;
-                    }
-                } else {
-                    this->storeCurrentCharAndReadNext();
-                    done = false;
-                }
-            }
-            auto contentStr = this->extractCurrentTokenText();
-            completeString += contentStr;
-            token->setContent(contentStr);
+			//read the content of the tag
+			done = false;
+			while (!done) {
+				done = true;
+				if (this->atEndOfSource())
+				{
+					break;
+				}
+				if (d->currentChar == '<') {
+					peekChar = utf8::peek_next(d->iterator, d->bufferEnd);
+					if (peekChar != '/') {
+						this->storeCurrentCharAndReadNext();
+						done = false;
+					}
+				} else {
+					this->storeCurrentCharAndReadNext();
+					done = false;
+				}
+			}
+			auto contentStr = this->extractCurrentTokenText();
+			completeString += contentStr;
+			token->setContent(contentStr);
 
-            //read the closing tag
-            done = false;
-            while (!done) {
-                done = true;
-                if (this->atEndOfSource())
-                {
-                    break;
-                }
-                if (d->currentChar != '>') {
-                    this->storeCurrentCharAndReadNext();
-                    done = false;
-                }
-            }
-            this->storeCurrentCharAndReadNext();
-            completeString += this->extractCurrentTokenText();
+			//read the closing tag
+			done = false;
+			while (!done) {
+				done = true;
+				if (this->atEndOfSource())
+				{
+					break;
+				}
+				if (d->currentChar != '>') {
+					this->storeCurrentCharAndReadNext();
+					done = false;
+				}
+			}
+			this->storeCurrentCharAndReadNext();
+			completeString += this->extractCurrentTokenText();
 
-            token->setString(completeString);
+			token->setString(completeString);
 
-            return token;
-        } else {
-            this->readNextChar();
-            if (d->currentChar == '=')
-            {
-                ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeSmallerOrEqualComparator, "<=", line, column, index));
-                this->readNextChar();
-                return ret;
-            }
-            else
-            {
-                ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeSmallerComparator, "<", line, column, index));
-                return ret;
-            }
-        }
-    }
-    return nullptr;
+			return token;
+		} else {
+			this->readNextChar();
+			if (d->currentChar == '=')
+			{
+				ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeSmallerOrEqualComparator, "<=", line, column, index));
+				this->readNextChar();
+				return ret;
+			}
+			else
+			{
+				ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeSmallerComparator, "<", line, column, index));
+				return ret;
+			}
+		}
+	}
+	return nullptr;
 }
 
 /*!
@@ -982,88 +982,88 @@ std::shared_ptr<LILToken> LILLexer::readComparatorOrForeignLang()
  */
 std::shared_ptr<LILToken> LILLexer::readComparator()
 {
-    const size_t line = d->currentLine;
-    const size_t column = d->currentColumn - 1;
-    const size_t index = d->index;
-    std::shared_ptr<LILToken> ret;
-    if (d->currentChar == '>')
-    {
-        this->readNextChar();
-        if (d->currentChar == '=')
-        {
-            ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeBiggerOrEqualComparator, ">=", line, column, index));
-            this->readNextChar();
-            return ret;
-        }
-        else
-        {
-            ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeBiggerComparator, ">", line, column, index));
-            return ret;
-        }
-    }
-    else if (d->currentChar == '<')
-    {
-        this->readNextChar();
-        if (d->currentChar == '=')
-        {
-            ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeSmallerOrEqualComparator, "<=", line, column, index));
-            this->readNextChar();
-            return ret;
-        }
-        else
-        {
-            ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeSmallerComparator, "<", line, column, index));
-            return ret;
-        }
-    }
-    return ret;
+	const size_t line = d->currentLine;
+	const size_t column = d->currentColumn - 1;
+	const size_t index = d->index;
+	std::shared_ptr<LILToken> ret;
+	if (d->currentChar == '>')
+	{
+		this->readNextChar();
+		if (d->currentChar == '=')
+		{
+			ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeBiggerOrEqualComparator, ">=", line, column, index));
+			this->readNextChar();
+			return ret;
+		}
+		else
+		{
+			ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeBiggerComparator, ">", line, column, index));
+			return ret;
+		}
+	}
+	else if (d->currentChar == '<')
+	{
+		this->readNextChar();
+		if (d->currentChar == '=')
+		{
+			ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeSmallerOrEqualComparator, "<=", line, column, index));
+			this->readNextChar();
+			return ret;
+		}
+		else
+		{
+			ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeSmallerComparator, "<", line, column, index));
+			return ret;
+		}
+	}
+	return ret;
 }
 
 std::shared_ptr<LILToken> LILLexer::readEqualSignOrFatArrow()
 {
-    LILChar cc = d->currentChar;
-    this->readNextChar();
-    LILChar cc2 = d->currentChar;
-    if (cc2 == '>') {
-        LILString tokenStr = cc;
-        tokenStr += cc2;
-        std::shared_ptr<LILToken> ret = std::make_shared<LILToken>(TokenTypeFatArrow, tokenStr, d->currentLine, d->currentColumn - 1, d->index);
-        this->readNextChar();
-        return ret;
-    } else {
-        std::shared_ptr<LILToken> ret = std::make_shared<LILToken>(TokenTypeEqualSign, cc, d->currentLine, d->currentColumn - 1, d->index);
-        //do not read next char here, since it was already read
-        return ret;
-    }
+	LILChar cc = d->currentChar;
+	this->readNextChar();
+	LILChar cc2 = d->currentChar;
+	if (cc2 == '>') {
+		LILString tokenStr = cc;
+		tokenStr += cc2;
+		std::shared_ptr<LILToken> ret = std::make_shared<LILToken>(TokenTypeFatArrow, tokenStr, d->currentLine, d->currentColumn - 1, d->index);
+		this->readNextChar();
+		return ret;
+	} else {
+		std::shared_ptr<LILToken> ret = std::make_shared<LILToken>(TokenTypeEqualSign, cc, d->currentLine, d->currentColumn - 1, d->index);
+		//do not read next char here, since it was already read
+		return ret;
+	}
 }
 
 std::shared_ptr<LILToken> LILLexer::readMinusSignOrThinArrow()
 {
-    LILChar cc = d->currentChar;
-    this->readNextChar();
-    LILChar cc2 = d->currentChar;
-    if (cc2 == '>') {
-        LILString tokenStr = cc;
-        tokenStr += cc2;
-        std::shared_ptr<LILToken> ret = std::make_shared<LILToken>(TokenTypeThinArrow, tokenStr, d->currentLine, d->currentColumn - 1, d->index);
-        this->readNextChar();
-        return ret;
-    } else {
-        std::shared_ptr<LILToken> ret = std::make_shared<LILToken>(TokenTypeMinusSign, cc, d->currentLine, d->currentColumn - 1, d->index);
-        //do not read next char here, since it was already read
-        return ret;
-    }
+	LILChar cc = d->currentChar;
+	this->readNextChar();
+	LILChar cc2 = d->currentChar;
+	if (cc2 == '>') {
+		LILString tokenStr = cc;
+		tokenStr += cc2;
+		std::shared_ptr<LILToken> ret = std::make_shared<LILToken>(TokenTypeThinArrow, tokenStr, d->currentLine, d->currentColumn - 1, d->index);
+		this->readNextChar();
+		return ret;
+	} else {
+		std::shared_ptr<LILToken> ret = std::make_shared<LILToken>(TokenTypeMinusSign, cc, d->currentLine, d->currentColumn - 1, d->index);
+		//do not read next char here, since it was already read
+		return ret;
+	}
 }
 
 std::shared_ptr<LILToken> LILLexer::readInvalidChar()
 {
-    const size_t line = d->currentLine;
-    const size_t column = d->currentColumn - 1;
-    const size_t index = d->index;
+	const size_t line = d->currentLine;
+	const size_t column = d->currentColumn - 1;
+	const size_t index = d->index;
 
-    std::shared_ptr<LILToken> ret;
+	std::shared_ptr<LILToken> ret;
 
-    ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeNone, d->currentChar, line, column, index));
-    this->readNextChar();
-    return ret;
+	ret = std::shared_ptr<LILToken>(new LILToken(TokenTypeNone, d->currentChar, line, column, index));
+	this->readNextChar();
+	return ret;
 }

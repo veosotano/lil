@@ -53,17 +53,17 @@ enum TessWindingRule
 //   Each element in the element array is polygon defined as 'polySize' number of vertex indices.
 //   If a polygon has than 'polySize' vertices, the remaining indices are stored as TESS_UNDEF.
 //   Example, drawing a polygon:
-//     const int nelems = tessGetElementCount(tess);
-//     const TESSindex* elems = tessGetElements(tess);
-//     for (int i = 0; i < nelems; i++) {
-//         const TESSindex* poly = &elems[i * polySize];
-//         glBegin(GL_POLYGON);
-//         for (int j = 0; j < polySize; j++) {
-//             if (poly[j] == TESS_UNDEF) break;
-//             glVertex2fv(&verts[poly[j]*vertexSize]);
-//         }
-//         glEnd();
-//     }
+//	 const int nelems = tessGetElementCount(tess);
+//	 const TESSindex* elems = tessGetElements(tess);
+//	 for (int i = 0; i < nelems; i++) {
+//		 const TESSindex* poly = &elems[i * polySize];
+//		 glBegin(GL_POLYGON);
+//		 for (int j = 0; j < polySize; j++) {
+//			 if (poly[j] == TESS_UNDEF) break;
+//			 glVertex2fv(&verts[poly[j]*vertexSize]);
+//		 }
+//		 glEnd();
+//	 }
 //
 // TESS_CONNECTED_POLYGONS
 //   Each element in the element array is polygon defined as 'polySize' number of vertex indices,
@@ -71,41 +71,41 @@ enum TessWindingRule
 //   If a polygon has than 'polySize' vertices, the remaining indices are stored as TESS_UNDEF.
 //   If a polygon edge is a boundary, that is, not connected to another polygon, the neighbour index is TESS_UNDEF.
 //   Example, flood fill based on seed polygon:
-//     const int nelems = tessGetElementCount(tess);
-//     const TESSindex* elems = tessGetElements(tess);
-//     unsigned char* visited = (unsigned char*)calloc(nelems);
-//     TESSindex stack[50];
-//     int nstack = 0;
-//     stack[nstack++] = seedPoly;
-//     visited[startPoly] = 1;
-//     while (nstack > 0) {
-//         TESSindex idx = stack[--nstack];
+//	 const int nelems = tessGetElementCount(tess);
+//	 const TESSindex* elems = tessGetElements(tess);
+//	 unsigned char* visited = (unsigned char*)calloc(nelems);
+//	 TESSindex stack[50];
+//	 int nstack = 0;
+//	 stack[nstack++] = seedPoly;
+//	 visited[startPoly] = 1;
+//	 while (nstack > 0) {
+//		 TESSindex idx = stack[--nstack];
 //			const TESSindex* poly = &elems[idx * polySize * 2];
 //			const TESSindex* nei = &poly[polySize];
-//          for (int i = 0; i < polySize; i++) {
-//              if (poly[i] == TESS_UNDEF) break;
-//              if (nei[i] != TESS_UNDEF && !visited[nei[i]])
-//	                stack[nstack++] = nei[i];
-//                  visited[nei[i]] = 1;
-//              }
-//          }
-//     }
+//		  for (int i = 0; i < polySize; i++) {
+//			  if (poly[i] == TESS_UNDEF) break;
+//			  if (nei[i] != TESS_UNDEF && !visited[nei[i]])
+//					stack[nstack++] = nei[i];
+//				  visited[nei[i]] = 1;
+//			  }
+//		  }
+//	 }
 //
 // TESS_BOUNDARY_CONTOURS
 //   Each element in the element array is [base index, count] pair defining a range of vertices for a contour.
 //   The first value is index to first vertex in contour and the second value is number of vertices in the contour.
 //   Example, drawing contours:
-//     const int nelems = tessGetElementCount(tess);
-//     const TESSindex* elems = tessGetElements(tess);
-//     for (int i = 0; i < nelems; i++) {
-//         const TESSindex base = elems[i * 2];
-//         const TESSindex count = elems[i * 2 + 1];
-//         glBegin(GL_LINE_LOOP);
-//         for (int j = 0; j < count; j++) {
-//             glVertex2fv(&verts[(base+j) * vertexSize]);
-//         }
-//         glEnd();
-//     }
+//	 const int nelems = tessGetElementCount(tess);
+//	 const TESSindex* elems = tessGetElements(tess);
+//	 for (int i = 0; i < nelems; i++) {
+//		 const TESSindex base = elems[i * 2];
+//		 const TESSindex count = elems[i * 2 + 1];
+//		 glBegin(GL_LINE_LOOP);
+//		 for (int j = 0; j < count; j++) {
+//			 glVertex2fv(&verts[(base+j) * vertexSize]);
+//		 }
+//		 glEnd();
+//	 }
 
 enum TessElementType
 {

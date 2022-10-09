@@ -1,14 +1,14 @@
 /********************************************************************
  *
- *      LIL Is a Language
+ *	  LIL Is a Language
  *
- *      AUTHORS: Miro Keller
+ *	  AUTHORS: Miro Keller
  *
- *      COPYRIGHT: ©2020-today:  All Rights Reserved
+ *	  COPYRIGHT: ©2020-today:  All Rights Reserved
  *
- *      LICENSE: see LICENSE file
+ *	  LICENSE: see LICENSE file
  *
- *      This file represents an assignment
+ *	  This file represents an assignment
  *
  ********************************************************************/
 
@@ -19,28 +19,28 @@
 
 namespace LIL
 {
-    class LILAssignment : public LILTypedNode
-    {
-    public:
-        LILAssignment();
-        LILAssignment(const LILAssignment &other);
-        std::shared_ptr<LILAssignment> clone() const;
-        virtual ~LILAssignment();
+	class LILAssignment : public LILTypedNode
+	{
+	public:
+		LILAssignment();
+		LILAssignment(const LILAssignment &other);
+		std::shared_ptr<LILAssignment> clone() const;
+		virtual ~LILAssignment();
 
-        void setSubject(std::shared_ptr<LILNode> pp);
-        std::shared_ptr<LILNode> getSubject() const;
-        void setValue(std::shared_ptr<LILNode> val);
-        std::shared_ptr<LILNode> getValue() const;
-        void clearValue();
-        const std::vector<std::shared_ptr<LILNode>> & getNodes() const;
-        
-    protected:
-        virtual std::shared_ptr<LILClonable> cloneImpl() const;
-        
-    private:
-        std::shared_ptr<LILNode> _subject;
-        std::shared_ptr<LILNode> _value;
-    };
+		void setSubject(std::shared_ptr<LILNode> pp);
+		std::shared_ptr<LILNode> getSubject() const;
+		void setValue(std::shared_ptr<LILNode> val);
+		std::shared_ptr<LILNode> getValue() const;
+		void clearValue();
+		const std::vector<std::shared_ptr<LILNode>> & getNodes() const;
+		
+	protected:
+		virtual std::shared_ptr<LILClonable> cloneImpl() const;
+		
+	private:
+		std::shared_ptr<LILNode> _subject;
+		std::shared_ptr<LILNode> _value;
+	};
 }
 
 #endif

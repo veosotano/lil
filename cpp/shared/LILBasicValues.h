@@ -1,15 +1,15 @@
 /********************************************************************
  *
- *      LIL Is a Language
+ *	  LIL Is a Language
  *
- *      AUTHORS: Miro Keller
+ *	  AUTHORS: Miro Keller
  *
- *      COPYRIGHT: ©2020-today:  All Rights Reserved
+ *	  COPYRIGHT: ©2020-today:  All Rights Reserved
  *
- *      LICENSE: see LICENSE file
+ *	  LICENSE: see LICENSE file
  *
- *      This file contains the most fundamental value types to be used
- *      throughout the system
+ *	  This file contains the most fundamental value types to be used
+ *	  throughout the system
  *
  ********************************************************************/
 
@@ -35,27 +35,27 @@
 
 namespace LIL
 {
-    struct LILRange
-    {
-    public:
-        size_t location;
-        size_t length;
-    };
+	struct LILRange
+	{
+	public:
+		size_t location;
+		size_t length;
+	};
 
-    struct LILVersion
-    {
-    public:
-        int major;
-        int minor;
-        int patch;
-        int build;
+	struct LILVersion
+	{
+	public:
+		int major;
+		int minor;
+		int patch;
+		int build;
 	};
 
 	typedef float LILUnitF32;
 	typedef double LILUnitF64;
 	typedef unsigned char LILUnitI8;
 	typedef short int LILUnitI16;
-    typedef long int LILUnitI32;
+	typedef long int LILUnitI32;
 	typedef long long int LILUnitI64;
 
 	struct LILPoint
@@ -63,21 +63,21 @@ namespace LIL
 	public:
 		LILUnitF64 x;
 		LILUnitF64 y;
-    };
+	};
 
 	struct LILSize
 	{
 	public:
 		LILUnitF64 width;
 		LILUnitF64 height;
-    };
+	};
 
 	struct LILRect
 	{
 	public:
 		LILPoint origin;
 		LILSize size;
-    };
+	};
 }
 
 #endif

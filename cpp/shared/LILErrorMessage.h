@@ -1,14 +1,14 @@
 /********************************************************************
  *
- *      LIL Is a Language
+ *	  LIL Is a Language
  *
- *      AUTHORS: Miro Keller
+ *	  AUTHORS: Miro Keller
  *
- *      COPYRIGHT: ©2020-today:  All Rights Reserved
+ *	  COPYRIGHT: ©2020-today:  All Rights Reserved
  *
- *      LICENSE: see LICENSE file
+ *	  LICENSE: see LICENSE file
  *
- *      This file defines the structure for error messages
+ *	  This file defines the structure for error messages
  *
  ********************************************************************/
 
@@ -16,12 +16,12 @@
 #define LILERRORMESSAGE_H
 
 namespace LIL {
-    struct LILErrorMessage {
-        LILString message;
-        LILString file;
-        size_t line;
-        size_t column;
-    };
+	struct LILErrorMessage {
+		LILString message;
+		LILString file;
+		size_t line;
+		size_t column;
+	};
 }
 
 #endif

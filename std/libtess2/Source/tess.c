@@ -416,7 +416,7 @@ int stackInit( EdgeStack *stack, TESSalloc *alloc )
 
 void stackDelete( EdgeStack *stack )
 {
-    deleteBucketAlloc( stack->nodeBucket );
+	deleteBucketAlloc( stack->nodeBucket );
 }
 
 int stackEmpty( EdgeStack *stack )
@@ -605,7 +605,7 @@ TESStesselator* tessNewTess( TESSalloc* alloc )
 
 	tess = (TESStesselator *)alloc->memalloc( alloc->userData, sizeof( TESStesselator ));
 	if ( tess == NULL ) {
-		return 0;          /* out of memory */
+		return 0;		  /* out of memory */
 	}
 	tess->alloc = *alloc;
 	/* Check and set defaults. */
@@ -630,7 +630,7 @@ TESStesselator* tessNewTess( TESSalloc* alloc )
 	tess->bmax[1] = 0;
 
 	tess->reverseContours = 0;
-    
+	
 	tess->windingRule = TESS_WINDING_ODD;
 	tess->processCDT = 0;
 
@@ -767,7 +767,7 @@ void OutputPolymesh( TESStesselator *tess, TESSmesh *mesh, int elementType, int 
 	}
 
 	tess->vertexIndices = (TESSindex*)tess->alloc.memalloc( tess->alloc.userData,
-														    sizeof(TESSindex) * tess->vertexCount );
+															sizeof(TESSindex) * tess->vertexCount );
 	if (!tess->vertexIndices)
 	{
 		tess->outOfMemory = 1;
@@ -874,7 +874,7 @@ void OutputContours( TESStesselator *tess, TESSmesh *mesh, int vertexSize )
 	}
 
 	tess->vertexIndices = (TESSindex*)tess->alloc.memalloc( tess->alloc.userData,
-														    sizeof(TESSindex) * tess->vertexCount );
+															sizeof(TESSindex) * tess->vertexCount );
 	if (!tess->vertexIndices)
 	{
 		tess->outOfMemory = 1;
@@ -976,8 +976,8 @@ void tessAddContour( TESStesselator *tess, int size, const void* vertices,
 		* vertices in such an order that a CCW contour will add +1 to
 		* the winding number of the region inside the contour.
 		*/
-        e->winding = tess->reverseContours ? -1 : 1;
-        e->Sym->winding = tess->reverseContours ? 1 : -1;
+		e->winding = tess->reverseContours ? -1 : 1;
+		e->Sym->winding = tess->reverseContours ? 1 : -1;
 	}
 }
 
@@ -1073,11 +1073,11 @@ int tessTesselate( TESStesselator *tess, int windingRule, int elementType,
 	tessMeshCheckMesh( mesh );
 
 	if (elementType == TESS_BOUNDARY_CONTOURS) {
-		OutputContours( tess, mesh, vertexSize );     /* output contours */
+		OutputContours( tess, mesh, vertexSize );	 /* output contours */
 	}
 	else
 	{
-		OutputPolymesh( tess, mesh, elementType, polySize, vertexSize );     /* output polygons */
+		OutputPolymesh( tess, mesh, elementType, polySize, vertexSize );	 /* output polygons */
 	}
 
 	tessMeshDeleteMesh( &tess->alloc, mesh );

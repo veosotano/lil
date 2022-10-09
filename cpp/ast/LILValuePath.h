@@ -1,14 +1,14 @@
 /********************************************************************
  *
- *      LIL Is a Language
+ *	  LIL Is a Language
  *
- *      AUTHORS: Miro Keller
+ *	  AUTHORS: Miro Keller
  *
- *      COPYRIGHT: ©2020-today:  All Rights Reserved
+ *	  COPYRIGHT: ©2020-today:  All Rights Reserved
  *
- *      LICENSE: see LICENSE file
+ *	  LICENSE: see LICENSE file
  *
- *      This file represents a value path
+ *	  This file represents a value path
  *
  ********************************************************************/
 
@@ -19,27 +19,27 @@
 
 namespace LIL
 {
-    class LILValuePath : public LILTypedNode
-    {
-    public:
-        LILValuePath();
-        LILValuePath(const LILValuePath &other);
-        std::shared_ptr<LILValuePath> clone() const;
-        virtual ~LILValuePath();
+	class LILValuePath : public LILTypedNode
+	{
+	public:
+		LILValuePath();
+		LILValuePath(const LILValuePath &other);
+		std::shared_ptr<LILValuePath> clone() const;
+		virtual ~LILValuePath();
 
-        const std::vector<std::shared_ptr<LILNode>> & getNodes() const;
-        void setNodes(const std::vector<std::shared_ptr<LILNode>> & newNodes);
-        void addChild(std::shared_ptr<LILNode> child);
-        
-        void setPreventEmitCallToIVar(bool newValue);
-        bool getPreventEmitCallToIVar() const;
+		const std::vector<std::shared_ptr<LILNode>> & getNodes() const;
+		void setNodes(const std::vector<std::shared_ptr<LILNode>> & newNodes);
+		void addChild(std::shared_ptr<LILNode> child);
+		
+		void setPreventEmitCallToIVar(bool newValue);
+		bool getPreventEmitCallToIVar() const;
 
-    protected:
-        virtual std::shared_ptr<LILClonable> cloneImpl() const;
+	protected:
+		virtual std::shared_ptr<LILClonable> cloneImpl() const;
 
-    private:
-        bool _preventEmitCallToIVar;
-    };
+	private:
+		bool _preventEmitCallToIVar;
+	};
 }
 
 #endif

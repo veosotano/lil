@@ -1,14 +1,14 @@
 /********************************************************************
  *
- *      LIL Is a Language
+ *	  LIL Is a Language
  *
- *      AUTHORS: Miro Keller
+ *	  AUTHORS: Miro Keller
  *
- *      COPYRIGHT: ©2020-today:  All Rights Reserved
+ *	  COPYRIGHT: ©2020-today:  All Rights Reserved
  *
- *      LICENSE: see LICENSE file
+ *	  LICENSE: see LICENSE file
  *
- *      This file is a filter in a selector chain
+ *	  This file is a filter in a selector chain
  *
  ********************************************************************/
 
@@ -19,25 +19,25 @@
 
 namespace LIL
 {
-    class LILFilter : public LILNode
-    {
-    public:
-        LILFilter();
-        LILFilter(const LILFilter &other);
-        std::shared_ptr<LILFilter> clone() const;
-        virtual ~LILFilter();
-        
-        virtual void receiveNodeData(const LILString & data);
+	class LILFilter : public LILNode
+	{
+	public:
+		LILFilter();
+		LILFilter(const LILFilter &other);
+		std::shared_ptr<LILFilter> clone() const;
+		virtual ~LILFilter();
+		
+		virtual void receiveNodeData(const LILString & data);
 
-        void setName(LILString newName);
-        const LILString getName() const;
-        
-    protected:
-        virtual std::shared_ptr<LILClonable> cloneImpl() const;
-        
-    private:
-        LILString _name;
-    };
+		void setName(LILString newName);
+		const LILString getName() const;
+		
+	protected:
+		virtual std::shared_ptr<LILClonable> cloneImpl() const;
+		
+	private:
+		LILString _name;
+	};
 }
 
 #endif

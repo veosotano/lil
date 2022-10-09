@@ -1,14 +1,14 @@
 /********************************************************************
  *
- *      LIL Is a Language
+ *	  LIL Is a Language
  *
- *      AUTHORS: Miro Keller
+ *	  AUTHORS: Miro Keller
  *
- *      COPYRIGHT: ©2020-today:  All Rights Reserved
+ *	  COPYRIGHT: ©2020-today:  All Rights Reserved
  *
- *      LICENSE: see LICENSE file
+ *	  LICENSE: see LICENSE file
  *
- *      This file encapsulates the name of a property
+ *	  This file encapsulates the name of a property
  *
  ********************************************************************/
 
@@ -19,27 +19,27 @@
 
 namespace LIL
 {
-    class LILPropertyName : public LILNode
-    {
-    public:
-        LILPropertyName();
-        LILPropertyName(const LILPropertyName &other);
-        std::shared_ptr<LILPropertyName> clone() const;
-        virtual ~LILPropertyName();
+	class LILPropertyName : public LILNode
+	{
+	public:
+		LILPropertyName();
+		LILPropertyName(const LILPropertyName &other);
+		std::shared_ptr<LILPropertyName> clone() const;
+		virtual ~LILPropertyName();
 
-        void receiveNodeData(const LILString & data) override;
+		void receiveNodeData(const LILString & data) override;
 
-        bool equalTo(std::shared_ptr<LILNode> otherNode) override;
+		bool equalTo(std::shared_ptr<LILNode> otherNode) override;
 
-        void setName(LILString newName);
-        const LILString getName() const;
+		void setName(LILString newName);
+		const LILString getName() const;
 
-    protected:
-        std::shared_ptr<LILClonable> cloneImpl() const override;
-        
-    private:
-        LILString _name;
-    };
+	protected:
+		std::shared_ptr<LILClonable> cloneImpl() const override;
+		
+	private:
+		LILString _name;
+	};
 }
 
 #endif

@@ -1,15 +1,15 @@
 /********************************************************************
  *
- *      LIL Is a Language
+ *	  LIL Is a Language
  *
- *      AUTHORS: Miro Keller
+ *	  AUTHORS: Miro Keller
  *
- *      COPYRIGHT: ©2020-today:  All Rights Reserved
+ *	  COPYRIGHT: ©2020-today:  All Rights Reserved
  *
- *      LICENSE: see LICENSE file
+ *	  LICENSE: see LICENSE file
  *
- *      This file represents a simple selector, which groups individual
- *      selectors as a basic group
+ *	  This file represents a simple selector, which groups individual
+ *	  selectors as a basic group
  *
  ********************************************************************/
 
@@ -20,7 +20,7 @@ using namespace LIL;
 LILSimpleSelector::LILSimpleSelector()
 : LIL::LILNode(NodeTypeSimpleSelector)
 {
-    
+	
 }
 
 LILSimpleSelector::LILSimpleSelector(const LILSimpleSelector &other)
@@ -31,36 +31,36 @@ LILSimpleSelector::LILSimpleSelector(const LILSimpleSelector &other)
 
 std::shared_ptr<LILSimpleSelector> LILSimpleSelector::clone() const
 {
-    return std::static_pointer_cast<LILSimpleSelector> (this->cloneImpl());
+	return std::static_pointer_cast<LILSimpleSelector> (this->cloneImpl());
 }
 
 std::shared_ptr<LILClonable> LILSimpleSelector::cloneImpl() const
 {
-    std::shared_ptr<LILSimpleSelector> clone(new LILSimpleSelector(*this));
-    return clone;
+	std::shared_ptr<LILSimpleSelector> clone(new LILSimpleSelector(*this));
+	return clone;
 }
 
 LILSimpleSelector::~LILSimpleSelector()
 {
-    
+	
 }
 
 const std::vector<std::shared_ptr<LILNode>> & LILSimpleSelector::getNodes() const
 {
-    return this->getChildNodes();
+	return this->getChildNodes();
 }
 
 void LILSimpleSelector::setNodes(std::vector<std::shared_ptr<LILNode>> && nodes)
 {
-    this->setChildNodes(std::move(nodes));
+	this->setChildNodes(std::move(nodes));
 }
 
 const std::shared_ptr<LILNode> & LILSimpleSelector::getFirstNode() const
 {
-    return this->getNodes().front();
+	return this->getNodes().front();
 }
 
 const std::shared_ptr<LILNode> & LILSimpleSelector::getLastNode() const
 {
-    return this->getNodes().back();
+	return this->getNodes().back();
 }

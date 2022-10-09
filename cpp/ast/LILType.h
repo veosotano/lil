@@ -1,14 +1,14 @@
 /********************************************************************
  *
- *      LIL Is a Language
+ *	  LIL Is a Language
  *
- *      AUTHORS: Miro Keller
+ *	  AUTHORS: Miro Keller
  *
- *      COPYRIGHT: ©2020-today:  All Rights Reserved
+ *	  COPYRIGHT: ©2020-today:  All Rights Reserved
  *
- *      LICENSE: see LICENSE file
+ *	  LICENSE: see LICENSE file
  *
- *      This file encapsulates the type of a variable
+ *	  This file encapsulates the type of a variable
  *
  ********************************************************************/
 
@@ -19,63 +19,63 @@
 
 namespace LIL
 {
-    class LILType : public LILNode
-    {
-    public:
-        static std::shared_ptr<LILType> merge(std::shared_ptr<LILType> typeA, std::shared_ptr<LILType> typeB);
-        static std::shared_ptr<LILType> make(LILString name);
-        static bool sortTyAlphabeticallyCompare(std::shared_ptr<LILType> typeA, std::shared_ptr<LILType> typeB) {
-            return typeA->getName().data() < typeB->getName().data();
-        };
-        static bool isBuiltInType(LILType * ty);
-        static bool isNumberType(LILType * ty);
-        static bool isIntegerType(LILType * ty);
-        static bool isFloatType(LILType * ty);
-        static bool combinesWithPointer(LILType * ty);
-        static bool typesCompatible(LILType * ty1, LILType * ty2);
+	class LILType : public LILNode
+	{
+	public:
+		static std::shared_ptr<LILType> merge(std::shared_ptr<LILType> typeA, std::shared_ptr<LILType> typeB);
+		static std::shared_ptr<LILType> make(LILString name);
+		static bool sortTyAlphabeticallyCompare(std::shared_ptr<LILType> typeA, std::shared_ptr<LILType> typeB) {
+			return typeA->getName().data() < typeB->getName().data();
+		};
+		static bool isBuiltInType(LILType * ty);
+		static bool isNumberType(LILType * ty);
+		static bool isIntegerType(LILType * ty);
+		static bool isFloatType(LILType * ty);
+		static bool combinesWithPointer(LILType * ty);
+		static bool typesCompatible(LILType * ty1, LILType * ty2);
 
-        LILType();
-        LILType(TypeType type);
-        LILType(const LILType &other);
-        std::shared_ptr<LILType> clone() const;
-        virtual ~LILType();
-        bool equalTo(std::shared_ptr<LILNode> otherNode) override;
-        virtual void receiveNodeData(const LILString & data) override;
+		LILType();
+		LILType(TypeType type);
+		LILType(const LILType &other);
+		std::shared_ptr<LILType> clone() const;
+		virtual ~LILType();
+		bool equalTo(std::shared_ptr<LILNode> otherNode) override;
+		virtual void receiveNodeData(const LILString & data) override;
 
-        const LILString getName() const;
-        void setName(LILString newName);
+		const LILString getName() const;
+		void setName(LILString newName);
 
-        const LILString getStrongTypeName() const;
-        void setStrongTypeName(LILString newName);
+		const LILString getStrongTypeName() const;
+		void setStrongTypeName(LILString newName);
 
-        virtual bool getIsWeakType() const;
-        std::shared_ptr<LILType> getDefaultType() const;
-        virtual std::shared_ptr<LILType> getIntegerType() const;
-        virtual std::shared_ptr<LILType> getFloatType() const;
+		virtual bool getIsWeakType() const;
+		std::shared_ptr<LILType> getDefaultType() const;
+		virtual std::shared_ptr<LILType> getIntegerType() const;
+		virtual std::shared_ptr<LILType> getFloatType() const;
 
-        TypeType getTypeType() const override;
-        void setTypeType(TypeType newType);
-        virtual bool isA(TypeType otherType) const override;
+		TypeType getTypeType() const override;
+		void setTypeType(TypeType newType);
+		virtual bool isA(TypeType otherType) const override;
 
-        bool getIsNullable() const;
-        void setIsNullable(bool newValue);
+		bool getIsNullable() const;
+		void setIsNullable(bool newValue);
 
-        const std::vector<std::shared_ptr<LILNode>> & getTmplParams() const;
-        void addTmplParam(std::shared_ptr<LILNode> value);
-        void setTmplParams(const std::vector<std::shared_ptr<LILNode>> && values);
+		const std::vector<std::shared_ptr<LILNode>> & getTmplParams() const;
+		void addTmplParam(std::shared_ptr<LILNode> value);
+		void setTmplParams(const std::vector<std::shared_ptr<LILNode>> && values);
 
-        size_t getBitWidth() const;
+		size_t getBitWidth() const;
 
-    protected:
-        virtual std::shared_ptr<LILClonable> cloneImpl() const override;
+	protected:
+		virtual std::shared_ptr<LILClonable> cloneImpl() const override;
 
-    private:
-        LILString _name;
-        LILString _strongTypeName;
-        std::vector<std::shared_ptr<LILNode>> _tmplParams;
-        TypeType _typeType;
-        bool _isNullable;
-    };
+	private:
+		LILString _name;
+		LILString _strongTypeName;
+		std::vector<std::shared_ptr<LILNode>> _tmplParams;
+		TypeType _typeType;
+		bool _isNullable;
+	};
 }
 
 #endif

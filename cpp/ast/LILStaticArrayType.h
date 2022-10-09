@@ -1,14 +1,14 @@
 /********************************************************************
  *
- *      LIL Is a Language
+ *	  LIL Is a Language
  *
- *      AUTHORS: Miro Keller
+ *	  AUTHORS: Miro Keller
  *
- *      COPYRIGHT: ©2020-today:  All Rights Reserved
+ *	  COPYRIGHT: ©2020-today:  All Rights Reserved
  *
- *      LICENSE: see LICENSE file
+ *	  LICENSE: see LICENSE file
  *
- *      This file is used to express C-style arrays
+ *	  This file is used to express C-style arrays
  *
  ********************************************************************/
 
@@ -19,33 +19,33 @@
 
 namespace LIL
 {
-    class LILStaticArrayType : public LILType
-    {
-    public:
-        LILStaticArrayType();
-        LILStaticArrayType(const LILStaticArrayType &other);
-        std::shared_ptr<LILStaticArrayType> clone() const;
-        virtual ~LILStaticArrayType();
-        bool equalTo(std::shared_ptr<LILNode> otherNode);
-        virtual void receiveNodeData(const LILString & data);
-        
-        void setArgument(std::shared_ptr<LILNode> node);
-        std::shared_ptr<LILNode> getArgument() const;
+	class LILStaticArrayType : public LILType
+	{
+	public:
+		LILStaticArrayType();
+		LILStaticArrayType(const LILStaticArrayType &other);
+		std::shared_ptr<LILStaticArrayType> clone() const;
+		virtual ~LILStaticArrayType();
+		bool equalTo(std::shared_ptr<LILNode> otherNode);
+		virtual void receiveNodeData(const LILString & data);
+		
+		void setArgument(std::shared_ptr<LILNode> node);
+		std::shared_ptr<LILNode> getArgument() const;
 
-        void setType(std::shared_ptr<LILType> type);
-        std::shared_ptr<LILType> getType() const;
+		void setType(std::shared_ptr<LILType> type);
+		std::shared_ptr<LILType> getType() const;
 
-        void setReceivesType(bool value);
-        bool getReceivesType() const;
+		void setReceivesType(bool value);
+		bool getReceivesType() const;
 
-    protected:
-        virtual std::shared_ptr<LILClonable> cloneImpl() const;
-        
-    private:
-        std::shared_ptr<LILNode> _argument;
-        std::shared_ptr<LILType> _type;
-        bool _receivesType;
-    };
+	protected:
+		virtual std::shared_ptr<LILClonable> cloneImpl() const;
+		
+	private:
+		std::shared_ptr<LILNode> _argument;
+		std::shared_ptr<LILType> _type;
+		bool _receivesType;
+	};
 }
 
 #endif

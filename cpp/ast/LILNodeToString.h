@@ -1,14 +1,14 @@
 /********************************************************************
  *
- *      LIL Is a Language
+ *	  LIL Is a Language
  *
- *      AUTHORS: Miro Keller
+ *	  AUTHORS: Miro Keller
  *
- *      COPYRIGHT: ©2020-today:  All Rights Reserved
+ *	  COPYRIGHT: ©2020-today:  All Rights Reserved
  *
- *      LICENSE: see LICENSE file
+ *	  LICENSE: see LICENSE file
  *
- *      This file knows how to convert a node from the AST to a string
+ *	  This file knows how to convert a node from the AST to a string
  *
  ********************************************************************/
 
@@ -18,11 +18,11 @@
 #include "LILShared.h"
 
 namespace LIL {
-    class LILNode;
-    class LILNodeToString {
-    public:
-        static LILString stringify(LILNode * node);
-    };
+	class LILNode;
+	class LILNodeToString {
+	public:
+		static LILString stringify(LILNode * node);
+	};
 }
 
 

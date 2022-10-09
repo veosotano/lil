@@ -1,14 +1,14 @@
 /********************************************************************
  *
- *      LIL Is a Language
+ *	  LIL Is a Language
  *
- *      AUTHORS: Miro Keller
+ *	  AUTHORS: Miro Keller
  *
- *      COPYRIGHT: ©2020-today:  All Rights Reserved
+ *	  COPYRIGHT: ©2020-today:  All Rights Reserved
  *
- *      LICENSE: see LICENSE file
+ *	  LICENSE: see LICENSE file
  *
- *      This file analyzes the code to determine types automatically
+ *	  This file analyzes the code to determine types automatically
  *
  ********************************************************************/
 
@@ -56,25 +56,25 @@
 
 namespace LIL
 {
-    class LILTypeResolver : public LILVisitor
-    {
-    public:
-        
-        LILTypeResolver();
-        virtual ~LILTypeResolver();
-        
-        void initializeVisit() override;
-        void performVisit(std::shared_ptr<LILRootNode> rootNode) override;
-        void process(std::shared_ptr<LILNode> node);
-        std::shared_ptr<LILType> _process(std::shared_ptr<LILType> value);
+	class LILTypeResolver : public LILVisitor
+	{
+	public:
+		
+		LILTypeResolver();
+		virtual ~LILTypeResolver();
+		
+		void initializeVisit() override;
+		void performVisit(std::shared_ptr<LILRootNode> rootNode) override;
+		void process(std::shared_ptr<LILNode> node);
+		std::shared_ptr<LILType> _process(std::shared_ptr<LILType> value);
 
-        std::shared_ptr<LILClassDecl> getClassContext() const;
-        void enterClassContext(std::shared_ptr<LILClassDecl> value);
-        void exitClassContext();
+		std::shared_ptr<LILClassDecl> getClassContext() const;
+		void enterClassContext(std::shared_ptr<LILClassDecl> value);
+		void exitClassContext();
 
-    private:
-        std::vector<std::shared_ptr<LILClassDecl>> _classContext;
-    };
+	private:
+		std::vector<std::shared_ptr<LILClassDecl>> _classContext;
+	};
 }
 
 #endif

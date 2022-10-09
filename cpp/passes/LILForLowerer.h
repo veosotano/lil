@@ -1,15 +1,15 @@
 /********************************************************************
  *
- *      LIL Is a Language
+ *	  LIL Is a Language
  *
- *      AUTHORS: Miro Keller
+ *	  AUTHORS: Miro Keller
  *
- *      COPYRIGHT: ©2020-today:  All Rights Reserved
+ *	  COPYRIGHT: ©2020-today:  All Rights Reserved
  *
- *      LICENSE: see LICENSE file
+ *	  LICENSE: see LICENSE file
  *
- *      This file adds intermediate parts of paths that come from
- *      expanded fields of classes
+ *	  This file adds intermediate parts of paths that come from
+ *	  expanded fields of classes
  *
  ********************************************************************/
 
@@ -20,23 +20,23 @@
 
 namespace LIL
 {
-    class LILEnum;
+	class LILEnum;
 
 class LILForLowerer : public LILVisitor
-    {
-    public:
-        LILForLowerer();
-        virtual ~LILForLowerer();
-        void initializeVisit() override;
-        void performVisit(std::shared_ptr<LILRootNode> rootNode) override;
-        void process(LILNode * node);
-        void processForBlocks(LILNode * node);
-        
-    private:
-        void _process(LILEnum * enm);
-        void _createForArgsNumber(LILFlowControl * fc, LILNode * arg) const;
-        void _createForArgsObject(LILFlowControl * fc, LILNode * arg, LILType * ty) const;
-    };
+	{
+	public:
+		LILForLowerer();
+		virtual ~LILForLowerer();
+		void initializeVisit() override;
+		void performVisit(std::shared_ptr<LILRootNode> rootNode) override;
+		void process(LILNode * node);
+		void processForBlocks(LILNode * node);
+		
+	private:
+		void _process(LILEnum * enm);
+		void _createForArgsNumber(LILFlowControl * fc, LILNode * arg) const;
+		void _createForArgsObject(LILFlowControl * fc, LILNode * arg, LILType * ty) const;
+	};
 }
 
 #endif /* LILFORLOWERER_H */

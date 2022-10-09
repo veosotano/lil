@@ -1,15 +1,15 @@
 /********************************************************************
  *
- *      LIL Is a Language
+ *	  LIL Is a Language
  *
- *      AUTHORS: Miro Keller
+ *	  AUTHORS: Miro Keller
  *
- *      COPYRIGHT: ©2020-today:  All Rights Reserved
+ *	  COPYRIGHT: ©2020-today:  All Rights Reserved
  *
- *      LICENSE: see LICENSE file
+ *	  LICENSE: see LICENSE file
  *
- *      This file adds intermediate parts of paths that come from
- *      expanded fields of classes
+ *	  This file adds intermediate parts of paths that come from
+ *	  expanded fields of classes
  *
  ********************************************************************/
 
@@ -20,20 +20,20 @@
 
 namespace LIL
 {
-    class LILEnum;
+	class LILEnum;
 
-    class LILEnumLowerer : public LILVisitor
-    {
-    public:
-        LILEnumLowerer();
-        virtual ~LILEnumLowerer();
-        void initializeVisit() override;
-        void performVisit(std::shared_ptr<LILRootNode> rootNode) override;
-        void process(LILNode * node);
-        
-    private:
-        void _process(LILEnum * enm);
-    };
+	class LILEnumLowerer : public LILVisitor
+	{
+	public:
+		LILEnumLowerer();
+		virtual ~LILEnumLowerer();
+		void initializeVisit() override;
+		void performVisit(std::shared_ptr<LILRootNode> rootNode) override;
+		void process(LILNode * node);
+		
+	private:
+		void _process(LILEnum * enm);
+	};
 }
 
 #endif /* LILENUMLOWERER_H */

@@ -18,39 +18,39 @@ LILPassManager::LILPassManager()
 : _verbose(false)
 , _hasErrors(false)
 {
-    
+	
 }
 
 LILPassManager::~LILPassManager()
 {
-    
+	
 }
 
 void LILPassManager::execute(const std::vector<LILVisitor *> & visitors, std::shared_ptr<LILRootNode> rootNode, const LILString & code)
 {
-    for (const auto & visitor : visitors) {
-        visitor->setVerbose(this->getVerbose());
-        visitor->initializeVisit();
-        visitor->performVisit(rootNode);
-        if (visitor->hasErrors())
-        {
-            LILPrintErrors(visitor->errors, code);
-            this->_hasErrors = true;
-            break;
-        }
-    }
+	for (const auto & visitor : visitors) {
+		visitor->setVerbose(this->getVerbose());
+		visitor->initializeVisit();
+		visitor->performVisit(rootNode);
+		if (visitor->hasErrors())
+		{
+			LILPrintErrors(visitor->errors, code);
+			this->_hasErrors = true;
+			break;
+		}
+	}
 }
 
 bool LILPassManager::getVerbose() const
 {
-    return this->_verbose;
+	return this->_verbose;
 }
 void LILPassManager::setVerbose(bool value)
 {
-    this->_verbose = value;
+	this->_verbose = value;
 }
 
 bool LILPassManager::hasErrors() const
 {
-    return this->_hasErrors;
+	return this->_hasErrors;
 }

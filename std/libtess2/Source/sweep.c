@@ -545,7 +545,7 @@ static int CheckForLeftSplice( TESStesselator *tess, ActiveRegion *regUp )
 		/* eUp->Dst is below eLo, so splice eUp->Dst into eLo */
 		regUp->dirty = regLo->dirty = TRUE;
 		e = tessMeshSplitEdge( tess->mesh, eLo );
-		if (e == NULL) longjmp(tess->env,1);    
+		if (e == NULL) longjmp(tess->env,1);	
 		if ( !tessMeshSplice( tess->mesh, eUp->Lnext, eLo->Sym ) ) longjmp(tess->env,1);
 		e->Rface->inside = regUp->inside;
 	}
@@ -631,7 +631,7 @@ static int CheckForIntersect( TESStesselator *tess, ActiveRegion *regUp )
 		return FALSE;
 	}
 
-	if(    (! VertEq( dstUp, tess->event )
+	if(	(! VertEq( dstUp, tess->event )
 		&& EdgeSign( dstUp, tess->event, &isect ) >= 0)
 		|| (! VertEq( dstLo, tess->event )
 		&& EdgeSign( dstLo, tess->event, &isect ) <= 0 ))
@@ -760,7 +760,7 @@ static void WalkDirtyRegions( TESStesselator *tess, ActiveRegion *regUp )
 			}
 		}
 		if( eUp->Org != eLo->Org ) {
-			if(    eUp->Dst != eLo->Dst
+			if(	eUp->Dst != eLo->Dst
 				&& ! regUp->fixUpperEdge && ! regLo->fixUpperEdge
 				&& (eUp->Dst == tess->event || eLo->Dst == tess->event) )
 			{
@@ -804,11 +804,11 @@ static void ConnectRightVertex( TESStesselator *tess, ActiveRegion *regUp,
 *
 * There are two reasons for doing this (adding a right-going edge):
 *  - if the two regions being merged are "inside", we must add an edge
-*    to keep them separated (the combined region would not be monotone).
+*	to keep them separated (the combined region would not be monotone).
 *  - in any case, we must leave some record of vEvent in the dictionary,
-*    so that we can merge vEvent with features that we have not seen yet.
-*    For example, maybe there is a vertical edge which passes just to
-*    the right of vEvent; we would like to splice vEvent into this edge.
+*	so that we can merge vEvent with features that we have not seen yet.
+*	For example, maybe there is a vertical edge which passes just to
+*	the right of vEvent; we would like to splice vEvent into this edge.
 *
 * However, we don't want to connect vEvent to just any vertex.  We don''t
 * want the new edge to cross any other edges; otherwise we will create
@@ -1123,9 +1123,9 @@ static void InitEdgeDict( TESStesselator *tess )
 	h = (tess->bmax[1] - tess->bmin[1]) + (TESSreal)0.01;
 
 	smin = tess->bmin[0] - w;
-    smax = tess->bmax[0] + w;
-    tmin = tess->bmin[1] - h;
-    tmax = tess->bmax[1] + h;
+	smax = tess->bmax[0] + w;
+	tmin = tess->bmin[1] - h;
+	tmax = tess->bmax[1] + h;
 
 	AddSentinel( tess, smin, smax, tmin );
 	AddSentinel( tess, smin, smax, tmax );
@@ -1149,7 +1149,7 @@ static void DoneEdgeDict( TESStesselator *tess )
 		}
 		assert( reg->windingNumber == 0 );
 		DeleteRegion( tess, reg );
-		/*    tessMeshDelete( reg->eUp );*/
+		/*	tessMeshDelete( reg->eUp );*/
 	}
 	dictDeleteDict( &tess->alloc, tess->dict );
 }

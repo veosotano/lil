@@ -1,14 +1,14 @@
 /********************************************************************
  *
- *      LIL Is a Language
+ *	  LIL Is a Language
  *
- *      AUTHORS: Miro Keller
+ *	  AUTHORS: Miro Keller
  *
- *      COPYRIGHT: ©2020-today:  All Rights Reserved
+ *	  COPYRIGHT: ©2020-today:  All Rights Reserved
  *
- *      LICENSE: see LICENSE file
+ *	  LICENSE: see LICENSE file
  *
- *      This file prints nodes as text in a hierarchical tree
+ *	  This file prints nodes as text in a hierarchical tree
  *
  ********************************************************************/
 
@@ -19,19 +19,19 @@
 
 namespace LIL
 {
-    class LILDocumentationTmplManager
-    {
-    public:
-        LILDocumentationTmplManager();
-        virtual ~LILDocumentationTmplManager();
-        void setTemplatePath(const std::string & path);
-        void loadTemplate(const std::string & file);
-        std::string renderTemplate(const std::string & file, const std::unordered_map<std::string, std::string> tmplData) const;
-        
-    private:
-        std::unordered_map<std::string, std::string> _tmpls;
-        std::string _tmplPath;
-    };
+	class LILDocumentationTmplManager
+	{
+	public:
+		LILDocumentationTmplManager();
+		virtual ~LILDocumentationTmplManager();
+		void setTemplatePath(const std::string & path);
+		void loadTemplate(const std::string & file);
+		std::string renderTemplate(const std::string & file, const std::unordered_map<std::string, std::string> tmplData) const;
+		
+	private:
+		std::unordered_map<std::string, std::string> _tmpls;
+		std::string _tmplPath;
+	};
 }
 
 #endif /* LILDOCUMENTATIONTMPLMANAGER_H */

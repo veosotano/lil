@@ -1,14 +1,14 @@
 /********************************************************************
  *
- *      LIL Is a Language
+ *	  LIL Is a Language
  *
- *      AUTHORS: Miro Keller
+ *	  AUTHORS: Miro Keller
  *
- *      COPYRIGHT: ©2020-today:  All Rights Reserved
+ *	  COPYRIGHT: ©2020-today:  All Rights Reserved
  *
- *      LICENSE: see LICENSE file
+ *	  LICENSE: see LICENSE file
  *
- *      This file prints nodes as text in a hierarchical tree
+ *	  This file prints nodes as text in a hierarchical tree
  *
  ********************************************************************/
 
@@ -56,41 +56,41 @@
 
 namespace LIL
 {
-    class LILDocumentationTmplManager;
+	class LILDocumentationTmplManager;
 
-    class LILDocumentationWriter : public LILVisitor
-    {
-    public:
-        LILDocumentationWriter();
-        virtual ~LILDocumentationWriter();
-        void initializeVisit() override;
-        void performVisit(std::shared_ptr<LILRootNode> rootNode) override;
-        void visit(LILNode * node) override;
-        void setValue(std::shared_ptr<LILDocumentation> doc);
-        const std::shared_ptr<LILDocumentation> & getValue() const;
-        const std::string & getResult() const;
-        void setTemplateManager(LILDocumentationTmplManager * mgr);
-        std::string writeAliasesTemplate(std::vector<std::shared_ptr<LILDocumentation>> docs, LILClassDecl * classDecl);
-        std::string writeMemberVarsTemplate(std::vector<std::shared_ptr<LILDocumentation>> docs, LILClassDecl * classDecl);
-        std::string writeVvarsTemplate(std::vector<std::shared_ptr<LILDocumentation>> docs, LILClassDecl * classDecl);
-        std::string writeMemberFnsTemplate(std::vector<std::shared_ptr<LILDocumentation>> docs, LILClassDecl * classDecl);
-        std::string writeFnArgsTemplate(std::vector<std::shared_ptr<LILDocumentation>> docs, LILFunctionDecl * fnDecl);
-        std::string createBoilerplateClass(LILClassDecl * classDecl, LILRootNode * rootNode);
-        std::string createBoilerplateFn(LILFunctionDecl * classDecl, LILRootNode * rootNode);
-        std::string writeAliasBoilerplate(LILAliasDecl * alias) const;
-        std::string writeVvarBoilerplate(LILVarDecl * vd) const;
-        std::string writeMemberVarBoilerplate(LILVarDecl * vd) const;
-        std::string writeMemberFnBoilerplate(LILFunctionDecl * fnDecl) const;
-        std::string writeFnArgBoilerplate(LILVarDecl * vd) const;
+	class LILDocumentationWriter : public LILVisitor
+	{
+	public:
+		LILDocumentationWriter();
+		virtual ~LILDocumentationWriter();
+		void initializeVisit() override;
+		void performVisit(std::shared_ptr<LILRootNode> rootNode) override;
+		void visit(LILNode * node) override;
+		void setValue(std::shared_ptr<LILDocumentation> doc);
+		const std::shared_ptr<LILDocumentation> & getValue() const;
+		const std::string & getResult() const;
+		void setTemplateManager(LILDocumentationTmplManager * mgr);
+		std::string writeAliasesTemplate(std::vector<std::shared_ptr<LILDocumentation>> docs, LILClassDecl * classDecl);
+		std::string writeMemberVarsTemplate(std::vector<std::shared_ptr<LILDocumentation>> docs, LILClassDecl * classDecl);
+		std::string writeVvarsTemplate(std::vector<std::shared_ptr<LILDocumentation>> docs, LILClassDecl * classDecl);
+		std::string writeMemberFnsTemplate(std::vector<std::shared_ptr<LILDocumentation>> docs, LILClassDecl * classDecl);
+		std::string writeFnArgsTemplate(std::vector<std::shared_ptr<LILDocumentation>> docs, LILFunctionDecl * fnDecl);
+		std::string createBoilerplateClass(LILClassDecl * classDecl, LILRootNode * rootNode);
+		std::string createBoilerplateFn(LILFunctionDecl * classDecl, LILRootNode * rootNode);
+		std::string writeAliasBoilerplate(LILAliasDecl * alias) const;
+		std::string writeVvarBoilerplate(LILVarDecl * vd) const;
+		std::string writeMemberVarBoilerplate(LILVarDecl * vd) const;
+		std::string writeMemberFnBoilerplate(LILFunctionDecl * fnDecl) const;
+		std::string writeFnArgBoilerplate(LILVarDecl * vd) const;
 
-    private:
-        std::shared_ptr<LILDocumentation> _value;
-        std::string _result;
-        LILDocumentationTmplManager * _tmplManager;
+	private:
+		std::shared_ptr<LILDocumentation> _value;
+		std::string _result;
+		LILDocumentationTmplManager * _tmplManager;
 
-        std::string _htmlEncode(const std::string& data) const;
-        std::string _typeStringRep(LILType * type) const;
-    };
+		std::string _htmlEncode(const std::string& data) const;
+		std::string _typeStringRep(LILType * type) const;
+	};
 }
 
 #endif

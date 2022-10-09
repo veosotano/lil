@@ -332,8 +332,8 @@ void pqDeletePriorityQ( TESSalloc* alloc, PriorityQ *pq )
 }
 
 
-#define LT(x,y)     (! LEQ(y,x))
-#define GT(x,y)     (! LEQ(x,y))
+#define LT(x,y)	 (! LEQ(y,x))
+#define GT(x,y)	 (! LEQ(x,y))
 #define Swap(a,b)   if(1){PQkey *tmp = *a; *a = *b; *b = tmp;}else
 
 /* really tessPqSortInit */
@@ -354,8 +354,8 @@ int pqInit( TESSalloc* alloc, PriorityQ *pq )
 										  (size_t)((pq->size+1) * sizeof(pq->order[0])) );
 	/* the previous line is a patch to compensate for the fact that IBM */
 	/* machines return a null on a malloc of zero bytes (unlike SGI),   */
-	/* so we have to put in this defense to guard against a memory      */
-	/* fault four lines down. from fossum@austin.ibm.com.               */
+	/* so we have to put in this defense to guard against a memory	  */
+	/* fault four lines down. from fossum@austin.ibm.com.			   */
 	if (pq->order == NULL) return 0;
 
 	p = pq->order;

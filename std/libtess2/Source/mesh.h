@@ -107,41 +107,41 @@ typedef struct ActiveRegion ActiveRegion;
 */
 
 struct TESSvertex {
-	TESSvertex *next;      /* next vertex (never NULL) */
-	TESSvertex *prev;      /* previous vertex (never NULL) */
-	TESShalfEdge *anEdge;    /* a half-edge with this origin */
+	TESSvertex *next;	  /* next vertex (never NULL) */
+	TESSvertex *prev;	  /* previous vertex (never NULL) */
+	TESShalfEdge *anEdge;	/* a half-edge with this origin */
 
 	/* Internal data (keep hidden) */
 	TESSreal coords[3];  /* vertex location in 3D */
-	TESSreal s, t;       /* projection onto the sweep plane */
+	TESSreal s, t;	   /* projection onto the sweep plane */
 	int pqHandle;   /* to allow deletion from priority queue */
 	TESSindex n;			/* to allow identify unique vertices */
 	TESSindex idx;			/* to allow map result to original verts */
 };
 
 struct TESSface {
-	TESSface *next;      /* next face (never NULL) */
-	TESSface *prev;      /* previous face (never NULL) */
-	TESShalfEdge *anEdge;    /* a half edge with this left face */
+	TESSface *next;	  /* next face (never NULL) */
+	TESSface *prev;	  /* previous face (never NULL) */
+	TESShalfEdge *anEdge;	/* a half edge with this left face */
 
 	/* Internal data (keep hidden) */
-	TESSface *trail;     /* "stack" for conversion to strips */
+	TESSface *trail;	 /* "stack" for conversion to strips */
 	TESSindex n;		/* to allow identiy unique faces */
-	char marked;     /* flag for conversion to strips */
-	char inside;     /* this face is in the polygon interior */
+	char marked;	 /* flag for conversion to strips */
+	char inside;	 /* this face is in the polygon interior */
 };
 
 struct TESShalfEdge {
-	TESShalfEdge *next;      /* doubly-linked list (prev==Sym->next) */
-	TESShalfEdge *Sym;       /* same edge, opposite direction */
-	TESShalfEdge *Onext;     /* next edge CCW around origin */
-	TESShalfEdge *Lnext;     /* next edge CCW around left face */
-	TESSvertex *Org;       /* origin vertex (Overtex too long) */
-	TESSface *Lface;     /* left face */
+	TESShalfEdge *next;	  /* doubly-linked list (prev==Sym->next) */
+	TESShalfEdge *Sym;	   /* same edge, opposite direction */
+	TESShalfEdge *Onext;	 /* next edge CCW around origin */
+	TESShalfEdge *Lnext;	 /* next edge CCW around left face */
+	TESSvertex *Org;	   /* origin vertex (Overtex too long) */
+	TESSface *Lface;	 /* left face */
 
 	/* Internal data (keep hidden) */
 	ActiveRegion *activeRegion;  /* a region with this upper edge (sweep.c) */
-	int winding;    /* change in winding number when crossing
+	int winding;	/* change in winding number when crossing
 						  from the right face to the left face */
 	int mark; /* Used by the Edge Flip algorithm */
 };
@@ -157,9 +157,9 @@ struct TESShalfEdge {
 #define Rnext   Oprev->Sym  /* 3 pointers */
 
 struct TESSmesh {
-	TESSvertex vHead;      /* dummy header for vertex list */
-	TESSface fHead;      /* dummy header for face list */
-	TESShalfEdge eHead;      /* dummy header for edge list */
+	TESSvertex vHead;	  /* dummy header for vertex list */
+	TESSface fHead;	  /* dummy header for face list */
+	TESShalfEdge eHead;	  /* dummy header for edge list */
 	TESShalfEdge eHeadSym;   /* and its symmetric counterpart */
 
 	struct BucketAlloc* edgeBucket;

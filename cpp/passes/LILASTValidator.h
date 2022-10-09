@@ -1,14 +1,14 @@
 /********************************************************************
  *
- *      LIL Is a Language
+ *	  LIL Is a Language
  *
- *      AUTHORS: Miro Keller
+ *	  AUTHORS: Miro Keller
  *
- *      COPYRIGHT: ©2020-today:  All Rights Reserved
+ *	  COPYRIGHT: ©2020-today:  All Rights Reserved
  *
- *      LICENSE: see LICENSE file
+ *	  LICENSE: see LICENSE file
  *
- *      This file checks the AST for logical coherence
+ *	  This file checks the AST for logical coherence
  *
  ********************************************************************/
 
@@ -60,57 +60,57 @@
 
 namespace LIL
 {
-    class LILASTValidator : public LILVisitor
-    {
-    public:
-        LILASTValidator();
-        virtual ~LILASTValidator();
-        void initializeVisit() override;
-        void performVisit(std::shared_ptr<LILRootNode> rootNode) override;
-        void illegalNodeType(LILNode* illegalNode, LILNode * container);
+	class LILASTValidator : public LILVisitor
+	{
+	public:
+		LILASTValidator();
+		virtual ~LILASTValidator();
+		void initializeVisit() override;
+		void performVisit(std::shared_ptr<LILRootNode> rootNode) override;
+		void illegalNodeType(LILNode* illegalNode, LILNode * container);
 
-        void validate(const std::shared_ptr<LILNode> & node);
-        void _validate(const std::shared_ptr<LILBoolLiteral> & value);
-        void _validate(const std::shared_ptr<LILNumberLiteral> & value);
-        void _validate(const std::shared_ptr<LILPercentageLiteral> & value);
-        void _validate(const std::shared_ptr<LILExpression> & value);
-        void _validate(const std::shared_ptr<LILUnaryExpression> & value);
-        void _validate(const std::shared_ptr<LILStringLiteral> & value);
-        void _validate(const std::shared_ptr<LILStringFunction> & value);
-        void _validate(const std::shared_ptr<LILNullLiteral> & value);
-        void _validate(const std::shared_ptr<LILType> & value);
-        bool _isBuiltInType(const std::shared_ptr<LILType> & ty) const;
-        void _validate(const std::shared_ptr<LILVarDecl> & value);
-        void _validate(const std::shared_ptr<LILAliasDecl> & value);
-        void _validate(const std::shared_ptr<LILTypeDecl> & value);
-        void _validate(const std::shared_ptr<LILConversionDecl> & value);
-        void _validate(const std::shared_ptr<LILEnum> & value);
-        void _validate(const std::shared_ptr<LILClassDecl> & value);
-        void _validate(const std::shared_ptr<LILObjectDefinition> & value);
-        void _validate(const std::shared_ptr<LILAssignment> & value);
-        void _validate(const std::shared_ptr<LILValuePath> & value);
-        void _validate(const std::shared_ptr<LILPropertyName> & value);
-        void _validate(const std::shared_ptr<LILVarName> & value);
-        void _validate(const std::shared_ptr<LILRule> & value);
-        void _validate(const std::shared_ptr<LILSimpleSelector> & value);
-        void _validate(const std::shared_ptr<LILSelectorChain> & value);
-        void _validate(const std::shared_ptr<LILSelector> & value);
-        void _validate(const std::shared_ptr<LILCombinator> & value);
-        void _validate(const std::shared_ptr<LILFilter> & value);
-        void _validate(const std::shared_ptr<LILFlag> & value);
-        void _validate(const std::shared_ptr<LILFunctionDecl> & value);
-        void _validateFunctionDeclChild(LILFunctionDecl * value, LILNode *node);
-        void _validate(const std::shared_ptr<LILFunctionCall> & value);
-        void _validate(const std::shared_ptr<LILFlowControl> & value);
-        void _validate(const std::shared_ptr<LILFlowControlCall> & value);
-        void _validate(const std::shared_ptr<LILInstruction> & value);
-        void _validate(const std::shared_ptr<LILIfInstruction> & value);
-        void _validate(const std::shared_ptr<LILForeignLang> & value);
-        void _validate(const std::shared_ptr<LILDocumentation> & value);
-        void _validate(const std::shared_ptr<LILValueList> & value);
-        void _validate(const std::shared_ptr<LILIndexAccessor> & value);
-        inline void validateChildren(const std::vector<std::shared_ptr<LILNode>> & children);
-    };
+		void validate(const std::shared_ptr<LILNode> & node);
+		void _validate(const std::shared_ptr<LILBoolLiteral> & value);
+		void _validate(const std::shared_ptr<LILNumberLiteral> & value);
+		void _validate(const std::shared_ptr<LILPercentageLiteral> & value);
+		void _validate(const std::shared_ptr<LILExpression> & value);
+		void _validate(const std::shared_ptr<LILUnaryExpression> & value);
+		void _validate(const std::shared_ptr<LILStringLiteral> & value);
+		void _validate(const std::shared_ptr<LILStringFunction> & value);
+		void _validate(const std::shared_ptr<LILNullLiteral> & value);
+		void _validate(const std::shared_ptr<LILType> & value);
+		bool _isBuiltInType(const std::shared_ptr<LILType> & ty) const;
+		void _validate(const std::shared_ptr<LILVarDecl> & value);
+		void _validate(const std::shared_ptr<LILAliasDecl> & value);
+		void _validate(const std::shared_ptr<LILTypeDecl> & value);
+		void _validate(const std::shared_ptr<LILConversionDecl> & value);
+		void _validate(const std::shared_ptr<LILEnum> & value);
+		void _validate(const std::shared_ptr<LILClassDecl> & value);
+		void _validate(const std::shared_ptr<LILObjectDefinition> & value);
+		void _validate(const std::shared_ptr<LILAssignment> & value);
+		void _validate(const std::shared_ptr<LILValuePath> & value);
+		void _validate(const std::shared_ptr<LILPropertyName> & value);
+		void _validate(const std::shared_ptr<LILVarName> & value);
+		void _validate(const std::shared_ptr<LILRule> & value);
+		void _validate(const std::shared_ptr<LILSimpleSelector> & value);
+		void _validate(const std::shared_ptr<LILSelectorChain> & value);
+		void _validate(const std::shared_ptr<LILSelector> & value);
+		void _validate(const std::shared_ptr<LILCombinator> & value);
+		void _validate(const std::shared_ptr<LILFilter> & value);
+		void _validate(const std::shared_ptr<LILFlag> & value);
+		void _validate(const std::shared_ptr<LILFunctionDecl> & value);
+		void _validateFunctionDeclChild(LILFunctionDecl * value, LILNode *node);
+		void _validate(const std::shared_ptr<LILFunctionCall> & value);
+		void _validate(const std::shared_ptr<LILFlowControl> & value);
+		void _validate(const std::shared_ptr<LILFlowControlCall> & value);
+		void _validate(const std::shared_ptr<LILInstruction> & value);
+		void _validate(const std::shared_ptr<LILIfInstruction> & value);
+		void _validate(const std::shared_ptr<LILForeignLang> & value);
+		void _validate(const std::shared_ptr<LILDocumentation> & value);
+		void _validate(const std::shared_ptr<LILValueList> & value);
+		void _validate(const std::shared_ptr<LILIndexAccessor> & value);
+		inline void validateChildren(const std::vector<std::shared_ptr<LILNode>> & children);
+	};
 }
 
 #endif

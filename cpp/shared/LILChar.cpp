@@ -1,14 +1,14 @@
 /********************************************************************
  *
- *      LIL Is a Language
+ *	  LIL Is a Language
  *
- *      AUTHORS: Miro Keller
+ *	  AUTHORS: Miro Keller
  *
- *      COPYRIGHT: ©2020-today:  All Rights Reserved
+ *	  COPYRIGHT: ©2020-today:  All Rights Reserved
  *
- *      LICENSE: see LICENSE file
+ *	  LICENSE: see LICENSE file
  *
- *      This file implements a character in LIL
+ *	  This file implements a character in LIL
  *
  ********************************************************************/
 
@@ -19,15 +19,15 @@ using namespace LIL;
 
 namespace LIL
 {
-    class LILCharPrivate
-    {
-        friend class LILChar;
-        LILCharPrivate()
-        {
+	class LILCharPrivate
+	{
+		friend class LILChar;
+		LILCharPrivate()
+		{
 
-        }
-        LILUnitI64 value;
-    };
+		}
+		LILUnitI64 value;
+	};
 }
 
 LILChar::LILChar()
@@ -39,43 +39,43 @@ LILChar::LILChar()
 LILChar::LILChar(const LILChar & other)
 : d(new LILCharPrivate)
 {
-    d->value = other.d->value;
+	d->value = other.d->value;
 }
 
 LILChar::LILChar(LILUnitI64 value)
 : d(new LILCharPrivate)
 {
-    d->value = value;
+	d->value = value;
 }
 
 LILChar::~LILChar()
 {
-    delete d;
+	delete d;
 }
 
 LILChar & LILChar::operator=(const LILChar &other)
 {
-    d->value = other.data();
-    return *this;
+	d->value = other.data();
+	return *this;
 }
 
 LILChar & LILChar::operator=(const char * other)
 {
-    d->value = static_cast<uint32_t>(*other);
-    return *this;
+	d->value = static_cast<uint32_t>(*other);
+	return *this;
 }
 
 LILUnitI64 LILChar::data() const
 {
-    return d->value;
+	return d->value;
 }
 
 bool LILChar::isSpace() const
 {
-    return std::isspace(static_cast<unsigned char>(this->data()));
+	return std::isspace(static_cast<unsigned char>(this->data()));
 }
 
 bool LILChar::isDigit() const
 {
-    return std::isdigit(static_cast<unsigned char>(this->data()));
+	return std::isdigit(static_cast<unsigned char>(this->data()));
 }

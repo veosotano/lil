@@ -1,14 +1,14 @@
 /********************************************************************
  *
- *      LIL Is a Language
+ *	  LIL Is a Language
  *
- *      AUTHORS: Miro Keller
+ *	  AUTHORS: Miro Keller
  *
- *      COPYRIGHT: ©2020-today:  All Rights Reserved
+ *	  COPYRIGHT: ©2020-today:  All Rights Reserved
  *
- *      LICENSE: see LICENSE file
+ *	  LICENSE: see LICENSE file
  *
- *      This file represents a bool written in the source code
+ *	  This file represents a bool written in the source code
  *
  ********************************************************************/
 
@@ -25,58 +25,58 @@ LILBoolLiteral::LILBoolLiteral()
 LILBoolLiteral::LILBoolLiteral(const LILBoolLiteral & other)
 : LILTypedNode(other)
 {
-    this->_value = other._value;
-    this->_originalRep = other._originalRep;
+	this->_value = other._value;
+	this->_originalRep = other._originalRep;
 }
 
 std::shared_ptr<LILBoolLiteral> LILBoolLiteral::clone() const
 {
-    auto clone = std::static_pointer_cast<LILBoolLiteral> (this->cloneImpl());
-    //clone LILTypedNode
-    if (this->_type) {
-        clone->setType(this->_type->clone());
-    }
-    return clone;
+	auto clone = std::static_pointer_cast<LILBoolLiteral> (this->cloneImpl());
+	//clone LILTypedNode
+	if (this->_type) {
+		clone->setType(this->_type->clone());
+	}
+	return clone;
 }
 
 std::shared_ptr<LILClonable> LILBoolLiteral::cloneImpl() const
 {
-    return std::shared_ptr<LILBoolLiteral>(new LILBoolLiteral(*this));
+	return std::shared_ptr<LILBoolLiteral>(new LILBoolLiteral(*this));
 }
 
 LILBoolLiteral::~LILBoolLiteral()
 {
-    
+	
 }
 
 void LILBoolLiteral::receiveNodeData(const LIL::LILString &data)
 {
-    if (data == "true") {
-        this->setValue(true);
-    } else if (data == "false"){
-        this->setValue(false);
-    }
+	if (data == "true") {
+		this->setValue(true);
+	} else if (data == "false"){
+		this->setValue(false);
+	}
 }
 
 void LILBoolLiteral::setValue(bool newValue)
 {
-    this->_value = newValue;
+	this->_value = newValue;
 }
 
 bool LILBoolLiteral::getValue()
 {
-    return this->_value;
+	return this->_value;
 }
 
 bool LILBoolLiteral::equalTo(std::shared_ptr<LILNode> otherNode)
 {
-    if ( ! LILTypedNode::equalTo(otherNode)) return false;
-    std::shared_ptr<LILBoolLiteral> castedNode = std::static_pointer_cast<LILBoolLiteral>(otherNode);
-    if ( this->_value != castedNode->_value ) return false;
-    return true;
+	if ( ! LILTypedNode::equalTo(otherNode)) return false;
+	std::shared_ptr<LILBoolLiteral> castedNode = std::static_pointer_cast<LILBoolLiteral>(otherNode);
+	if ( this->_value != castedNode->_value ) return false;
+	return true;
 }
 
 std::shared_ptr<LILType> LILBoolLiteral::getType() const
 {
-    return LILType::make("bool");
+	return LILType::make("bool");
 }

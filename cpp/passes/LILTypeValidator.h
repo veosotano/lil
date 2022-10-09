@@ -1,14 +1,14 @@
 /********************************************************************
  *
- *      LIL Is a Language
+ *	  LIL Is a Language
  *
- *      AUTHORS: Miro Keller
+ *	  AUTHORS: Miro Keller
  *
- *      COPYRIGHT: ©2020-today:  All Rights Reserved
+ *	  COPYRIGHT: ©2020-today:  All Rights Reserved
  *
- *      LICENSE: see LICENSE file
+ *	  LICENSE: see LICENSE file
  *
- *      This file checks if function calls match their prototypes
+ *	  This file checks if function calls match their prototypes
  *
  ********************************************************************/
 
@@ -30,34 +30,34 @@
 
 namespace LIL
 {
-    class LILTypeValidator : public LILVisitor
-    {
-    public:
-        LILTypeValidator();
-        virtual ~LILTypeValidator();
-        void initializeVisit() override;
-        void visit(LILNode * node) override { };
-        void performVisit(std::shared_ptr<LILRootNode> rootNode) override;
-        void validateType(const std::shared_ptr<LILType> & value);
-        void validate(std::shared_ptr<LILNode> node);
-        void _validate(std::shared_ptr<LILFunctionCall> fc);
-        void _validateFCArguments(std::shared_ptr<LILFunctionType> fnTy, std::shared_ptr<LILFunctionCall> fc, bool isMethod, std::shared_ptr<LILValuePath> vp);
-        bool _isDefinitionOf(std::shared_ptr<LILType> nativeTy, std::shared_ptr<LILType> customTy);
-        void _validate(std::shared_ptr<LILObjectDefinition> od);
-        bool _validateField(std::shared_ptr<LILType> vdTy, std::shared_ptr<LILType> asTy);
-        void _validate(std::shared_ptr<LILVarDecl> vd);
-        void _validate(std::shared_ptr<LILVarName> vn);
-        inline void validateChildren(const std::vector<std::shared_ptr<LILNode>> & children);
+	class LILTypeValidator : public LILVisitor
+	{
+	public:
+		LILTypeValidator();
+		virtual ~LILTypeValidator();
+		void initializeVisit() override;
+		void visit(LILNode * node) override { };
+		void performVisit(std::shared_ptr<LILRootNode> rootNode) override;
+		void validateType(const std::shared_ptr<LILType> & value);
+		void validate(std::shared_ptr<LILNode> node);
+		void _validate(std::shared_ptr<LILFunctionCall> fc);
+		void _validateFCArguments(std::shared_ptr<LILFunctionType> fnTy, std::shared_ptr<LILFunctionCall> fc, bool isMethod, std::shared_ptr<LILValuePath> vp);
+		bool _isDefinitionOf(std::shared_ptr<LILType> nativeTy, std::shared_ptr<LILType> customTy);
+		void _validate(std::shared_ptr<LILObjectDefinition> od);
+		bool _validateField(std::shared_ptr<LILType> vdTy, std::shared_ptr<LILType> asTy);
+		void _validate(std::shared_ptr<LILVarDecl> vd);
+		void _validate(std::shared_ptr<LILVarName> vn);
+		inline void validateChildren(const std::vector<std::shared_ptr<LILNode>> & children);
 
-        std::shared_ptr<LILClassDecl> getClassContext() const;
-        void enterClassContext(std::shared_ptr<LILClassDecl> value);
-        void exitClassContext();
+		std::shared_ptr<LILClassDecl> getClassContext() const;
+		void enterClassContext(std::shared_ptr<LILClassDecl> value);
+		void exitClassContext();
 
-    private:
-        std::vector<std::shared_ptr<LILClassDecl>> _classContext;
+	private:
+		std::vector<std::shared_ptr<LILClassDecl>> _classContext;
 
-        bool _isCustomType(const std::shared_ptr<LILType> & ty) const;
-    };
+		bool _isCustomType(const std::shared_ptr<LILType> & ty) const;
+	};
 }
 
 #endif /* LILTYPEVALIDATOR_H */

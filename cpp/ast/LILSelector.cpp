@@ -1,14 +1,14 @@
 /********************************************************************
  *
- *      LIL Is a Language
+ *	  LIL Is a Language
  *
- *      AUTHORS: Miro Keller
+ *	  AUTHORS: Miro Keller
  *
- *      COPYRIGHT: ©2020-today:  All Rights Reserved
+ *	  COPYRIGHT: ©2020-today:  All Rights Reserved
  *
- *      LICENSE: see LICENSE file
+ *	  LICENSE: see LICENSE file
  *
- *      This file is the selector in a selector chain
+ *	  This file is the selector in a selector chain
  *
  ********************************************************************/
 
@@ -19,130 +19,130 @@ using namespace LIL;
 LILSelector::LILSelector()
 : LIL::LILNode(NodeTypeSelector)
 {
-    this->_selectorType = SelectorTypeNone;
-    this->_name = "";
+	this->_selectorType = SelectorTypeNone;
+	this->_name = "";
 }
 
 LILSelector::LILSelector(const LILSelector &other)
 : LILNode(other)
 {
-    this->_selectorType = other._selectorType;
-    this->_name = other._name;
+	this->_selectorType = other._selectorType;
+	this->_name = other._name;
 }
 
 std::shared_ptr<LILSelector> LILSelector::clone() const
 {
-    return std::static_pointer_cast<LILSelector> (this->cloneImpl());
+	return std::static_pointer_cast<LILSelector> (this->cloneImpl());
 }
 
 std::shared_ptr<LILClonable> LILSelector::cloneImpl() const
 {
-    std::shared_ptr<LILSelector> clone(new LILSelector(*this));
-    return clone;
+	std::shared_ptr<LILSelector> clone(new LILSelector(*this));
+	return clone;
 }
 
 LILSelector::~LILSelector()
 {
-    
+	
 }
 
 void LILSelector::receiveNodeData(const LIL::LILString &data)
 {
-    if (data == "*")
-    {
-        this->setSelectorType(SelectorTypeUniversalSelector);
-    }
-    else if (data == "@this")
-    {
-        this->setSelectorType(SelectorTypeThisSelector);
-    }
-    else if (data == "@root")
-    {
-        this->setSelectorType(SelectorTypeRootSelector);
-    }
-    else if (data == "@parent")
-    {
-        this->setSelectorType(SelectorTypeParentSelector);
-    }
-    else if (data == "@self")
-    {
-        this->setSelectorType(SelectorTypeSelfSelector);
-    }
-    else if (data == "@super")
-    {
-        this->setSelectorType(SelectorTypeSuperSelector);
-    }
-    else if (data == "@mainMenu")
-    {
-        this->setSelectorType(SelectorTypeMainMenu);
-    }
-    else if (data == "@key")
-    {
-        this->setSelectorType(SelectorTypeKey);
-    }
-    else if (data == "@value")
-    {
-        this->setSelectorType(SelectorTypeValue);
-    }
-    else if (data == "@index")
-    {
-        this->setSelectorType(SelectorTypeIndex);
-    }
-    else if (data == "@i")
-    {
-        this->setSelectorType(SelectorTypeI);
-    }
-    else if (data == "@j")
-    {
-        this->setSelectorType(SelectorTypeJ);
-    }
-    else if (data == "@k")
-    {
-        this->setSelectorType(SelectorTypeK);
-    }
-    else
-    {
-        this->setSelectorType(SelectorTypeNameSelector);
-    }
-    this->_name = data;
+	if (data == "*")
+	{
+		this->setSelectorType(SelectorTypeUniversalSelector);
+	}
+	else if (data == "@this")
+	{
+		this->setSelectorType(SelectorTypeThisSelector);
+	}
+	else if (data == "@root")
+	{
+		this->setSelectorType(SelectorTypeRootSelector);
+	}
+	else if (data == "@parent")
+	{
+		this->setSelectorType(SelectorTypeParentSelector);
+	}
+	else if (data == "@self")
+	{
+		this->setSelectorType(SelectorTypeSelfSelector);
+	}
+	else if (data == "@super")
+	{
+		this->setSelectorType(SelectorTypeSuperSelector);
+	}
+	else if (data == "@mainMenu")
+	{
+		this->setSelectorType(SelectorTypeMainMenu);
+	}
+	else if (data == "@key")
+	{
+		this->setSelectorType(SelectorTypeKey);
+	}
+	else if (data == "@value")
+	{
+		this->setSelectorType(SelectorTypeValue);
+	}
+	else if (data == "@index")
+	{
+		this->setSelectorType(SelectorTypeIndex);
+	}
+	else if (data == "@i")
+	{
+		this->setSelectorType(SelectorTypeI);
+	}
+	else if (data == "@j")
+	{
+		this->setSelectorType(SelectorTypeJ);
+	}
+	else if (data == "@k")
+	{
+		this->setSelectorType(SelectorTypeK);
+	}
+	else
+	{
+		this->setSelectorType(SelectorTypeNameSelector);
+	}
+	this->_name = data;
 }
 
 bool LILSelector::equalTo(std::shared_ptr<LILNode> otherNode)
 {
-    if ( ! LILNode::equalTo(otherNode)) return false;
-    //other checks
-    if ( this->_selectorType != otherNode->getSelectorType()) return false;
-    //compare the child nodes
-    size_t nodesSize = this->_childNodes.size();
-    const auto otherChildNodes = otherNode->getChildNodes();
-    for (size_t i = 0; i<nodesSize; ++i)
-    {
-        if ( ! this->_childNodes[i]->equalTo(otherChildNodes[i])) return false;
-    }
-    return true;
-    
+	if ( ! LILNode::equalTo(otherNode)) return false;
+	//other checks
+	if ( this->_selectorType != otherNode->getSelectorType()) return false;
+	//compare the child nodes
+	size_t nodesSize = this->_childNodes.size();
+	const auto otherChildNodes = otherNode->getChildNodes();
+	for (size_t i = 0; i<nodesSize; ++i)
+	{
+		if ( ! this->_childNodes[i]->equalTo(otherChildNodes[i])) return false;
+	}
+	return true;
+	
 }
 
 SelectorType LILSelector::getSelectorType() const
 {
-    return this->_selectorType;
+	return this->_selectorType;
 }
 
 bool LILSelector::isA(SelectorType otherType) const
 {
-    return this->_selectorType == otherType;
+	return this->_selectorType == otherType;
 }
 
 void LILSelector::setSelectorType(SelectorType newType)
 {
-    this->_selectorType = newType;
+	this->_selectorType = newType;
 }
 
 LILString LILSelector::getName() const
 {
-    return this->_name;
+	return this->_name;
 }
 void LILSelector::setName(LILString newName)
 {
-    this->_name = newName;
+	this->_name = newName;
 }

@@ -1,14 +1,14 @@
 /********************************************************************
  *
- *      LIL Is a Language
+ *	  LIL Is a Language
  *
- *      AUTHORS: Miro Keller
+ *	  AUTHORS: Miro Keller
  *
- *      COPYRIGHT: ©2020-today:  All Rights Reserved
+ *	  COPYRIGHT: ©2020-today:  All Rights Reserved
  *
- *      LICENSE: see LICENSE file
+ *	  LICENSE: see LICENSE file
  *
- *      This kind of token holds code written in another language
+ *	  This kind of token holds code written in another language
  *
  ********************************************************************/
 
@@ -19,29 +19,29 @@
 
 namespace LIL
 {
-    class LILNode;
-    
-    class LILForeignLangToken : public LILToken
-    {
-    public:
-        LILForeignLangToken(TokenType type, size_t line, size_t column, size_t index);
-        virtual ~LILForeignLangToken();
-        void setValue(LILString newValue);
-        
-        bool equals(TokenType otherType, LILString otherValue);
-        LILString toString();
+	class LILNode;
+	
+	class LILForeignLangToken : public LILToken
+	{
+	public:
+		LILForeignLangToken(TokenType type, size_t line, size_t column, size_t index);
+		virtual ~LILForeignLangToken();
+		void setValue(LILString newValue);
+		
+		bool equals(TokenType otherType, LILString otherValue);
+		LILString toString();
 
-        void setLanguage(LILString value);
-        const LILString & getLanguage() const;
+		void setLanguage(LILString value);
+		const LILString & getLanguage() const;
 
-        void setContent(LILString value);
-        const LILString & getContent() const;
-        
-        
-    private:
-        LILString _language;
-        LILString _content;
-    };
+		void setContent(LILString value);
+		const LILString & getContent() const;
+		
+		
+	private:
+		LILString _language;
+		LILString _content;
+	};
 }
 
 #endif

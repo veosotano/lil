@@ -267,7 +267,7 @@ TESShalfEdge *tessMeshMakeEdge( TESSmesh *mesh )
 	if (newVertex1 == NULL || newVertex2 == NULL || newFace == NULL) {
 		if (newVertex1 != NULL) bucketFree( mesh->vertexBucket, newVertex1 );
 		if (newVertex2 != NULL) bucketFree( mesh->vertexBucket, newVertex2 );
-		if (newFace != NULL) bucketFree( mesh->faceBucket, newFace );     
+		if (newFace != NULL) bucketFree( mesh->faceBucket, newFace );	 
 		return NULL;
 	} 
 
@@ -724,11 +724,11 @@ int tessMeshMergeConvexFaces( TESSmesh *mesh, int maxVertsPerFace )
 
 		// Merge if the resulting poly is convex.
 		//
-		//      vf--ve--vd
-		//          ^|
+		//	  vf--ve--vd
+		//		  ^|
 		// left   e ||   right
-		//          |v
-		//      va--vb--vc
+		//		  |v
+		//	  va--vb--vc
 
 		va = e->Lprev->Org;
 		vb = e->Org;

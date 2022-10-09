@@ -1,14 +1,14 @@
 /********************************************************************
  *
- *      LIL Is a Language
+ *	  LIL Is a Language
  *
- *      AUTHORS: Miro Keller
+ *	  AUTHORS: Miro Keller
  *
- *      COPYRIGHT: ©2020-today:  All Rights Reserved
+ *	  COPYRIGHT: ©2020-today:  All Rights Reserved
  *
- *      LICENSE: see LICENSE file
+ *	  LICENSE: see LICENSE file
  *
- *      This file encapsulates multiple types for one variable
+ *	  This file encapsulates multiple types for one variable
  *
  ********************************************************************/
 
@@ -19,36 +19,36 @@
 
 namespace LIL
 {
-    class LILMultipleType : public LILType
-    {
-    public:
-        LILMultipleType();
-        LILMultipleType(const LILMultipleType &other);
-        std::shared_ptr<LILMultipleType> clone() const;
-        virtual ~LILMultipleType();
-        bool equalTo(std::shared_ptr<LILNode> otherNode) override;
-        void receiveNodeData(const LILString & data) override;
+	class LILMultipleType : public LILType
+	{
+	public:
+		LILMultipleType();
+		LILMultipleType(const LILMultipleType &other);
+		std::shared_ptr<LILMultipleType> clone() const;
+		virtual ~LILMultipleType();
+		bool equalTo(std::shared_ptr<LILNode> otherNode) override;
+		void receiveNodeData(const LILString & data) override;
 
-        void addType(std::shared_ptr<LILType> ty);
-        void setTypes(std::vector<std::shared_ptr<LILType>> && tys);
-        std::vector<std::shared_ptr<LILType>> getTypes() const;
+		void addType(std::shared_ptr<LILType> ty);
+		void setTypes(std::vector<std::shared_ptr<LILType>> && tys);
+		std::vector<std::shared_ptr<LILType>> getTypes() const;
 
-        bool getIsWeakType() const override;
-        void setIsWeakType(bool value);
-        std::shared_ptr<LILType> getIntegerType() const override;
-        std::shared_ptr<LILType> getFloatType() const override;
+		bool getIsWeakType() const override;
+		void setIsWeakType(bool value);
+		std::shared_ptr<LILType> getIntegerType() const override;
+		std::shared_ptr<LILType> getFloatType() const override;
 
-        void sortTypes();
+		void sortTypes();
 
-        size_t indexOfType(LILType * ty) const;
+		size_t indexOfType(LILType * ty) const;
 
-    protected:
-        std::shared_ptr<LILClonable> cloneImpl() const override;
+	protected:
+		std::shared_ptr<LILClonable> cloneImpl() const override;
 
-    private:
-        std::vector<std::shared_ptr<LILType>> _types;
-        bool _isWeakType;
-    };
+	private:
+		std::vector<std::shared_ptr<LILType>> _types;
+		bool _isWeakType;
+	};
 }
 
 #endif

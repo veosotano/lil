@@ -1,15 +1,15 @@
 /********************************************************************
  *
- *      LIL Is a Language
+ *	  LIL Is a Language
  *
- *      AUTHORS: Miro Keller
+ *	  AUTHORS: Miro Keller
  *
- *      COPYRIGHT: ©2020-today:  All Rights Reserved
+ *	  COPYRIGHT: ©2020-today:  All Rights Reserved
  *
- *      LICENSE: see LICENSE file
+ *	  LICENSE: see LICENSE file
  *
- *      This file represents a simple selector, which groups individual
- *      selectors as a basic group
+ *	  This file represents a simple selector, which groups individual
+ *	  selectors as a basic group
  *
  ********************************************************************/
 
@@ -20,21 +20,21 @@
 
 namespace LIL
 {
-    class LILSimpleSelector : public LILNode
-    {
-    public:
-        LILSimpleSelector();
-        LILSimpleSelector(const LILSimpleSelector &other);
-        std::shared_ptr<LILSimpleSelector> clone() const;
-        virtual ~LILSimpleSelector();
-        const std::vector<std::shared_ptr<LILNode>> & getNodes() const;
-        void setNodes(std::vector<std::shared_ptr<LILNode>> && nodes);
-        const std::shared_ptr<LILNode> & getFirstNode() const;
-        const std::shared_ptr<LILNode> & getLastNode() const;
+	class LILSimpleSelector : public LILNode
+	{
+	public:
+		LILSimpleSelector();
+		LILSimpleSelector(const LILSimpleSelector &other);
+		std::shared_ptr<LILSimpleSelector> clone() const;
+		virtual ~LILSimpleSelector();
+		const std::vector<std::shared_ptr<LILNode>> & getNodes() const;
+		void setNodes(std::vector<std::shared_ptr<LILNode>> && nodes);
+		const std::shared_ptr<LILNode> & getFirstNode() const;
+		const std::shared_ptr<LILNode> & getLastNode() const;
 
-    protected:
-        virtual std::shared_ptr<LILClonable> cloneImpl() const;
-    };
+	protected:
+		virtual std::shared_ptr<LILClonable> cloneImpl() const;
+	};
 }
 
 #endif
