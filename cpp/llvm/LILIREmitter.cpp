@@ -1501,13 +1501,9 @@ llvm::Value * LILIREmitter::_emitAsgmt(LILAssignment * asgmt)
 			switch (sel->getSelectorType()) {
 				case SelectorTypeSelfSelector:
 				{
-					auto ptrToSelf = d->namedValues["@self"];
+					d->currentAlloca = d->namedValues["@self"];
 					auto classDecl = this->findAncestorClass(asgmt->shared_from_this());
 					currentTy = classDecl->getType();
-					auto ptrTy = std::make_shared<LILPointerType>();
-					ptrTy->setName("ptr");
-					ptrTy->setArgument(currentTy);
-					d->currentAlloca = d->irBuilder.CreateLoad(this->llvmTypeFromLILType(ptrTy.get()), ptrToSelf);
 					stringRep = "@self";
 					break;
 				}
@@ -1825,13 +1821,9 @@ llvm::Value * LILIREmitter::_emitVP(LILValuePath * value)
 			switch (sel->getSelectorType()) {
 				case SelectorTypeSelfSelector:
 				{
-					auto ptrToSelf = d->namedValues["@self"];
+					llvmSubject = d->namedValues["@self"];
 					auto classDecl = this->findAncestorClass(value->shared_from_this());
 					currentTy = classDecl->getType();
-					auto ptrTy = std::make_shared<LILPointerType>();
-					ptrTy->setName("ptr");
-					ptrTy->setArgument(currentTy);
-					llvmSubject = d->irBuilder.CreateLoad(this->llvmTypeFromLILType(ptrTy.get()), ptrToSelf);
 					stringRep = "@self";
 					break;
 				}
@@ -2824,10 +2816,15 @@ llvm::Function * LILIREmitter::_emitFn(LILFunctionDecl * value)
 	std::map<std::string, llvm::Value *> scope;
 	d->hiddenLocals.push_back(scope);
 
-	for (llvm::Value & arg : fun->args()) {
-		auto name = std::string(arg.getName());
-		llvm::AllocaInst * alloca = this->createEntryBlockAlloca(fun, name, arg.getType());
-		d->irBuilder.CreateStore(&arg, alloca);
+	for (unsigned int i = 0; i<fun->arg_size(); i+=1) {
+		auto arg = fun->getArg(i);
+		auto name = std::string(arg->getName());
+		if (name == "@self") {
+			d->namedValues[name] = arg;
+			continue;
+		}
+		llvm::AllocaInst * alloca = this->createEntryBlockAlloca(fun, name, arg->getType());
+		d->irBuilder.CreateStore(arg, alloca);
 		if (d->namedValues.count(name)) {
 			d->hiddenLocals.back()[name] = d->namedValues[name];
 		}
@@ -4662,13 +4659,9 @@ llvm::Value * LILIREmitter::_emitPointer(LILValuePath * value)
 			switch (sel->getSelectorType()) {
 				case SelectorTypeSelfSelector:
 				{
-					auto ptrToSelf = d->namedValues["@self"];
+					llvmSubject = d->namedValues["@self"];
 					auto classDecl = this->findAncestorClass(value->shared_from_this());
 					currentTy = classDecl->getType();
-					auto ptrTy = std::make_shared<LILPointerType>();
-					ptrTy->setName("ptr");
-					ptrTy->setArgument(currentTy);
-					llvmSubject = d->irBuilder.CreateLoad(this->llvmTypeFromLILType(ptrTy.get()), ptrToSelf);
 					stringRep = "@self";
 					break;
 				}
