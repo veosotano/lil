@@ -700,32 +700,29 @@ long int LIL__ticksTonanoseconds(long int ticks) {
 }
 - (void)mouseDown:(NSEvent *)anEvent {
 	NSPoint loc = [anEvent locationInWindow];
-	CGFloat scaleFactor = self.window.screen.backingScaleFactor;
 	[self setModifierKeyState:[anEvent modifierFlags]];
 	LIL__setMouseDown(
 		0,
-		loc.x * scaleFactor,
-		loc.y * scaleFactor
+		loc.x,
+		loc.y
 	);
 }
 - (void)mouseDragged:(NSEvent *)anEvent {
 	NSPoint loc = [anEvent locationInWindow];
-	CGFloat scaleFactor = self.window.screen.backingScaleFactor;
 	[self setModifierKeyState:[anEvent modifierFlags]];
 	LIL__setMouseDragged(
 		0,
-		loc.x * scaleFactor,
-		loc.y * scaleFactor
+		loc.x,
+		loc.y
 	);
 }
 - (void)mouseUp:(NSEvent *)anEvent {
 	NSPoint loc = [anEvent locationInWindow];
-	CGFloat scaleFactor = self.window.screen.backingScaleFactor;
 	[self setModifierKeyState:[anEvent modifierFlags]];
 	LIL__setMouseUp(
 		0,
-		loc.x * scaleFactor,
-		loc.y * scaleFactor,
+		loc.x,
+		loc.y,
 		[anEvent clickCount]
 	);
 }
