@@ -736,6 +736,7 @@ typedef struct
 - (void)setMainView:(LILMainView *)theView;
 - (void)setWindowBackgroundRed:(double)red green:(double)green blue:(double)blue alpha:(double)alpha;
 - (CGSize)getUIWindowSize;
+- (LILMainView *)getMainView;
 @property (strong, nonatomic) UIWindow *window;
 
 @end
@@ -780,6 +781,11 @@ LILAppDelegate * LIL__applicationDelegate;
 
 - (CGSize)getUIWindowSize {
 	return mainView.frame.size;
+}
+
+- (LILMainView *)getMainView
+{
+	return mainView;
 }
 
 @end

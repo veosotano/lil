@@ -1,0 +1,352 @@
+alias cstr => ptr(i8);
+#needs "string.lil";
+#needs "print.lil";
+#needs "app.lil";
+#import "objc.lil";
+var.id LIL__applicationDelegate extern;
+
+class @CGSize {
+	var.f64 width;
+	var.f64 height;
+};
+class @CGPoint {
+	var.f64 x;
+	var.f64 y;
+};
+class @CGRect {
+	var.@CGPoint origin;
+	var.@CGSize size;
+};
+
+enum.i64 UITextBorderStyle {
+	none,
+	line,
+	bezel,
+	roundedRect
+};
+
+enum.i64 UITextAutocorrectionType {
+	default,
+	no,
+	yes
+};
+
+enum.i64 UIKeyboardType {
+	default,
+	ASCIICapable,
+	numbersAndPunctuation,
+	URL,
+	numberPad,
+	phonePad,
+	namePhonePad,
+	emailAddress,
+	decimalPad,
+	twitter,
+	webSearch,
+	ASCIICapableNumberPad
+};
+
+enum.i64 UIReturnKey {
+	default,
+	go,
+	google,
+	join,
+	next,
+	route,
+	search,
+	send,
+	yahoo,
+	done,
+	emergencyCall,
+	continue
+};
+
+enum.i64 UITextFieldViewMode {
+	never,
+	whileEditing,
+	unlessEditing,
+	always
+};
+
+enum.i64 UIControlContentVerticalAlignment {
+	center,
+	top,
+	bottom,
+	fill,
+};
+
+#export {
+	class @textfield
+	{
+		//this class MUST only be an i64
+		//do not add any more vars
+		#expand var.@element super: @element { };
+
+		//public interface
+		vvar.i64 componentId;
+		vvar.f64 width;
+		vvar.f64 height;
+		//vvar.@rgb background;
+		vvar.f64 x;
+		vvar.f64 y;
+		vvar.ptr(@string)=>ptr(i8) value;
+		// vvar.ptr(any)|null onChange;
+
+		fn getComponentId => i64 {
+			return app.selectables[@self.id].componentId;
+		};
+
+		fn initialize(var.cstr name; var.i64 parentId: 0) => i64 {
+			var componentId: app.newTextfield();
+			var id: app.newElement(name, parentId, 5, componentId);
+			@self.id: id;
+			
+			//create UITextfield
+			var.Class tfClass: objc_lookUpClass(`UITextField`);
+			var.SEL tfAllocSel: sel_registerName(`alloc`);
+			var tfAllocMethod: pointerTo(objc_msgSend) => ptr(fn(id,SEL)=>id);
+			var textfieldInstance: tfAllocMethod(tfClass => id, tfAllocSel);
+			
+			var.SEL tfInitSel: sel_registerName(`initWithFrame:`);
+			var.@CGRect newFrame: @CGRect {
+				origin: @CGPoint {
+					x: 0;
+					y: 0;
+				};
+				size: @CGSize {
+					width: 300;
+					height: 40;
+				};
+			};
+			var tfInitMethod: pointerTo(objc_msgSend) => ptr(fn(id,SEL,@CGRect));
+			tfInitMethod(textfieldInstance, tfInitSel,newFrame);
+			
+			var setBorderStyleSel: sel_registerName(`setBorderStyle:`);
+			var setBorderStyleMethod: pointerTo(objc_msgSend) => ptr(fn(id,SEL,i64));
+			setBorderStyleMethod(textfieldInstance, setBorderStyleSel, UITextBorderStyle.roundedRect);
+
+			var fontClass: objc_lookUpClass(`UIFont`);
+			var fontCreateSel: sel_registerName(`systemFontOfSize:`);
+			var fontCreateMethod: pointerTo(objc_msgSend) => ptr(fn(id,SEL,f64)=>id);
+			fontCreateMethod(fontClass => id, fontCreateSel, 15);
+
+			var setAutocorrectionTypeSel: sel_registerName(`setAutocorrectionType:`);
+			var setAutocorrectionTypeMethod: pointerTo(objc_msgSend) => ptr(fn(id,SEL,i64));
+			setAutocorrectionTypeMethod(textfieldInstance, setAutocorrectionTypeSel, UITextAutocorrectionType.no);
+
+			var setKeyboardTypeSel: sel_registerName(`setKeyboardType:`);
+			var setKeyboardTypeMethod: pointerTo(objc_msgSend) => ptr(fn(id,SEL,i64));
+			setKeyboardTypeMethod(textfieldInstance, setKeyboardTypeSel, UIKeyboardType.default);
+
+			var setReturnKeyTypeSel: sel_registerName(`setReturnKeyType:`);
+			var setReturnKeyTypeMethod: pointerTo(objc_msgSend) => ptr(fn(id,SEL,i64));
+			setReturnKeyTypeMethod(textfieldInstance, setReturnKeyTypeSel, UIReturnKey.done);
+
+			var setClearButtonModeSel: sel_registerName(`setClearButtonMode:`);
+			var setClearButtonModeMethod: pointerTo(objc_msgSend) => ptr(fn(id,SEL,i64));
+			setClearButtonModeMethod(textfieldInstance, setClearButtonModeSel, UITextFieldViewMode.whileEditing);
+
+			var setContentVerticalAlignmentSel: sel_registerName(`setContentVerticalAlignment:`);
+			var setContentVerticalAlignmentMethod: pointerTo(objc_msgSend) => ptr(fn(id,SEL,i64));
+			setContentVerticalAlignmentMethod(textfieldInstance, setContentVerticalAlignmentSel, UIControlContentVerticalAlignment.center);
+
+			app.textfields[componentId].data: textfieldInstance;
+
+			//ask the app delegate for the main view
+			var.SEL getMainViewSel: sel_registerName(`getMainView`);
+			var.ptr(fn(id,SEL)=>id) getMainViewMethod: (pointerTo(objc_msgSend) => ptr(fn(id,SEL)=>id));
+			var.id mainView: getMainViewMethod(LIL__applicationDelegate, getMainViewSel);
+
+			//add the textfield to the main view
+			var.SEL addSubviewSel: sel_registerName(`addSubview:`);
+			var.ptr(fn(id,SEL,id)=>id) addSubviewMethod: (pointerTo(objc_msgSend) => ptr(fn(id,SEL,id)=>id));
+			addSubviewMethod(mainView, addSubviewSel, textfieldInstance);
+
+			// //set the app delegate as the delegate of the textfield
+			// var.SEL setDelSel: sel_registerName(`setDelegate:`);
+			// var.ptr(fn(id,SEL,id)) setDelMethod: (pointerTo(objc_msgSend) => ptr(fn(id,SEL,id)));
+			// setDelMethod(textfieldInstance, setDelSel, LIL__applicationDelegate);
+			//
+			// //store id in the tag field of the UITextField
+			// var.SEL setTagSel: sel_registerName(`setTag:`);
+			// var.ptr(fn(id,SEL,i64)) setTagMethod: (pointerTo(objc_msgSend) => ptr(fn(id,SEL,i64)));
+			// setTagMethod(textfieldInstance, setTagSel, @self.id);
+			
+			//fixme: release the textfield
+			
+
+			return id;
+		};
+
+		fn setWidth(var.f64 value) {
+			app.textfields[@self.componentId].width: value;
+
+			var.id textfieldInstance: app.textfields[@self.componentId].data => id;
+			var getFrameSel: sel_registerName(`frame`);
+			var getFrameMethod: pointerTo(objc_msgSend) => ptr(fn(id,SEL)=>@CGRect);
+			var.@CGRect tfFrame: getFrameMethod(textfieldInstance, getFrameSel);
+
+			tfFrame.size.width: value;
+			
+			var setSizeSel: sel_registerName(`setFrame:`);
+			var setSizeMethod: pointerTo(objc_msgSend) => ptr(fn(id,SEL,@CGRect));
+			setSizeMethod(textfieldInstance, setSizeSel, tfFrame);
+		};
+		fn getWidth {
+			return app.textfields[@self.componentId].width;
+		};
+		fn setHeight(var.f64 value) {
+			app.textfields[@self.componentId].height: value;
+
+			var.id textfieldInstance: app.textfields[@self.componentId].data => id;
+			var getFrameSel: sel_registerName(`frame`);
+			var getFrameMethod: pointerTo(objc_msgSend) => ptr(fn(id,SEL)=>@CGRect);
+			var.@CGRect tfFrame: getFrameMethod(textfieldInstance, getFrameSel);
+
+			tfFrame.size.height: value;
+
+			var setSizeSel: sel_registerName(`setFrame:`);
+			var setSizeMethod: pointerTo(objc_msgSend) => ptr(fn(id,SEL,@CGRect));
+			setSizeMethod(textfieldInstance, setSizeSel, tfFrame);
+		};
+		fn getHeight {
+			return app.textfields[@self.componentId].height;
+		};
+
+		fn setX(var.f64 value) {
+			app.textfields[@self.componentId].x: value;
+
+			var textfieldInstance: app.textfields[@self.componentId].data => id;
+			var getFrameSel: sel_registerName(`frame`);
+			var getFrameMethod: pointerTo(objc_msgSend) => ptr(fn(id,SEL)=>@CGRect);
+			var.@CGRect tfFrame: getFrameMethod(textfieldInstance, getFrameSel);
+
+			tfFrame.origin.x: value;
+
+			var setFrameSel: sel_registerName(`setFrame:`);
+			var setFrameMethod: pointerTo(objc_msgSend) => ptr(fn(id,SEL,@CGRect));
+			setFrameMethod(textfieldInstance, setFrameSel, tfFrame);
+		}
+		fn getX() => f64 {
+			return app.textfields[@self.componentId].x;
+		};
+		fn setY(var.f64 value) {
+			app.textfields[@self.componentId].y: value;
+
+			var textfieldInstance: app.textfields[@self.componentId].data => id;
+			var getFrameSel: sel_registerName(`frame`);
+			var getFrameMethod: pointerTo(objc_msgSend) => ptr(fn(id,SEL)=>@CGRect);
+			var.@CGRect tfFrame: getFrameMethod(textfieldInstance, getFrameSel);
+
+			//ask the app delegate for the main view
+			var getMainViewSel: sel_registerName(`getMainView`);
+			var getMainViewMethod: pointerTo(objc_msgSend) => ptr(fn(id,SEL)=>id);
+			var mainView: getMainViewMethod(LIL__applicationDelegate, getMainViewSel);
+			
+			var.@CGRect mvFrame: getFrameMethod(mainView, getFrameSel);
+
+			tfFrame.origin.y: (mvFrame.size.height - value) - tfFrame.size.height;
+
+			var setFrameSel: sel_registerName(`setFrame:`);
+			var setFrameMethod: pointerTo(objc_msgSend) => ptr(fn(id,SEL,@CGRect));
+			setFrameMethod(textfieldInstance, setFrameSel, tfFrame);
+		};
+		fn getY() => f64 {
+			return app.textfields[@self.componentId].y;
+		};
+		
+		fn getValue() => cstr {
+			var.id textfieldInstance: app.textfields[@self.componentId].data => id;
+			var.SEL getValueSel: sel_registerName(`text`);
+			var.ptr(fn(id,SEL)=>id) getValueMethod: (pointerTo(objc_msgSend) => ptr(fn(id,SEL)=>id));
+			var.id nsStringInstance: getValueMethod(textfieldInstance, getValueSel);
+
+			var.SEL cstrSel: sel_registerName(`UTF8String`);
+			var.ptr(fn(id,SEL)=>ptr(i8)) cstrMethod: (pointerTo(objc_msgSend) => ptr(fn(id,SEL)=>ptr(i8)));
+			return cstrMethod(nsStringInstance, cstrSel);
+		}
+		fn setValue(var.ptr(@string) value) {
+			var.Class stringClass: objc_lookUpClass(`NSString`);
+			var.SEL strCreateSel: sel_registerName(`stringWithUTF8String:`);
+			var.ptr(fn(id,SEL,cstr)=>id) strCreateMethod: (pointerTo(objc_msgSend) => ptr(fn(id,SEL,cstr)=>id));
+			var.id nsStrInstance: strCreateMethod(stringClass=>id, strCreateSel, value.cstr());
+
+			var.id textfieldInstance: app.textfields[@self.componentId].data => id;
+			
+			var.SEL setValueSel: sel_registerName(`setText:`);
+			var.ptr(fn(id,SEL,id)) setValueMethod: (pointerTo(objc_msgSend) => ptr(fn(id,SEL,id)));
+			setValueMethod(textfieldInstance, setValueSel, nsStrInstance);
+
+			if @self.width = 0 {
+				var.SEL getAttrStrSel: sel_registerName(`attributedStringValue`);
+				var.ptr(fn(id,SEL)=>id) getAttrStrMethod: (pointerTo(objc_msgSend) => ptr(fn(id,SEL)=>id));
+				var.id nsAttrStrInstance: getAttrStrMethod(textfieldInstance, getAttrStrSel);
+
+				var.SEL getSizeSel: sel_registerName(`size`);
+				var.ptr(fn(id,SEL)=>@CGSize) getSizeMethod: (pointerTo(objc_msgSend) => ptr(fn(id,SEL)=>@CGSize));
+				var.@CGSize attrStrSize: getSizeMethod(nsAttrStrInstance, getSizeSel);
+
+				var.SEL getFrameSel: sel_registerName(`frame`);
+				var.ptr(fn(id,SEL)=>@CGRect) getFrameMethod: (pointerTo(objc_msgSend) => ptr(fn(id,SEL)=>@CGRect));
+				var.@CGRect tfFrame: getFrameMethod(textfieldInstance, getFrameSel);
+				tfFrame.size.width: attrStrSize.width + 8;
+				
+				var.SEL setFrameSel: sel_registerName(`setFrameSize:`);
+				var.ptr(fn(id,SEL,@CGSize)) setFrameMethod: (pointerTo(objc_msgSend) => ptr(fn(id,SEL,@CGSize)));
+				setFrameMethod(textfieldInstance, setFrameSel, tfFrame.size);
+			}
+		};
+		fn getOnChange => ptr(any)|null {
+			return app.textfields[@self.componentId].onChange;
+		};
+		fn setOnChange(var.ptr(any) ptr) {
+			app.textfields[@self.componentId].onChange: ptr;
+		};
+		// fn setBackground(var.@rgb value) {
+		// 	app.textfields[@self.componentId].bgColor: value;
+		//
+		// 	//enable background
+		// 	var.id textfieldInstance: app.textfields[@self.componentId].data => id;
+		// 	var.SEL drawsBackgroundSel: sel_registerName(`setDrawsBackground:`);
+		// 	var.ptr(fn(id,SEL,bool)) drawsBackgroundMethod: (pointerTo(objc_msgSend) => ptr(fn(id,SEL,bool)));
+		// 	drawsBackgroundMethod(textfieldInstance, drawsBackgroundSel, true);
+		//
+		// 	//instantiate UIColor
+		// 	var.Class colorClass: objc_lookUpClass(`UIColor`);
+		// 	var.SEL colorCreateSel: sel_registerName(`colorWithSRGBRed:green:blue:alpha:`);
+		// 	var.ptr(fn(id,SEL,f64,f64,f64,f64)=>id) colorCreateMethod: (pointerTo(objc_msgSend) => ptr(fn(id,SEL,f64,f64,f64,f64)=>id));
+		// 	var red: value.red;
+		// 	var green: value.green;
+		// 	var blue: value.blue;
+		// 	var alpha: value.alpha;
+		// 	var.id nsColorInstance: colorCreateMethod(colorClass=>id, colorCreateSel, red, green, blue, alpha);
+		//
+		// 	//set background color
+		// 	var.SEL setBackgroundSel: sel_registerName(`setBackgroundColor:`);
+		// 	var.ptr(fn(id,SEL,id)) setBackgroundMethod: (pointerTo(objc_msgSend) => ptr(fn(id,SEL,id)));
+		// 	setBackgroundMethod(textfieldInstance, setBackgroundSel, nsColorInstance);
+		// };
+		// fn getBackground {
+		// 	return app.textfields[@self.componentId].bgColor;
+		// };
+		// fn getBackgroundPointer {
+		// 	return pointerTo app.textfields[@self.componentId].bgColor;
+		// };
+
+		fn getI32Value {
+			var.id textfieldInstance: app.textfields[@self.componentId].data => id;
+			var.SEL getValueSel: sel_registerName(`intValue`);
+			var.ptr(fn(id,SEL)=>i32) getValueMethod: (pointerTo(objc_msgSend) => ptr(fn(id,SEL)=>i32));
+			return getValueMethod(textfieldInstance, getValueSel);
+		};
+
+		fn remove {
+			var componentId: @self.componentId;
+			var.id textfieldInstance: app.textfields[componentId].data => id;
+			app.textfields[componentId].data: (0 => ptr(any));
+			var.SEL removeSel: sel_registerName(`removeFromSuperview`);
+			var.ptr(fn(id,SEL)) removeMethod: (pointerTo(objc_msgSend) => ptr(fn(id,SEL)));
+			removeMethod(textfieldInstance, removeSel);
+		}
+	};
+}
