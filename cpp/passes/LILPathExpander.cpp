@@ -200,6 +200,9 @@ void LILPathExpander::_process(LILValuePath * vp)
 				}
 				auto field = classDecl->getFieldNamed(pnName);
 				if (!field) {
+					field = classDecl->getMethodNamed(pnName);
+				}
+				if (!field) {
 					field = this->_addExpandedFields(tempNodes, classDecl, pnName, hasChanges, false);
 					if (field) {
 						classDecl = this->findAncestorClass(field);

@@ -4715,6 +4715,18 @@ llvm::Value * LILIREmitter::_emitPointer(LILValuePath * value)
 						return nullptr;
 					}
 					auto field = classDecl->getFieldNamed(pn->getName());
+					if (!field) {
+						field = classDecl->getMethodNamed(pn->getName());
+						if (field && field->getNodeType() == NodeTypeFunctionDecl) {
+							auto fd = std::static_pointer_cast<LILFunctionDecl>(field);
+							auto fnName = fd->getName().data();
+							if (d->namedValues.count(fnName) == 0) {
+								std::cerr << "FUNCTION POINTER NOT FOUND FAIL !!!!!!!!!!!!!!!!\n";
+								return nullptr;
+							}
+							return d->namedValues.at(fnName);
+						}
+					}
 					auto fieldTy = field->getType();
 					bool useIfCastTy = false;
 					if (!this->inhibitSearchingForIfCastType && fieldTy->isA(TypeTypeMultiple)) {

@@ -2166,6 +2166,9 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(LILValuePath * vp)
 							}
 						}
 						if (!field) {
+							field = classDecl->getMethodNamed(pnName);
+						}
+						if (!field) {
 							std::cerr << "FIELD WAS NULL FAIL!!!!\n";
 							return nullptr;
 						}
