@@ -803,6 +803,7 @@ fn floor(f64) => f64 extern;
 			var parent: @element { id: parentId };
 			var parentWidth: parent.width;
 			var parentHeight: parent.height;
+			var parentY: parent.y;
 			var sel: app.selectChildren(@self.id);
 			var.f64 childrenWidth: 0;
 			for sel.size {
@@ -832,7 +833,7 @@ fn floor(f64) => f64 extern;
 				#if DEBUG_LAYOUT {
 					printf(`setting child %li y to %lf\n`, @value, floor(newY));
 				}
-				elem.y: floor(newY);
+				elem.y: parentY + floor(newY);
 			}
 		}
 	}
