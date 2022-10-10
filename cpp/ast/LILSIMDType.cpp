@@ -26,6 +26,7 @@ LILSIMDType::LILSIMDType()
 
 LILSIMDType::LILSIMDType(const LILSIMDType &other)
 : LILType(other)
+, _type(other._type)
 , _width(other._width)
 {
 
@@ -39,6 +40,9 @@ std::shared_ptr<LILSIMDType> LILSIMDType::clone() const
 std::shared_ptr<LILClonable> LILSIMDType::cloneImpl() const
 {
 	std::shared_ptr<LILSIMDType> clone(new LILSIMDType(*this));
+	if (this->_type) {
+		clone->_type = this->_type->clone();
+	}
 	return clone;
 }
 
