@@ -800,7 +800,9 @@ fn floor(f64) => f64 extern;
 				puts `update layout`;
 			}
 			var parentId: app.selectables[@self.id].parentId;
-			var parent: @container { id: parentId };
+			var parent: @element { id: parentId };
+			var parentWidth: parent.width;
+			var parentHeight: parent.height;
 			var sel: app.selectChildren(@self.id);
 			var.f64 childrenWidth: 0;
 			for sel.size {
@@ -810,7 +812,7 @@ fn floor(f64) => f64 extern;
 			#if DEBUG_LAYOUT {
 				printf(`children width is %lf\n`, childrenWidth);
 			}
-			var.f64 spaceX: (parent.width - childrenWidth);
+			var.f64 spaceX: (parentWidth - childrenWidth);
 			#if DEBUG_LAYOUT {
 				printf(`spaceX is %lf\n`, spaceX);
 			}
@@ -826,7 +828,7 @@ fn floor(f64) => f64 extern;
 				elem.x: floor(newX);
 				cumulativeWidth +: elem.width;
 				
-				var.f64 newY: (parent.height / 2) - (elem.height / 2);
+				var.f64 newY: (parentHeight / 2) - (elem.height / 2);
 				#if DEBUG_LAYOUT {
 					printf(`setting child %li y to %lf\n`, @value, floor(newY));
 				}
