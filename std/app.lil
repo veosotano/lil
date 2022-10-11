@@ -766,6 +766,7 @@ fn floor(f64) => f64 extern;
 	
 	class @layoutData {
 		var.i64 id;
+		var.bool vertical;
 	}
 	class @layout {
 		//this class MUST only be an i64
@@ -774,9 +775,17 @@ fn floor(f64) => f64 extern;
 
 		//public interface
 		vvar.i64 componentId;
+		vvar.bool vertical;
 
 		fn getComponentId => i64 {
 			return app.selectables[@self.id].componentId;
+		}
+
+		fn setVertical(var.bool value) {
+			app.layoutData[@self.componentId].vertical: value;
+		}
+		fn getVertical => bool {
+			return  app.layoutData[@self.componentId].vertical
 		}
 
 		fn initialize(var.cstr name; var.i64 parentId: 0) => i64 {
@@ -803,37 +812,76 @@ fn floor(f64) => f64 extern;
 			var parent: @element { id: parentId };
 			var parentWidth: parent.width;
 			var parentHeight: parent.height;
+			var parentX: parent.x;
 			var parentY: parent.y;
 			var sel: app.selectChildren(@self.id);
-			var.f64 childrenWidth: 0;
-			for sel.size {
-				var elem: sel.items[@value];
-				childrenWidth +: elem.width;
-			}
-			#if DEBUG_LAYOUT {
-				printf(`children width is %lf\n`, childrenWidth);
-			}
-			var.f64 spaceX: (parentWidth - childrenWidth);
-			#if DEBUG_LAYOUT {
-				printf(`spaceX is %lf\n`, spaceX);
-			}
-			var.f64 amountOfSpaces: 1 + (sel.size => f64);
-			var.f64 spaceChunkX: spaceX / amountOfSpaces;
-			var.f64 cumulativeWidth: 0;
-			for sel.size {
-				var elem: sel.items[@value];
-				var.f64 newX: spaceChunkX + (spaceChunkX * (@value => f64)) + cumulativeWidth;
-				#if DEBUG_LAYOUT {
-					printf(`setting child %li x to %lf\n`, @value, floor(newX));
+			
+			if @self.vertical
+			{
+				var.f64 childrenHeight: 0;
+				for sel.size {
+					var elem: sel.items[@value];
+					childrenHeight +: elem.height;
 				}
-				elem.x: floor(newX);
-				cumulativeWidth +: elem.width;
+				#if DEBUG_LAYOUT {
+					printf(`children height is %lf\n`, childrenHeight);
+				}
+				var.f64 spaceY: (parentHeight - childrenHeight);
+				#if DEBUG_LAYOUT {
+					printf(`spaceY is %lf\n`, spaceY);
+				}
+				var.f64 amountOfSpaces: 1 + (sel.size => f64);
+				var.f64 spaceChunkY: spaceY / amountOfSpaces;
+				var.f64 cumulativeHeight: 0;
+				for sel.size {
+					var elem: sel.items[@value];
+					var.f64 newY: spaceChunkY + (spaceChunkY * (@value => f64)) + cumulativeHeight;
+					#if DEBUG_LAYOUT {
+						printf(`setting child %li y to %lf\n`, @value, floor(newY));
+					}
+					elem.y: parentY + floor(newY);
+					cumulativeHeight +: elem.height;
 				
-				var.f64 newY: (parentHeight / 2) - (elem.height / 2);
-				#if DEBUG_LAYOUT {
-					printf(`setting child %li y to %lf\n`, @value, floor(newY));
+					var.f64 newX: (parentWidth / 2) - (elem.width / 2);
+					#if DEBUG_LAYOUT {
+						printf(`setting child %li x to %lf\n`, @value, floor(newX));
+					}
+					elem.x: parentX + floor(newX);
 				}
-				elem.y: parentY + floor(newY);
+			}
+			else
+			{
+				//horizontal
+				var.f64 childrenWidth: 0;
+				for sel.size {
+					var elem: sel.items[@value];
+					childrenWidth +: elem.width;
+				}
+				#if DEBUG_LAYOUT {
+					printf(`children width is %lf\n`, childrenWidth);
+				}
+				var.f64 spaceX: (parentWidth - childrenWidth);
+				#if DEBUG_LAYOUT {
+					printf(`spaceX is %lf\n`, spaceX);
+				}
+				var.f64 amountOfSpaces: 1 + (sel.size => f64);
+				var.f64 spaceChunkX: spaceX / amountOfSpaces;
+				var.f64 cumulativeWidth: 0;
+				for sel.size {
+					var elem: sel.items[@value];
+					var.f64 newX: spaceChunkX + (spaceChunkX * (@value => f64)) + cumulativeWidth;
+					#if DEBUG_LAYOUT {
+						printf(`setting child %li x to %lf\n`, @value, floor(newX));
+					}
+					elem.x: parentX + floor(newX);
+					cumulativeWidth +: elem.width;
+				
+					var.f64 newY: (parentHeight / 2) - (elem.height / 2);
+					#if DEBUG_LAYOUT {
+						printf(`setting child %li y to %lf\n`, @value, floor(newY));
+					}
+					elem.y: parentY + floor(newY);
+				}
 			}
 		}
 	}
