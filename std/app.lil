@@ -835,12 +835,13 @@ fn floor(f64) => f64 extern;
 				var.f64 cumulativeHeight: 0;
 				for sel.size {
 					var elem: sel.items[@value];
+					var elemHeight: elem.height;
 					var.f64 newY: spaceChunkY + (spaceChunkY * (@value => f64)) + cumulativeHeight;
 					#if DEBUG_LAYOUT {
 						printf(`setting child %li y to %lf\n`, @value, floor(newY));
 					}
-					elem.y: parentY + floor(newY);
-					cumulativeHeight +: elem.height;
+					elem.y: ((parentY + parentHeight) - floor(newY)) - elemHeight;
+					cumulativeHeight +: elemHeight;
 				
 					var.f64 newX: (parentWidth / 2) - (elem.width / 2);
 					#if DEBUG_LAYOUT {
