@@ -1,0 +1,39 @@
+#configure {
+	onUpdateFn: true;
+}
+
+#needs "std/cmath.lil";
+
+var.f64 runningTime: 0.0;
+
+fn onUpdate(var.f64 deltaTime) {
+	runningTime +: deltaTime;
+	var.f64 cosValue: cos(runningTime * 3);
+	var target: $(box2);
+	var color: target.background;
+	color.alpha: (0.5 + (0.5 * cosValue));
+	target.background: color;
+}
+
+@root {
+	width: 900;
+	height: 600;
+	background: #72ADE8;
+	
+				
+	#new @container box {
+		width: 200;
+		height: 200;
+		background: #FFF4;
+		x: 350;
+		y: 350;
+	}
+	
+	#new @container box2 {
+		width: 100;
+		height: 300;
+		x: 500;
+		y: 300;
+		background: #FF7A0066;
+	}
+}
