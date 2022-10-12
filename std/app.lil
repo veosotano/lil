@@ -1,5 +1,5 @@
 const DEBUG: false;
-const DEBUG_LAYOUT: true;
+const DEBUG_LAYOUT: false;
 const DEBUG_SHAPE_VERTICES: false;
 
 #snippet namesSize { 256 };
