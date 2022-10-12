@@ -41,7 +41,7 @@ typedef struct
 struct RasterizerData
 {
 	float4 clipSpacePosition [[position]];
-	float3 color;
+	float4 color;
 	float2 texture;
 };
 
@@ -69,7 +69,7 @@ vertexShader(uint vertexID [[ vertex_id ]],
 	out.clipSpacePosition.z = 0.0;
 	out.clipSpacePosition.w = 1.0;
 
-	out.color = float3(vtx.red, vtx.green, vtx.blue);
+	out.color = float4(vtx.red, vtx.green, vtx.blue, vtx.alpha);
 	
 	out.texture = float2(vtx.textureX, vtx.textureY);
 
@@ -79,7 +79,7 @@ vertexShader(uint vertexID [[ vertex_id ]],
 fragment float4
 fragmentShader(RasterizerData in [[stage_in]])
 {
-	return float4(in.color, 1.0);
+	return in.color;
 }
 
 fragment float4

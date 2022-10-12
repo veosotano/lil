@@ -395,8 +395,18 @@ typedef struct
 		boxPipelineDescriptor.label						   = @"boxPipeline";
 		boxPipelineDescriptor.vertexFunction				  = vertexShaderFn;
 		boxPipelineDescriptor.fragmentFunction				= fragmentShaderFn;
-		boxPipelineDescriptor.colorAttachments[0].pixelFormat = drawablePixelFormat_;
+
+		MTLRenderPipelineColorAttachmentDescriptor *attachment = boxPipelineDescriptor.colorAttachments[0];
+		attachment.pixelFormat = drawablePixelFormat_;
+		attachment.blendingEnabled = YES;
+		attachment.rgbBlendOperation = MTLBlendOperationAdd;
+		attachment.alphaBlendOperation = MTLBlendOperationAdd;
+		attachment.sourceRGBBlendFactor = MTLBlendFactorSourceAlpha;
+		attachment.sourceAlphaBlendFactor = MTLBlendFactorSourceAlpha;
+		attachment.destinationRGBBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
+		attachment.destinationAlphaBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
 		boxPipelineDescriptor.depthAttachmentPixelFormat	  = LILDepthPixelFormat;
+		
 
 		boxPipeline = [device newRenderPipelineStateWithDescriptor:boxPipelineDescriptor error:&error];
 		if(!boxPipeline)
