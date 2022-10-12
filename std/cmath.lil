@@ -1,228 +1,230 @@
-fn acosf(f32) => f32 extern;
-fn acos(f64) => f64 extern;
-//fn acosl(f128) => f128 extern;
+#export {
+	fn acosf(f32) => f32 extern;
+	fn acos(f64) => f64 extern;
+	//fn acosl(f128) => f128 extern;
 
-fn asinf(f32) => f32 extern;
-fn asin(f64) => f64 extern;
-//fn asinl(f128) => f128 extern;
+	fn asinf(f32) => f32 extern;
+	fn asin(f64) => f64 extern;
+	//fn asinl(f128) => f128 extern;
 
-fn atanf(f32) => f32 extern;
-fn atan(f64) => f64 extern;
-//fn atanl(f128) => f128 extern;
+	fn atanf(f32) => f32 extern;
+	fn atan(f64) => f64 extern;
+	//fn atanl(f128) => f128 extern;
 
-fn atan2f(f32, f32) => f32 extern;
-fn atan2(f64, f64) => f64 extern;
-//fn atan2l(f128, f128) => f128 extern;
+	fn atan2f(f32, f32) => f32 extern;
+	fn atan2(f64, f64) => f64 extern;
+	//fn atan2l(f128, f128) => f128 extern;
 
-fn cosf(f32) => f32 extern;
-fn cos(f64) => f64 extern;
-//fn cosl(f128) => f128 extern;
+	fn cosf(f32) => f32 extern;
+	fn cos(f64) => f64 extern;
+	//fn cosl(f128) => f128 extern;
 
-fn sinf(f32) => f32 extern;
-fn sin(f64) => f64 extern;
-//fn sinl(f128) => f128 extern;
+	fn sinf(f32) => f32 extern;
+	fn sin(f64) => f64 extern;
+	//fn sinl(f128) => f128 extern;
 
-fn tanf(f32) => f32 extern;
-fn tan(f64) => f64 extern;
-//fn tanl(f128) => f128 extern;
+	fn tanf(f32) => f32 extern;
+	fn tan(f64) => f64 extern;
+	//fn tanl(f128) => f128 extern;
 
-fn acoshf(f32) => f32 extern;
-fn acosh(f64) => f64 extern;
-//fn acoshl(f128) => f128 extern;
+	fn acoshf(f32) => f32 extern;
+	fn acosh(f64) => f64 extern;
+	//fn acoshl(f128) => f128 extern;
 
-fn asinhf(f32) => f32 extern;
-fn asinh(f64) => f64 extern;
-//fn asinhl(f128) => f128 extern;
+	fn asinhf(f32) => f32 extern;
+	fn asinh(f64) => f64 extern;
+	//fn asinhl(f128) => f128 extern;
 
-fn atanhf(f32) => f32 extern;
-fn atanh(f64) => f64 extern;
-//fn atanhl(f128) => f128 extern;
+	fn atanhf(f32) => f32 extern;
+	fn atanh(f64) => f64 extern;
+	//fn atanhl(f128) => f128 extern;
 
-fn coshf(f32) => f32 extern;
-fn cosh(f64) => f64 extern;
-//fn coshl(f128) => f128 extern;
+	fn coshf(f32) => f32 extern;
+	fn cosh(f64) => f64 extern;
+	//fn coshl(f128) => f128 extern;
 
-fn sinhf(f32) => f32 extern;
-fn sinh(f64) => f64 extern;
-//fn sinhl(f128) => f128 extern;
+	fn sinhf(f32) => f32 extern;
+	fn sinh(f64) => f64 extern;
+	//fn sinhl(f128) => f128 extern;
 
-fn tanhf(f32) => f32 extern;
-fn tanh(f64) => f64 extern;
-//fn tanhl(f128) => f128 extern;
+	fn tanhf(f32) => f32 extern;
+	fn tanh(f64) => f64 extern;
+	//fn tanhl(f128) => f128 extern;
 
-fn expf(f32) => f32 extern;
-fn exp(f64) => f64 extern;
-//fn expl(f128) => f128 extern;
+	fn expf(f32) => f32 extern;
+	fn exp(f64) => f64 extern;
+	//fn expl(f128) => f128 extern;
 
-fn exp2f(f32) => f32 extern;
-fn exp2(f64); => f64 extern 
-//fn exp2l(f128); => f128 extern 
+	fn exp2f(f32) => f32 extern;
+	fn exp2(f64); => f64 extern 
+	//fn exp2l(f128); => f128 extern 
 
-fn expm1f(f32) => f32 extern;
-fn expm1(f64); => f64 extern 
-//fn expm1l(f128); => f128 extern 
+	fn expm1f(f32) => f32 extern;
+	fn expm1(f64); => f64 extern 
+	//fn expm1l(f128); => f128 extern 
 
-fn logf(f32) => f32 extern;
-fn log(f64) => f64 extern;
-//fn logl(f128) => f128 extern;
+	fn logf(f32) => f32 extern;
+	fn log(f64) => f64 extern;
+	//fn logl(f128) => f128 extern;
 
-fn log10f(f32) => f32 extern;
-fn log10(f64) => f64 extern;
-//fn log10l(f128) => f128 extern;
+	fn log10f(f32) => f32 extern;
+	fn log10(f64) => f64 extern;
+	//fn log10l(f128) => f128 extern;
 
-fn log2f(f32) => f32 extern;
-fn log2(f64) => f64 extern;
-//fn log2l(f128) => f128 extern;
+	fn log2f(f32) => f32 extern;
+	fn log2(f64) => f64 extern;
+	//fn log2l(f128) => f128 extern;
 
-fn log1pf(f32) => f32 extern;
-fn log1p(f64) => f64 extern;
-//fn log1pl(f128) => f128 extern;
+	fn log1pf(f32) => f32 extern;
+	fn log1p(f64) => f64 extern;
+	//fn log1pl(f128) => f128 extern;
 
-fn logbf(f32) => f32 extern;
-fn logb(f64) => f64 extern;
-//fn logbl(f128) => f128 extern;
+	fn logbf(f32) => f32 extern;
+	fn logb(f64) => f64 extern;
+	//fn logbl(f128) => f128 extern;
 
-fn modff(f32, ptr(f32)) => f32 extern;
-fn modf(f64, ptr(f64)) => f64 extern;
-//fn modfl(f128, ptr(f128)) => f128 extern;
+	fn modff(f32, ptr(f32)) => f32 extern;
+	fn modf(f64, ptr(f64)) => f64 extern;
+	//fn modfl(f128, ptr(f128)) => f128 extern;
 
-fn ldexpf(f32, i32) => f32 extern;
-fn ldexp(f64, i32) => f64 extern;
-//fn ldexpl(f128, i32) => f128 extern;
+	fn ldexpf(f32, i32) => f32 extern;
+	fn ldexp(f64, i32) => f64 extern;
+	//fn ldexpl(f128, i32) => f128 extern;
 
-fn frexpf(f32, ptr(i32)) => f32 extern;
-fn frexp(f64, ptr(i32)) => f64 extern;
-//fn frexpl(f128, ptr(i32)) => f128 extern;
+	fn frexpf(f32, ptr(i32)) => f32 extern;
+	fn frexp(f64, ptr(i32)) => f64 extern;
+	//fn frexpl(f128, ptr(i32)) => f128 extern;
 
-fn ilogbf(f32) => i32 extern;
-fn ilogb(f64) => i32 extern;
-fn ilogbl(f128) => i32 extern;
+	fn ilogbf(f32) => i32 extern;
+	fn ilogb(f64) => i32 extern;
+	fn ilogbl(f128) => i32 extern;
 
-fn scalbnf(f32, i32) => f32 extern;
-fn scalbn(f64, i32) => f64 extern;
-//fn scalbnl(f128, i32) => f128 extern;
+	fn scalbnf(f32, i32) => f32 extern;
+	fn scalbn(f64, i32) => f64 extern;
+	//fn scalbnl(f128, i32) => f128 extern;
 
-fn scalblnf(f32, i64) => f32 extern;
-fn scalbln(f64, i64) => f64 extern;
-//fn scalblnl(f128, i64) => f128 extern;
+	fn scalblnf(f32, i64) => f32 extern;
+	fn scalbln(f64, i64) => f64 extern;
+	//fn scalblnl(f128, i64) => f128 extern;
 
-fn fabsf(f32) => f32 extern;
-fn fabs(f64) => f64 extern;
-//fn fabsl(f128) => f128 extern;
+	fn fabsf(f32) => f32 extern;
+	fn fabs(f64) => f64 extern;
+	//fn fabsl(f128) => f128 extern;
 
-fn cbrtf(f32) => f32 extern;
-fn cbrt(f64) => f64 extern;
-//fn cbrtl(f128) => f128 extern;
+	fn cbrtf(f32) => f32 extern;
+	fn cbrt(f64) => f64 extern;
+	//fn cbrtl(f128) => f128 extern;
 
-fn hypotf(f32, f32) => f32 extern;
-fn hypot(f64, f64) => f64 extern;
-//fn hypotl(f128, f128) => f128 extern;
+	fn hypotf(f32, f32) => f32 extern;
+	fn hypot(f64, f64) => f64 extern;
+	//fn hypotl(f128, f128) => f128 extern;
 
-fn powf(f32, f32) => f32 extern;
-fn pow(f64, f64) => f64 extern;
-//fn powl(f128, f128) => f128 extern;
+	fn powf(f32, f32) => f32 extern;
+	fn pow(f64, f64) => f64 extern;
+	//fn powl(f128, f128) => f128 extern;
 
-fn sqrtf(f32) => f32 extern;
-fn sqrt(f64) => f64 extern;
-//fn sqrtl(f128) => f128 extern;
+	fn sqrtf(f32) => f32 extern;
+	fn sqrt(f64) => f64 extern;
+	//fn sqrtl(f128) => f128 extern;
 
-fn erff(f32) => f32 extern;
-fn erf(f64) => f64 extern;
-//fn erfl(f128) => f128 extern;
+	fn erff(f32) => f32 extern;
+	fn erf(f64) => f64 extern;
+	//fn erfl(f128) => f128 extern;
 
-fn erfcf(f32) => f32 extern;
-fn erfc(f64) => f64 extern;
-//fn erfcl(f128) => f128 extern;
+	fn erfcf(f32) => f32 extern;
+	fn erfc(f64) => f64 extern;
+	//fn erfcl(f128) => f128 extern;
 
-//not thread safe
-fn lgammaf(f32) => f32 extern;
-fn lgamma(f64) => f64 extern;
-//fn lgammal(f128) => f128 extern;
+	//not thread safe
+	fn lgammaf(f32) => f32 extern;
+	fn lgamma(f64) => f64 extern;
+	//fn lgammal(f128) => f128 extern;
 
-fn tgammaf(f32) => f32 extern;
-fn tgamma(f64) => f64 extern;
-//fn tgammal(f128) => f128 extern;
+	fn tgammaf(f32) => f32 extern;
+	fn tgamma(f64) => f64 extern;
+	//fn tgammal(f128) => f128 extern;
 
-fn ceilf(f32) => f32 extern;
-fn ceil(f64) => f64 extern;
-//fn ceill(f128) => f128 extern;
+	fn ceilf(f32) => f32 extern;
+	fn ceil(f64) => f64 extern;
+	//fn ceill(f128) => f128 extern;
 
-fn floorf(f32) => f32 extern;
-fn floor(f64) => f64 extern;
-//fn floorl(f128) => f128 extern;
+	fn floorf(f32) => f32 extern;
+	fn floor(f64) => f64 extern;
+	//fn floorl(f128) => f128 extern;
 
-fn nearbyintf(f32) => f32 extern;
-fn nearbyint(f64) => f64 extern;
-//fn nearbyintl(f128) => f128 extern;
+	fn nearbyintf(f32) => f32 extern;
+	fn nearbyint(f64) => f64 extern;
+	//fn nearbyintl(f128) => f128 extern;
 
-fn rintf(f32) => f32 extern;
-fn rint(f64) => f64 extern;
-//fn rintl(f128) => f128 extern;
+	fn rintf(f32) => f32 extern;
+	fn rint(f64) => f64 extern;
+	//fn rintl(f128) => f128 extern;
 
-fn lrintf(f32) => i64 extern;
-fn lrint(f64) => i64 extern;
-fn lrintl(f128) => i64 extern;
+	fn lrintf(f32) => i64 extern;
+	fn lrint(f64) => i64 extern;
+	fn lrintl(f128) => i64 extern;
 
-fn roundf(f32) => f32 extern;
-fn round(f64) => f64 extern;
-//fn roundl(f128) => f128 extern;
+	fn roundf(f32) => f32 extern;
+	fn round(f64) => f64 extern;
+	//fn roundl(f128) => f128 extern;
 
-fn lroundf(f32) => i64 extern;
-fn lround(f64) => i64 extern;
-fn lroundl(f128) => i64 extern;
+	fn lroundf(f32) => i64 extern;
+	fn lround(f64) => i64 extern;
+	fn lroundl(f128) => i64 extern;
 
-//fn llrintf(f32) => i128 extern;
-//fn llrint(f64) => i128 extern;
-//fn llrintl(f128) => i128 extern;
+	//fn llrintf(f32) => i128 extern;
+	//fn llrint(f64) => i128 extern;
+	//fn llrintl(f128) => i128 extern;
 
-//fn llroundf(f32) => i128 extern;
-//fn llround(f64) => i128 extern;
-//fn llroundl(f128) => i128 extern;
+	//fn llroundf(f32) => i128 extern;
+	//fn llround(f64) => i128 extern;
+	//fn llroundl(f128) => i128 extern;
 
-fn truncf(f32) => f32 extern;
-fn trunc(f64) => f64 extern;
-//fn truncl(f128) => f128 extern;
+	fn truncf(f32) => f32 extern;
+	fn trunc(f64) => f64 extern;
+	//fn truncl(f128) => f128 extern;
 
-fn fmodf(f32, f32) => f32 extern;
-fn fmod(f64, f64) => f64 extern;
-//fn fmodl(f128, f128) => f128 extern;
+	fn fmodf(f32, f32) => f32 extern;
+	fn fmod(f64, f64) => f64 extern;
+	//fn fmodl(f128, f128) => f128 extern;
 
-fn remainderf(f32, f32) => f32 extern;
-fn remainder(f64, f64) => f64 extern;
-//fn remainderl(f128, f128) => f128 extern;
+	fn remainderf(f32, f32) => f32 extern;
+	fn remainder(f64, f64) => f64 extern;
+	//fn remainderl(f128, f128) => f128 extern;
 
-fn remquof(f32, f32, ptr(i32)) => f32 extern;
-fn remquo(f64, f64, ptr(i32)) => f64 extern;
-//fn remquol(f128, f128, ptr(i32)) => f128 extern;
+	fn remquof(f32, f32, ptr(i32)) => f32 extern;
+	fn remquo(f64, f64, ptr(i32)) => f64 extern;
+	//fn remquol(f128, f128, ptr(i32)) => f128 extern;
 
-fn copysignf(f32, f32) => f32 extern;
-fn copysign(f64, f64) => f64 extern;
-//fn copysignl(f128, f128) => f128 extern;
+	fn copysignf(f32, f32) => f32 extern;
+	fn copysign(f64, f64) => f64 extern;
+	//fn copysignl(f128, f128) => f128 extern;
 
-fn nanf(ptr(i8)) => f32 extern;
-fn nan(ptr(i8)) => f64 extern;
-//fn nanl(ptr(i8)) => f128 extern;
+	fn nanf(ptr(i8)) => f32 extern;
+	fn nan(ptr(i8)) => f64 extern;
+	//fn nanl(ptr(i8)) => f128 extern;
 
-fn nextafterf(f32, f32) => f32 extern;
-fn nextafter(f64, f64) => f64 extern;
-//fn nextafterl(f128, f128) => f128 extern;
+	fn nextafterf(f32, f32) => f32 extern;
+	fn nextafter(f64, f64) => f64 extern;
+	//fn nextafterl(f128, f128) => f128 extern;
 
-//fn nexttoward(f64, f128) => f64 extern;
-//fn nexttowardf(f32, f128) => f32 extern;
-//fn nexttowardl(f128, f128) => f128 extern;
+	//fn nexttoward(f64, f128) => f64 extern;
+	//fn nexttowardf(f32, f128) => f32 extern;
+	//fn nexttowardl(f128, f128) => f128 extern;
 
-fn fdimf(f32, f32) => f32 extern;
-fn fdim(f64, f64) => f64 extern;
-//fn fdiml(f128, f128) => f128 extern;
+	fn fdimf(f32, f32) => f32 extern;
+	fn fdim(f64, f64) => f64 extern;
+	//fn fdiml(f128, f128) => f128 extern;
 
-fn fmaxf(f32, f32) => f32 extern;
-fn fmax(f64, f64) => f64 extern;
-//fn fmaxl(f128, f128) => f128 extern;
+	fn fmaxf(f32, f32) => f32 extern;
+	fn fmax(f64, f64) => f64 extern;
+	//fn fmaxl(f128, f128) => f128 extern;
 
-fn fminf(f32, f32) => f32 extern;
-fn fmin(f64, f64) => f64 extern;
-//fn fminl(f128, f128) => f128 extern;
+	fn fminf(f32, f32) => f32 extern;
+	fn fmin(f64, f64) => f64 extern;
+	//fn fminl(f128, f128) => f128 extern;
 
-fn fmaf(f32, f32, f32) => f32 extern;
-fn fma(f64, f64, f64) => f64 extern;
-//fn fmal(f128, f128, f128) => f128 extern;
+	fn fmaf(f32, f32, f32) => f32 extern;
+	fn fma(f64, f64, f64) => f64 extern;
+	//fn fmal(f128, f128, f128) => f128 extern;
+}
