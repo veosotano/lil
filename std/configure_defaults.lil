@@ -20,6 +20,7 @@
 	importStdLil: #arg { name: "importStdLil"; default: true };
 	debugStdLil: #arg { name: "debugStdLil"; default: false };
 	stdLilPath: #arg { name: "stdLilPath"; default: "%compilerDir/std/lil.lil" };
+	rebuildStdLil: #arg { name: "rebuildStdLil"; default: false };
 	linkerFlags: #arg { name: "linkerFlags"; default: "-lc" };
 	imports: #arg { name: "initImportPath"; default: "%compilerDir/std/init.lil" };
 	memorySize: 268435456; //in bytes, 256 MB by default (not used yet)

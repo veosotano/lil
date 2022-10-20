@@ -26,7 +26,7 @@ int main(int argc, const char * argv[]) {
 	}
 
 	//REMEMBER TO UPDATE THIS
-	const char * versionString = "0.1.1";
+	const char * versionString = "0.1.2";
 
 	bool verbose = false;
 	bool noConfigureDefaults = false;

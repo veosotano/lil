@@ -424,6 +424,7 @@ void LILBuildManager::build()
 		if (!this->_config->getConfigBool("singleFile")) {
 			std::vector<std::string> linkFiles;
 
+			std::string stdLilFolder = buildPath+"/std";
 			for (const auto & filePair : mainCodeUnit->getNeededFilesForBuild()) {
 				std::string fileDirAndName;
 				std::string fileNameExt;
@@ -457,6 +458,21 @@ void LILBuildManager::build()
 					fileName = fileNameExt.substr(0, dotIndex);
 				} else {
 					fileName = fileNameExt;
+				}
+
+				std::string oFile = fileName+this->_config->getConfigString("objExt");
+				std::string oDir = buildPath+"/"+fileDir;
+
+				if ((oDir == stdLilFolder) && !this->_config->getConfigBool("rebuildStdLil")) {
+					std::string oPath = oDir+"/"+oFile;
+					std::ifstream outputFile(oPath, std::ios::in);
+					if (!outputFile.fail()) {
+						if (this->_verbose) {
+							std::cerr << "Skipping " << oPath << " because it already exists\n";
+						}
+						linkFiles.push_back(oPath);
+						continue;
+					}
 				}
 
 				std::string fpath = fileStr;
@@ -519,8 +535,6 @@ void LILBuildManager::build()
 					std::unique_ptr<LILOutputEmitter> outEmitter = std::make_unique<LILOutputEmitter>();
 					outEmitter->setVerbose(fileIsVerbose);
 					outEmitter->setDebugIREmitter(this->_debug);
-					std::string oFile = fileName+this->_config->getConfigString("objExt");
-					std::string oDir = buildPath+"/"+fileDir;
 					outEmitter->setInFile(fileNameExt);
 					outEmitter->setOutFile(oFile);
 					outEmitter->setDir(oDir);
