@@ -97,7 +97,7 @@
 
 	fn ilogbf(f32) => i32 extern;
 	fn ilogb(f64) => i32 extern;
-	fn ilogbl(f128) => i32 extern;
+	//fn ilogbl(f128) => i32 extern;
 
 	fn scalbnf(f32, i32) => f32 extern;
 	fn scalbn(f64, i32) => f64 extern;
@@ -162,7 +162,7 @@
 
 	fn lrintf(f32) => i64 extern;
 	fn lrint(f64) => i64 extern;
-	fn lrintl(f128) => i64 extern;
+	//fn lrintl(f128) => i64 extern;
 
 	fn roundf(f32) => f32 extern;
 	fn round(f64) => f64 extern;
@@ -170,7 +170,7 @@
 
 	fn lroundf(f32) => i64 extern;
 	fn lround(f64) => i64 extern;
-	fn lroundl(f128) => i64 extern;
+	//fn lroundl(f128) => i64 extern;
 
 	//fn llrintf(f32) => i128 extern;
 	//fn llrint(f64) => i128 extern;
