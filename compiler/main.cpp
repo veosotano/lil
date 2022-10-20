@@ -25,6 +25,9 @@ int main(int argc, const char * argv[]) {
 		return 0;
 	}
 
+	//REMEMBER TO UPDATE THIS
+	const char * versionString = "0.1.1";
+
 	bool verbose = false;
 	bool noConfigureDefaults = false;
 	bool debugConfigureDefaults = false;
@@ -65,6 +68,10 @@ int main(int argc, const char * argv[]) {
 			debugConfigureDefaults = true;
 			arguments.push_back(command);
 			++i;
+			
+		} else if (command == "--version") {
+			std::cerr << versionString << "\n";
+			exit(0);
 			
 		} else if (command.substr(0, 2) == "--") {
 			arguments.push_back(command);
