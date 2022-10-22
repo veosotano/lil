@@ -19,7 +19,8 @@
 	optimize: #arg { name: "optimize"; default: 1 };
 	importStdLil: #arg { name: "importStdLil"; default: true };
 	debugStdLil: #arg { name: "debugStdLil"; default: false };
-	stdLilPath: #arg { name: "stdLilPath"; default: "%compilerDir/std/lil.lil" };
+	stdLilDir: #arg { name: "stdLilDir"; default: "%compilerDir/std" };
+	stdLilPath: #arg { name: "stdLilPath"; default: "%stdLilDir/lil.lil" };
 	rebuildStdLil: #arg { name: "rebuildStdLil"; default: false };
 	linkerFlags: #arg { name: "linkerFlags"; default: "-lc" };
 	imports: #arg { name: "initImportPath"; default: "%compilerDir/std/init.lil" };
