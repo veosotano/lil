@@ -49,7 +49,6 @@ namespace LIL {
 		LILString _directory;
 		LILString _file;
 		LILString _compilerDir;
-		LILString _currentWorkingDir;
 		LILString _minOSVersion;
 		bool _hasErrors;
 		bool _debug;

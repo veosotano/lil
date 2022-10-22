@@ -227,6 +227,14 @@ void LILBuildManager::configure()
 	std::shared_ptr<LILStringLiteral> dirStrLit = std::make_shared<LILStringLiteral>();
 	dirStrLit->setValue(this->_directory);
 	this->_config->setConfig("directory", dirStrLit);
+	
+	std::string buildPath = this->_config->getConfigString("buildPath");
+	if (buildPath.substr(0, 1) != "/") {
+		buildPath = this->_config->getConfigString("currentWorkingDir") + "/" + buildPath;
+		std::shared_ptr<LILStringLiteral> buildPathStr = std::make_shared<LILStringLiteral>();
+		buildPathStr->setValue(buildPath);
+		this->_config->setConfig("buildPath", buildPathStr);
+	}
 
 	if (this->_verbose) {
 		std::cerr << "============================\n";
@@ -247,9 +255,6 @@ void LILBuildManager::build()
 	std::string exeExt = this->_config->getConfigString("exeExt");
 	std::string objExt = this->_config->getConfigString("objExt");
 	std::string buildPath = this->_config->getConfigString("buildPath");
-	if (buildPath.substr(0, 1) != "/") {
-		buildPath = this->_currentWorkingDir.data() + "/" + buildPath;
-	}
 
 	LIL_makeDir(buildPath);
 	
@@ -424,7 +429,10 @@ void LILBuildManager::build()
 		if (!this->_config->getConfigBool("singleFile")) {
 			std::vector<std::string> linkFiles;
 
-			std::string stdLilFolder = buildPath+"/std";
+			std::string stdLilOutputFolder = buildPath+"/std";
+			std::string stdLilDir = this->_config->getConfigString("stdLilDir");
+			auto stdLilDirLen = stdLilDir.length();
+
 			for (const auto & filePair : mainCodeUnit->getNeededFilesForBuild()) {
 				std::string fileDirAndName;
 				std::string fileNameExt;
@@ -440,7 +448,12 @@ void LILBuildManager::build()
 				} else {
 					fileDirAndName = fileStr;
 				}
-				
+
+				bool isStdLilDir = false;
+				if (fileDirAndName.substr(0, stdLilDirLen) == stdLilDir) {
+					//fileDirAndName = fileDirAndName.substr(stdLilDirLen - 3, (fileDirAndName.length() - stdLilDirLen) + 3);
+					isStdLilDir = true;
+				}
 				if (this->_verbose) {
 					std::cerr << "Compiling " << fileDirAndName << "\n";
 				}
@@ -463,7 +476,7 @@ void LILBuildManager::build()
 				std::string oFile = fileName+this->_config->getConfigString("objExt");
 				std::string oDir = buildPath+"/"+fileDir;
 
-				if ((oDir == stdLilFolder) && !this->_config->getConfigBool("rebuildStdLil")) {
+				if (isStdLilDir && !this->_config->getConfigBool("rebuildStdLil")) {
 					std::string oPath = oDir+"/"+oFile;
 					std::ifstream outputFile(oPath, std::ios::in);
 					if (!outputFile.fail()) {
@@ -799,7 +812,6 @@ void LILBuildManager::setCompilerDir(LILString value)
 
 void LILBuildManager::setCurrentWorkingDir(LILString value)
 {
-	this->_currentWorkingDir = value;
 	auto strLit = std::make_shared<LILStringLiteral>();
 	strLit->setValue(value);
 	this->_config->setConfig("currentWorkingDir", strLit);
