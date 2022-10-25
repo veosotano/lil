@@ -540,22 +540,22 @@ fn floor(f64) => f64 extern;
 			return app.imgPositions[@self.componentId].z;
 		};
 		fn setVelX(var.f64 value) {
-			app.boxVelocities[@self.componentId].x: value;
+			app.imgVelocities[@self.componentId].x: value;
 		};
 		fn getVelX() => f64 {
-			return app.boxVelocities[@self.componentId].x;
+			return app.imgVelocities[@self.componentId].x;
 		};
 		fn setVelY(var.f64 value) {
-			app.boxVelocities[@self.componentId].y: value;
+			app.imgVelocities[@self.componentId].y: value;
 		};
 		fn getVelY() => f64 {
-			return app.boxVelocities[@self.componentId].y;
+			return app.imgVelocities[@self.componentId].y;
 		};
 		fn setVelZ(var.f64 value) {
-			app.boxVelocities[@self.componentId].z: value;
+			app.imgVelocities[@self.componentId].z: value;
 		};
 		fn getVelZ() => f64 {
-			return app.boxVelocities[@self.componentId].z;
+			return app.imgVelocities[@self.componentId].z;
 		};
 
 		fn getSrc() => cstr {
