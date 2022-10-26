@@ -20,13 +20,14 @@
 
 using namespace LIL;
 
+const char * versionString =
+#include "../VERSION"
+;
+
 int main(int argc, const char * argv[]) {
 	if (argc == 1) {
 		return 0;
 	}
-
-	//REMEMBER TO UPDATE THIS
-	const char * versionString = "0.1.4";
 
 	bool verbose = false;
 	bool noConfigureDefaults = false;
