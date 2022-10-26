@@ -60,6 +60,16 @@ fn floor(f64) => f64 extern;
 		var.f32 textureX;
 		var.f32 textureY;
 	};
+	class @uniform {
+		var.f32 scale;
+		var.i32 targetSizeX;
+		var.i32 targetSizeY;
+		var.i32 targetPosX;
+		var.i32 targetPosY;
+		var.i32 viewportSizeX;
+		var.i32 viewportSizeY;
+		var.f32 time;
+	};
 	class @selectable {
 		var.i64 nameId;
 		var.i64 parentId;

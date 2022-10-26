@@ -46,6 +46,9 @@ extern CGSize LIL__getWindowSize();
 extern LIL__audioDescriptorStruct * LIL__audioInit();
 extern void LIL__audioFree();
 
+extern void LIL__setMetalRenderer(void * value);
+extern void LIL__execRenderCallback(long int i, void * vtxBuf, long int * vtxCount, void * uniforms);
+
 extern long int LIL__gamepadConnected(long int vendorID, long int productID);
 extern void LIL__setGamepadButtonState(long int gamepadId, long int buttonId, bool value);
 extern void LIL__setGamepadX(long int gamepadId, double value);
@@ -269,7 +272,13 @@ typedef struct
 typedef struct
 {
 	float scale;
-	vector_uint2 viewportSize;
+	unsigned int targetSizeX;
+	unsigned int targetSizeY;
+	unsigned int targetPosX;
+	unsigned int targetPosY;
+	unsigned int viewportSizeX;
+	unsigned int viewportSizeY;
+	float time;
 } LILUniforms;
 
 @interface LILMetalRenderer : NSObject
@@ -280,6 +289,8 @@ typedef struct
 - (void)renderToMetalLayer:(nonnull CAMetalLayer*)metalLayer;
 - (void *)getVertexBufferPointer;
 - (void *)getIndexBufferPointer;
+- (void)newPipeline;
+- (void)newBuffer:(long int)size;
 
 @property(nonatomic, assign) MTLClearColor windowBgColor;
 @property(nonatomic, assign) long int boxVertexCount;
@@ -306,6 +317,7 @@ typedef struct
 	id <MTLRenderPipelineState> shapePipeline;
 	id <MTLFunction> vertexShaderFn;
 	id <MTLFunction> fragmentShaderFn;
+	id <MTLFunction> customFragmentShaderFn;
 	id <MTLFunction> textureShaderFn;
 	MTLPixelFormat drawablePixelFormat_;
 	MTLRenderPassDescriptor * drawableRenderDescriptor;
@@ -318,6 +330,11 @@ typedef struct
 	long int shapeVertexCount_;
 	long int shapeIndexCount_;
 	double scale_;
+	id <MTLRenderPipelineState> pipelines[16];
+	long int pipelineCount;
+	id <MTLBuffer> vertexBuffers[16];
+	long int vertexBufferCount;
+	
 }
 
 @synthesize windowBgColor = windowBgColor_;
@@ -343,6 +360,8 @@ typedef struct
 		self.windowBgColor = MTLClearColorMake(0., 0., 0., 1.);
 		drawablePixelFormat_ = drawablePixelFormat;
 		scale_ = 1.0;
+		pipelineCount = 0;
+		vertexBufferCount = 0;
 
 		commandQueue = [device newCommandQueue];
 
@@ -370,6 +389,12 @@ typedef struct
 		fragmentShaderFn = [shaderLib newFunctionWithName:@"fragmentShader"];
 		if(!fragmentShaderFn) {
 			NSLog(@" ERROR: Couldn't load fragment function from default library");
+			return nil;
+		}
+		
+		customFragmentShaderFn = [shaderLib newFunctionWithName:@"customFragmentShader"];
+		if(!customFragmentShaderFn) {
+			NSLog(@" ERROR: Couldn't load custom fragment function from default library");
 			return nil;
 		}
 		
@@ -528,7 +553,13 @@ typedef struct
 
 		LILUniforms uniforms;
 		uniforms.scale = scale_;
-		uniforms.viewportSize = viewportSize;
+		uniforms.targetSizeX = viewportSize.x;
+		uniforms.targetSizeY = viewportSize.y;
+		uniforms.targetPosX = 0;
+		uniforms.targetPosY = 0;
+		uniforms.viewportSizeX = viewportSize.x;
+		uniforms.viewportSizeY = viewportSize.y;
+		uniforms.time = 0;
 		[renderEncoder setVertexBytes:&uniforms length:sizeof(uniforms) atIndex:LILVertexInputIndexUniforms ];
 
 		[renderEncoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:self.boxVertexCount];
@@ -559,9 +590,26 @@ typedef struct
 			[renderEncoder setVertexBuffer:vertexBuffer offset:shapeOffset atIndex:LILVertexInputIndexVertices ];
 			LILUniforms shapeUniforms;
 			shapeUniforms.scale = scale_;
-			shapeUniforms.viewportSize = viewportSize;
+			shapeUniforms.targetSizeX = viewportSize.x;
+			shapeUniforms.targetSizeY = viewportSize.y;
+			shapeUniforms.targetPosX = 0;
+			shapeUniforms.targetPosY = 0;
+			shapeUniforms.viewportSizeX = viewportSize.x;
+			shapeUniforms.viewportSizeY = viewportSize.y;
+			shapeUniforms.time = 0;
 			[renderEncoder setVertexBytes:&shapeUniforms length:sizeof(shapeUniforms) atIndex:LILVertexInputIndexUniforms ];
 			[renderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:self.shapeIndexCount indexType:MTLIndexTypeUInt32 indexBuffer:indexBuffer indexBufferOffset:0];
+		}
+	
+		//pipelines
+		for (long int i = 0; i < pipelineCount; i+=1 ) {
+			long int vertexCount = 0;
+			LIL__execRenderCallback(i, vertexBuffers[i].contents, &vertexCount, &uniforms);
+
+			[renderEncoder setRenderPipelineState:pipelines[i]];
+			[renderEncoder setVertexBuffer:vertexBuffers[i] offset:0 atIndex:LILVertexInputIndexVertices];
+			[renderEncoder setVertexBytes:&uniforms length:sizeof(uniforms) atIndex:LILVertexInputIndexUniforms ];
+			[renderEncoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:vertexCount];
 		}
 	
 		[renderEncoder endEncoding];
@@ -618,6 +666,45 @@ typedef struct
 - (void *)getIndexBufferPointer
 {
 	return indexBuffer.contents;
+}
+
+- (void)newPipeline
+{
+	NSError *error;
+
+	MTLRenderPipelineDescriptor *pipelineDescriptor = [[MTLRenderPipelineDescriptor alloc] init];
+	pipelineDescriptor.rasterSampleCount			   = 4;
+	pipelineDescriptor.label						   = @"pipeline";
+	pipelineDescriptor.vertexFunction				  = vertexShaderFn;
+	pipelineDescriptor.fragmentFunction				= customFragmentShaderFn;
+
+	MTLRenderPipelineColorAttachmentDescriptor *attachment = pipelineDescriptor.colorAttachments[0];
+	attachment.pixelFormat = drawablePixelFormat_;
+	attachment.blendingEnabled = YES;
+	attachment.rgbBlendOperation = MTLBlendOperationAdd;
+	attachment.alphaBlendOperation = MTLBlendOperationAdd;
+	attachment.sourceRGBBlendFactor = MTLBlendFactorSourceAlpha;
+	attachment.sourceAlphaBlendFactor = MTLBlendFactorSourceAlpha;
+	attachment.destinationRGBBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
+	attachment.destinationAlphaBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
+	pipelineDescriptor.depthAttachmentPixelFormat	  = LILDepthPixelFormat;
+
+	pipelines[pipelineCount] = [device newRenderPipelineStateWithDescriptor:pipelineDescriptor error:&error];
+	if(!pipelines[pipelineCount])
+	{
+		NSLog(@"ERROR: Failed aquiring pipeline state: %@", error);
+	} else {
+		NSLog(@"Hooray");
+		pipelineCount += 1;
+	}
+}
+
+- (void)newBuffer:(long int) size
+{
+	NSLog(@"creating buffer");
+	long int currentCount = vertexBufferCount;
+	vertexBufferCount += 1;
+	vertexBuffers[currentCount] = [device newBufferWithLength:size options:MTLResourceStorageModeShared];
 }
 
 @end
@@ -782,6 +869,8 @@ long int LIL__ticksTonanoseconds(long int ticks) {
 
 	metalLayer.pixelFormat = MTLPixelFormatBGRA8Unorm;
 	self.renderer = [[LILMetalRenderer alloc] initWithMetalDevice:device drawablePixelFormat:metalLayer.pixelFormat];
+	LIL__setMetalRenderer((__bridge void*)self.renderer);
+	msgEmit("onRendererReady", (__bridge void*)self.renderer);
 	[self setupDisplayLink];
 
 	[self resizeDrawable:self.bounds.size scaleFactor:self.window.screen.backingScaleFactor];

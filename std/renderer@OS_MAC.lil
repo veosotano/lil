@@ -1,0 +1,49 @@
+alias cstr => ptr(i8);
+#needs "cstd.lil";
+
+#export {
+	#needs "objc.lil";
+
+	var.@renderer renderer;
+	
+	class @pipeline {
+		var.ptr(fn(ptr(any),ptr(i64),ptr(any))) callback;
+	}
+	
+	fn LIL__setMetalRenderer(var.ptr(any) value) {
+		renderer.setMetalRenderer(value);
+	}
+
+	fn LIL__execRenderCallback(var.i64 i; var.ptr(any) vtxBuf; var.ptr(i64) vtxCount; var.ptr(any) uniforms) {
+		var callback: renderer.pipelines[i].callback;
+		callback(vtxBuf, vtxCount, uniforms);
+	}
+	
+	class @renderer {
+		var.ptr(any) metalRenderer;
+		var.[16 x @pipeline] pipelines;
+		var.i64 pipelineCount: 0;
+		
+		fn setMetalRenderer(var.ptr(any) value) {
+			puts `set metal renderer`;
+			@self.metalRenderer: value;
+		}
+		
+		fn newPipeline => ptr(@pipeline) {
+			var newPipelineSel: sel_registerName(`newPipeline`);
+			var newPipelineMethod: pointerTo(objc_msgSend) => ptr(fn(id,SEL));
+			newPipelineMethod(@self.metalRenderer, newPipelineSel);
+			
+			var currentCount: @self.pipelineCount;
+			@self.pipelineCount +: 1;
+			
+			return pointerTo @self.pipelines[currentCount];
+		};
+
+		fn newBuffer(var.i64 size) {
+			var newBufferSel: sel_registerName(`newBuffer:`);
+			var newBufferMethod: pointerTo(objc_msgSend) => ptr(fn(id,SEL,i64));
+			newBufferMethod(@self.metalRenderer, newBufferSel, size);
+		};
+	}
+}

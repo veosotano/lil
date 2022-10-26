@@ -34,15 +34,25 @@ typedef struct
 typedef struct
 {
 	float scale;
-	vector_uint2 viewportSize;
+	unsigned int targetSizeX;
+	unsigned int targetSizeY;
+	unsigned int targetPosX;
+	unsigned int targetPosY;
+	unsigned int viewportSizeX;
+	unsigned int viewportSizeY;
+	float time;
 } LILUniforms;
 
 // Vertex shader outputs and per-fragment inputs
 struct RasterizerData
 {
-	float4 clipSpacePosition [[position]];
+	float4 position [[position]];
 	float4 color;
 	float2 texture;
+	float2 targetSize;
+	float2 targetPos;
+	float2 viewportSize;
+	float time;
 };
 
 vertex RasterizerData
@@ -59,15 +69,18 @@ vertexShader(uint vertexID [[ vertex_id ]],
 	// Scale the vertex by scale factor of the current frame
 	pixelSpacePosition *= uniforms.scale;
 
-	float2 viewportSize = float2(uniforms.viewportSize);
-	
-	pixelSpacePosition -= viewportSize / 2.0;
+	out.targetSize = float2(uniforms.targetSizeX, uniforms.targetSizeY) * uniforms.scale;
+	out.targetPos = float2(uniforms.targetPosX, uniforms.targetPosY) * uniforms.scale;
+	out.viewportSize = float2(uniforms.viewportSizeX, uniforms.viewportSizeY);
+	out.time = uniforms.time;
+
+	pixelSpacePosition -= out.viewportSize / 2.0;
 
 	// Divide the pixel coordinates by half the size of the viewport to convert from positions in
 	// pixel space to positions in clip space
-	out.clipSpacePosition.xy = pixelSpacePosition / (viewportSize / 2.0);
-	out.clipSpacePosition.z = 0.0;
-	out.clipSpacePosition.w = 1.0;
+	out.position.xy = pixelSpacePosition / (out.viewportSize / 2.0);
+	out.position.z = 0.0;
+	out.position.w = 1.0;
 
 	out.color = float4(vtx.red, vtx.green, vtx.blue, vtx.alpha);
 	
@@ -89,4 +102,20 @@ textureShader(  RasterizerData in [[stage_in]],
 	constexpr sampler theSampler(coord::normalized);
 	float4 color = texture.sample(theSampler, in.texture);
 	return float4(color.r, color.g, color.b, color.a);
+}
+
+fragment float4
+customFragmentShader(RasterizerData in [[stage_in]])
+{
+	float2 pos = in.position.xy;
+	pos.x -= in.targetPos.x;
+	pos.y -= (in.viewportSize.y - in.targetSize.y) - in.targetPos.y;
+
+	float2 uv = pos / in.viewportSize;
+	uv *= (in.viewportSize / in.targetSize);
+	uv.y = 1 - uv.y;
+
+	uv -= 0.5;
+	uv.x *= in.targetSize.x / in.targetSize.y;
+	return float4(float3(in.color.r, in.color.g, in.color.b), 1.0);
 }
