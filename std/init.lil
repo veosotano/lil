@@ -50,6 +50,14 @@
 			};
 		}
 
+		fn LIL__nextFrame(var.f64 deltaTime) {
+			#if #getConfig(onUpdateFn) {
+				onUpdate(deltaTime);
+			} else {
+				LIL__runSystems(deltaTime);
+			}
+		};
+
 		#if #getConfig(autoMainFn) {
 			fn main(var.i32 argc; var.ptr(cstr) argv) {
 				LIL__run();

@@ -1405,13 +1405,6 @@ fn floor(f64) => f64 extern;
 		LIL__movementSystem(deltaTime);
 	};
 
-	fn LIL__nextFrame(var.ptr(any) vertexBuffer; var.ptr(i64) vertexCount; var.f64 deltaTime) {
-		#if #getConfig(onUpdateFn) {
-			onUpdate(deltaTime);
-		}
-		LIL__runSystems(deltaTime);
-	};
-	
 	fn LIL__setTextureSize(var.i64 imgId; var.f64 width; var.f64 height) {
 		app.imgs[imgId].textureWidth: width;
 		app.imgs[imgId].textureHeight: height;
