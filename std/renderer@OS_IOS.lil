@@ -25,7 +25,6 @@ alias cstr => ptr(i8);
 		var.i64 pipelineCount: 0;
 		
 		fn setMetalRenderer(var.ptr(any) value) {
-			puts `set metal renderer`;
 			@self.metalRenderer: value;
 		}
 		
