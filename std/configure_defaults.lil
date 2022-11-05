@@ -42,6 +42,7 @@
 	audioBitsPerSample: 16i32;
 	audioBytesPerFrame: 4i32;
 	audioBufferSeconds: 2i32;
+	audioOscillatorSize: 4;
 
 	builds {
 		debug {

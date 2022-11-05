@@ -13,11 +13,8 @@ typedef struct LIL__audioDescriptorStruct {
 	AudioComponentInstance * audioUnit;
 	size_t bufferSize;
 	char * data;
-	UInt64 playCursor;
 	UInt32 bitsPerSample;
 	UInt32 bytesPerFrame;
-	UInt32 freq;
-	float volume;
 	UInt32 samplesPerSecond;
 } LIL__audioDescriptorStruct;
 
@@ -45,6 +42,7 @@ extern CGSize LIL__getWindowSize();
 
 extern LIL__audioDescriptorStruct * LIL__audioInit();
 extern void LIL__audioFree();
+extern void LIL__audioUpdate(UInt32 frames, char * dstBuffer);
 
 extern void LIL__setMetalRenderer(void * value);
 extern void LIL__execRenderCallback(long int i, void * vtxBuf, long int * vtxCount, void * uniforms);
@@ -63,24 +61,8 @@ extern void LIL__notifyChange(long int theId, const char * value);
 
 OSStatus LIL__renderAudio(void * inData, AudioUnitRenderActionFlags * flags, const AudioTimeStamp * timestamp, UInt32 busNumber, UInt32 frames, AudioBufferList *ioData)
 {
-	LIL__audioDescriptorStruct * audioDescriptor = (LIL__audioDescriptorStruct *)inData;
-	
 	char * dstBuffer = (char * )ioData->mBuffers[0].mData;
-	UInt32 bytesToOutput = frames * audioDescriptor->bytesPerFrame;
-	
-	UInt32 region1Size = bytesToOutput;
-	UInt32 region2Size = 0;
-
-	if (audioDescriptor->playCursor + bytesToOutput > audioDescriptor->bufferSize) {
-		region1Size = audioDescriptor->bufferSize - audioDescriptor->playCursor;
-		region2Size = bytesToOutput - region1Size;
-	}
-
-	memcpy(dstBuffer, audioDescriptor->data + audioDescriptor->playCursor, region1Size);
-	if (region2Size > 0) {
-		memcpy(dstBuffer+region1Size, audioDescriptor->data, region2Size);
-	}
-	audioDescriptor->playCursor = (audioDescriptor->playCursor + bytesToOutput) % audioDescriptor->bufferSize;
+	LIL__audioUpdate(frames, dstBuffer);
 	return noErr;
 }
 
