@@ -1,0 +1,104 @@
+#configure {
+	name: "SoundTest";
+}
+
+fn button1MouseDown {
+	audio.oscillators[0].play();
+}
+fn button1MouseUp {
+	audio.oscillators[0].stop();
+}
+
+fn button2MouseDown {
+	audio.oscillators[1].play();
+}
+fn button2MouseUp {
+	audio.oscillators[1].stop();
+}
+
+fn button3MouseDown {
+	audio.oscillators[2].play();
+}
+fn button3MouseUp {
+	audio.oscillators[2].stop();
+}
+
+fn button4MouseDown {
+	audio.oscillators[3].play();
+}
+fn button4MouseUp {
+	audio.oscillators[3].stop();
+}
+
+@root {
+	width: 800;
+	height: 600;
+	background: #ACE;
+	
+	#new @layout layout {
+	
+		#new @container button1 {
+			width: 120;
+			height: 80;
+			background: #A53B59;
+			onMouseDown: button1MouseDown;
+			onMouseUp: button1MouseUp;
+		}
+	
+		#new @container button2 {
+			width: 120;
+			height: 80;
+			background: #CB7519;
+			onMouseDown: button2MouseDown;
+			onMouseUp: button2MouseUp;
+		}
+	
+		#new @container button3 {
+			width: 120;
+			height: 80;
+			background: #00BA6E;
+			onMouseDown: button3MouseDown;
+			onMouseUp: button3MouseUp;
+		}
+	
+		#new @container button4 {
+			width: 120;
+			height: 80;
+			background: #7A3FB9;
+			onMouseDown: button4MouseDown;
+			onMouseUp: button4MouseUp;
+		}
+	
+	}
+}
+
+fn keyDownListener(var.ptr(@event) event) {
+	if event.code = Keyboard.a {
+		audio.oscillators[0].play();
+	} else if event.code = Keyboard.s {
+		audio.oscillators[1].play();
+	} else if event.code = Keyboard.d {
+		audio.oscillators[2].play();
+	} else if event.code = Keyboard.f {
+		audio.oscillators[3].play();
+	}
+}
+
+fn keyUpListener(var.ptr(@event) event) {
+	if event.code = Keyboard.a {
+		audio.oscillators[0].stop();
+	} else if event.code = Keyboard.s {
+		audio.oscillators[1].stop();
+	} else if event.code = Keyboard.d {
+		audio.oscillators[2].stop();
+	} else if event.code = Keyboard.f {
+		audio.oscillators[3].stop();
+	}
+}
+
+msgSub(`onKeyDown`, pointerTo(keyDownListener) => msgCallback);
+msgSub(`onKeyUp`, pointerTo(keyUpListener) => msgCallback);
+audio.oscillators[0].freq: 261;
+audio.oscillators[1].freq: 293;
+audio.oscillators[2].freq: 392;
+audio.oscillators[3].freq: 440;
