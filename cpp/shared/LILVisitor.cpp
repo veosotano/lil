@@ -293,8 +293,9 @@ std::shared_ptr<LILNode> LILVisitor::findNodeForValuePath(LILValuePath * vp) con
 						
 					} else if (currentTy->getTypeType() == TypeTypeStaticArray) {
 						if (isLast) {
-							//we can't return a node
-							return nullptr;
+							//we only know about the complete array at this point
+							//the calling code will need to figure out what to do with it
+							return currentNode;
 						} else {
 							auto saTy = std::static_pointer_cast<LILStaticArrayType>(currentTy);
 							currentTy = saTy->getType();
