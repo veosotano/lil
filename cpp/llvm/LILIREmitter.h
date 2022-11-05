@@ -183,6 +183,7 @@ namespace LIL
 		void _convertLlvmValueIfNeeded(llvm::Value ** llvmValue, LILType * ty1, LILType * ty2);
 
 		bool _needsTemporaryVariable(LILNode * node);
+		std::shared_ptr<LILNode> _evaluateLiteralExpression(std::shared_ptr<LILExpression> exp) const;
 		bool _debug;
 	};
 }

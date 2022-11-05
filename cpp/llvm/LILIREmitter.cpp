@@ -4863,6 +4863,9 @@ llvm::Type * LILIREmitter::llvmTypeFromLILType(LILType * type)
 			auto vd = std::static_pointer_cast<LILVarDecl>(arg);
 			arg = vd->getInitVal();
 		}
+		if (arg && arg->isA(NodeTypeExpression)) {
+			arg = this->_evaluateLiteralExpression(std::static_pointer_cast<LILExpression>(arg));
+		}
 		if (!arg || !arg->isA(NodeTypeNumberLiteral)) {
 			std::cerr << "STATIC ARRAY ARGUMENT WAS NOT NUMBER FAIL!!!!!!!!!!!!!!!!\n";
 			return nullptr;
@@ -5487,4 +5490,72 @@ bool LILIREmitter::_needsTemporaryVariable(LILNode * node)
 		default:
 			return false;
 	}
+}
+
+std::shared_ptr<LILNode> LILIREmitter::_evaluateLiteralExpression(std::shared_ptr<LILExpression> exp) const
+{
+	std::shared_ptr<LILNode> left = exp->getLeft();
+	if (left->getNodeType() == NodeTypeExpression) {
+		left = this->_evaluateLiteralExpression(std::static_pointer_cast<LILExpression>(left));
+		if (!left) {
+			std::cerr << "COULD NOT EVALUATE LEFT FAIL!!!!!!!!!!!!!!!!\n\n";
+			return nullptr;
+		}
+	}
+	if (left->getNodeType() != NodeTypeNumberLiteral) {
+		std::cerr << "LEFT NODE WAS NOT NUMBER LITERAL FAIL!!!!!!!!!!!!!!!!\n\n";
+		return nullptr;
+	}
+	
+	std::shared_ptr<LILNode> right = exp->getRight();
+	if (right->getNodeType() == NodeTypeExpression) {
+		right = this->_evaluateLiteralExpression(std::static_pointer_cast<LILExpression>(right));
+		if (!right) {
+			std::cerr << "COULD NOT EVALUATE RIGHT FAIL!!!!!!!!!!!!!!!!\n\n";
+			return nullptr;
+		}
+	}
+	if (right->getNodeType() != NodeTypeNumberLiteral) {
+		std::cerr << "RIGHT NODE WAS NOT NUMBER LITERAL FAIL!!!!!!!!!!!!!!!!\n\n";
+		return nullptr;
+	}
+	
+	auto leftNum = std::static_pointer_cast<LILNumberLiteral>(left);
+	auto rightNum = std::static_pointer_cast<LILNumberLiteral>(right);
+	
+	std::shared_ptr<LILNumberLiteral> ret = std::make_shared<LILNumberLiteral>();
+	long result = 0;
+	switch (exp->getExpressionType()) {
+		case ExpressionTypeSum:
+		{
+			result = leftNum->getValue().toLong() + rightNum->getValue().toLong();
+			break;
+		}
+		case ExpressionTypeSubtraction:
+		{
+			result = leftNum->getValue().toLong() - rightNum->getValue().toLong();
+			break;
+		}
+		case ExpressionTypeMultiplication:
+		{
+			result = leftNum->getValue().toLong() * rightNum->getValue().toLong();
+			break;
+		}
+		case ExpressionTypeDivision:
+		{
+			result = leftNum->getValue().toLong() / rightNum->getValue().toLong();
+			break;
+		}
+		case ExpressionTypeMod:
+		{
+			result = leftNum->getValue().toLong() % rightNum->getValue().toLong();
+			break;
+		}
+			
+		default:
+			std::cerr << "UNIMPLEMENTED FAIL!!!!!!!!!!!!!!!!\n\n";
+			return nullptr;
+	}
+	ret->setValue(LILString::number((LILUnitI64) result));
+	return ret;
 }
