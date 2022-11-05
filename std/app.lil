@@ -35,7 +35,8 @@ fn floor(f64) => f64 extern;
 	//4: @layout
 	//5: @textfield
 	//6: @label
-	var.@app app: @app { selectables: []; entityCount: 0; typeCount: 5 };
+	//7: @sound
+	var.@app app: @app { selectables: []; entityCount: 0; typeCount: 8 };
 
 	class @size {
 		var.f64 width;

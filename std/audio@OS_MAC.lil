@@ -5,6 +5,7 @@
 #snippet bufferSize { (#paste samplesPerSecond * #paste bytesPerFrame * #paste bufferSeconds) };
 #snippet mixBufferSize { #paste samplesPerSecond * #paste bufferSeconds };
 #snippet oscillatorSize { #getConfig(audioOscillatorSize) };
+#snippet soundDataSize { #getConfig(soundDataSize) };
 
 #import "cstd.lil";
 #needs "string.lil";
@@ -422,5 +423,72 @@ const DEBUG_OSCILLATOR_DETAIL: false;
 		audio.clear(frames);
 		audio.update(frames);
 		audio.output(frames, dstBuffer);
+	}
+
+	class @soundData {
+		var.i64 id: 0;
+		var.bool isPlaying: false;
+	}
+	
+	var.[#paste soundDataSize x @soundData] soundData: [];
+	var.i64 soundDataCount: 0;
+	
+	class @sound {
+		//this class MUST only be an i64
+		//do not add any more vars
+		#expand var.@element super: @element { };
+
+		//public interface
+		vvar.i64 componentId;
+		vvar.bool isPlaying;
+		//fixme: should be =>cstr
+		#resource vvar.ptr(@string)=>ptr(i8) src;
+
+		fn getComponentId => i64 {
+			return app.selectables[@self.id].componentId;
+		}
+
+		fn setIsPlaying(var.bool value) {
+			soundData[@self.componentId].isPlaying: value;
+		}
+		fn getIsPlaying => bool {
+			return soundData[@self.componentId].isPlaying;
+		}
+
+		fn initialize(var.cstr name; var.i64 parentId: 0) => i64 {
+			#if DEBUG {
+				print "created sound object";
+			}
+			var componentId: soundDataCount;
+			soundDataCount +: 1;
+			@self.id: app.newElement(name, parentId, 7, componentId);
+			soundData[componentId].id: @self.id;
+			return @self.id;
+		}
+
+		//WARNING: only call this when it is the last entity
+		fn deinit {
+			app.removeLastEntity();
+			var resourceId: app.selectables[@self.id].resourceId;
+			if resourceId >= 0 {
+				app.removeLastResource();
+			}
+		}
+		
+		fn play {
+			print "Play sound";
+		}
+		
+		fn getSrc() => cstr {
+			var resourceId: app.selectables[@self.id].resourceId;
+			return pointerTo(app.resources[resourceId].path) => ptr(i8);
+		}
+		fn setSrc(var.ptr(@string) value) {
+			var resourceId: app.selectables[@self.id].resourceId;
+			if resourceId < 0 {
+				app.selectables[@self.id].resourceId: app.newResource();
+			}
+			memcpy(@self.src, value.cstr(), value.length);
+		}
 	}
 }
