@@ -245,6 +245,10 @@ void LILTypeValidator::_validate(std::shared_ptr<LILFunctionCall> fc)
 			auto ptrTy = std::static_pointer_cast<LILPointerType>(fieldTy);
 			fieldTy = ptrTy->getArgument();
 		}
+		if (fieldTy->isA(TypeTypeStaticArray)) {
+			auto saTy = std::static_pointer_cast<LILStaticArrayType>(fieldTy);
+			fieldTy = saTy->getType();
+		}
 		if (fieldTy->isA(TypeTypeObject)) {
 			auto classDecl = this->findClassWithName(fieldTy->getName());
 			if (!classDecl) {
