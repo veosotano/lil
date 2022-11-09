@@ -998,11 +998,7 @@ llvm::Value * LILIREmitter::_emitStr(LILStringLiteral * value)
 
 llvm::Value * LILIREmitter::_emitNull(LILNullLiteral * value)
 {
-	auto zeroLit = std::make_shared<LILNumberLiteral>();
-	zeroLit->setValue("0");
-	auto zeroTy = LILType::make("i8");
-	zeroLit->setType(zeroTy);
-	return this->emit(zeroLit.get());
+	return llvm::Constant::getNullValue(this->llvmTypeFromLILType(value->getType().get()));
 }
 
 llvm::Value * LILIREmitter::_emitVarDecl(LILVarDecl * value)

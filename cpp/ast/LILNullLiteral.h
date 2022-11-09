@@ -15,11 +15,11 @@
 #ifndef LILNULLLITERAL_H
 #define LILNULLLITERAL_H
 
-#include "LILNode.h"
+#include "LILTypedNode.h"
 
 namespace LIL
 {
-	class LILNullLiteral : public LILNode
+	class LILNullLiteral : public LILTypedNode
 	{
 	public:
 		LILNullLiteral();
@@ -29,8 +29,7 @@ namespace LIL
 		void receiveNodeData(const LIL::LILString &data) override;
 
 		bool equalTo(std::shared_ptr<LILNode> otherNode) override;
-		std::shared_ptr<LILType> getType() const override;
-		
+
 	private:
 
 		

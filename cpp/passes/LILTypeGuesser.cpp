@@ -691,7 +691,10 @@ void LILTypeGuesser::_process(LILStringFunction * value)
 
 void LILTypeGuesser::_process(LILNullLiteral * value)
 {
-
+	std::shared_ptr<LILType> ty = this->recursiveFindTypeFromAncestors(value);
+	if (ty) {
+		value->setType(ty);
+	}
 }
 
 void LILTypeGuesser::_process(LILVarDecl * value)
