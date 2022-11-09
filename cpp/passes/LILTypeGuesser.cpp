@@ -835,6 +835,10 @@ void LILTypeGuesser::_process(LILFunctionDecl * value)
 					vd->setType(newTy);
 					hasChanges = true;
 				}
+				auto initVal = vd->getInitVal();
+				if (initVal && !initVal->getType()) {
+					this->process(initVal.get());
+				}
 				newArgs.push_back(vd);
 			} else {
 				std::cerr << "UNKNOWN NODE TYPE IN FUNCTION TYPE ARGS FAIL!!!!\n\n";
