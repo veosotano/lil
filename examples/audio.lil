@@ -30,8 +30,13 @@ fn button4MouseUp {
 	audio.oscillators[3].stop();
 }
 
+fn button5MouseUp {
+	var sound: $(testSound);
+	sound.play();
+}
+
 @root {
-	width: 800;
+	width: 900;
 	height: 600;
 	background: #ACE;
 	
@@ -60,7 +65,7 @@ fn button4MouseUp {
 			onMouseDown: button3MouseDown;
 			onMouseUp: button3MouseUp;
 		}
-	
+		
 		#new @container button4 {
 			width: 120;
 			height: 80;
@@ -69,6 +74,16 @@ fn button4MouseUp {
 			onMouseUp: button4MouseUp;
 		}
 	
+		#new @container button5 {
+			width: 120;
+			height: 80;
+			background: #7ABD00;
+			onMouseUp: button5MouseUp;
+		}
+	}
+	
+	#new @sound testSound {
+		src: "test.wav";
 	}
 }
 
@@ -81,6 +96,9 @@ fn keyDownListener(var.ptr(@event) event) {
 		audio.oscillators[2].play();
 	} else if event.code = Keyboard.f {
 		audio.oscillators[3].play();
+	} else if event.code = Keyboard.g {
+		var sound: $(testSound);
+		sound.play();
 	}
 }
 
