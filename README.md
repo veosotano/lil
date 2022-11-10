@@ -70,10 +70,8 @@ We already have some rudimentary physics (more to come), so let's play with velo
 			src: "myimage.png";
 			x: 620;
 			y: 350;
-			velocity: @vel {
-				x: 5;
-				y: 3;
-			};
+			velX: 5;
+			velY: 3;
 		}
 	}
 
@@ -85,9 +83,9 @@ Let's set some configuration values. We give the app a name, we automatically en
 		onUpdateFn: true;
 	}
 	fn onUpdate(var.f64 deltaTime) {
-		//cheating here, no selection system yet
-		//also, suppose the following functions exist:
-		var img: @image { id: 1 };
+		//select the image
+		var img: $(test);
+		//suppose the following functions exist:
 		applyUserInput(img);
 		limitSpeed(img);
 		updateAI(img);
@@ -104,10 +102,8 @@ Let's set some configuration values. We give the app a name, we automatically en
 			src: "myimage.png";
 			x: 620;
 			y: 350;
-			velocity: @vel {
-				x: 5;
-				y: 3;
-			};
+			velX: 5;
+			velY: 3;
 		}
 	}
 
