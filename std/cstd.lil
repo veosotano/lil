@@ -22,6 +22,7 @@
 
 	//memory
 	fn malloc (i64)=>ptr(any) extern;
+	fn calloc (i64,i64)=>ptr(any) extern;
 	fn realloc (ptr(any),i64)=>ptr(any) extern;
 	fn free (ptr(any)) extern;
 	fn memcpy (var.ptr(any) dst; var.ptr(any) src; var.i64 len) extern;
