@@ -486,7 +486,9 @@ const DEBUG_OSCILLATOR_DETAIL: false;
 		fn setSrc(var.ptr(@string) value) {
 			var resourceId: app.selectables[@self.id].resourceId;
 			if resourceId < 0 {
-				app.selectables[@self.id].resourceId: app.newResource();
+				resourceId: app.newResource();
+				app.selectables[@self.id].resourceId: resourceId;
+				app.resources[resourceId].typeId: ResourceType.sound;
 			}
 			memcpy(@self.src, value.cstr(), value.length);
 		}

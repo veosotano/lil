@@ -116,9 +116,14 @@ fn floor(f64) => f64 extern;
 		var.f64 textureHeight;
 		var.bool useClip;
 	};
+	enum.i32 ResourceType {
+		texture,
+		sound
+	};
 	class @resource {
 		var.[1024 x i8] path;
 		var.ptr(any)|null data;
+		var.ResourceType typeId;
 	};
 	class @vel
 	{
@@ -576,7 +581,9 @@ fn floor(f64) => f64 extern;
 		fn setSrc(var.ptr(@string) value) {
 			var resourceId: app.selectables[@self.id].resourceId;
 			if resourceId < 0 {
-				app.selectables[@self.id].resourceId: app.newResource();
+				resourceId: app.newResource();
+				app.selectables[@self.id].resourceId: resourceId;
+				app.resources[resourceId].typeId: ResourceType.texture;
 			}
 			memcpy(@self.src, value.cstr(), value.length);
 		}

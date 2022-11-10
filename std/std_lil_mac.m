@@ -21,6 +21,7 @@ typedef struct LIL__audioDescriptorStruct {
 typedef struct LIL__resourceStruct {
 	char path[1024];
 	void * data;
+	int typeId;
 } LIL__resourceStruct;
 
 extern void LIL__init();
