@@ -18,8 +18,8 @@ fn NSBeep extern;
 const DEBUG: false;
 const DEBUG_OSCILLATOR: false;
 const DEBUG_OSCILLATOR_DETAIL: false;
-const DEBUG_SOUND: true;
-const DEBUG_SOUND_DETAIL: true;
+const DEBUG_SOUND: false;
+const DEBUG_SOUND_DETAIL: false;
 
 #export {
 	fn sinf(var.f32 value) => f32 extern;
