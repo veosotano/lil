@@ -42,8 +42,11 @@ extern void LIL__setKeyUp(int keyCode);
 extern CGSize LIL__getWindowSize();
 
 extern LIL__audioDescriptorStruct * LIL__audioInit();
+AudioStreamBasicDescription LIL__audioOutputDescriptor;
 extern void LIL__audioFree();
 extern void LIL__audioUpdate(UInt32 frames, char * dstBuffer);
+extern char * LIL__audioAllocSoundBuffer(SInt64 sizeInBytes, SInt64 idx);
+extern void LIL__audiofreeSoundBuffer(SInt64 idx);
 
 extern void LIL__setMetalRenderer(void * value);
 extern void LIL__execRenderCallback(long int i, void * vtxBuf, long int * vtxCount, void * uniforms);
@@ -88,17 +91,18 @@ void LIL__setupAudio()
 		NSLog(@"Error setting up audio component");
 		return;
 	}
-	
-	AudioStreamBasicDescription asbd;
-	asbd.mSampleRate = audioDescriptor->samplesPerSecond;
-	asbd.mFormatID = kAudioFormatLinearPCM;
-	asbd.mFormatFlags = kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked;
-	asbd.mFramesPerPacket = 1;
-	asbd.mChannelsPerFrame = 2;
-	asbd.mBitsPerChannel = audioDescriptor->bitsPerSample;
-	asbd.mBytesPerFrame = audioDescriptor->bytesPerFrame;
-	asbd.mBytesPerPacket = audioDescriptor->bytesPerFrame;
-	status = AudioUnitSetProperty(*(audioDescriptor->audioUnit), kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, 0, &asbd, sizeof(asbd));
+
+	LIL__audioOutputDescriptor.mSampleRate = audioDescriptor->samplesPerSecond;
+	LIL__audioOutputDescriptor.mFormatID = kAudioFormatLinearPCM;
+	LIL__audioOutputDescriptor.mFormatFlags = kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked;
+	LIL__audioOutputDescriptor.mFramesPerPacket = 1;
+	LIL__audioOutputDescriptor.mChannelsPerFrame = 2;
+	LIL__audioOutputDescriptor.mBitsPerChannel = audioDescriptor->bitsPerSample;
+	LIL__audioOutputDescriptor.mBytesPerFrame = audioDescriptor->bytesPerFrame;
+	LIL__audioOutputDescriptor.mBytesPerPacket = audioDescriptor->bytesPerFrame;
+	LIL__audioOutputDescriptor.mReserved = 0;
+
+	status = AudioUnitSetProperty(*(audioDescriptor->audioUnit), kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, 0, &LIL__audioOutputDescriptor, sizeof(LIL__audioOutputDescriptor));
 
 	if (status != noErr) {
 		NSLog(@"Error setting up audio output stream");
@@ -953,6 +957,8 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
 - (void)setWindowBackgroundRed:(double)red green:(double)green blue:(double)blue alpha:(double)alpha;
 - (void)loadTextureForFile:(NSString *)path index:(unsigned int)idx;
 - (void)unloadTextureForIndex:(unsigned int)idx;
+- (void)loadSoundForFile:(NSString *)path index:(unsigned int)idx;
+- (void)unloadSoundForIndex:(unsigned int)idx;
 - (LILMainView *)getMainView;
 - (NSWindow *)getMainWindow;
 - (void)quit;
@@ -1017,10 +1023,21 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
 	[mainWindow setContentView:mainView];
 	
 	long int count = LIL__getResourceCount();
+	long int textureCount = 0;
+	long int soundCount = 0;
 	for(long int i = 0; i<count; i+=1) {
 		LIL__resourceStruct * res = LIL__getResorceById(i);
 		NSString * path = [[NSString alloc] initWithUTF8String: res->path];
-		[self loadTextureForFile: path index:i];
+
+		if (res->typeId == 0) {
+			//typeId 0 is texture
+			[self loadTextureForFile: path index:textureCount];
+			textureCount += 1;
+		} else if (res->typeId == 1) {
+			//typeId 1 is sound
+			[self loadSoundForFile: path index:soundCount];
+			soundCount += 1;
+		}
 	}
 }
 
@@ -1134,6 +1151,104 @@ static CVReturn LIL__dispatchRenderLoop(CVDisplayLinkRef displayLink, const CVTi
 	{
 		[renderer unloadTextureForIndex:idx];
 	}
+}
+
+- (void)loadSoundForFile:(NSString *)filename index:(unsigned int)idx
+{
+	NSURL * soundUrl;
+	if ([filename isAbsolutePath]){
+		soundUrl = [NSURL fileURLWithPath:filename];
+	} else {
+		soundUrl = [[NSBundle mainBundle] URLForResource:filename withExtension:nil];
+	}
+	
+	if (soundUrl != nil) {
+		ExtAudioFileRef audioFile;
+		OSStatus result = ExtAudioFileOpenURL((__bridge CFURLRef)soundUrl, &audioFile);
+		if(result != noErr)
+		{
+			NSLog(@"Failed to load the sound from %@ with error code %i", soundUrl.absoluteString, result);
+			return;
+		}
+
+		AudioStreamBasicDescription fileADesc;
+		UInt32 fileADescSize = sizeof(fileADesc);
+		result = ExtAudioFileGetProperty(audioFile, kExtAudioFileProperty_FileDataFormat, &fileADescSize, &fileADesc);
+		
+		if(result != noErr) {
+			NSLog(@"Failed to get the audio format from %@ with error code %i", soundUrl.absoluteString, result);
+			return;
+		}
+
+		AudioStreamBasicDescription targetASBD;
+		memcpy(&targetASBD, &LIL__audioOutputDescriptor, sizeof(AudioStreamBasicDescription));
+
+		result = ExtAudioFileSetProperty(audioFile, kExtAudioFileProperty_ClientDataFormat, sizeof(AudioStreamBasicDescription), &targetASBD);
+
+		if(result != noErr) {
+			NSLog(@"Failed to set the output format for %@ with error code %i", soundUrl.absoluteString, result);
+			return;
+		}
+
+		UInt64 fileLengthFrames;
+		UInt32 fileLenSize = sizeof(fileLengthFrames);
+		result = ExtAudioFileGetProperty(audioFile, kExtAudioFileProperty_FileLengthFrames, &fileLenSize, &fileLengthFrames);
+
+		if(result != noErr) {
+			NSLog(@"Failed to get the file length for %@ with error code %i", soundUrl.absoluteString, result);
+			return;
+		}
+		
+		UInt64 outLengthFrames = ceil(fileLengthFrames * (targetASBD.mSampleRate / fileADesc.mSampleRate));
+
+		unsigned int sizeInBytes = (unsigned int)targetASBD.mBytesPerFrame * (unsigned int)outLengthFrames;
+
+		AudioBufferList * bufferList = malloc(sizeof(AudioBufferList));
+		bufferList->mNumberBuffers = 1;
+		bufferList->mBuffers[0].mNumberChannels = 2;
+		bufferList->mBuffers[0].mDataByteSize = sizeInBytes;
+		bufferList->mBuffers[0].mData = LIL__audioAllocSoundBuffer((SInt64)sizeInBytes, (SInt64)idx);
+
+		//make a copy on the stack, to feed the reader in small chunks
+		char bufferListStack[sizeof(AudioBufferList)];
+		memcpy(bufferListStack, &bufferList, sizeof(AudioBufferList));
+
+		AudioBufferList * scratchBufferList = (AudioBufferList*)bufferListStack;
+		scratchBufferList->mBuffers[0].mData = (char*)scratchBufferList->mBuffers[0].mData;
+
+		UInt32 readFrames = 0;
+		while (readFrames < fileLengthFrames) {
+			
+			UInt32 remainingFrames = (UInt32)fileLengthFrames - readFrames;
+			UInt32 framesToRead = (remainingFrames < 16384) ? remainingFrames : 16384;
+			scratchBufferList->mNumberBuffers = bufferList->mNumberBuffers;
+			scratchBufferList->mBuffers[0].mNumberChannels = bufferList->mBuffers[0].mNumberChannels;
+			scratchBufferList->mBuffers[0].mData = bufferList->mBuffers[0].mData + (readFrames * targetASBD.mBytesPerFrame);
+			scratchBufferList->mBuffers[0].mDataByteSize = framesToRead * targetASBD.mBytesPerFrame;
+
+			result = ExtAudioFileRead(audioFile, &framesToRead, scratchBufferList);
+
+			if(result != noErr)
+			{
+				NSLog(@"Failed to read the file %@ with error code %i", soundUrl.absoluteString, result);
+				return;
+			}
+
+			if (framesToRead == 0) {
+				break;
+			}
+
+			readFrames += framesToRead;
+		}
+
+		ExtAudioFileDispose(audioFile);
+		free(bufferList);
+	}
+}
+
+- (void)unloadSoundForIndex:(unsigned int)idx
+{
+	LIL__audiofreeSoundBuffer((SInt64)idx);
 }
 
 - (LILMainView *)getMainView

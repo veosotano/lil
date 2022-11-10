@@ -18,6 +18,8 @@ fn NSBeep extern;
 const DEBUG: false;
 const DEBUG_OSCILLATOR: false;
 const DEBUG_OSCILLATOR_DETAIL: false;
+const DEBUG_SOUND: true;
+const DEBUG_SOUND_DETAIL: true;
 
 #export {
 	fn sinf(var.f32 value) => f32 extern;
@@ -210,10 +212,28 @@ const DEBUG_OSCILLATOR_DETAIL: false;
 			}
 		}
 	}
+
+	class @soundData {
+		var.i64 id: 0;
+		var.bool isPlaying: false;
+	}
+
+	class @soundPlayback {
+		var.i64 id: 0;
+		var.i64 playCursor: 0;
+		var.f32 volume: 1.0;
+		var.f32 pitch: 1.0;
+		var.ptr(@soundPlayback)|null next: null;
+	}
 	
 	class @audio {
 		var.[#paste mixBufferSize x f32] mixBuffer: [];
 		var.[#paste oscillatorSize x @oscillator] oscillators: [];
+		var.[#paste soundDataSize x @soundData] soundData: [];
+		var.i64 soundDataCount: 0;
+		var.[#paste soundDataSize x ptr(i8)] soundBuffers: [];
+		var.[#paste soundDataSize x i64] soundBufferSizes: [];
+		var.ptr(@soundPlayback)|null playbackHead: null;
 		var.f32 gain: 1.0;
 
 		fn construct {
@@ -397,6 +417,66 @@ const DEBUG_OSCILLATOR_DETAIL: false;
 					}
 				}
 			}
+
+			//mix sound effects
+			var.ptr(@soundPlayback)|null previousPlayback: null;
+			for (var playback: audio.playbackHead; playback != null;) {
+				if playback => ptr(@soundPlayback) {
+					#if DEBUG_SOUND_DETAIL {
+						printf(`sound buffer size: %li\n`, audio.soundBufferSizes[playback.id]);
+						printf(`play cursor: %li\n`, playback.playCursor);
+					}
+
+					var.i64 remainingBytes: bytesToOutput => i64;
+					if (playback.playCursor + bytesToOutput) >= audio.soundBufferSizes[playback.id] {
+						remainingBytes: audio.soundBufferSizes[playback.id] - playback.playCursor;
+					}
+					#if DEBUG_SOUND_DETAIL {
+						printf(`bytes to output: %i\n`, bytesToOutput);
+						printf(`remaining bytes: %li\n`, remainingBytes);
+					}
+
+					var.ptr(i8) buffer: audio.soundBuffers[playback.id];
+
+					var.ptr(f32) channel: pointerTo(@self.mixBuffer[0]);
+					var.ptr(i16) playbackChannel: (buffer + playback.playCursor) => ptr(i16);
+					var.i64 sampleCount: remainingBytes / (#paste bytesPerFrame => i64);
+
+					#if DEBUG_SOUND_DETAIL {
+						printf(`sample count: %li\n`, sampleCount);
+					}
+
+					for (var.i64 i: 0; i < sampleCount; i +: 1) {
+						//left channel
+						var currentSampleL: valueOf channel;
+						var playbackSampleL: valueOf(playbackChannel + (i * 2));
+
+						set(channel, currentSampleL + (playbackSampleL => f32));
+						channel: channel + 1;
+						//right channel
+						var currentSampleR: valueOf channel;
+						var playbackSampleR: valueOf(playbackChannel + (i * 2) + 1);
+
+						set(channel, currentSampleR + (playbackSampleR => f32));
+						channel: channel + 1;
+					}
+
+					playback.playCursor: playback.playCursor + (remainingBytes => i64);
+					if playback.playCursor >= audio.soundBufferSizes[playback.id] {
+						audio.removePlayback(playback, previousPlayback);
+						if previousPlayback => ptr(@soundPlayback) {
+							playback: previousPlayback.next;
+						} else {
+							playback: null;
+						}
+
+					} else {
+						previousPlayback: playback;
+						playback: playback.next;
+					}
+					
+				}
+			}
 		}
 
 		fn output(var.i32 frames; var.ptr(i8) dstBuffer) {
@@ -415,9 +495,53 @@ const DEBUG_OSCILLATOR_DETAIL: false;
 				channel: channel + 1;
 			}
 		}
+		
+		fn newPlayback(var.i64 soundId) {
+			#if DEBUG_SOUND {
+				printf(`newPlayback with id %li\n`, soundId);
+			}
+			var.ptr(@soundPlayback) newPlayback: malloc(sizeOf(type @soundPlayback));
+			//fixme: I'd like to initialize this with newPlayback: @soundPlayback { };
+			newPlayback.id: soundId;
+			newPlayback.playCursor: 0;
+			newPlayback.volume: 1.0;
+			newPlayback.pitch: 1.0;
+			newPlayback.next: null;
+			@self.addPlayback(newPlayback);
+		}
+		
+		fn addPlayback(var.ptr(@soundPlayback) value) {
+			#if DEBUG_SOUND {
+				printf(`setting new playhead\n`);
+			}
+			value.next: @self.playbackHead;
+			@self.playbackHead: value;
+		}
+		
+		fn removePlayback(var.ptr(@soundPlayback) value; var.ptr(@soundPlayback)|null previousPlayback) {
+			#if DEBUG_SOUND {
+				printf(`remove playback id %li\n`, value.id);
+			}
+			if previousPlayback => ptr(@soundPlayback) {
+				previousPlayback.next: value.next;
+			} else {
+				audio.playbackHead: value.next;
+			}
+			free(value);
+		}
 	}
 	
 	var.@audio audio: @audio { };
+	
+	fn LIL__audioAllocSoundBuffer(var.i64 sizeInBytes; var.i64 idx) => ptr(i8) {
+		audio.soundBuffers[idx]: calloc(sizeInBytes, 1);
+		audio.soundBufferSizes[idx]: sizeInBytes;
+		return audio.soundBuffers[idx];
+	}
+	
+	fn LIL__audiofreeSoundBuffer(var.i64 idx) {
+		free(audio.soundBuffers[idx]);
+	}
 	
 	fn LIL__audioUpdate(var.i32 frames, var.ptr(i8) dstBuffer) {
 		audio.clear(frames);
@@ -425,14 +549,6 @@ const DEBUG_OSCILLATOR_DETAIL: false;
 		audio.output(frames, dstBuffer);
 	}
 
-	class @soundData {
-		var.i64 id: 0;
-		var.bool isPlaying: false;
-	}
-	
-	var.[#paste soundDataSize x @soundData] soundData: [];
-	var.i64 soundDataCount: 0;
-	
 	class @sound {
 		//this class MUST only be an i64
 		//do not add any more vars
@@ -449,20 +565,20 @@ const DEBUG_OSCILLATOR_DETAIL: false;
 		}
 
 		fn setIsPlaying(var.bool value) {
-			soundData[@self.componentId].isPlaying: value;
+			audio.soundData[@self.componentId].isPlaying: value;
 		}
 		fn getIsPlaying => bool {
-			return soundData[@self.componentId].isPlaying;
+			return audio.soundData[@self.componentId].isPlaying;
 		}
 
 		fn initialize(var.cstr name; var.i64 parentId: 0) => i64 {
-			#if DEBUG {
-				print "created sound object";
+			#if DEBUG_SOUND {
+				printf(`created sound object\n`);
 			}
-			var componentId: soundDataCount;
-			soundDataCount +: 1;
+			var componentId: audio.soundDataCount;
+			audio.soundDataCount +: 1;
 			@self.id: app.newElement(name, parentId, 7, componentId);
-			soundData[componentId].id: @self.id;
+			audio.soundData[componentId].id: @self.id;
 			return @self.id;
 		}
 
@@ -476,7 +592,10 @@ const DEBUG_OSCILLATOR_DETAIL: false;
 		}
 		
 		fn play {
-			print "Play sound";
+			#if DEBUG_SOUND {
+				printf(`Play sound\n`);
+			}
+			audio.newPlayback(@self.componentId);
 		}
 		
 		fn getSrc() => cstr {
