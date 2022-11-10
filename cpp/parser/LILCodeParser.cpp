@@ -6271,6 +6271,7 @@ bool LILCodeParser::readForFlowControl()
 		{
 			d->receiver->receiveNodeData(ParserEventPunctuation, d->currentToken->getString());
 			this->readNextToken();
+			needsClosingParenthesis = false;
 			LIL_CHECK_FOR_END_AND_SKIP_WHITESPACE
 		}
 		else

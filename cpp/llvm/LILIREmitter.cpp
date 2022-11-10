@@ -4170,9 +4170,11 @@ llvm::Value * LILIREmitter::_emitFor(LILFlowControl * value)
 		d->irBuilder.SetInsertPoint(loopBB);
 		this->_emitEvaluables(value->getThen());
 		
-		auto stepNode = arguments[2];
-		if (stepNode) {
-			this->emit(stepNode.get());
+		if (arguments.size() == 3) {
+			auto stepNode = arguments[2];
+			if (stepNode) {
+				this->emit(stepNode.get());
+			}
 		}
 
 		auto condition2 = this->emit(condNode.get());
