@@ -42,8 +42,11 @@
 	audioBitsPerSample: 16i32;
 	audioBytesPerFrame: 4i32;
 	audioBufferSeconds: 2i32;
-	audioOscillatorSize: 4;
+	audioOscillatorSize: 8;
 	soundDataSize: #arg { name: "soundDataSize"; default: 256 };
+	audioSequencerSize: 2;
+	audioOscillatorsPerSequencer: 4;
+	audioSequencerNoteSize: 4;
 
 	builds {
 		debug {

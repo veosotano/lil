@@ -6,6 +6,9 @@
 #snippet mixBufferSize { #paste samplesPerSecond * #paste bufferSeconds };
 #snippet oscillatorSize { #getConfig(audioOscillatorSize) };
 #snippet soundDataSize { #getConfig(soundDataSize) };
+#snippet sequencerSize { #getConfig(audioSequencerSize) };
+#snippet oscillatorsPerSequencer { #getConfig(audioOscillatorsPerSequencer) };
+#snippet sequencerNoteSize { #getConfig(audioSequencerNoteSize) };
 
 #import "cstd.lil";
 #needs "string.lil";
@@ -57,6 +60,10 @@ const DEBUG_SOUND_DETAIL: false;
 		free(LIL__audioDescriptor.data);
 	}
 
+	//FIXME: only generate the necessary samples on demand:
+	//generating more samples adding some latency was only needed
+	//when the function was driven by the render thread, Now that the
+	//audio thread is more independent it is not needed anymore.
 	class @oscillator {
 		var.[#paste bufferSize x i8] buffer: [];
 		var.i64 playCursor: 0;
@@ -68,6 +75,16 @@ const DEBUG_SOUND_DETAIL: false;
 		var.bool fadeOut: false;
 		var.bool isPlaying: false;
 		var.bool hasSamples: false;
+
+		fn reset {
+			@self.playCursor: 0;
+			@self.sampleIndex: 0;
+			@self.sineValue: 0;
+			@self.fadeIn: true;
+			@self.fadeOut: false;
+			@self.isPlaying: false;
+			@self.hasSamples: false;
+		}
 
 		fn play {
 			@self.isPlaying: true;
@@ -226,6 +243,87 @@ const DEBUG_SOUND_DETAIL: false;
 		var.ptr(@soundPlayback)|null next: null;
 	}
 	
+	class @sequencerNote {
+		var.i32 freq;
+		var.f32 duration;
+	}
+	
+	class @sequencerPlayback {
+		var.[#paste sequencerNoteSize x @sequencerNote] notes;
+		var.i64 count: 0;
+		var.f32 volume: 1.0;
+	}
+	
+	class @sequencer {
+		var.@sequencerPlayback sequence;
+		var.i64 id: 0;
+		var.i64 playCursor: 0;
+		var.i64 playingNote: -1;
+		var.i64 playingOscillatorId: -1;
+		var.bool isPlaying: false;
+		
+		fn play (var.ptr(@sequencerPlayback) sequence) {
+
+			//clean oscillators
+			//FIXME: this won't be necessary once oscillators generate
+			//only the necessary amount of samples
+			var.i64 oscillatorsAmount: #paste oscillatorsPerSequencer;
+			var oscillatorOffset: @self.id * oscillatorsAmount;
+			for oscillatorsAmount {
+				audio.oscillators[oscillatorOffset + @value].reset();
+			}
+
+			memcpy(pointerTo(@self.sequence), sequence, sizeOf(type @sequencerPlayback));
+			@self.isPlaying: true;
+		}
+		
+		fn update(var.i32 frames) {
+			if @self.isPlaying {
+				var.i64 oscillatorsAmount: #paste oscillatorsPerSequencer;
+				var oscillatorOffset: @self.id * oscillatorsAmount;
+
+				var.f32 playCursorSeconds: ((@self.playCursor => f64) / (#paste samplesPerSecond => f64)) => f32;
+				var.f32 previousNotesTime: 0;
+				var.bool playsNextNote: false;
+				for @self.sequence.count {
+					var.ptr(@sequencerNote) note: pointerTo @self.sequence.notes[@value];
+					if ((previousNotesTime + note.duration) < playCursorSeconds) {
+						previousNotesTime +: note.duration;
+					} else {
+						if @self.playingNote < @value {
+							@self.playingNote: @value;
+							if @self.playingOscillatorId >= 0 {
+								audio.oscillators[oscillatorOffset + @self.playingOscillatorId].stop();
+							}
+							@self.playingOscillatorId +: 1;
+							audio.oscillators[oscillatorOffset + @self.playingOscillatorId].playFreq(note.freq);
+							playsNextNote: true;
+						} else {
+							playsNextNote: true;
+						}
+						break;
+					}
+				}
+				if !playsNextNote {
+					if @self.playingOscillatorId >= 0 {
+						var stopOscId: oscillatorOffset + @self.playingOscillatorId;
+						audio.oscillators[stopOscId].stop();
+					}
+					@self.isPlaying: false;
+					@self.playCursor: 0;
+					@self.playingOscillatorId: -1;
+					@self.playingNote: -1;
+				}
+			}
+		}
+		
+		fn advance(var.i32 frames) {
+			if @self.isPlaying {
+				@self.playCursor +: frames;
+			}
+		}
+	}
+	
 	class @audio {
 		var.[#paste mixBufferSize x f32] mixBuffer: [];
 		var.[#paste oscillatorSize x @oscillator] oscillators: [];
@@ -234,6 +332,8 @@ const DEBUG_SOUND_DETAIL: false;
 		var.[#paste soundDataSize x ptr(i8)] soundBuffers: [];
 		var.[#paste soundDataSize x i64] soundBufferSizes: [];
 		var.ptr(@soundPlayback)|null playbackHead: null;
+		var.[#paste sequencerSize x @sequencer] sequencers: [];
+		
 		var.f32 gain: 1.0;
 
 		fn construct {
@@ -242,6 +342,9 @@ const DEBUG_SOUND_DETAIL: false;
 			}
 			for #paste oscillatorSize {
 				@self.oscillators[@value]: @oscillator { };
+			}
+			for #paste sequencerSize {
+				@self.sequencers[@value]: @sequencer { id: @value };
 			}
 		}
 		
@@ -263,6 +366,10 @@ const DEBUG_SOUND_DETAIL: false;
 		fn update(var.i32 frames) {
 			var.i32 bytesToOutput: frames * #paste bytesPerFrame;
 			//generate
+			for #paste sequencerSize {
+				var seq: pointerTo(@self.sequencers[@value]);
+				seq.update(frames);
+			}
 			for #paste oscillatorSize {
 				var osc: pointerTo(@self.oscillators[@value]);
 				osc.update();
@@ -477,6 +584,12 @@ const DEBUG_SOUND_DETAIL: false;
 					
 				}
 			}
+
+			//advance sequencers
+			for #paste sequencerSize {
+				var seq: pointerTo(@self.sequencers[@value]);
+				seq.advance(frames);
+			}
 		}
 
 		fn output(var.i32 frames; var.ptr(i8) dstBuffer) {
@@ -528,6 +641,19 @@ const DEBUG_SOUND_DETAIL: false;
 				audio.playbackHead: value.next;
 			}
 			free(value);
+		}
+		
+		fn playSequence(var.ptr(@sequencerPlayback) seq) {
+			var.i64 nextFreeSequencer: -1;
+			for (var.i64 i: 0; i < #paste sequencerSize; i +: 1) {
+				if !@self.sequencers[i].isPlaying {
+					nextFreeSequencer: i;
+					break;
+				}
+			}
+			if nextFreeSequencer >= 0 {
+				@self.sequencers[nextFreeSequencer].play(seq);
+			}
 		}
 	}
 	
