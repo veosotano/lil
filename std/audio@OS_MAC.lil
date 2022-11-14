@@ -60,30 +60,22 @@ const DEBUG_SOUND_DETAIL: false;
 		free(LIL__audioDescriptor.data);
 	}
 
-	//FIXME: only generate the necessary samples on demand:
-	//generating more samples adding some latency was only needed
-	//when the function was driven by the render thread, Now that the
-	//audio thread is more independent it is not needed anymore.
 	class @oscillator {
 		var.[#paste bufferSize x i8] buffer: [];
 		var.i64 playCursor: 0;
 		var.i32 freq: 0;
 		var.f32 volume: 1.0;
-		var.i64 sampleIndex: 0;
 		var.f32 sineValue: 0f32;
 		var.bool fadeIn: true;
 		var.bool fadeOut: false;
 		var.bool isPlaying: false;
-		var.bool hasSamples: false;
 
 		fn reset {
 			@self.playCursor: 0;
-			@self.sampleIndex: 0;
 			@self.sineValue: 0;
 			@self.fadeIn: true;
 			@self.fadeOut: false;
 			@self.isPlaying: false;
-			@self.hasSamples: false;
 		}
 
 		fn play {
@@ -101,17 +93,13 @@ const DEBUG_SOUND_DETAIL: false;
 			}
 		}
 
-		fn update {
+		fn update(var.i32 frames) {
 			if @self.isPlaying {
-				@self.generateSineTone();
-				@self.hasSamples: true;
-
-			} else {
-				@self.hasSamples: false;
+				@self.generateSineTone(frames);
 			}
 		}
 
-		fn generateSineTone {
+		fn generateSineTone(var.i32 frames) {
 			#if DEBUG_OSCILLATOR {
 				printf(`//////////////////////////////////////\n`);
 			}
@@ -123,42 +111,15 @@ const DEBUG_SOUND_DETAIL: false;
 			#if DEBUG_OSCILLATOR_DETAIL {
 				printf(`period: %i\n`, period);
 			}
-			var.i32 latencySampleCount: #paste samplesPerSecond / 15i32;
-			#if DEBUG_OSCILLATOR_DETAIL {
-				printf(`latencySampleCount: %i\n`, latencySampleCount);
-			}
-			var.i32 targetQueueBytes: latencySampleCount * #paste bytesPerFrame;
-			#if DEBUG_OSCILLATOR_DETAIL {
-				printf(`targetQueueBytes: %i\n`, targetQueueBytes);
-				printf(`playCursor: %li\n`, @self.playCursor);
-			}
-			var.i64 targetCursor: ((@self.playCursor + (targetQueueBytes => i64)) MOD (#paste bufferSize => i64));
-			#if DEBUG_OSCILLATOR_DETAIL {
-				printf(`targetCursor: %i\n`, targetCursor);
-				printf(`sampleIndex: %li\n`, @self.sampleIndex);
-			}
-			var.i64 writeCursor: ((@self.sampleIndex * (#paste bytesPerFrame => i64)) MOD (#paste bufferSize => i64));
-			#if DEBUG_OSCILLATOR_DETAIL {
-				printf(`writeCursor: %i\n`, writeCursor);
-			}
-			var.i64 bytesToWrite: 0;
-
-			if (writeCursor > targetCursor) {
-				bytesToWrite: (#paste bufferSize => i64) - writeCursor;
-				bytesToWrite +: targetCursor;
-			} else {
-				bytesToWrite: targetCursor - writeCursor;
-			}
-			#if DEBUG_OSCILLATOR_DETAIL {
-				printf(`bytesToWrite: %i\n`, bytesToWrite);
-			}
+			var.i32 bytesToOutput: frames * #paste bytesPerFrame;
 
 			var bufPtr: pointerTo(@self.buffer) => ptr(i8);
+			var writeCursor: @self.playCursor;
 			var.ptr(i8) region1Ptr: bufPtr + writeCursor;
 			#if DEBUG_OSCILLATOR_DETAIL {
 				printf(`region1Ptr: %li\n`, region1Ptr => i64);
 			}
-			var.i64 region1Size: bytesToWrite;
+			var.i64 region1Size: bytesToOutput;
 			if ((region1Size + writeCursor) > (#paste bufferSize => i64)) {
 				region1Size: (#paste bufferSize => i64) - writeCursor;
 			}
@@ -170,7 +131,7 @@ const DEBUG_SOUND_DETAIL: false;
 			#if DEBUG_OSCILLATOR_DETAIL {
 				printf(`region2Ptr: %li\n`, region2Ptr => i64);
 			}
-			var.i64 region2Size: bytesToWrite - region1Size;
+			var.i64 region2Size: bytesToOutput - region1Size;
 			#if DEBUG_OSCILLATOR_DETAIL {
 				printf(`region2Size %i\n`, region2Size);
 			}
@@ -203,7 +164,6 @@ const DEBUG_SOUND_DETAIL: false;
 				if (@self.sineValue > (2.0f32 * #paste M_PI)) {
 					@self.sineValue -: (2.0f32 * #paste M_PI);
 				}
-				@self.sampleIndex +: 1;
 			}
 
 			channel: region2Ptr => ptr(i16);
@@ -225,7 +185,6 @@ const DEBUG_SOUND_DETAIL: false;
 				if (@self.sineValue > (2.0f32 * #paste M_PI)) {
 					@self.sineValue -: (2.0f32 * #paste M_PI);
 				}
-				@self.sampleIndex +: 1;
 			}
 		}
 	}
@@ -259,20 +218,10 @@ const DEBUG_SOUND_DETAIL: false;
 		var.i64 id: 0;
 		var.i64 playCursor: 0;
 		var.i64 playingNote: -1;
-		var.i64 playingOscillatorId: -1;
+		var.i64 playingOscillator: -1;
 		var.bool isPlaying: false;
 		
 		fn play (var.ptr(@sequencerPlayback) sequence) {
-
-			//clean oscillators
-			//FIXME: this won't be necessary once oscillators generate
-			//only the necessary amount of samples
-			var.i64 oscillatorsAmount: #paste oscillatorsPerSequencer;
-			var oscillatorOffset: @self.id * oscillatorsAmount;
-			for oscillatorsAmount {
-				audio.oscillators[oscillatorOffset + @value].reset();
-			}
-
 			memcpy(pointerTo(@self.sequence), sequence, sizeOf(type @sequencerPlayback));
 			@self.isPlaying: true;
 		}
@@ -292,11 +241,12 @@ const DEBUG_SOUND_DETAIL: false;
 					} else {
 						if @self.playingNote < @value {
 							@self.playingNote: @value;
-							if @self.playingOscillatorId >= 0 {
-								audio.oscillators[oscillatorOffset + @self.playingOscillatorId].stop();
+							if @self.playingOscillator >= 0 {
+								audio.oscillators[oscillatorOffset + @self.playingOscillator].stop();
 							}
-							@self.playingOscillatorId +: 1;
-							audio.oscillators[oscillatorOffset + @self.playingOscillatorId].playFreq(note.freq);
+							var nextFreeOscillator: @self.findNextFreeOscillator();
+							audio.oscillators[oscillatorOffset + nextFreeOscillator].playFreq(note.freq);
+							@self.playingOscillator: nextFreeOscillator;
 							playsNextNote: true;
 						} else {
 							playsNextNote: true;
@@ -305,13 +255,13 @@ const DEBUG_SOUND_DETAIL: false;
 					}
 				}
 				if !playsNextNote {
-					if @self.playingOscillatorId >= 0 {
-						var stopOscId: oscillatorOffset + @self.playingOscillatorId;
+					if @self.playingOscillator >= 0 {
+						var stopOscId: oscillatorOffset + @self.playingOscillator;
 						audio.oscillators[stopOscId].stop();
 					}
 					@self.isPlaying: false;
 					@self.playCursor: 0;
-					@self.playingOscillatorId: -1;
+					@self.playingOscillator: -1;
 					@self.playingNote: -1;
 				}
 			}
@@ -321,6 +271,20 @@ const DEBUG_SOUND_DETAIL: false;
 			if @self.isPlaying {
 				@self.playCursor +: frames;
 			}
+		}
+		
+		fn findNextFreeOscillator => i64 {
+			var.i64 oscillatorsAmount: #paste oscillatorsPerSequencer;
+			var oscillatorOffset: @self.id * oscillatorsAmount;
+
+			var.i64 ret: -1;
+			for oscillatorsAmount {
+				if !audio.oscillators[oscillatorOffset + @value].isPlaying {
+					ret: @value;
+					break;
+				}
+			}
+			return ret;
 		}
 	}
 	
@@ -372,13 +336,13 @@ const DEBUG_SOUND_DETAIL: false;
 			}
 			for #paste oscillatorSize {
 				var osc: pointerTo(@self.oscillators[@value]);
-				osc.update();
+				osc.update(frames);
 			}
 
 			//mix
 			for #paste oscillatorSize {
 				var osc: pointerTo(@self.oscillators[@value]);
-				if osc.hasSamples {
+				if osc.isPlaying {
 					var oscRegion1Ptr: (pointerTo(osc.buffer) => ptr(i8)) + osc.playCursor;
 					var oscRegion2Ptr: pointerTo(osc.buffer) => ptr(i8);
 
