@@ -15,6 +15,7 @@
 #include "LILNodeToString.h"
 #include "LILParameterSorter.h"
 #include "LILPointerType.h"
+#include "LILStaticArrayType.h"
 #include "LILVarNode.h"
 
 using namespace LIL;
@@ -443,6 +444,10 @@ void LILParameterSorter::_process(LILFunctionCall * value)
 					if (currentTy->isA(TypeTypePointer)) {
 						auto ptrTy = std::static_pointer_cast<LILPointerType>(currentTy);
 						currentTy = ptrTy->getArgument();
+					}
+					if (currentTy->isA(TypeTypeStaticArray)) {
+						auto saTy = std::static_pointer_cast<LILStaticArrayType>(currentTy);
+						currentTy = saTy->getType();
 					}
 					if (!currentTy->isA(TypeTypeObject)) {
 						std::cerr << "VALUE PATH NODE DOES NOT POINT TO OBJECT FAIL!!!!!!!!\n";
