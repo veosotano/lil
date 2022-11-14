@@ -1,0 +1,105 @@
+#configure {
+	name: "NotePlaybackTest";
+}
+
+var goalSound: @sequencerPlayback {
+	notes: [
+		@sequencerNote { freq: 261; duration: 0.15 },
+		@sequencerNote { freq: 293; duration: 0.15 },
+		@sequencerNote { freq: 880; duration: 0.15 }
+	];
+	count: 3;
+};
+
+var paddle1Sound: @sequencerPlayback {
+	notes: [
+		@sequencerNote { freq: 261; duration: 0.1 },
+		@sequencerNote { freq: 440; duration: 0.1 }
+	];
+	count: 2;
+};
+var paddle2Sound: @sequencerPlayback {
+	notes: [
+		@sequencerNote { freq: 440; duration: 0.1 },
+		@sequencerNote { freq: 261; duration: 0.1 }
+	];
+	count: 2;
+};
+
+var wallSound: @sequencerPlayback {
+	notes: [
+		@sequencerNote { freq: 392; duration: 0.05 }
+	];
+	count: 1;
+};
+
+var winSound: @sequencerPlayback {
+	notes: [
+		@sequencerNote { freq: 261; duration: 0.3 },
+		@sequencerNote { freq: 293; duration: 0.3 },
+		@sequencerNote { freq: 392; duration: 0.6 },
+		@sequencerNote { freq: 880; duration: 0.6 }
+	];
+	count: 4;
+};
+
+
+fn button1MouseDown {
+	audio.playSequence(goalSound);
+}
+
+fn button2MouseDown {
+	audio.playSequence(paddle1Sound);
+}
+
+fn button3MouseDown {
+	audio.playSequence(paddle2Sound);
+}
+
+fn button4MouseDown {
+	audio.playSequence(wallSound);
+}
+
+fn button5MouseDown {
+	audio.playSequence(winSound);
+}
+
+@root {
+	width: 900;
+	height: 600;
+	background: #ACE;
+
+	#new @layout layout {
+		#new @container button1 {
+			width: 120;
+			height: 80;
+			background: #A53B59;
+			onMouseDown: button1MouseDown;
+		}
+		#new @container button2 {
+			width: 120;
+			height: 80;
+			background: #21A001;
+			onMouseDown: button2MouseDown;
+		}
+		#new @container button3 {
+			width: 120;
+			height: 80;
+			background: #F3C500;
+			onMouseDown: button3MouseDown;
+		}
+		#new @container button4 {
+			width: 120;
+			height: 80;
+			background: #D83D00;
+			onMouseDown: button4MouseDown;
+		}
+		#new @container button5 {
+			width: 120;
+			height: 80;
+			background: #7825CF;
+			onMouseDown: button5MouseDown;
+		}
+	}
+}
+
