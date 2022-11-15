@@ -4,33 +4,67 @@
 	onUpdateFn: true;
 }
 
-const.f64 windowWidth: 1440;
-const.f64 windowHeight: 900;
+const.f64 windowWidth: 1200;
+const.f64 windowHeight: 800;
 
 var.bool goal: false;
 var.i64 goalCounter: 0;
 var.i64 goalCounterMax: 50;
-var.bool doesBeep: false;
-var.i64 beepCounterMax: 4;
-var.i64 beepCounter: 0;
-const.i32 player1SoundFreq: 440i32;
-const.i32 player2SoundFreq: 493i32;
-const.i32 wallSoundFreq: 180i32;
-const.i32 goalSoundFreq: 329i32;
-const.i32 winSoundFreq: 587i32;
 var.i64 player1Score: 0;
 var.i64 player2Score: 0;
 var.i64 player1Gamepad: 0;
 var.i64 player2Gamepad: 1;
 var.bool useSoloMode: false;
 
+var goalSound: @sequencerPlayback {
+	notes: [
+		@sequencerNote { freq: 261; duration: 0.15 },
+		@sequencerNote { freq: 293; duration: 0.15 },
+		@sequencerNote { freq: 880; duration: 0.15 }
+	];
+	count: 3;
+};
+
+var paddle1Sound: @sequencerPlayback {
+	notes: [
+		@sequencerNote { freq: 261; duration: 0.1 },
+		@sequencerNote { freq: 440; duration: 0.1 }
+	];
+	count: 2;
+};
+var paddle2Sound: @sequencerPlayback {
+	notes: [
+		@sequencerNote { freq: 440; duration: 0.1 },
+		@sequencerNote { freq: 261; duration: 0.1 }
+	];
+	count: 2;
+};
+
+var wallSound: @sequencerPlayback {
+	notes: [
+		@sequencerNote { freq: 392; duration: 0.05 }
+	];
+	count: 1;
+};
+
+var winSound: @sequencerPlayback {
+	notes: [
+		@sequencerNote { freq: 261; duration: 0.3 },
+		@sequencerNote { freq: 293; duration: 0.3 },
+		@sequencerNote { freq: 392; duration: 0.6 },
+		@sequencerNote { freq: 880; duration: 0.6 }
+	];
+	count: 4;
+};
+
 fn onUpdate(var.f64 deltaTime) {
 	applyUserInput();
 	applyUserInput2();
-	var player1: @container { id: 5 };
-	var player2: @container { id: 6 };
+	var player1: $(player1);
+	var player2: $(player2);
+	LIL__runSystems(deltaTime);
 	limitPaddlePositions(player1, player2);
-	var ball: @container { id: 7 };
+	var ball: $(ball);
 	bounceOnEdges(ball);
 	bounceOnPaddles(player1, player2, ball );
 	
@@ -39,13 +73,6 @@ fn onUpdate(var.f64 deltaTime) {
 		goalCounterTick();
 	}
 };
-
-fn playBeep(var.i64 howManyFrames; var.i32 freq) {
-	beepCounterMax: howManyFrames;
-	beepCounter: 0;
-	LIL__audioDescriptor.freq: freq;
-	doesBeep: true;
-}
 
 fn applyUserInput () {
 	var id: 5;
@@ -127,7 +154,7 @@ fn bounceOnEdges (var.@container ball) {
 	if (bottom <= 0) {
 		if (velY < 0) {
 			velY: (velY * (-1f64)) + 1;
-			LIL__beep();
+			audio.playSequence(wallSound);
 		}
 		if velX < 0 {
 			velX -: 1f64;
@@ -145,7 +172,7 @@ fn bounceOnEdges (var.@container ball) {
 	if (top >= windowHeight) {
 		if velY > 0 {
 			velY: (velY * (-1f64)) - (1f64);
-			LIL__beep();
+			audio.playSequence(wallSound);
 		}
 		if velX < 0 {
 			velX -: 1f64;
@@ -186,10 +213,10 @@ fn player1Goal {
 	if player1Score >= 6 {
 		playerWin();
 	} else {
-		LIL__beep();
+		audio.playSequence(goalSound);
 		goalCounterMax: 50;
 	}
-	var player1ScoreBar: @container { id: 2 };
+	var player1ScoreBar: $(player1ScoreBar);
 	player1ScoreBar.width: (player1Score => f64) * 30;
 	
 };
@@ -203,10 +230,10 @@ fn player2Goal {
 	if player2Score >= 6 {
 		playerWin();
 	} else {
-		LIL__beep();
+		audio.playSequence(goalSound);
 		goalCounterMax: 50;
 	}
-	var player2ScoreBar: @container { id: 4 };
+	var player2ScoreBar: $(player2ScoreBar);
 	player2ScoreBar.width: (player2Score => f64) * 30;
 };
 
@@ -214,9 +241,9 @@ fn newGame {
 	player1Score: 0;
 	player2Score: 0;
 	goalCounterMax: 150;
-	var player1ScoreBar: @container { id: 2 };
+	var player1ScoreBar: $(player1ScoreBar);
 	player1ScoreBar.width: 0;
-	var player2ScoreBar: @container { id: 4 };
+	var player2ScoreBar: $(player2ScoreBar);
 	player2ScoreBar.width: 0;
 }
 
@@ -225,12 +252,12 @@ fn newGameMenu(var.ptr(any) data) {
 }
 
 fn playerWin {
-	LIL__beep();
+	audio.playSequence(winSound);
 	newGame();
 }
 
 fn restoreBallSpeed {
-	var ball: @container { id: 7 };
+	var ball: $(ball);
 	var velX: ball.velX;
 	var velY: ball.velY;
 	if velX < 0 {
@@ -257,28 +284,19 @@ fn goalCounterTick {
 	}
 };
 
-fn beepCounterTick {
-	if beepCounter < beepCounterMax {
-		beepCounter +: 1;
-	} else {
-		doesBeep: false;
-		beepCounter: 0;
-	}
-};
-
 fn bounceOnPaddles (var.@container player1; var.@container player2; var.@container ball) {
 	var velX: ball.velX;
 	if aabbIntersects(player1, ball) {
 		if velX < 0 {
 			ball.velX: (velX * (-1)) + 1;
-			LIL__beep();
+			audio.playSequence(paddle1Sound);
 		}
 	}
 	
 	if aabbIntersects(player2, ball) {
 		if velX > 0 {
 			ball.velX: (velX * (-1)) - 1;
-			LIL__beep();
+			audio.playSequence(paddle2Sound);
 		}
 	}
 };
@@ -310,33 +328,33 @@ fn aabbIntersects(var.@container a; var.@container b) => bool {
 		height: 50;
 		background: #0;
 		
-		x: 300;
-		y: 800;
+		x: 100;
+		y: 600;
 	}
 	
 	#new @container player1ScoreBar {
 		width: 0;
 		height: 30;
 		background: #6;
-		x: 310;
-		y: 810;
+		x: 110;
+		y: 610;
 	}
 	
 	#new @container player2Score {
 		width: 170;
 		height: 50;
-		background: #0000;
+		background: #0;
 		
-		x: 970;
-		y: 800;
+		x: 900;
+		y: 600;
 	}
 	
 	#new @container player2ScoreBar {
 		width: 0;
 		height: 30;
 		background: #6;
-		x: 980;
-		y: 810;
+		x: 910;
+		y: 610;
 	}
 	
 	#new @container player1 {
