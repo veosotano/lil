@@ -1105,6 +1105,10 @@ fn floor(f64) => f64 extern;
 		};
 		
 		fn setupLayouts {
+			app.updateLayouts();
+		}
+
+		fn updateLayouts {
 			for @self.layoutCount {
 				var id: @self.layoutData[@value].id;
 				var layout: @layout { id: id };
