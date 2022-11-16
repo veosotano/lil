@@ -14,6 +14,7 @@
 
 #include "LILTypeResolver.h"
 #include "LILAliasDecl.h"
+#include "LILEnum.h"
 #include "LILNodeToString.h"
 #include "LILObjectType.h"
 #include "LILSIMDType.h"
@@ -220,8 +221,8 @@ std::shared_ptr<LILType> LILTypeResolver::_process(std::shared_ptr<LILType> valu
 						}
 					}
 				}
+				const auto & rootNode = this->getRootNode();
 				if (!ret) {
-					const auto & rootNode = this->getRootNode();
 					auto aliases = rootNode->getAliases();
 					for (auto alias : aliases) {
 						auto aTy = alias->getSrcType();
@@ -238,7 +239,6 @@ std::shared_ptr<LILType> LILTypeResolver::_process(std::shared_ptr<LILType> valu
 					}
 				}
 				if (!ret) {
-					const auto & rootNode = this->getRootNode();
 					auto typeDecls = rootNode->getTypes();
 					for (auto typeDecl : typeDecls) {
 						auto tTy = typeDecl->getSrcType();
@@ -251,6 +251,19 @@ std::shared_ptr<LILType> LILTypeResolver::_process(std::shared_ptr<LILType> valu
 								ret = dstTy->clone();
 							}
 							ret->setStrongTypeName(value->getName());
+							break;
+						}
+					}
+				}
+				
+				if (!ret) {
+					auto enumDecls = rootNode->getEnums();
+					for (auto enumDecl : enumDecls) {
+						if (enumDecl->getName() == value->getName()) {
+							auto enumTy = enumDecl->getType();
+							if (enumTy) {
+								ret = enumTy->clone();
+							}
 							break;
 						}
 					}
