@@ -7,14 +7,23 @@
 const.f64 windowWidth: 1200;
 const.f64 windowHeight: 800;
 
+enum.i16 PongScene {
+	mainMenu,
+	inGame
+}
+
+var.PongScene currentScene: PongScene.mainMenu;
+
 var.bool goal: false;
 var.i64 goalCounter: 0;
 var.i64 goalCounterMax: 50;
+var.ptr(fn)|null goalCounterCallback: null;
 var.i64 player1Score: 0;
 var.i64 player2Score: 0;
 var.i64 player1Gamepad: 0;
 var.i64 player2Gamepad: 1;
 var.bool useSoloMode: false;
+var.i64 maxGoals: 3;
 
 var goalSound: @sequencerPlayback {
 	notes: [
@@ -58,24 +67,32 @@ var winSound: @sequencerPlayback {
 };
 
 fn onUpdate(var.f64 deltaTime) {
-	applyUserInput();
-	applyUserInput2();
-	var player1: $(player1);
-	var player2: $(player2);
-	LIL__runSystems(deltaTime);
-	limitPaddlePositions(player1, player2);
-	var ball: $(ball);
-	bounceOnEdges(ball);
-	bounceOnPaddles(player1, player2, ball );
+	if currentScene = PongScene.inGame
+	{
+		applyUserInput();
+		applyUserInput2();
+		var player1: $(player1);
+		var player2: $(player2);
+		LIL__runSystems(deltaTime);
+		limitPaddlePositions(player1, player2);
+		var ball: $(ball);
+		bounceOnEdges(ball);
+		bounceOnPaddles(player1, player2, ball );
 	
-	checkForGoal(ball);
-	if goal {
-		goalCounterTick();
+		checkForGoal(ball);
+		if goal {
+			goalCounterTick();
+		}
+	}
+	else
+	{
+		LIL__runSystems(deltaTime);
 	}
 };
 
 fn applyUserInput () {
-	var id: 5;
+	var player1: $(player1);
+	var id: player1.id;
 	var gamepad: input.getGamepad(player1Gamepad);
 	//W -- up
 	// fixme: I'd like this to be:
@@ -100,7 +117,8 @@ fn applyUserInput () {
 	}
 };
 fn applyUserInput2 () {
-	var id: 6;
+	var player2: $(player2);
+	var id: player2.id;
 	var gamepad: input.getGamepad(player2Gamepad);
 	//K -- up
 	var.bool gpUpPressed: input.isGamepadButtonDown(player2Gamepad, 4);
@@ -205,36 +223,38 @@ fn checkForGoal (var.@container ball) {
 
 fn player1Goal {
 	goal: true;
-	app.box2ds[0].bgColor: #F00;
+	var root: $(@root);
+	root.background: #F00;
 	restoreBallSpeed();
 	//$(@root goal).play();
 
 	player1Score +: 1;
-	if player1Score >= 6 {
+	if player1Score >= maxGoals {
 		playerWin();
 	} else {
 		audio.playSequence(goalSound);
 		goalCounterMax: 50;
+		var player1ScoreBar: $(player1ScoreBar);
+		player1ScoreBar.width: (player1Score => f64) * 30;
 	}
-	var player1ScoreBar: $(player1ScoreBar);
-	player1ScoreBar.width: (player1Score => f64) * 30;
-	
 };
+
 fn player2Goal {
 	goal: true;
-	app.box2ds[0].bgColor: #00F;
+	var root: $(@root);
+	root.background: #00F;
 	restoreBallSpeed();
 	//$(@root goal).play();
 
 	player2Score +: 1;
-	if player2Score >= 6 {
+	if player2Score >= maxGoals {
 		playerWin();
 	} else {
 		audio.playSequence(goalSound);
 		goalCounterMax: 50;
+		var player2ScoreBar: $(player2ScoreBar);
+		player2ScoreBar.width: (player2Score => f64) * 30;
 	}
-	var player2ScoreBar: $(player2ScoreBar);
-	player2ScoreBar.width: (player2Score => f64) * 30;
 };
 
 fn newGame {
@@ -245,15 +265,61 @@ fn newGame {
 	player1ScoreBar.width: 0;
 	var player2ScoreBar: $(player2ScoreBar);
 	player2ScoreBar.width: 0;
+	
+	$(player1)::visible();
+	$(player2)::visible();
+	$(ball)::visible();
+	$(mainMenu)::hidden();
+	$(logo)::hidden();
+	app.updateLayouts();
+	
+	$(player1Score)::visible();
+	$(player1ScoreBar)::visible();
+	$(player2Score)::visible();
+	$(player2ScoreBar)::visible();
+	
+	currentScene: PongScene.inGame;
 }
 
-fn newGameMenu(var.ptr(any) data) {
+fn newGame3Goals {
+	useSoloMode: false;
+	maxGoals: 3;
+	newGame();
+}
+
+fn newGame6Goals {
+	useSoloMode: false;
+	maxGoals: 6;
+	newGame();
+}
+
+fn newGameSinglePlayer {
+	maxGoals: 6;
+	useSoloMode: true;
 	newGame();
 }
 
 fn playerWin {
 	audio.playSequence(winSound);
-	newGame();
+	
+	goalCounterCallback: pointerTo showMainMenu;
+}
+
+fn showMainMenu {
+	$(player1)::hidden();
+	$(player2)::hidden();
+	$(ball)::hidden();
+	$(mainMenu)::visible();
+	$(logo)::visible();
+	app.updateLayouts();
+
+	$(player1Score)::hidden();
+	$(player1ScoreBar)::hidden();
+	$(player2Score)::hidden();
+	$(player2ScoreBar)::hidden();
+
+	currentScene: PongScene.mainMenu;
+	goalCounterCallback: null;
 }
 
 fn restoreBallSpeed {
@@ -281,6 +347,12 @@ fn goalCounterTick {
 		goalCounter: 0;
 		app.box2ds[0].bgColor: #3;
 		goal: false;
+
+		if goalCounterCallback => ptr(fn) {
+			//FIXME: why can't I call goalCounterCallback() directly?
+			var callback: goalCounterCallback;
+			callback();
+		}
 	}
 };
 
@@ -328,16 +400,28 @@ fn aabbIntersects(var.@container a; var.@container b) => bool {
 		height: 50;
 		background: #0;
 		
-		x: 100;
-		y: 600;
+		::hidden {
+			y: 0;
+			x: -9999;
+		}
+		::visible {
+			x: 100;
+			y: 600;
+		}
 	}
 	
 	#new @container player1ScoreBar {
 		width: 0;
 		height: 30;
 		background: #6;
-		x: 110;
-		y: 610;
+		::hidden {
+			y: 0;
+			x: -9999;
+		}
+		::visible {
+			x: 110;
+			y: 610;
+		}
 	}
 	
 	#new @container player2Score {
@@ -345,45 +429,138 @@ fn aabbIntersects(var.@container a; var.@container b) => bool {
 		height: 50;
 		background: #0;
 		
-		x: 900;
-		y: 600;
+		::hidden {
+			y: 0;
+			x: -9999;
+		}
+		::visible{
+			x: 900;
+			y: 600;
+		}
 	}
 	
 	#new @container player2ScoreBar {
 		width: 0;
 		height: 30;
 		background: #6;
-		x: 910;
-		y: 610;
+		::hidden {
+			y: 0;
+			x: -9999;
+		}
+		::visible {
+			x: 910;
+			y: 610;
+		}
 	}
 	
 	#new @container player1 {
 		width: 40;
 		height: 200;
-		x: 10;
-		y: (windowHeight / 2 ) - 100;
 		background: #F;
+		
+		
+		::hidden {
+			y: 0;
+			x: -9999;
+		}
+		
+		::visible {
+			y: (windowHeight / 2 ) - 100;
+			x: 10;
+		}
 	}
 	#new @container player2 {
 		width: 40;
 		height: 200;
-		x: (windowWidth - 50);
-		y: (windowHeight / 2 ) - 100;
 		background: #F;
+		
+		
+		::hidden {
+			x: -9999;
+			y: 0;
+		}
+		
+		::visible {
+			y: (windowHeight / 2 ) - 100;
+			x: (windowWidth - 50);
+		}
 	}
 	#new @container ball {
 		width: 50;
 		height: 50;
 		background: #F;
-		x: 80;
-		y: 400;
-		velX: -6;
-		velY: 4;
+		
+		::hidden {
+			x: -9999;
+			y: 0;
+			velX: 0;
+			velY: 0;
+		}
+		
+		::visible {
+			x: 80;
+			y: 400;
+			velX: -6;
+			velY: 4;
+		}
 	}
 
 	// #new @sound goal {
 	//	 src: "goal.wav";
 	// }
+	
+	
+	#new @image logo {
+		src: "pong_logo.png";
+		width: 400;
+		height: 250;
+		::visible {
+			x: 400;
+			y: 500;
+		}
+		::hidden {
+			x: -9999;
+			y: 0;
+		}
+	}
+	
+	#new @container mainMenu {
+		width: 420;
+		height: 350;
+		background: #2;
+		y: 150;
+		
+		::visible {
+			x: 390;
+		}
+		
+		::hidden {
+			x: -9999;
+		}
+
+		#new  @layout buttonsLayout {
+			vertical: true;
+
+			#new @image twoPlayers3Goals {
+				width: 400;
+				height: 80;
+				src: "two_players_3_goals.png";
+				action: newGame3Goals;
+			}
+			#new @image twoPlayers3Goals {
+				width: 400;
+				height: 80;
+				src: "two_players_6_goals.png";
+				action: newGame6Goals;
+			}
+			#new @image singlePlayer {
+				width: 400;
+				height: 80;
+				src: "single_player.png";
+				action: newGameSinglePlayer;
+			}
+		}
+	}
 }
 
 fn switchGamepads(var.ptr(any) data) {
@@ -405,12 +582,12 @@ fn toggleSoloMode(var.ptr(any) data) {
 }
 
 @mainMenu {
-	#new @menu controller {
-		label: "Controller";
+	#new @menu game {
+		label: "Game";
 
 		#new @menuItem newGame {
 			label: "New game";
-			action: pointerTo(newGameMenu);
+			action: pointerTo(newGame) => msgCallback;
 			shortcut: "n";
 		}
 		#new @menuItem switchGamepads {
