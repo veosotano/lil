@@ -27,7 +27,7 @@
 			#paste LIL_INITIALIZERS;
 			msgEmit(`onInitialize`, pointerTo(app));
 			
-			app.setupLayouts();
+			app.updateLayouts();
 		}
 		
 		fn LIL__addAppMenu {

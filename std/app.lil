@@ -1103,10 +1103,6 @@ fn floor(f64) => f64 extern;
 			msgSub(`onMouseDragged`, pointerTo(LIL__mouseDraggedListener) => msgCallback);
 			msgSub(`onMouseUp`,pointerTo( LIL__mouseUpListener) => msgCallback);
 		};
-		
-		fn setupLayouts {
-			app.updateLayouts();
-		}
 
 		fn updateLayouts {
 			for @self.layoutCount {
