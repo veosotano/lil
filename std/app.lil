@@ -1319,14 +1319,6 @@ fn floor(f64) => f64 extern;
 		fn removeLastActionId {
 			@self.actionCount -: 1;
 		}
-		fn newTextfield => i64 {
-			var currentCount: @self.textfieldCount;
-			@self.textfieldCount +: 1;
-			return currentCount;
-		};
-		fn removeLastTextfield {
-			@self.textfieldCount -: 1;
-		}
 		fn newMouseDownActionId => i64 {
 			var currentCount: @self.mouseDownActionCount;
 			@self.mouseDownActionCount +: 1;
@@ -1358,6 +1350,14 @@ fn floor(f64) => f64 extern;
 		}
 		fn removeLastDragEndActionId {
 			@self.dragEndActionCount -: 1;
+		}
+		fn newTextfield => i64 {
+			var currentCount: @self.textfieldCount;
+			@self.textfieldCount +: 1;
+			return currentCount;
+		};
+		fn removeLastTextfield {
+			@self.textfieldCount -: 1;
 		}
 		fn newLayout() {
 			var currentCount: @self.layoutCount;
