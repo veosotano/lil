@@ -44,10 +44,20 @@
 #---------------------------
 <lil>theImage.z: 0;</lil>
 
-#===== vvar velocity ===========
-#= The speed at which this image should move, in pixels per 60th of a second.
+#===== vvar velX ==============
+#= The speed at which this container should move along the horizontal axis, in pixels per 60th of a second.
 #---------------------------
-<lil>theImage.velocity: @vel { x: 3; y: 5 };</lil>
+<lil>theImage.velX: 3;</lil>
+
+#===== vvar velY ==============
+#= The speed at which this container should move along the vertical axis, in pixels per 60th of a second.
+#---------------------------
+<lil>theImage.velY: 5;</lil>
+
+#===== vvar velZ ==============
+#= The speed at which this container should move along the direction of the depth, in pixels per 60th of a second.
+#---------------------------
+<lil>theImage.velZ: 0;</lil>
 
 #===== vvar src ===========
 #= A string containing the file path for the resource. Returns the string as a cstr.
@@ -69,6 +79,11 @@
 <lil>var theImage: @image { };
 theImage.initialize(`myImage`, 0);</lil>
 
+#===== fn deinit =======
+#= Removes the last img, entity, and resource, and unloads the texture. Only call this when it is the last entity.
+#---------------------------
+<lil>theImage.deinit();</lil>
+
 #===== fn setWidth =============
 #= Setter for the width vvar.
 #===== var value ===========
@@ -83,6 +98,11 @@ theImage.initialize(`myImage`, 0);</lil>
 	//etc
 }</lil>
 
+#===== fn getWidthFinal ========
+#= Returns either the width value or the width of the texture.
+#---------------------------
+<lil>var usedWidth: theImage.getWidthFinal();</lil>
+
 #===== fn setHeight =============
 #= Setter for the height vvar.
 #===== var value ===========
@@ -94,6 +114,11 @@ theImage.initialize(`myImage`, 0);</lil>
 #= Getter for the height vvar.
 #---------------------------
 <lil>print theImage.getHeight();</lil>
+
+#===== fn getHeightFinal ========
+#= Returns either the height value or the height of the texture.
+#---------------------------
+<lil>var usedHeight: theImage.getHeightFinal();</lil>
 
 #===== fn setX =============
 #= Setter for the x vvar.
@@ -135,25 +160,46 @@ theImage.initialize(`myImage`, 0);</lil>
 	//etc
 }</lil>
 
-#===== fn setVelocity =============
-#= Setter for the velocity vvar.
+#===== fn setVelX ==========
+#= Setter for the velX vvar.
 #===== var value ===========
-#= A vector describing the velocitiy of the image.
+#= The number in pixels for the velocity along the horizontal axis.
 #---------------------------
-<lil>theImage.setVelocity(@vel {
-	x: 2;
-	y: 0;
-});</lil>
+<lil>theImage.setVelX(3);</lil>
 
-#===== fn getVelocity =============
-#= Value accessor for the velocity vvar.
+#===== fn getVelX ==========
+#= Getter for the velX vvar.
 #---------------------------
-<lil>var vel: theImage.getVelocity();</lil>
+<lil>if theImage.getVelX() > 100 {
+	//etc
+}</lil>
 
-#===== fn getVelocityPointer =============
-#= Pointer accessor for the volicity vvar.
+#===== fn setVelY ==========
+#= Setter for the velY vvar.
+#===== var value ===========
+#= The number in pixels for the velocity along the vertical axis.
 #---------------------------
-<lil>var ptrToVel: theImage.getVelocityPointer();</lil>
+<lil>theImage.setVelY(0);</lil>
+
+#===== fn getVelY ==========
+#= Getter for the velY vvar.
+#---------------------------
+<lil>var currentY: theImage.getVelY();</lil>
+
+#===== fn setVelZ ==========
+#= Setter for the velZ vvar.
+#===== var value ===========
+#= The number in pixels for the velocity in the direction of the depth.
+#---------------------------
+<lil>theImage.setVelZ(0);</lil>
+
+#===== fn getVelZ ==========
+#= Getter for the velZ vvar.
+#---------------------------
+<lil>if theImage.getVelZ() > 0 {
+	//etc
+}
+</lil>
 
 #===== fn setSrc =============
 #= Setter for the src vvar.

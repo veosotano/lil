@@ -48,10 +48,20 @@
 #---------------------------
 <lil>theContainer.z: 0;</lil>
 
-#===== vvar velocity =======
-#= The speed at which this container should move, in pixels per 60th of a second.
+#===== vvar velX ==============
+#= The speed at which this container should move along the horizontal axis, in pixels per 60th of a second.
 #---------------------------
-<lil>theContainer.velocity: @vel { x: 3; y: 5 };</lil>
+<lil>theContainer.velX: 3;</lil>
+
+#===== vvar velY ==============
+#= The speed at which this container should move along the vertical axis, in pixels per 60th of a second.
+#---------------------------
+<lil>theContainer.velY: 5;</lil>
+
+#===== vvar velZ ==============
+#= The speed at which this container should move along the direction of the depth, in pixels per 60th of a second.
+#---------------------------
+<lil>theContainer.velZ: 0;</lil>
 
 #===== fn getComponentId ===
 #= Accessor for the componentId vvar.
@@ -67,6 +77,11 @@
 #---------------------------
 <lil>var theContainer: @container { };
 theContainer.initialize(`myContainer`, 0);</lil>
+
+#===== fn deinit =======
+#= Removes the last box and entity. Only call this when it is the last entity.
+#---------------------------
+<lil>theContainer.deinit();</lil>
 
 #===== fn setWidth =====
 #= Setter for the width vvar.
@@ -152,22 +167,44 @@ theContainer.initialize(`myContainer`, 0);</lil>
 }
 </lil>
 
-#===== fn setVelocity =====
-#= Setter for the velocity vvar.
+#===== fn setVelX ==========
+#= Setter for the velX vvar.
 #===== var value ===========
-#= A vector describing the velocitiy of the container.
+#= The number in pixels for the velocity along the horizontal axis.
 #---------------------------
-<lil>theContainer.setVelocity(@vel {
-	x: 2;
-	y: 0;
-});</lil>
+<lil>theContainer.setVelX(3);</lil>
 
-#===== fn getVelocity =====
-#= Value accessor for the velocity vvar.
+#===== fn getVelX ==========
+#= Getter for the velX vvar.
 #---------------------------
-<lil>var vel: theContainer.getVelocity();</lil>
+<lil>if theContainer.getVelX() > 100 {
+	//etc
+}</lil>
 
-#===== fn getVelocityPointer =====
-#= Pointer accessor for the volicity vvar.
+#===== fn setVelY ==========
+#= Setter for the velY vvar.
+#===== var value ===========
+#= The number in pixels for the velocity along the vertical axis.
 #---------------------------
-<lil>var ptrToVel: theContainer.getVelocityPointer();</lil>
+<lil>theContainer.setVelY(0);</lil>
+
+#===== fn getVelY ==========
+#= Getter for the velY vvar.
+#---------------------------
+<lil>var currentY: theContainer.getVelY();</lil>
+
+#===== fn setVelZ ==========
+#= Setter for the velZ vvar.
+#===== var value ===========
+#= The number in pixels for the velocity in the direction of the depth.
+#---------------------------
+<lil>theContainer.setVelZ(0);</lil>
+
+#===== fn getVelZ ==========
+#= Getter for the velZ vvar.
+#---------------------------
+<lil>if theContainer.getVelZ() > 0 {
+	//etc
+}
+</lil>
+
