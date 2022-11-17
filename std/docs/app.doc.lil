@@ -14,6 +14,15 @@ app.selectByName(
 #----------------------------
 <lil>var sel: pointerTo app.selectables[entityId];</lil>
 
+#===== var entityCount ======
+#= How many entities are currently in use.
+#----------------------------
+<lil>
+for app.entityCount {
+	//etc
+}
+</lil>
+
 #===== var boxPositions =====
 #= Position storage for boxes (containers).
 #----------------------------
@@ -70,12 +79,6 @@ app.selectByName(
 //etc
 }</lil>
 
-#===== var colliderIds ======
-#= This is currently unused
-
-#===== var colliders ========
-#= This is currently unused
-
 #===== var names ============
 #= Storage for names that have been given a name id.
 #----------------------------
@@ -116,20 +119,132 @@ app.selectByName(
 #----------------------------
 <lil>var currentCount: @self.actionCount;</lil>
 
+#===== var mouseDownActions =====
+#= This static array stores the actions that happen on mouse down.
+#----------------------------
+<lil>return app.mouseDownActions[actionId].ptr;</lil>
+
+#===== var mouseDownActionCount ======
+#= The amount of actions that are currently in use on mouse down.
+#----------------------------
+<lil>for (var.i64 i: app.mouseDownActionCount - 1; i>=0; i -: 1) {
+	//etc
+}</lil>
+
+#===== var mouseUpActions ======
+#= This static array stores the actions that happen on mouse up.
+#----------------------------
+<lil>return app.mouseUpActions[actionId].ptr;</lil>
+
+#===== var mouseUpActionCount ======
+#= The amount of actions that are currently in use on mouse up.
+#----------------------------
+<lil>for (var.i64 i: app.mouseUpActionCount - 1; i>=0; i -: 1) {
+	//etc
+}</lil>
+
+#===== var mouseDraggedActions ====
+#= This static array stores the actions that happen on mouse dragged.
+#----------------------------
+<lil>return app.mouseDraggedActions[actionId].ptr;</lil>
+
+#===== var mouseDraggedActionCount ======
+#= The amount of actions that are currently in use on mouse dragged.
+#----------------------------
+<lil>for (var.i64 i: app.mouseDraggedActionCount - 1; i>=0; i -: 1) {
+	//etc
+}</lil>
+
+#===== var dragEndActions ====
+#= This static array stores the actions that happen on drag end.
+#----------------------------
+<lil>return app.dragEndActions[actionId].ptr;</lil>
+
+#===== var dragEndActionCount ======
+#= The amount of actions that are currently in use on drag end.
+#----------------------------
+<lil>for (var.i64 i: app.dragEndActionCount - 1; i>=0; i -: 1) {
+	//etc
+}</lil>
+
+#===== var dragTargetId =====
+#= The entity id of the element that is the current target of the dragging session.
+#----------------------------
+<lil>if id = app.dragTargetId {
+	//etc
+}</lil>
+
+#===== var dragOrigin =======
+#= The position of where the dragging session started
+#----------------------------
+<lil>app.dragOrigin: @pos2d { x: mouseX; y: mouseY };</lil>
+
+#===== var dragMinDistance ==
+#= The minimum distance the mouse needs to travel from the drag origin to start the dragging session
+#----------------------------
+<lil>if (fabs(evt.x - app.dragOrigin.x) >= app.dragMinDistance)) {
+	//etc
+}</lil>
+
+#===== var dragHasSession ======
+#= Wether or not we are currently in a dragging session
+#----------------------------
+<lil>if app.dragHasSession {
+	//etc
+}</lil>
+
+#===== var textfields ======
+#= This static array stores the data for the textfields that are in use.
+#----------------------------
+<lil>app.textfields[componentId].data: textfieldInstance;</lil>
+
+#===== var textfieldCount ======
+#= The amount of textfields that are currently in use.
+#----------------------------
+<lil>@self.textfieldCount +: 1;</lil>
+
+#===== var layoutData ======
+#= This static array stores the data for the layouts that are in use.
+#----------------------------
+<lil>app.layoutData[@self.componentId].vertical: value;</lil>
+
+#===== var layoutCount ======
+#= The amount of layouts that are currently in use.
+#----------------------------
+<lil>for @self.layoutCount {
+	var layoutData: pointerTo app.layoutData[@value];
+	//etc
+}</lil>
+
 #===== fn initialize ========
-#= Sets up the background color and mouse listener
+#= Sets up the background color and mouse listener.
 #----------------------------
 <lil>app.initialize();</lil>
+
+#===== fn updateLayouts ========
+#= Calls the update() method on all the layouts.
+#----------------------------
+<lil>app.updateLayouts();</lil>
 
 #===== fn newEntity =========
 #= Bumps the current entity count by one and returns the new entity id
 #----------------------------
 <lil>var newId: app.newEntity();</lil>
 
+#===== fn removeLastEntity ==
+#= Decreases the entity count by one.
+#----------------------------
+<lil>app.removeLastEntity();</lil>
+
 #===== fn newType ===========
-#= Bumps the current type count by one and returns the new type id
+#= Bumps the current type count by one and returns the new type id.
 #----------------------------
 <lil>var newTypeId: app.newType();</lil>
+
+#===== fn removeLastType ====
+#= Decreases type count by one.
+#----------------------------
+<lil>app.removeLastType();</lil>
 
 #===== fn registerName ======
 #= For each unique string passed in to this function it returns a corresponding id.
@@ -144,3 +259,206 @@ app.selectByName(
 #= The number that was previously handed out by the registerName method.
 #----------------------------
 <lil>return app.getName(selectable.nameId);</lil>
+
+#===== fn removeLastName =========
+#= Decreases the name count by one.
+#----------------------------
+<lil>app.removeLastName();</lil>
+
+#===== fn selectByName =========
+#= Makes a linear search in the array of entities to find those which match given parent and name.
+#===== var parentId ============
+#= The id of the parent element.
+#===== var nameId ===============
+#= The id of the name of the element. To find it, use the registerName() method.
+#----------------------------
+<lil>var selection: app.selectByName(parentId, app.registerName(`elementName`));</lil>
+
+#===== fn selectChildren =========
+#= Makes a linear search in the array of entities to find those which match given parent.
+#===== var parentId ============
+#= The id of the parent element.
+#----------------------------
+<lil>var selection: app.selectChildren(parentId);</lil>
+
+#===== fn setSelectable =========
+#= Stores the given value in the selectables array.
+#===== var id ============
+#= The entity id of the selectable.
+#===== var value ===============
+#= The @selectable to be stored.
+#----------------------------
+<lil>@self.setSelectable(id, @selectable {
+	nameId: nameId;
+	parentId: parentId;
+	typeId: typeId;
+	componentId: componentId;
+	//etc
+});
+</lil>
+
+#===== fn newElement =========
+#= Creates a new entity with given values and stores it. Returns the id of the new entity.
+#===== var name ============
+#= A C string containing the name of the new element.
+#===== var parentId ===============
+#= The id of the parent element.
+#===== var typeId ===============
+#= The id of the type of element.
+#===== var componentId ===============
+#= The id of some related piece of data. The meaning of this value is defined by each concrete class.
+#----------------------------
+<lil>@self.id: app.newElement(name, parentId, 3, componentId);</lil>
+
+#===== fn newSizedElement =========
+#= Creates a new entity with given values and stores it. Returns the id of the new entity.
+#= This method takes function pointers to get and set width, height, x and y coordinates.
+#===== var name ============
+#= A C string containing the name of the new element.
+#===== var parentId ===============
+#= The id of the parent element.
+#===== var typeId ===============
+#= The id of the type of element.
+#===== var componentId ===============
+#= The id of some related piece of data. The meaning of this value is defined by each concrete class.
+#===== var getWidthPtr ===============
+#= A pointer to the getWidth method for this class.
+#===== var setWidthPtr ===============
+#= A pointer to the setWidth method for this class.
+#===== var getHeightPtr ===============
+#= A pointer to the getHeight method for this class.
+#===== var setHeightPtr ===============
+#= A pointer to the setHeight method for this class.
+#===== var getXPtr ===============
+#= A pointer to the getX method for this class.
+#===== var setXPtr ===============
+#= A pointer to the setX method for this class.
+#===== var getYPtr ===============
+#= A pointer to the getY method for this class.
+#===== var setYPtr ===============
+#= A pointer to the setY method for this class.
+#----------------------------
+<lil>@self.id: app.newSizedElement(
+	name: name;
+	parentId: parentId;
+	typeId: 1;
+	componentId: componentId;
+	getWidthPtr: pointerTo @self.getWidthFinal;
+	setWidthPtr: pointerTo @self.setWidth;
+	getHeightPtr: pointerTo @self.getHeightFinal;
+	setHeightPtr: pointerTo @self.setHeight;
+	getXPtr: pointerTo @self.getX;
+	setXPtr: pointerTo @self.setX;
+	getYPtr: pointerTo @self.getY;
+	setYPtr: pointerTo @self.setY
+);</lil>
+
+#===== fn newBox =========
+#= Bumps the box count by one and returns the new id
+#----------------------------
+<lil>var componentId: app.newBox();</lil>
+
+#===== fn removeLastBox =========
+#= Decreases the box count by one.
+#----------------------------
+<lil>app.removeLastBox();</lil>
+
+#===== fn newImg =========
+#= Bumps the img count by one and returns the new id
+#----------------------------
+<lil>var componentId: app.newImg();</lil>
+
+#===== fn removeLastImg =========
+#= Decreases the img count by one.
+#----------------------------
+<lil>app.removeLastImg();</lil>
+
+#===== fn newShape =========
+#= Bumps the shape count by one and returns the new id
+#----------------------------
+<lil>var componentId: app.newShape();</lil>
+
+#===== fn removeLastShape =========
+#= Decreases the shape count by one.
+#----------------------------
+<lil>app.removeLastShape();</lil>
+
+#===== fn newResource =========
+#= Bumps the resource count by one and returns the new id
+#----------------------------
+<lil>resourceId: app.newResource();</lil>
+
+#===== fn removeLastResource =========
+#= Decreases the resource count by one.
+#----------------------------
+<lil>app.removeLastResource();</lil>
+
+#===== fn newActionId =========
+#= Bumps the action count by one and returns the new id
+#----------------------------
+<lil>var actionId: app.newActionId();</lil>
+
+#===== fn removeLastActionId =========
+#= Decreases the action count by one.
+#----------------------------
+<lil>app.removeLastActionId();</lil>
+
+#===== fn newMouseDownActionId =========
+#= Bumps the action count by one and returns the new id
+#----------------------------
+<lil>var actionId: app.newMouseDownActionId();</lil>
+
+#===== fn removeLastMouseDownActionId =========
+#= Decreases the action count by one.
+#----------------------------
+<lil>app.removeLastMouseDownActionId();</lil>
+
+#===== fn newMouseUpActionId =========
+#= Bumps the action count by one and returns the new id
+#----------------------------
+<lil>var actionId: app.newMouseUpActionId();</lil>
+
+#===== fn removeLastMouseUpActionId =========
+#= Decreases the action count by one.
+#----------------------------
+<lil>app.removeLastMouseUpActionId();</lil>
+
+#===== fn newMouseDraggedActionId =========
+#= Bumps the action count by one and returns the new id
+#----------------------------
+<lil>var actionId: app.newMouseDraggedActionId();</lil>
+
+#===== fn removeLastMouseDraggedActionId =========
+#= Decreases the action count by one.
+#----------------------------
+<lil>app.removeLastMouseDraggedActionId();</lil>
+
+#===== fn newDragEndActionId =========
+#= Bumps the action count by one and returns the new id
+#----------------------------
+<lil>var actionId: app.newDragEndActionId();</lil>
+
+#===== fn removeLastDragEndActionId =========
+#= Decreases the action count by one.
+#----------------------------
+<lil>app.removeLastDragEndActionId();</lil>
+
+#===== fn newTextfield =========
+#= Bumps the textfield count by one and returns the new id
+#----------------------------
+<lil>var componentId: app.newTextfield();</lil>
+
+#===== fn removeLastTextfield =========
+#= Decreases the textfield count by one.
+#----------------------------
+<lil>app.removeLastTextfield();</lil>
+
+#===== fn newLayout =========
+#= Bumps the layout count by one and returns the new id
+#----------------------------
+<lil>var componentId: app.newLayout();</lil>
+
+#===== fn removeLastLayout =========
+#= Decreases the layout count by one.
+#----------------------------
+<lil>app.removeLastLayout();</lil>
