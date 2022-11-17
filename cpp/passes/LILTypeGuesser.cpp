@@ -2180,7 +2180,6 @@ std::shared_ptr<LILType> LILTypeGuesser::findTypeForValuePath(LILValuePath * vp)
 							field = classDecl->getMethodNamed(pnName);
 						}
 						if (!field) {
-							std::cerr << "FIELD WAS NULL FAIL!!!!\n";
 							return nullptr;
 						}
 						if (field->getNodeType() == NodeTypeVarDecl) {

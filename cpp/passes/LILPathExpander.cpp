@@ -17,6 +17,7 @@
 #include "LILPathExpander.h"
 #include "LILAssignment.h"
 #include "LILClassDecl.h"
+#include "LILErrorMessage.h"
 #include "LILFlowControl.h"
 #include "LILFunctionCall.h"
 #include "LILFunctionDecl.h"
@@ -66,6 +67,9 @@ void LILPathExpander::process(LILNode * node)
 {
 	for (auto childNode : node->getChildNodes()) {
 		this->process(childNode.get());
+		if (this->errors.size() > 0) {
+			return;
+		}
 	}
 	switch (node->getNodeType()) {
 		case NodeTypeValuePath:
@@ -214,7 +218,13 @@ void LILPathExpander::_process(LILValuePath * vp)
 					tempNodes.clear();
 				}
 				if (!field) {
-					std::cerr << "FIELD WAS NULL FAIL!!!!\n";
+					LILErrorMessage ei;
+					ei.message =  "The class "+className+" does not have any field called "+pnName.data()+". Please check the spelling.";
+					LILNode::SourceLocation sl = pn->getSourceLocation();
+					ei.file = sl.file;
+					ei.line = sl.line;
+					ei.column = sl.column;
+					this->errors.push_back(ei);
 					return;
 				}
 				if (field->getNodeType() == NodeTypeVarDecl) {
